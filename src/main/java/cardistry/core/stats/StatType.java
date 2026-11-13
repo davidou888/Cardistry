@@ -7,8 +7,8 @@ import cardistry.model.Element;
  *
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
- * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}. Les autres sont déclarées pour les objets et
- * trinkets à venir, mais pas encore lues par le moteur.
+ * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
+ * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}. {@link #GOLD_GAIN} attend le shop.
  */
 public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
@@ -25,10 +25,16 @@ public enum StatType {
     FIRE_DAMAGE(1.0),
     WATER_DAMAGE(1.0),
     NATURE_DAMAGE(1.0),
-    /** Multiplicateur des soins reçus. */
+    /** Multiplicateur de tous les soins reçus (cartes, objets, trinkets). */
     HEAL_EFFICIENCY(1.0),
-    /** Dégâts retirés à chaque attaque subie. */
-    DAMAGE_REDUCTION(0);
+    /** Multiplicateur des cartes de soin de feu (en plus de {@link #HEAL_EFFICIENCY}). */
+    FIRE_HEAL(1.0),
+    WATER_HEAL(1.0),
+    NATURE_HEAL(1.0),
+    /** Dégâts retirés à chaque attaque adverse subie (jamais sous 0). */
+    DAMAGE_REDUCTION(0),
+    /** Multiplicateur des dégâts infligés par l'adversaire. */
+    ENEMY_DAMAGE(1.0);
 
     private final double defaultBase;
 
@@ -38,6 +44,15 @@ public enum StatType {
 
     public double defaultBase() {
         return defaultBase;
+    }
+
+    /** Stat du multiplicateur des cartes de soin d'un élément. */
+    public static StatType healMultiplier(Element element) {
+        return switch (element) {
+            case FIRE -> FIRE_HEAL;
+            case WATER -> WATER_HEAL;
+            case NATURE -> NATURE_HEAL;
+        };
     }
 
     /** Stat du multiplicateur de dégâts pour un élément. */

@@ -124,7 +124,7 @@ class CombatEngineTest {
 
         assertEquals(5, hydra.hp(), DELTA);
         assertEquals(new GameEvent.CardPlayed(jet), events.get(0));
-        assertEquals(new GameEvent.DamageDealt(hydra, 15, 1.5), events.get(1));
+        assertEquals(new GameEvent.DamageDealt(hydra, 15, 1.5, GameEvent.DamageDealt.Source.SPELL), events.get(1));
     }
 
     @Test
@@ -191,7 +191,7 @@ class CombatEngineTest {
 
         assertSame(swamp, state.terrain());
         assertEquals(new GameEvent.TerrainChanged(epfl, swamp), events.get(1));
-        assertEquals(new GameEvent.DamageDealt(state.player(), 3.75, 0.75), events.get(3));
+        assertEquals(new GameEvent.DamageDealt(state.player(), 3.75, 0.75, GameEvent.DamageDealt.Source.ENEMY_ATTACK), events.get(3));
         assertEquals(100 - 3.75, state.player().hp(), DELTA);
     }
 
@@ -275,7 +275,7 @@ class CombatEngineTest {
 
         assertEquals(List.of(
                 new GameEvent.CardPlayed(tsunami),
-                new GameEvent.DamageDealt(hydra, 22.5, 1.5),
+                new GameEvent.DamageDealt(hydra, 22.5, 1.5, GameEvent.DamageDealt.Source.SPELL),
                 new GameEvent.EnemyKilled(hydra),
                 new GameEvent.CombatStarted(siren, 2, 2),
                 new GameEvent.HandDealt(state.hand())), events);
@@ -348,7 +348,7 @@ class CombatEngineTest {
         engine.submit(new Action.PlayCard(0));
 
         // 10 × 1.5 (eau bat feu) × 1.25 (stat eau)
-        assertEquals(new GameEvent.DamageDealt(hydra, 18.75, 1.875), events.get(1));
+        assertEquals(new GameEvent.DamageDealt(hydra, 18.75, 1.875, GameEvent.DamageDealt.Source.SPELL), events.get(1));
     }
 
     @Test

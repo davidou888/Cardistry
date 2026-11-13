@@ -133,15 +133,35 @@ public final class GameState {
                 * playerStats.get(StatType.damageMultiplier(spell.element()));
     }
 
-    /** Multiplicateur total d'un soin sur le terrain actuel (terrain × stats). */
+    /** Multiplicateur total d'un soin sur le terrain actuel (terrain × efficacité × soin de l'élément). */
     public double healMultiplier(HealCard heal) {
         return ElementRules.healMultiplier(heal.element(), terrain.element())
-                * playerStats.get(StatType.HEAL_EFFICIENCY);
+                * playerStats.get(StatType.HEAL_EFFICIENCY)
+                * playerStats.get(StatType.healMultiplier(heal.element()));
     }
 
-    /** Multiplicateur actuel de l'attaque de l'adversaire (dépend du terrain). */
+    /** Multiplicateur actuel de l'attaque de l'adversaire (terrain × stat {@link StatType#ENEMY_DAMAGE}). */
     public double enemyAttackMultiplier() {
-        return ElementRules.terrainAttackMultiplier(terrain.element(), currentEnemy().element());
+        return ElementRules.terrainAttackMultiplier(terrain.element(), currentEnemy().element())
+                * playerStats.get(StatType.ENEMY_DAMAGE);
+    }
+
+    /** Dégâts que l'adversaire infligera à sa prochaine attaque (multiplicateur, puis réduction). */
+    public double enemyAttackDamage() {
+        return Math.max(0, currentEnemy().attack() * enemyAttackMultiplier()
+                - playerStats.get(StatType.DAMAGE_REDUCTION));
+    }
+
+    /**
+     * Poids d'une carte dans la pioche : produit des facteurs des trinkets équipés
+     * (1 = fréquence normale, 2 = deux fois plus fréquente).
+     */
+    public double cardWeight(Card card) {
+        double weight = 1.0;
+        for (Trinket trinket : trinkets) {
+            weight *= trinket.cardWeight(card);
+        }
+        return weight;
     }
 
     public boolean isWon() {
@@ -172,6 +192,10 @@ public final class GameState {
 
     void addToHand(Card card) {
         hand.add(card);
+    }
+
+    Card replaceInHand(int slot, Card card) {
+        return hand.set(slot, card);
     }
 
     void clearHand() {

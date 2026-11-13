@@ -58,6 +58,32 @@ public class CardPool {
     }
 
     /** Tire une carte au hasard et en renvoie une copie. */
+    /**
+     * Tire une carte en pondérant chaque entrée du registre par {@code weight} (1 = normal) ;
+     * renvoie une copie. Si tous les poids valent 1, équivaut à {@link #draw(Rng)}.
+     */
+    public Card draw(Rng rng, java.util.function.ToDoubleFunction<Card> weight) {
+        double[] weights = new double[cards.size()];
+        double total = 0;
+        boolean uniform = true;
+        for (int i = 0; i < cards.size(); i++) {
+            weights[i] = Math.max(0, weight.applyAsDouble(cards.get(i)));
+            total += weights[i];
+            uniform &= weights[i] == 1.0;
+        }
+        if (uniform || total <= 0) {
+            return draw(rng);
+        }
+        double roll = rng.nextDouble() * total;
+        for (int i = 0; i < cards.size(); i++) {
+            roll -= weights[i];
+            if (roll < 0) {
+                return cards.get(i).copy();
+            }
+        }
+        return cards.get(cards.size() - 1).copy();
+    }
+
     public Card draw(Rng rng) {
         return rng.pick(cards).copy();
     }

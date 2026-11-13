@@ -9,6 +9,8 @@ import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.items.LootTable;
 import cardistry.items.Trinket;
+import cardistry.model.Element;
+import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
@@ -95,7 +97,10 @@ public final class CombatEngine {
         }
         boolean endsTurn = switch (action) {
             case Action.DrawCard draw -> {
-                drawCard();
+                int count = Math.max(1, state.playerStats().getInt(StatType.CARDS_PER_DRAW));
+                for (int i = 0; i < count && state.hand().size() < state.handSize(); i++) {
+                    drawCard();
+                }
                 yield true;
             }
             case Action.PlayCard play -> {
@@ -144,7 +149,7 @@ public final class CombatEngine {
         state.resetCombatTurn();
         state.clearHand();
         for (int i = 0; i < GameState.STARTING_HAND; i++) {
-            state.addToHand(pool.draw(rng));
+            state.addToHand(drawFromPool());
         }
         bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
         bus.publish(new GameEvent.HandDealt(state.hand()));
@@ -249,8 +254,12 @@ public final class CombatEngine {
 
     // --- Actions du joueur ---
 
+    private Card drawFromPool() {
+        return pool.draw(rng, state::cardWeight);
+    }
+
     private void drawCard() {
-        Card card = pool.draw(rng);
+        Card card = drawFromPool();
         state.addToHand(card);
         bus.publish(new GameEvent.CardDrawn(card));
     }
@@ -261,7 +270,7 @@ public final class CombatEngine {
         switch (card) {
             case SpellCard spell -> {
                 double mult = state.spellMultiplier(spell);
-                damageEnemy(spell.damage() * mult, mult);
+                damageEnemy(spell.damage() * mult, mult, GameEvent.DamageDealt.Source.SPELL);
             }
             case HealCard heal -> {
                 double mult = state.healMultiplier(heal);
@@ -285,10 +294,10 @@ public final class CombatEngine {
         Enemy enemy = state.currentEnemy();
         Player player = state.player();
         double mult = state.enemyAttackMultiplier();
-        double amount = enemy.attack() * mult;
+        double amount = state.enemyAttackDamage();
         bus.publish(new GameEvent.EnemyAttacked(enemy));
         player.takeDamage(amount);
-        bus.publish(new GameEvent.DamageDealt(player, amount, mult));
+        bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
         if (!player.isAlive()) {
             bus.publish(new GameEvent.GameLost());
         }
@@ -296,10 +305,10 @@ public final class CombatEngine {
 
     // --- Primitives partagées par les cartes et les effets ---
 
-    private void damageEnemy(double amount, double mult) {
+    private void damageEnemy(double amount, double mult, GameEvent.DamageDealt.Source source) {
         Enemy enemy = state.currentEnemy();
         enemy.takeDamage(amount);
-        bus.publish(new GameEvent.DamageDealt(enemy, amount, mult));
+        bus.publish(new GameEvent.DamageDealt(enemy, amount, mult, source));
     }
 
     /** Soigne sans dépasser les PV max ; l'événement porte les PV réellement rendus. */
@@ -333,7 +342,21 @@ public final class CombatEngine {
 
         @Override
         public void damageEnemy(double amount) {
-            CombatEngine.this.damageEnemy(amount, 1.0);
+            CombatEngine.this.damageEnemy(amount, 1.0, GameEvent.DamageDealt.Source.EFFECT);
+        }
+
+        @Override
+        public void elementalDamage(double amount, Element element) {
+            double mult = ElementRules.spellMultiplier(element, state.currentEnemy().element())
+                    * state.playerStats().get(StatType.damageMultiplier(element));
+            CombatEngine.this.damageEnemy(amount * mult, mult, GameEvent.DamageDealt.Source.EFFECT);
+        }
+
+        @Override
+        public void replaceCardInHand(int slot) {
+            Card replacement = drawFromPool();
+            Card removed = state.replaceInHand(slot, replacement);
+            bus.publish(new GameEvent.CardReplaced(removed, replacement));
         }
 
         @Override

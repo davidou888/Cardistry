@@ -65,9 +65,16 @@ final class CombatScreen {
         hpLine(p, 3, hp, enemy.maxHp(), Palette.DAMAGE, null);
 
         double mult = state.enemyAttackMultiplier();
+        double reduction = state.playerStats().get(cardistry.core.stats.StatType.DAMAGE_REDUCTION);
         String attack = "Attaque " + num(enemy.attack());
         if (mult != 1.0) {
-            attack += " ×" + num(mult) + " = " + num(enemy.attack() * mult);
+            attack += " ×" + num(mult);
+        }
+        if (reduction > 0) {
+            attack += " −" + num(reduction);
+        }
+        if (mult != 1.0 || reduction > 0) {
+            attack += " = " + num(state.enemyAttackDamage());
         }
         p.text(2, 4, attack, Palette.TEXT);
         if (mult > 1.0) {

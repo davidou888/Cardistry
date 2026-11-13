@@ -46,6 +46,8 @@ public final class TextRenderer implements Renderer {
             }
             case GameEvent.CardPlayed e -> console.println("Tu joues " + cardName(e.card()));
             case GameEvent.ItemUsed e -> console.println("Tu utilises " + Ansi.yellow(e.item().name()));
+            case GameEvent.CardReplaced e -> console.println("→ " + cardName(e.removed()) + " est remplacée par "
+                    + cardName(e.replacement()));
             case GameEvent.CardDrawn e -> {
                 console.println("Tu pioches : " + describe(e.card()));
                 console.pause(1);
@@ -121,8 +123,9 @@ public final class TextRenderer implements Renderer {
         console.println("ADVERSAIRE :");
         console.println(enemyName(enemy) + ", de type " + Ansi.element(enemy.element())
                 + ", il lui reste " + num(enemy.hp()) + " points de vie");
+        double reduction = state.playerStats().get(cardistry.core.stats.StatType.DAMAGE_REDUCTION);
         console.println("Attaque : " + num(enemy.attack()) + mult(state.enemyAttackMultiplier())
-                + " = " + num(enemy.attack() * state.enemyAttackMultiplier()));
+                + (reduction > 0 ? " − " + num(reduction) : "") + " = " + num(state.enemyAttackDamage()));
         console.pause(0.7);
         console.println();
         console.println("TERRAIN ACTUEL :");

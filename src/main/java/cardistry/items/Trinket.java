@@ -25,6 +25,7 @@ public final class Trinket implements Collectible {
     private final Set<Tag> tags;
     private final List<StatModifier> modifiers;
     private final GameHooks hooks;
+    private final java.util.Map<String, Double> cardWeights;
 
     private Trinket(Builder builder) {
         this.id = builder.id;
@@ -35,6 +36,7 @@ public final class Trinket implements Collectible {
         this.tags = Set.copyOf(builder.tags);
         this.modifiers = List.copyOf(builder.modifiers);
         this.hooks = builder.hooks;
+        this.cardWeights = java.util.Map.copyOf(builder.cardWeights);
     }
 
     public static Builder builder(String id, String name, Rarity rarity) {
@@ -56,6 +58,11 @@ public final class Trinket implements Collectible {
 
     public GameHooks hooks() {
         return hooks;
+    }
+
+    /** Facteur de fréquence de cette carte dans la pioche (1 si le trinket ne la change pas). */
+    public double cardWeight(cardistry.model.card.Card card) {
+        return cardWeights.getOrDefault(card.name(), 1.0);
     }
 
     @Override public String id() { return id; }
@@ -81,6 +88,7 @@ public final class Trinket implements Collectible {
         private final List<StatModifier> modifiers = new ArrayList<>();
         private GameHooks hooks = new GameHooks() {
         };
+        private final java.util.Map<String, Double> cardWeights = new java.util.HashMap<>();
 
         private Builder(String id, String name, Rarity rarity) {
             this.id = id;
@@ -112,6 +120,12 @@ public final class Trinket implements Collectible {
         /** Bonus en pourcentage : {@code percent(FIRE_DAMAGE, 0.25)} = +25 % dégâts feu. */
         public Builder percent(StatType stat, double percent) {
             modifiers.add(StatModifier.percent(stat, percent, sourceOf(id)));
+            return this;
+        }
+
+        /** La carte nommée {@code cardName} est {@code factor} fois plus fréquente dans la pioche. */
+        public Builder cardWeight(String cardName, double factor) {
+            cardWeights.put(cardName, factor);
             return this;
         }
 

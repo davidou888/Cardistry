@@ -24,6 +24,7 @@ class HookDispatcherTest {
         @Override public void onCardPlayed(GameEvent.CardPlayed e, EffectContext ctx) { calls.add("onCardPlayed"); }
         @Override public void onCardDrawn(GameEvent.CardDrawn e, EffectContext ctx) { calls.add("onCardDrawn"); }
         @Override public void onItemUsed(GameEvent.ItemUsed e, EffectContext ctx) { calls.add("onItemUsed"); }
+        @Override public void onCardReplaced(GameEvent.CardReplaced e, EffectContext ctx) { calls.add("onCardReplaced"); }
         @Override public void onDamageDealt(GameEvent.DamageDealt e, EffectContext ctx) { calls.add("onDamageDealt"); }
         @Override public void onHeal(GameEvent.Healed e, EffectContext ctx) { calls.add("onHeal"); }
         @Override public void onTerrainChanged(GameEvent.TerrainChanged e, EffectContext ctx) { calls.add("onTerrainChanged"); }
@@ -51,7 +52,8 @@ class HookDispatcherTest {
                 new GameEvent.CardPlayed(card),
                 new GameEvent.CardDrawn(card),
                 new GameEvent.ItemUsed(ItemRegistry.items().get(0)),
-                new GameEvent.DamageDealt(enemy, 10, 1),
+                new GameEvent.CardReplaced(card, card),
+                new GameEvent.DamageDealt(enemy, 10, 1, GameEvent.DamageDealt.Source.SPELL),
                 new GameEvent.Healed(player, 10, 1),
                 new GameEvent.TerrainChanged(terrain, terrain),
                 new GameEvent.EnemyAttacked(enemy),
@@ -63,7 +65,7 @@ class HookDispatcherTest {
 
         assertEquals(List.of(
                 "onGameStart", "onCombatStart", "onHandDealt", "onTurnStart", "onCardPlayed", "onCardDrawn",
-                "onItemUsed", "onDamageDealt", "onHeal", "onTerrainChanged", "onEnemyAttack", "onEnemyKilled",
+                "onItemUsed", "onCardReplaced", "onDamageDealt", "onHeal", "onTerrainChanged", "onEnemyAttack", "onEnemyKilled",
                 "onGameWon", "onGameLost"), recorder.calls);
     }
 }

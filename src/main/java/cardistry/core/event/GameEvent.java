@@ -29,8 +29,25 @@ public sealed interface GameEvent {
     record ItemUsed(Item item) implements GameEvent {
     }
 
-    /** {@code amount} = dégâts finaux, {@code multiplier} déjà appliqué. */
-    record DamageDealt(Combatant target, double amount, double multiplier) implements GameEvent {
+    /** Une carte de la main a été remplacée par une autre (effet). */
+    record CardReplaced(Card removed, Card replacement) implements GameEvent {
+    }
+
+    /**
+     * {@code amount} = dégâts finaux, {@code multiplier} déjà appliqué.
+     *
+     * @param source ce qui a causé les dégâts
+     */
+    record DamageDealt(Combatant target, double amount, double multiplier, Source source) implements GameEvent {
+
+        public enum Source {
+            /** Sortilège joué depuis la main. */
+            SPELL,
+            /** Effet d'objet ou de trinket. */
+            EFFECT,
+            /** Attaque de l'adversaire. */
+            ENEMY_ATTACK
+        }
     }
 
     /** {@code amount} = PV réellement rendus (multiplicateur appliqué, plafonné aux PV max). */

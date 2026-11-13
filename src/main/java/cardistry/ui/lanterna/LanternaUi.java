@@ -74,6 +74,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.GameStarted e -> seed = e.seed();
             case GameEvent.TurnStarted e -> view.log("— Tour " + e.turn() + " —", Palette.DIM);
             case GameEvent.CardPlayed e -> view.log("Tu joues " + e.card().name(), Palette.TEXT);
+            case GameEvent.CardReplaced e -> {
+                view.log(e.removed().name() + " remplacée par " + e.replacement().name(), Palette.INFO);
+                render();
+            }
             case GameEvent.ItemUsed e -> {
                 view.log("Tu utilises " + e.item().name(), Palette.INFO);
                 render();

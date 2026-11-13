@@ -32,6 +32,9 @@ public interface GameHooks {
     default void onCardDrawn(GameEvent.CardDrawn event, EffectContext ctx) {
     }
 
+    default void onCardReplaced(GameEvent.CardReplaced event, EffectContext ctx) {
+    }
+
     default void onItemUsed(GameEvent.ItemUsed event, EffectContext ctx) {
     }
 
