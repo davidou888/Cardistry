@@ -1,0 +1,48 @@
+package cardistry.ui.text;
+
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.util.Scanner;
+
+/** Terminal texte partagé par le renderer et la saisie : un seul Scanner pour toute la partie. */
+public final class Console {
+
+    private final Scanner scanner;
+    private final PrintStream out;
+    private final boolean fast;
+
+    /** @param fast si {@code true}, les pauses sont ignorées */
+    public Console(InputStream in, PrintStream out, boolean fast) {
+        this.scanner = new Scanner(in);
+        this.out = out;
+        this.fast = fast;
+    }
+
+    public void println(String line) {
+        out.println(line);
+    }
+
+    public void println() {
+        out.println();
+    }
+
+    public void print(String text) {
+        out.print(text);
+        out.flush();
+    }
+
+    public String readLine() {
+        return scanner.nextLine();
+    }
+
+    public void pause(double seconds) {
+        if (fast) {
+            return;
+        }
+        try {
+            Thread.sleep((long) (seconds * 1000));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}

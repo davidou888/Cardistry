@@ -44,6 +44,11 @@ public class CardPool {
         cards.add(new HealCard("Grande potion", NATURE, 20.0));
     }
 
+    /** Terrain sur lequel commence la partie. */
+    public static TerrainCard startingTerrain() {
+        return new TerrainCard("EPFL", FIRE);
+    }
+
     public Card draw() {
         return cards.get(random.nextInt(cards.size()));
     }
