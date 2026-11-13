@@ -1,6 +1,6 @@
 # Cardistry — Game Design
 
-> Document vivant. Les éléments marqués **[À DÉCIDER]** sont ouverts : on les tranche à deux, pas Claude Code.
+> Document vivant. Les éléments marqués **[À DÉCIDER]** sont ouverts : c'est Louis qui les tranche, pas Claude Code.
 
 ## Boucle de jeu (existant)
 - Combat tour par tour contre une suite d'adversaires (Hydre/feu, Sirène/eau, Goblin/nature).
