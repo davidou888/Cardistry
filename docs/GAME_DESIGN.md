@@ -74,9 +74,11 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Chaque **boisson** (objet tagué Boisson) donne **+1 Ivresse**. L'Ivresse retombe à 0 après chaque combat.
 - À **3 Ivresse** → malédiction **« Gueule de bois »** : −1 taille de main au prochain combat.
 - Modifiée par : Foie d'ingénieur (seuil à 5), Ptit Sat ? (+10 % dégâts par point d'Ivresse).
+- Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant et dure tout ce combat ; une seule par combat (l'Ivresse continue de monter au-delà du seuil) ; aucune pendant le dernier combat (il n'y a pas de suivant).
+- ⚠️ Équilibrage : avec 3 adversaires et 1 récompense par combat, on ne peut pas avoir 3 boissons avant le dernier combat. La Gueule de bois (et donc Foie d'ingénieur) n'a aucun effet tant que les runs ne sont pas plus longues ou que le shop n'existe pas ; Ptit Sat ? plafonne à +20 % en pratique.
 
 ### Contenu — premier jet
-Implémentés à ce jour (étape 2, tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
+Implémentés à ce jour — étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
 
 Précisions d'implémentation :
 - Les soins des objets et trinkets passent par l'efficacité des soins ; Grinder ajoute +50 % aux cartes de soin feu en plus.
@@ -84,6 +86,8 @@ Précisions d'implémentation :
 - Compréhension algébrique ne compte que les dégâts des sorts joués (pas ceux des objets ni de Plan du campus).
 - Plan du campus et les dégâts « bruts » des objets ignorent éléments et stats ; Gaz du bat Inf est traité comme un sort de l'élément tiré.
 - George ne se déclenche que sur les pioches (pas sur la main distribuée en début de combat).
+- Pichet vide : les 5 PV perdus ignorent Polycopié d'Analyse I et peuvent tuer le joueur ; si le joueur et l'adversaire meurent en même temps, c'est une défaite.
+- Ptit Sat ? : même portée que CMS (dégâts élémentaires), recalculé à chaque changement d'Ivresse.
 
 Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, hooks sur les événements actuels, dégâts / soins / pioche / terrain) ; **b** = demande une nouvelle mécanique (voir « Nouvelles mécaniques »).
 
@@ -164,7 +168,8 @@ Reste : carte de la run, shop, transitions d'écran.
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 - **[À DÉCIDER]** Diplôme EPFL : doubler s'applique-t-il aussi aux contreparties (CMS : adversaire +50 % ?) et aux effets entiers (Photocopieuse : 3 cartes ?) ?
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
-- **[À DÉCIDER]** Gueule de bois quand la main est déjà pleine au début du combat : on distribue une carte de moins ?
+- **[À DÉCIDER]** Gueule de bois : une seule par combat, et aucune pendant le dernier combat (choix provisoires) — ok ?
+- **[À DÉCIDER]** Ptit Sat ? : même portée que CMS (dégâts élémentaires) — ok ?
 
 ### Tranchées
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
@@ -175,4 +180,5 @@ Reste : carte de la run, shop, transitions d'écran.
 - ~~Slots~~ → 3 objets, 5 trinkets.
 - ~~Utiliser un objet~~ → action gratuite.
 - ~~Qu'est-ce qu'un combat~~ → un adversaire. Chaque combat commence avec une nouvelle main de 5 cartes.
+- ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
 - ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
