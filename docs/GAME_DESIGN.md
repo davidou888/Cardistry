@@ -78,7 +78,7 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - ⚠️ Équilibrage : avec 3 adversaires et 1 récompense par combat, on ne peut pas avoir 3 boissons avant le dernier combat. La Gueule de bois (et donc Foie d'ingénieur) n'a aucun effet tant que les runs ne sont pas plus longues ou que le shop n'existe pas ; Ptit Sat ? plafonne à +20 % en pratique.
 
 ### Contenu — premier jet
-Implémentés à ce jour — étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
+Implémentés à ce jour — étape 4 : Caïpirinha, Petit pétou (objets), Shot de Jäger, Moscow Mule, Raclette, Space cake, Pétou ancestral. Étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
 
 Précisions d'implémentation :
 - Les soins des objets et trinkets passent par l'efficacité des soins ; Grinder ajoute +50 % aux cartes de soin feu en plus.
@@ -139,6 +139,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 #### Nouvelles mécaniques nécessaires
 - **M1 — Ivresse** : compteur du joueur, remis à 0 à chaque fin de combat, seuil de Gueule de bois modifiable.
 - **M2 — Effets temporaires** : système générique (comme les malédictions) : délai avant déclenchement, durée en tours et/ou en déclenchements (charges), perdu ou gardé à la fin du combat, modificateurs de stats pendant l'effet, effets possibles : multiplier le prochain sort, annuler la prochaine attaque, faire sauter un tour. Affichés à l'écran avec leur durée restante.
+  - Raclette + Pétou ancestral : Raclette fait sauter *le* tour suivant ; si Pétou ancestral le faisait déjà sauter, les deux se chevauchent (pas de tour perdu en plus).
   - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Pétou ancestral fait jouer les tours impairs de chaque combat et sauter les pairs, +10 PV au début de chaque tour (joué ou sauté) ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
 - **M3 — Pioche au choix** : le jeu propose N cartes, le joueur en choisit une.
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
@@ -159,7 +160,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 
 ## Interface (terminal ASCII, Lanterna)
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
-Fait aussi : écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
+Fait aussi : effets temporaires affichés avec leur durée restante (ligne au-dessus du terrain, liste complète dans l'inventaire) ; objets et cartes homonymes (Caïpirinha, Petit pétou) distingués à l'écran (« la carte … » / « l'objet … » dans le journal, couleur d'élément pour les cartes, de rareté pour les objets) ; écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
 Reste : carte de la run, shop, transitions d'écran.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
