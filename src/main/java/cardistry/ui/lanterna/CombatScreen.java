@@ -4,6 +4,7 @@ import static cardistry.ui.Format.num;
 
 import cardistry.core.Curse;
 import cardistry.core.GameState;
+import cardistry.core.TemporaryEffect;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
@@ -45,6 +46,7 @@ final class CombatScreen {
     static void draw(Painter p, GameState state, ViewState view, long seed) {
         p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed, HELP);
         drawEnemy(p, state, view);
+        drawEffects(p, state);
         drawSprite(p, state, view);
         drawTerrainAndPlayer(p, state, view);
         p.separator(11, "Ta main " + state.hand().size() + "/" + state.handSize());
@@ -83,6 +85,60 @@ final class CombatScreen {
         } else if (mult < 1.0) {
             p.text(3 + attack.length(), 4, "(affaibli par le terrain)", Palette.HEAL);
         }
+    }
+
+    /**
+     * Ligne 5 : effets en cours avec leur durée (ceux des objets d'abord, ceux portés par un
+     * trinket ensuite). Format long si tout tient, sinon court ; au-delà, « +N ».
+     */
+    private static void drawEffects(Painter p, GameState state) {
+        List<TemporaryEffect> effects = new java.util.ArrayList<>(state.effects());
+        if (effects.isEmpty()) {
+            return;
+        }
+        effects.sort(java.util.Comparator.comparing(e -> !e.owner().isEmpty()));
+        int width = p.cols() - SPRITE_WIDTH - 3 - 2;
+        List<String> labels = effects.stream().map(TemporaryEffect::describe).toList();
+        if (String.join(" · ", labels).length() > width) {
+            labels = effects.stream().map(CombatScreen::compact).toList();
+        }
+        int col = 2;
+        for (int i = 0; i < effects.size(); i++) {
+            String label = labels.get(i);
+            int remaining = effects.size() - i - 1;
+            int room = width + 2 - col - (remaining > 0 ? 4 : 0);
+            if (label.length() > room) {
+                String more = "+" + (effects.size() - i);
+                if (i == 0) {
+                    p.text(col, 5, Painter.fit(label, Math.max(1, room)), effectColor(effects.get(i)));
+                    more = remaining > 0 ? "+" + remaining : "";
+                    col += Math.max(1, room) + 1;
+                }
+                p.text(col, 5, more, Palette.DIM);
+                return;
+            }
+            p.text(col, 5, label, effectColor(effects.get(i)));
+            col += label.length();
+            if (remaining > 0) {
+                p.text(col, 5, " · ", Palette.DIM);
+                col += 3;
+            }
+        }
+    }
+
+    /** « Space cake (dans 3) », « Space cake (2 tours) », « Shot de Jäger ». */
+    static String compact(TemporaryEffect effect) {
+        if (!effect.isActive()) {
+            return effect.name() + " (dans " + effect.delayLeft() + ")";
+        }
+        if (effect.turnsLeft() != null) {
+            return effect.name() + " (" + effect.turnsLeft() + (effect.turnsLeft() > 1 ? " tours)" : " tour)");
+        }
+        return effect.name();
+    }
+
+    private static TextColor effectColor(TemporaryEffect effect) {
+        return effect.isActive() ? Palette.INFO : Palette.DIM;
     }
 
     private static void drawSprite(Painter p, GameState state, ViewState view) {

@@ -58,6 +58,17 @@ final class ItemScreens {
             row = line(p, row, "• ", trinket);
         }
         if (state.trinkets().isEmpty()) {
+            p.text(5, row++, "aucun", Palette.DIM);
+        }
+        row++;
+        p.text(3, row++, "Effets en cours", Palette.TEXT, true);
+        for (cardistry.core.TemporaryEffect effect : state.effects()) {
+            if (row < p.rows() - 1) {
+                p.text(5, row++, Painter.fit("• " + effect.describe(), p.cols() - 7),
+                        effect.isActive() ? Palette.INFO : Palette.DIM);
+            }
+        }
+        if (state.effects().isEmpty()) {
             p.text(5, row, "aucun", Palette.DIM);
         }
     }

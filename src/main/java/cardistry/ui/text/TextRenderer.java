@@ -159,6 +159,12 @@ public final class TextRenderer implements Renderer {
         for (cardistry.core.Curse curse : state.pendingCurses()) {
             console.println(curse.displayName() + " au prochain combat");
         }
+        if (!state.effects().isEmpty()) {
+            console.println("EFFETS EN COURS :");
+            for (cardistry.core.TemporaryEffect effect : state.effects()) {
+                console.println("- " + effect.describe());
+            }
+        }
         console.println("TRINKETS (" + state.trinkets().size() + "/" + state.trinketSlots() + ") :"
                 + (state.trinkets().isEmpty() ? " aucun" : ""));
         for (Trinket trinket : state.trinkets()) {

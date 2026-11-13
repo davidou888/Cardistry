@@ -458,6 +458,47 @@ class LanternaUiTest {
         assertTrue(text.contains("Tu utilises l'objet Petit pétou"));
     }
 
+    @Test
+    void effetsEnCoursAffichesAvecLeurDuree() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of(ItemRegistry.trinket("petou-ancestral")));
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
+                new cardistry.items.LootTable(List::of));
+        for (String id : List.of("shot-de-jager", "space-cake")) {
+            engine.give(ItemRegistry.item(id));
+            engine.submit(new Action.UseItem(0));
+        }
+        ui.showStatus(state);
+        String text = dump("15-effets");
+        // Trop long en version complète : version courte, objets d'abord.
+        assertTrue(text.contains("Shot de Jäger · Space cake (dans 3) · +1"), text);
+
+        // L'inventaire liste tout, avec la durée.
+        Thread player = new Thread(() -> ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("i");
+        waitFor(() -> screen().contains("Appuie sur une touche pour revenir"));
+        String inventory = dump("16-inventaire-effets");
+        type("xqo");
+        player.join(TIMEOUT.toMillis());
+        assertTrue(inventory.contains("Shot de Jäger : prochain sort ×2"));
+        assertTrue(inventory.contains("Space cake : dans 3 tours"));
+        assertTrue(inventory.contains("Pétou ancestral : un tour sur deux, +10 PV par tour"));
+    }
+
+    @Test
+    void effetSeulEnVersionLongue() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
+                new cardistry.items.LootTable(List::of));
+        engine.give(ItemRegistry.item("shot-de-jager"));
+        engine.submit(new Action.UseItem(0));
+        ui.showStatus(state);
+        assertTrue(screen().contains("Shot de Jäger : prochain sort ×2"));
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {
