@@ -31,7 +31,8 @@ class ItemRegistryTest {
         List<String> names = ItemRegistry.all().stream().map(Collectible::name).toList();
         for (String expected : List.of("Redistribution des briquets", "Pichet de Sat", "Plante du Rolex",
                 "Polycopié d'Analyse I", "Pax", "Grinder", "Photocopieuse", "CMS", "Maté",
-                "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George")) {
+                "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George",
+                "Cafffeeeeinnnn", "Gaz du bat Inf")) {
             assertTrue(names.contains(expected), expected);
         }
     }

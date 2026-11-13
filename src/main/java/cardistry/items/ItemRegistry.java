@@ -9,6 +9,7 @@ import cardistry.core.EffectContext;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatType;
+import cardistry.model.Element;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
 import cardistry.model.card.TerrainCard;
@@ -163,7 +164,12 @@ public final class ItemRegistry {
     public static List<Item> items() {
         return List.of(
                 new Item("mate", "Maté", "+10 PV", "", COMMON, Set.of(Tag.HEAL),
-                        ctx -> ctx.healPlayer(10)));
+                        ctx -> ctx.healPlayer(10)),
+                new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),
+                        ctx -> ctx.drawCards(2)),
+                new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,
+                        Set.of(Tag.EPFL),
+                        ctx -> ctx.elementalDamage(20, ctx.rng().pick(List.of(Element.values())))));
     }
 
     /** Tous les objets et trinkets. */
