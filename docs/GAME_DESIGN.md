@@ -77,6 +77,13 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant et dure tout ce combat ; une seule par combat (l'Ivresse continue de monter au-delà du seuil) ; aucune pendant le dernier combat (il n'y a pas de suivant).
 - ⚠️ Équilibrage : avec 3 adversaires et 1 récompense par combat, on ne peut pas avoir 3 boissons avant le dernier combat. La Gueule de bois (et donc Foie d'ingénieur) n'a aucun effet tant que les runs ne sont pas plus longues ou que le shop n'existe pas ; Ptit Sat ? plafonne à +20 % en pratique.
 
+### Clopes
+- Ressource de run : **5 clopes** au début de chaque partie, conservées entre les combats, **20 maximum** (un paquet ; stat `CIGARETTE_MAX`).
+- **Fumer (F)** : action gratuite. −5 PV (ignorent Polycopié d'Analyse I, peuvent tuer), puis réduit la Gueule de bois de 1. On peut fumer sans Gueule de bois.
+- **Rouler (G)** : remplace l'action du tour (comme piocher) : +1 clope, puis l'adversaire attaque. Impossible si le paquet est plein.
+- La **Gueule de bois a une intensité** (1 par défaut = −1 taille de main). Chaque clope retire 1 d'intensité ; à 0, elle disparaît. Si elle est seulement « à venir », la clope la réduit à l'avance. Si elle est à la fois active et à venir, la clope réduit d'abord celle du combat en cours.
+- Affichage : un petit paquet ASCII en bas de l'écran, avec le nombre de clopes et les touches.
+
 ### Contenu — premier jet
 Implémentés à ce jour — étape 4 : Caïpirinha, Petit pétou (objets), Shot de Jäger, Moscow Mule, Raclette, Space cake, Pétou ancestral. Étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
 
@@ -98,7 +105,9 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Commun | Pichet de Sat | +25 % dégâts eau | Eau, EPFL | a |
 | Commun | Plante du Rolex | +25 % dégâts nature | Nature, EPFL | a |
 | Commun | Polycopié d'Analyse I | −2 dégâts à chaque attaque subie | Défense, EPFL | a |
+| Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
+| Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des −5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
 | Peu commun | Pax | +1 taille de main | Pioche, Soirée | a |
 | Peu commun | Monde Snack | +10 PV à chaque adversaire vaincu | Soin, Soirée | a |
@@ -108,6 +117,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Nature | a |
 | Rare | Foie d'ingénieur | Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
 | Rare | CMS | +50 % dégâts, mais l'adversaire aussi +25 % | EPFL | a |
+| Légendaire | Ross | Tous les soins ×2 (multiplicateur final, après tous les autres bonus de soin) ; les soins ne sont plus plafonnés par les PV max | Soin | b (M9) |
 | Légendaire | Paquet de cartes | Pioche non aléatoire : tu vois 3 cartes et en choisis une | Méta | b (M3) |
 | Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé (effet boule de neige **voulu**, voir plus bas) | EPFL | b (M4) |
 | Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse | Soirée | b (M1) |
@@ -134,7 +144,9 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 
 #### Choix assumés
 - **Diplôme EPFL** fait boule de neige avec les 9 trinkets EPFL : c'est voulu (synergies façon *The Binding of Isaac*). **[À DÉCIDER à l'étape 5]** le doublement s'applique-t-il aussi au bonus de set EPFL ?
-- Les soins restent plafonnés aux PV max, même si ça gaspille une partie des gros soins.
+- Les soins restent plafonnés aux PV max, même si ça gaspille une partie des gros soins — **sauf avec Ross**.
+- **Ross + Pétou ancestral** : +20 PV par tour sans plafond, presque invincible. Voulu (synergie façon Isaac), comme Diplôme EPFL.
+- Ross : ×2 appliqué **après** tous les autres bonus de soin (multiplicateur final, pas +100 % additif). Les PV peuvent dépasser le max (affichés en doré) ; les PV max ne bougent pas. Si on perd Ross, les PV en trop sont gardés mais les soins suivants sont de nouveau plafonnés.
 
 #### Nouvelles mécaniques nécessaires
 - **M1 — Ivresse** : compteur du joueur, remis à 0 à chaque fin de combat, seuil de Gueule de bois modifiable.
@@ -146,6 +158,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.
 - **M6 — Annulation de tour** : revenir à l'état du début du tour précédent (faisable en rejouant la seed et les actions depuis le début).
 - **M7 — Tirage avantageux** : tirer deux fois et garder le meilleur.
+- **M9 — Clopes** : ressource de run, actions Fumer / Rouler, intensité de malédiction, multiplicateur final de stat (Ross), soins non plafonnés.
 - **M8 — Combats et malédictions** : la partie est découpée en combats (un par adversaire) ; malédictions qui durent jusqu'au combat suivant (Gueule de bois).
 
 ## Shop
