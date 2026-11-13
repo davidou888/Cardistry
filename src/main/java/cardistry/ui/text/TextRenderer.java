@@ -24,6 +24,7 @@ public final class TextRenderer implements cardistry.ui.Renderer {
         switch (event) {
             case GameEvent.GameStarted e -> {
                 console.println("Welcome to GAME NAME");
+                console.println("Seed : " + e.seed());
                 console.println();
             }
             case GameEvent.TurnStarted e -> {

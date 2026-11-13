@@ -4,9 +4,9 @@ import static cardistry.model.Element.FIRE;
 import static cardistry.model.Element.NATURE;
 import static cardistry.model.Element.WATER;
 
+import cardistry.core.Rng;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Registre des cartes piochables. La pioche est infinie et avec remise ;
@@ -15,7 +15,6 @@ import java.util.Random;
 public class CardPool {
 
     private final List<Card> cards = new ArrayList<>();
-    private final Random random = new Random();
 
     public CardPool() {
         // --- Sortilèges (nom, élément, dégâts) ---
@@ -49,7 +48,7 @@ public class CardPool {
         return new TerrainCard("EPFL", FIRE);
     }
 
-    public Card draw() {
-        return cards.get(random.nextInt(cards.size()));
+    public Card draw(Rng rng) {
+        return rng.pick(cards);
     }
 }

@@ -23,11 +23,13 @@ public final class CombatEngine {
 
     private final GameState state;
     private final CardPool pool;
+    private final Rng rng;
     private final EventBus bus;
 
-    public CombatEngine(GameState state, CardPool pool, EventBus bus) {
+    public CombatEngine(GameState state, CardPool pool, Rng rng, EventBus bus) {
         this.state = state;
         this.pool = pool;
+        this.rng = rng;
         this.bus = bus;
     }
 
@@ -36,7 +38,7 @@ public final class CombatEngine {
     }
 
     public void start() {
-        bus.publish(new GameEvent.GameStarted());
+        bus.publish(new GameEvent.GameStarted(rng.seed()));
     }
 
     public void startTurn() {
@@ -89,7 +91,7 @@ public final class CombatEngine {
     }
 
     private void drawCard() {
-        Card card = pool.draw();
+        Card card = pool.draw(rng);
         state.addToHand(card);
         bus.publish(new GameEvent.CardDrawn(card));
     }

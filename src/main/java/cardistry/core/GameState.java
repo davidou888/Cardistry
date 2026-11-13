@@ -36,10 +36,10 @@ public final class GameState {
     }
 
     /** Nouvelle partie : adversaires par défaut, terrain de départ, main pleine. */
-    public static GameState newGame(CardPool pool) {
+    public static GameState newGame(CardPool pool, Rng rng) {
         List<Card> hand = new ArrayList<>();
         for (int i = 0; i < HAND_SIZE; i++) {
-            hand.add(pool.draw());
+            hand.add(pool.draw(rng));
         }
         return new GameState(new Player(), EnemyRoster.createDefault(), CardPool.startingTerrain(), hand, HAND_SIZE);
     }

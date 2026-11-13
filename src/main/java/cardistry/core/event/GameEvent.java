@@ -11,7 +11,7 @@ import cardistry.model.card.TerrainCard;
  */
 public sealed interface GameEvent {
 
-    record GameStarted() implements GameEvent {
+    record GameStarted(long seed) implements GameEvent {
     }
 
     record TurnStarted(int turn) implements GameEvent {
