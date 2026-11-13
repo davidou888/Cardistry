@@ -5,23 +5,29 @@ Version personnelle de Louis, développée en parallèle de celle de David (dép
 
 ## État actuel du code
 
-Prototype jouable (un combat contre 3 adversaires), en plein écran Lanterna. Lancement : `./play` (voir « Commandes »).
+Prototype jouable en plein écran Lanterna : 3 combats (un par adversaire), nouvelle main de 5 cartes par combat, récompense (objet ou trinket, 1 parmi 3) après chaque adversaire vaincu. Lancement : `./play` (voir « Commandes »).
 
 - `cardistry.Main` — assemble tout ; options `--seed N`, `--fast`, `--no-ui`
-- `core/` — `GameState`, `CombatEngine` (règles, aucun affichage), `Action`, `Rng`
-- `core/event/` — `GameEvent` (records scellés), `EventBus`, `GameHooks` + `HookDispatcher` (prêts, aucun trinket encore)
-- `core/stats/` — `Stats`, `StatModifier` (plats + pourcentages qui s'additionnent), `StatType`. Branchées : PV max (PV de départ + plafond des soins), taille de main, multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
+- `core/` — `GameState` (dont l'inventaire), `CombatEngine` (règles, récompenses, aucun affichage), `Action` (jouer, piocher, utiliser un objet), `ActionResult`, `RewardChoice`, `EffectContext` (ce que les effets peuvent faire), `Rng`
+- `core/event/` — `GameEvent` (records scellés), `EventBus` (en file : un événement publié en réaction est livré après l'événement en cours), `GameHooks` (reçoivent un `EffectContext`) + `HookDispatcher`. Le moteur transmet chaque événement aux hooks des trinkets équipés.
+- `core/stats/` — `Stats`, `StatModifier` (plats + pourcentages qui s'additionnent), `StatType`. Branchées : PV max (PV de départ + plafond des soins), taille de main, emplacements de trinkets (5) et d'objets (3), multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
 - `model/` — `Element`, `ElementRules` (**toutes** les tables de multiplicateurs), `Player`/`Enemy`, `EnemyRoster`, `card/` (`Card` scellée, `CardPool` = registre ; la pioche renvoie des copies)
-- `ui/` — interfaces `Renderer`/`Input`, `GameLoop`, `Format`, `QuitGameException`
-  - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
+- `items/` — `Rarity`, `Tag`, `Collectible` (scellée : `Item` consommable, `Trinket` passif = modificateurs de stats + hooks, construit par builder), `ItemRegistry` (**registre de tout le contenu**), `LootTable` (tirage pondéré par rareté, seedé)
+- `ui/` — interfaces `Renderer`/`Input`, `GameLoop`, `Format`, `ItemKeys` (A/Z/E…), `QuitGameException`
+  - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `src/main/resources/sprites/<nom-sans-accents>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
 - Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` pour relire la mise en page.
-- Pas encore créés : `items/`, `run/`.
+- Pas encore créés : `run/`.
+
+### Ajouter un objet ou un trinket
+1. Une entrée dans `ItemRegistry` (nom **exactement** comme dans GAME_DESIGN.md). Trinket : `Trinket.builder(id, nom, rareté).description(…).tags(…)` puis `.percent(stat, x)` / `.flat(stat, x)` pour les stats, `.hooks(new GameHooks() { … })` pour réagir aux événements. Objet : `new Item(…, ctx -> …)`.
+2. Si l'effet a besoin d'une action que `EffectContext` n'offre pas, l'y ajouter (elle doit publier l'événement correspondant).
+3. Un test par effet chiffré.
 
 ### Dettes restantes
 - Pioche infinie avec remise (pas de vrai deck/défausse), gardée volontairement pour l'instant.
-- `CardPool` (model) dépend de `core.Rng`.
+- `CardPool` (model) dépend de `core.Rng` ; `core` et `items` dépendent l'un de l'autre (inventaire dans `GameState`, effets via `EffectContext`).
 
 ## Architecture cible
 

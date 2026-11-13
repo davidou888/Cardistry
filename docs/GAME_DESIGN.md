@@ -76,6 +76,8 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Modifiée par : Foie d'ingénieur (seuil à 5), Ptit Sat ? (+10 % dégâts par point d'Ivresse).
 
 ### Contenu — premier jet
+Implémentés à ce jour : **Maté**, **Redistribution des briquets** (étape 1). Le reste suit l'ordre de « Nouvelles mécaniques ».
+
 Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, hooks sur les événements actuels, dégâts / soins / pioche / terrain) ; **b** = demande une nouvelle mécanique (voir « Nouvelles mécaniques »).
 
 #### Trinkets
@@ -141,7 +143,8 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 
 ## Interface (terminal ASCII, Lanterna)
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
-Reste : carte de la run, shop, récompenses, affichage des trinkets, transitions d'écran.
+Fait aussi : écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec A/Z/E (action gratuite), trinkets affichés en combat.
+Reste : carte de la run, shop, transitions d'écran.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
