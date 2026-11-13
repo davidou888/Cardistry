@@ -10,13 +10,13 @@ Prototype jouable (un combat contre 3 adversaires), migré sur Gradle. Lancement
 - `cardistry.Main` — assemble tout ; options `--seed N`, `--fast`
 - `core/` — `GameState`, `CombatEngine` (règles, aucun affichage), `Action`, `Rng`
 - `core/event/` — `GameEvent` (records scellés), `EventBus`, `GameHooks` + `HookDispatcher` (prêts, aucun trinket encore)
-- `core/stats/` — `Stats`, `StatModifier`, `StatType`. Branchées : taille de main, multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
+- `core/stats/` — `Stats`, `StatModifier` (plats + pourcentages qui s'additionnent), `StatType`. Branchées : PV max (PV de départ + plafond des soins), taille de main, multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
 - `model/` — `Element`, `ElementRules` (**toutes** les tables de multiplicateurs), `Player`/`Enemy`, `EnemyRoster`, `card/` (`Card` scellée, `CardPool` = registre ; la pioche renvoie des copies)
 - `ui/` — interfaces `Renderer`/`Input`, `GameLoop` ; `ui/text/` = rendu texte provisoire (en attendant Lanterna)
 - Pas encore créés : `items/`, `run/`, Lanterna.
 
 ### Dettes restantes
-- Pioche infinie avec remise (pas de vrai deck/défausse) ; soins sans plafond de PV. Voir « Questions ouvertes » dans `docs/GAME_DESIGN.md`.
+- Pioche infinie avec remise (pas de vrai deck/défausse), gardée volontairement pour l'instant.
 - `CardPool` (model) dépend de `core.Rng`.
 
 ## Architecture cible

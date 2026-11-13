@@ -113,7 +113,8 @@ public final class CombatEngine {
                 Player player = state.player();
                 double mult = ElementRules.healMultiplier(heal.element(), state.terrain().element())
                         * state.playerStats().get(StatType.HEAL_EFFICIENCY);
-                double amount = heal.amount() * mult;
+                double missing = Math.max(0, state.maxHp() - player.hp());
+                double amount = Math.min(heal.amount() * mult, missing);
                 player.heal(amount);
                 bus.publish(new GameEvent.Healed(player, amount, mult));
             }

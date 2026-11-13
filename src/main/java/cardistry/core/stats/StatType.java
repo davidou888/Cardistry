@@ -5,11 +5,12 @@ import cardistry.model.Element;
 /**
  * Stats modifiables du joueur, avec leur valeur de base.
  *
- * <p>Branchées dans le moteur : {@link #HAND_SIZE}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
+ * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
  * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}. Les autres sont déclarées pour les objets et
  * trinkets à venir, mais pas encore lues par le moteur.
  */
 public enum StatType {
+    /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
     MAX_HP(100),
     HAND_SIZE(7),
     CARDS_PER_DRAW(1),

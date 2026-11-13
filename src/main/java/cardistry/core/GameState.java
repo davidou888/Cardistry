@@ -42,7 +42,7 @@ public final class GameState {
         for (int i = 0; i < stats.getInt(StatType.HAND_SIZE); i++) {
             hand.add(pool.draw(rng));
         }
-        return new GameState(new Player(), EnemyRoster.createDefault(), CardPool.startingTerrain(), hand, stats);
+        return new GameState(new Player(stats.get(StatType.MAX_HP)), EnemyRoster.createDefault(), CardPool.startingTerrain(), hand, stats);
     }
 
     public Player player() {
@@ -69,6 +69,11 @@ public final class GameState {
     /** Taille maximale de la main (stat {@link StatType#HAND_SIZE}). */
     public int handSize() {
         return playerStats.getInt(StatType.HAND_SIZE);
+    }
+
+    /** PV max du joueur (stat {@link StatType#MAX_HP}) : les soins ne vont pas au-delà. */
+    public double maxHp() {
+        return playerStats.get(StatType.MAX_HP);
     }
 
     /** Stats du joueur : c'est ici que trinkets et objets ajouteront leurs modificateurs. */

@@ -91,7 +91,7 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println(SEPARATOR + " Tour " + state.turn());
         console.println("JOUEUR :");
-        console.println("Tu as " + num(state.player().hp()) + " points de vie");
+        console.println("Tu as " + num(state.player().hp()) + "/" + num(state.maxHp()) + " points de vie");
         console.pause(1);
         console.println();
         console.println("ADVERSAIRE :");

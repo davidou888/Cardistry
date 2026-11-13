@@ -40,7 +40,7 @@ class CombatEngineTest {
     private void setUp(TerrainCard terrain, List<Card> hand, Enemy... enemies) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = new GameState(new Player(), List.of(enemies), terrain, hand, new Stats());
+        state = new GameState(new Player(100), List.of(enemies), terrain, hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(42), bus);
     }
 
@@ -85,6 +85,8 @@ class CombatEngineTest {
         GameState a = GameState.newGame(new CardPool(), new Rng(5));
         GameState b = GameState.newGame(new CardPool(), new Rng(5));
         assertEquals(HAND_SIZE, a.hand().size());
+        assertEquals(100, a.player().hp(), DELTA);
+        assertEquals(100, a.maxHp(), DELTA);
         assertEquals(a.hand().stream().map(Card::name).toList(), b.hand().stream().map(Card::name).toList());
         assertEquals("Hydre", a.currentEnemy().name());
         assertEquals(1.25, a.enemyAttackMultiplier(), DELTA); // EPFL (feu) contre Hydre (feu)
@@ -127,11 +129,35 @@ class CombatEngineTest {
         HealCard heal = new HealCard("Petit pétou", FIRE, 10);
         setUp(new TerrainCard("EPFL", FIRE), List.of(heal), hydra);
 
+        state.player().takeDamage(50);
+
         engine.submit(new Action.PlayCard(0));
 
         assertTrue(events.contains(new GameEvent.Healed(state.player(), 15, 1.5)));
-        // 100 + 15 de soin - 5 × 1.25 d'attaque (Hydre sur terrain feu)
-        assertEquals(100 + 15 - 6.25, state.player().hp(), DELTA);
+        // 50 + 15 de soin - 5 × 1.25 d'attaque (Hydre sur terrain feu)
+        assertEquals(50 + 15 - 6.25, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void soinPlafonneAuxPvMax() {
+        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Petit pétou", FIRE, 10)), hydra());
+        state.player().takeDamage(4);
+
+        engine.submit(new Action.PlayCard(0));
+
+        assertEquals(new GameEvent.Healed(state.player(), 4, 1.5), events.get(1));
+        assertEquals(100 - 6.25, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void pvMaxAmeliorablesParStat() {
+        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Petit pétou", FIRE, 10)), hydra());
+        state.playerStats().add(StatModifier.flat(StatType.MAX_HP, 20, "amulette"));
+
+        engine.submit(new Action.PlayCard(0));
+
+        assertEquals(120, state.maxHp(), DELTA);
+        assertEquals(new GameEvent.Healed(state.player(), 15, 1.5), events.get(1));
     }
 
     @Test
@@ -303,6 +329,7 @@ class CombatEngineTest {
     @Test
     void efficaciteDesSoins() {
         setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Potion", NATURE, 10)), hydra());
+        state.player().takeDamage(50);
         state.playerStats().add(StatModifier.percent(StatType.HEAL_EFFICIENCY, 1, "test"));
 
         engine.submit(new Action.PlayCard(0));

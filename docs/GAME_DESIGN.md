@@ -48,7 +48,7 @@ Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
 | Exemple | Fiole de feu : 20 dégâts feu | Briquet : +25 % dégâts feu |
 
 ### Effets sur les stats
-Stats modifiables : PV max, taille de main, cartes piochées, or gagné, multiplicateur par élément, efficacité des soins, réduction de dégâts. **[À DÉCIDER]** ajouter crit / esquive ?
+Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, or gagné, multiplicateur par élément, efficacité des soins, réduction de dégâts. **[À DÉCIDER]** ajouter crit / esquive ?
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
@@ -85,10 +85,11 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
-- Les soins n'ont pas de plafond : les PV peuvent dépasser 100. Faut-il plafonner aux PV max ?
-- Pioche infinie avec remise (les doublons du registre servent de poids) : voir le passage à un vrai deck dans « Structure d'une run ».
+- **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 
 ### Tranchées
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
 - ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.
 - ~~Cumul des multiplicateurs de stats~~ → ils s'additionnent.
+- ~~Soins sans plafond~~ → les soins sont plafonnés aux PV max, que des objets/trinkets peuvent augmenter.
+- ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).

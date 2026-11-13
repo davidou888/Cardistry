@@ -27,7 +27,7 @@ public sealed interface GameEvent {
     record DamageDealt(Combatant target, double amount, double multiplier) implements GameEvent {
     }
 
-    /** {@code amount} = PV rendus finaux, {@code multiplier} déjà appliqué. */
+    /** {@code amount} = PV réellement rendus (multiplicateur appliqué, plafonné aux PV max). */
     record Healed(Combatant target, double amount, double multiplier) implements GameEvent {
     }
 
