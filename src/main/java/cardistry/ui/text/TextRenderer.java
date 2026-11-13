@@ -42,6 +42,7 @@ public final class TextRenderer implements Renderer {
                 }
             }
             case GameEvent.CardPlayed e -> console.println("Tu joues " + cardName(e.card()));
+            case GameEvent.ItemUsed e -> console.println("Tu utilises " + Ansi.yellow(e.item().name()));
             case GameEvent.CardDrawn e -> {
                 console.println("Tu pioches : " + describe(e.card()));
                 console.pause(1);
@@ -78,6 +79,7 @@ public final class TextRenderer implements Renderer {
                 case INVALID_CHOICE -> "Choisis un nombre entre 0 et " + handSize;
                 case HAND_FULL -> "Ta main est pleine";
                 case EMPTY_SLOT -> "Ce slot est vide, choisis une carte";
+                case NO_ITEM -> "Pas d'objet à cet emplacement";
             });
             case GameEvent.GameWon e -> {
                 console.println();

@@ -1,5 +1,6 @@
 package cardistry.core.event;
 
+import cardistry.items.Item;
 import cardistry.model.Combatant;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
@@ -22,6 +23,9 @@ public sealed interface GameEvent {
     }
 
     record CardDrawn(Card card) implements GameEvent {
+    }
+
+    record ItemUsed(Item item) implements GameEvent {
     }
 
     /** {@code amount} = dégâts finaux, {@code multiplier} déjà appliqué. */
@@ -67,7 +71,9 @@ public sealed interface GameEvent {
             /** Pioche impossible : main pleine. */
             HAND_FULL,
             /** Le slot choisi ne contient pas de carte. */
-            EMPTY_SLOT
+            EMPTY_SLOT,
+            /** Pas d'objet à cet emplacement. */
+            NO_ITEM
         }
     }
 

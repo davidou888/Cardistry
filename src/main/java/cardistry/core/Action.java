@@ -10,4 +10,8 @@ public sealed interface Action {
     /** Piocher une carte. */
     record DrawCard() implements Action {
     }
+
+    /** Utiliser l'objet à l'index {@code slot} de l'inventaire : action gratuite. */
+    record UseItem(int slot) implements Action {
+    }
 }

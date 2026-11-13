@@ -117,7 +117,7 @@ class CombatEngineTest {
         SpellCard jet = new SpellCard("Jet d'eau", WATER, 10);
         setUp(neutralTerrainFor(hydra), List.of(jet), hydra);
 
-        assertTrue(engine.submit(new Action.PlayCard(0)));
+        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.PlayCard(0)));
 
         assertEquals(5, hydra.hp(), DELTA);
         assertEquals(new GameEvent.CardPlayed(jet), events.get(0));
@@ -210,7 +210,7 @@ class CombatEngineTest {
     void piocherAjouteUneCarteEtLAdversaireAttaque() {
         setUp(new TerrainCard("EPFL", FIRE), List.of(), hydra());
 
-        assertTrue(engine.submit(new Action.DrawCard()));
+        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.DrawCard()));
 
         assertEquals(1, state.hand().size());
         assertEquals(new GameEvent.CardDrawn(state.hand().get(0)), events.get(0));
@@ -228,7 +228,7 @@ class CombatEngineTest {
         }
         setUp(new TerrainCard("EPFL", FIRE), fullHand, hydra());
 
-        assertFalse(engine.submit(new Action.DrawCard()));
+        assertEquals(ActionResult.REJECTED, engine.submit(new Action.DrawCard()));
 
         assertEquals(List.of(new GameEvent.ActionRejected(Reason.HAND_FULL)), events);
         assertEquals(HAND_SIZE, state.hand().size());
@@ -239,8 +239,8 @@ class CombatEngineTest {
     void slotHorsDeLaMainEstRefuse() {
         setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("A", FIRE)), hydra());
 
-        assertFalse(engine.submit(new Action.PlayCard(-1)));
-        assertFalse(engine.submit(new Action.PlayCard(HAND_SIZE)));
+        assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(-1)));
+        assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(HAND_SIZE)));
 
         assertEquals(List.of(
                 new GameEvent.ActionRejected(Reason.INVALID_CHOICE),
@@ -251,7 +251,7 @@ class CombatEngineTest {
     void slotVideEstRefuse() {
         setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("A", FIRE)), hydra());
 
-        assertFalse(engine.submit(new Action.PlayCard(1)));
+        assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(1)));
 
         assertEquals(List.of(new GameEvent.ActionRejected(Reason.EMPTY_SLOT)), events);
         assertEquals(1, state.hand().size());
@@ -322,7 +322,7 @@ class CombatEngineTest {
         int turns = 0;
         while (!engine.isOver()) {
             engine.startTurn();
-            assertTrue(engine.submit(new Action.PlayCard(0)));
+            assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.PlayCard(0)));
             turns++;
         }
 
@@ -370,7 +370,7 @@ class CombatEngineTest {
         state.playerStats().add(StatModifier.flat(StatType.HAND_SIZE, 1, "sac"));
 
         assertEquals(HAND_SIZE + 1, state.handSize());
-        assertTrue(engine.submit(new Action.DrawCard()));
+        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.DrawCard()));
         assertEquals(HAND_SIZE + 1, state.hand().size());
     }
 }

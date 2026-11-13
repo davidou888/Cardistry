@@ -1,5 +1,6 @@
 package cardistry.ui;
 
+import cardistry.core.ActionResult;
 import cardistry.core.CombatEngine;
 import cardistry.core.GameState;
 
@@ -20,8 +21,11 @@ public final class GameLoop {
             renderer.showStatus(state);
             input.waitForContinue();
             renderer.showHand(state);
-            while (!engine.submit(input.nextAction(state))) {
-                // action refusée : le renderer a affiché pourquoi, on redemande
+            // Action refusée ou gratuite (objet) : on redemande jusqu'à la fin du tour.
+            while (engine.submit(input.nextAction(state)) != ActionResult.TURN_ENDED) {
+                if (engine.isOver()) {
+                    break;
+                }
             }
         }
         renderer.showGameOver(state);

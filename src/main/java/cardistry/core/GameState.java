@@ -2,6 +2,8 @@ package cardistry.core;
 
 import cardistry.core.stats.StatType;
 import cardistry.core.stats.Stats;
+import cardistry.items.Item;
+import cardistry.items.Trinket;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.EnemyRoster;
@@ -29,6 +31,8 @@ public final class GameState {
     private final Stats playerStats;
     private int turn = 0;
     private int combatTurn = 0;
+    private final List<Trinket> trinkets = new ArrayList<>();
+    private final List<Item> items = new ArrayList<>();
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
         if (enemies.isEmpty()) {
@@ -82,6 +86,30 @@ public final class GameState {
     /** Stats du joueur : c'est ici que trinkets et objets ajouteront leurs modificateurs. */
     public Stats playerStats() {
         return playerStats;
+    }
+
+    // --- Inventaire ---
+
+    /** Trinkets équipés (vue non modifiable). */
+    public List<Trinket> trinkets() {
+        return Collections.unmodifiableList(trinkets);
+    }
+
+    /** Objets en inventaire, dans l'ordre des emplacements (vue non modifiable). */
+    public List<Item> items() {
+        return Collections.unmodifiableList(items);
+    }
+
+    public int trinketSlots() {
+        return playerStats.getInt(StatType.TRINKET_SLOTS);
+    }
+
+    public int itemSlots() {
+        return playerStats.getInt(StatType.ITEM_SLOTS);
+    }
+
+    public boolean hasTrinket(String id) {
+        return trinkets.stream().anyMatch(t -> t.id().equals(id));
     }
 
     /** Nombre total de tours joués dans la partie. */
@@ -157,5 +185,32 @@ public final class GameState {
 
     void resetCombatTurn() {
         combatTurn = 0;
+    }
+
+    /** Équipe un trinket et applique ses modificateurs. */
+    void equipTrinket(Trinket trinket) {
+        if (trinkets.size() >= trinketSlots()) {
+            throw new IllegalStateException("Plus d'emplacement de trinket");
+        }
+        trinkets.add(trinket);
+        trinket.modifiers().forEach(playerStats::add);
+    }
+
+    /** Retire un trinket et ses modificateurs. */
+    Trinket unequipTrinket(int slot) {
+        Trinket trinket = trinkets.remove(slot);
+        playerStats.removeBySource(trinket.modifierSource());
+        return trinket;
+    }
+
+    void addItem(Item item) {
+        if (items.size() >= itemSlots()) {
+            throw new IllegalStateException("Plus d'emplacement d'objet");
+        }
+        items.add(item);
+    }
+
+    Item removeItem(int slot) {
+        return items.remove(slot);
     }
 }

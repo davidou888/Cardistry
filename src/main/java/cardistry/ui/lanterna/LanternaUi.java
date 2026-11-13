@@ -67,6 +67,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.GameStarted e -> seed = e.seed();
             case GameEvent.TurnStarted e -> view.log("— Tour " + e.turn() + " —", Palette.DIM);
             case GameEvent.CardPlayed e -> view.log("Tu joues " + e.card().name(), Palette.TEXT);
+            case GameEvent.ItemUsed e -> {
+                view.log("Tu utilises " + e.item().name(), Palette.INFO);
+                render();
+            }
             case GameEvent.CardDrawn e -> {
                 view.log("Tu pioches " + e.card().name(), Palette.INFO);
                 animateDraw();
@@ -111,6 +115,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case INVALID_CHOICE -> "Pas de carte à ce numéro.";
                     case HAND_FULL -> "Ta main est pleine : joue une carte.";
                     case EMPTY_SLOT -> "Cet emplacement est vide.";
+                    case NO_ITEM -> "Pas d'objet à cet emplacement.";
                 }, Palette.WARNING);
                 render();
             }
