@@ -18,7 +18,7 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 application {
-    mainClass = "Magic"
+    mainClass = "cardistry.Main"
 }
 
 tasks.named<JavaExec>("run") {
