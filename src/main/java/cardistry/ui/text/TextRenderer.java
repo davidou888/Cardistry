@@ -155,7 +155,12 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println(SEPARATOR + " Tour " + state.turn());
         console.println("JOUEUR :");
-        console.println("Tu as " + num(state.player().hp()) + "/" + num(state.maxHp()) + " points de vie");
+        double hp = state.player().hp();
+        console.println("Tu as " + (hp > state.maxHp() ? Ansi.yellow(num(hp)) : num(hp)) + "/" + num(state.maxHp())
+                + " points de vie" + (hp > state.maxHp() ? " (" + Ansi.yellow("+" + num(hp - state.maxHp())) + " au-dessus du max)" : ""));
+        String gauge = state.trinkets().stream().flatMap(t -> t.gauge().stream()).findFirst()
+                .map(g -> " · " + g.label() + " " + g.value() + "/" + g.max()).orElse("");
+        console.println("Clopes : " + state.cigarettes() + "/" + state.cigaretteMax() + gauge);
         console.pause(1);
         console.println();
         console.println("ADVERSAIRE :");
@@ -207,6 +212,7 @@ public final class TextRenderer implements Renderer {
         }
         console.println();
         console.println("[0] Piocher une carte");
+        console.println("[f] Fumer une clope (gratuit)   [g] Rouler une clope");
         for (int i = 0; i < state.items().size(); i++) {
             console.println("[" + ItemKeys.key(i) + "] Utiliser l'" + describe(state.items().get(i)).replaceFirst("^Objet", "objet")
                     + " (gratuit)");

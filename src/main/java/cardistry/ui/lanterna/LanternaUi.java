@@ -167,6 +167,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.CigaretteSmoked e -> {
                 if (e.transformedIntoPetitPetou()) {
                     view.log("La clope se transforme en Petit pétou !", Palette.ACCENT);
+                    for (int i = 0; i < 4; i++) {
+                        view.floating.clear();
+                        view.floating.add(new ViewState.Floating("Petit pétou !", Palette.ACCENT, false, i / 2));
+                        frame();
+                    }
+                    view.resetEffects();
                 } else {
                     view.log("Tu fumes une clope", Palette.TEXT);
                 }

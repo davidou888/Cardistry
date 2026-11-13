@@ -73,6 +73,8 @@ final class MenuScreens {
         row = paragraph(p, 5, row, "• Soin sur un terrain de son élément ×" + num(ElementRules.HEAL_SAME_TERRAIN)
                 + " ; sur un terrain qui le bat ×" + num(ElementRules.HEAL_HOSTILE_TERRAIN) + ".", false);
         row++;
+        row = paragraph(p, 3, row, "Clopes : F fume (gratuit, −5 PV, réduit la Gueule de bois), G roule (+1, fin du tour).",
+                false);
         paragraph(p, 3, row, "En combat, le bas de l'écran montre l'effet réel de la carte sélectionnée.", false);
     }
 

@@ -53,7 +53,8 @@ final class CombatScreen {
         drawHand(p, state, view);
         drawDetail(p, state, view);
         p.separator(20, "Journal");
-        drawLog(p, view);
+        int packCol = drawPack(p, state);
+        drawLog(p, view, packCol);
         drawFloating(p, view);
     }
 
@@ -245,10 +246,15 @@ final class CombatScreen {
         }
     }
 
+    /** Barre et « PV/max » ; au-dessus du max (Ross), barre et PV en doré. */
     private static void hpLine(Painter p, int row, double hp, double max, TextColor barColor, TextColor flash) {
+        boolean overMax = hp > max;
         p.text(2, row, "PV", Palette.DIM);
-        p.text(6, row, Painter.bar(hp, max, BAR_WIDTH), flash != null ? flash : barColor, flash != null);
-        p.text(7 + BAR_WIDTH, row, num(Math.max(0, hp)) + "/" + num(max), Palette.TEXT);
+        TextColor color = flash != null ? flash : overMax ? Palette.ACCENT : barColor;
+        p.text(6, row, Painter.bar(hp, max, BAR_WIDTH), color, flash != null || overMax);
+        String current = num(Math.max(0, hp));
+        p.text(7 + BAR_WIDTH, row, current, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
+        p.text(7 + BAR_WIDTH + current.length(), row, "/" + num(max), Palette.TEXT);
     }
 
     // --- Main ---
@@ -343,7 +349,38 @@ final class CombatScreen {
 
     // --- Journal et effets ---
 
-    private static void drawLog(Painter p, ViewState view) {
+    /**
+     * Paquet de clopes en bas à droite (2 lignes) :
+     * <pre>
+     *  ┌╥╥╥──┐ 12/20 clopes   Honoré [###..]
+     *  │CLOPE│ F fumer · G rouler
+     * </pre>
+     *
+     * @return colonne où commence le paquet (le journal s'arrête avant)
+     */
+    static int drawPack(Painter p, GameState state) {
+        int count = state.cigarettes();
+        int max = Math.max(1, state.cigaretteMax());
+        int sticks = count == 0 ? 0 : (int) Math.ceil(5.0 * count / max);
+        String top = "┌" + "╥".repeat(sticks) + "─".repeat(5 - sticks) + "┐";
+        String info = count + "/" + max + " clopes";
+        String gauge = state.trinkets().stream().flatMap(t -> t.gauge().stream()).findFirst()
+                .map(g -> "   " + g.label() + " [" + "#".repeat(g.value()) + ".".repeat(g.max() - g.value()) + "]")
+                .orElse("");
+        int width = Math.max(top.length() + 1 + info.length() + gauge.length(), top.length() + 1 + 18);
+        int col = p.cols() - 2 - width;
+        int row = p.rows() - 3;
+        p.text(col, row, top, count == 0 ? Palette.DIM : Palette.TEXT);
+        p.text(col + top.length() + 1, row, info, count == 0 ? Palette.WARNING : Palette.TEXT, true);
+        if (!gauge.isEmpty()) {
+            p.text(col + top.length() + 1 + info.length(), row, gauge, Palette.ACCENT);
+        }
+        p.text(col, row + 1, "│CLOPE│", Palette.TEXT);
+        p.text(col + top.length() + 1, row + 1, "F fumer · G rouler", Palette.DIM);
+        return col;
+    }
+
+    private static void drawLog(Painter p, ViewState view, int packCol) {
         int first = 21;
         int last = p.rows() - 2;
         int capacity = last - first + 1;
@@ -352,8 +389,9 @@ final class CombatScreen {
         for (int i = start; i < log.size(); i++) {
             ViewState.LogLine line = log.get(i);
             boolean latest = i == log.size() - 1;
-            p.text(2, first + (i - start), Painter.fit(line.text(), p.cols() - 4),
-                    latest ? line.color() : Palette.DIM, latest);
+            int row = first + (i - start);
+            int width = row >= p.rows() - 3 ? packCol - 4 : p.cols() - 4; // le paquet occupe les 2 dernières lignes
+            p.text(2, row, Painter.fit(line.text(), Math.max(1, width)), latest ? line.color() : Palette.DIM, latest);
         }
     }
 

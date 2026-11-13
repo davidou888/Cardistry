@@ -499,6 +499,35 @@ class LanternaUiTest {
         assertTrue(screen().contains("Shot de Jäger : prochain sort ×2"));
     }
 
+    @Test
+    void paquetDeClopesJaugeHonoreEtPvAuDessusDuMax() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(ItemRegistry.item("spritz")),
+                List.of(ItemRegistry.trinket("honore"), ItemRegistry.trinket("ross")));
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
+                new cardistry.items.LootTable(List::of));
+        engine.submit(new Action.UseItem(0));   // Spritz ×2 sans plafond → 160 PV
+        engine.startTurn();
+        engine.startTurn();                      // Honoré 2/5
+        engine.submit(new Action.Smoke());       // 4 clopes, −5 PV
+        ui.showStatus(state);
+        String text = dump("17-clopes");
+        assertTrue(text.contains("4/20 clopes"), text);
+        assertTrue(text.contains("Honoré [##...]"), text);
+        assertTrue(text.contains("F fumer · G rouler"));
+        assertTrue(text.contains("155/100"), text);
+        assertTrue(text.contains("┌╥──"), "1 bâton sur 5 pour 4 clopes sur 20");
+    }
+
+    @Test
+    void toucheFFumeEtGRoule() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        type("fg");
+        assertEquals(new Action.Smoke(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        assertEquals(new Action.RollCigarette(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {
