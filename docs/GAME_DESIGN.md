@@ -3,9 +3,10 @@
 > Document vivant. Les éléments marqués **[À DÉCIDER]** sont ouverts : c'est Louis qui les tranche, pas Claude Code.
 
 ## Boucle de jeu (existant)
-- Combat tour par tour contre une suite d'adversaires (Hydre/feu, Sirène/eau, Goblin/nature).
-- À chaque tour : jouer une carte **ou** piocher. Main de 7 max. Puis l'adversaire attaque.
-- Quand un adversaire meurt, le suivant arrive mais **n'attaque pas** ce tour-là.
+- Une partie = une suite de **combats** ; **un combat = un adversaire** (Hydre/feu, Sirène/eau, Goblin/nature).
+- Chaque combat commence avec une **nouvelle main de 5 cartes** (la main précédente est défaussée). Taille max : 7.
+- À chaque tour : jouer une carte **ou** piocher, puis l'adversaire attaque. Utiliser un objet est une **action gratuite** (pas de fin de tour, pas d'attaque adverse), possible avant de jouer ou piocher.
+- Quand un adversaire meurt : choix d'**1 récompense parmi 3** (objet ou trinket), puis le combat suivant commence. Le nouvel adversaire **n'attaque pas** ce tour-là.
 - Cartes : **Sortilège** (dégâts), **Heal** (soin, boosté dans le terrain du même type), **Terrain** (change le terrain, modifie l'attaque adverse).
 - Éléments : **Feu > Nature > Eau > Feu**.
 
@@ -44,7 +45,9 @@ Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
 | | Objet | Trinket |
 |---|---|---|
 | Nature | Consommable, usage unique | Passif, actif toute la run |
-| Slots | **[À DÉCIDER]** ex. 3 | **[À DÉCIDER]** ex. 5 (+1 avec Diplôme EPFL) |
+| Slots | 3 | 5 (+1 avec Diplôme EPFL) |
+| Inventaire plein | le joueur remplace un objet existant ou refuse la récompense | idem |
+| Obtention (en attendant run et shop) | récompense après chaque adversaire vaincu : 1 au choix parmi 3, tirés selon les poids de rareté, sans trinket déjà possédé | idem |
 | Exemple | Maté : +10 PV | Redistribution des briquets : +25 % dégâts feu |
 
 ### Effets sur les stats
@@ -86,33 +89,35 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
 | Peu commun | Pax | +1 taille de main | Pioche, Soirée | a |
 | Peu commun | Monde Snack | +10 PV à chaque adversaire vaincu | Soin, Soirée | a |
-| Peu commun | Grinder | Soins de type feu +50 % | Soin, Soirée | a |
+| Peu commun | Grinder | Soins de type feu +50 % ; Petit pétou deux fois plus fréquent dans la pioche | Soin, Soirée | a |
 | Peu commun | Plan du campus | Jouer un terrain inflige aussi 5 dégâts | Terrain, EPFL | a |
 | Rare | Photocopieuse | Piocher donne 2 cartes | Pioche, EPFL | a |
 | Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Nature | a |
 | Rare | Foie d'ingénieur | Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
 | Rare | CMS | +50 % dégâts, mais l'adversaire aussi +25 % | EPFL | a |
 | Légendaire | Paquet de cartes | Pioche non aléatoire : tu vois 3 cartes et en choisis une | Méta | b (M3) |
-| Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé | EPFL | b (M4) |
+| Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé (effet boule de neige **voulu**, voir plus bas) | EPFL | b (M4) |
 | Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse | Soirée | b (M1) |
-| Légendaire | Pétou ancestral | +8 PV par tour, mais toi et l'adversaire ne jouez qu'un tour sur deux | Soirée, Feu | b (M2) |
+| Légendaire | Pétou ancestral | +10 PV par tour, mais tu ne joues qu'un tour sur deux (l'adversaire attaque normalement) | Soirée, Feu | b (M2) |
 | Légendaire | George | *« À l'origine de la redistribution des biens communs. »* À chaque carte piochée, une autre carte de ta main (tirée au hasard) est remplacée par une carte aléatoire du pool | Soirée | a |
 | Secret | 3 trinkets | voir `docs/SECRETS.md` (spoilers) | Méta | b (M5, M6, M7) |
 
 #### Objets (consommables)
-Raretés marquées *(proposée)* : à valider.
-
 | Rareté | Nom | Effet | Tags | Méca. |
 |---|---|---|---|---|
 | Commun | Maté | +10 PV | Soin | a |
-| Commun *(proposée)* | Pichet vide | 15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
-| Commun *(proposée)* | Cafffeeeeinnnn | Pioche 2 cartes | EPFL | a |
-| Commun *(proposée)* | Gaz du bat Inf | 20 dégâts d'un élément aléatoire | EPFL | a |
-| Peu commun *(proposée)* | Spritz | +30 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
-| Peu commun *(proposée)* | Shot de Jäger | Prochain sort ×2, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
-| Peu commun *(proposée)* | Moscow Mule | Annule la prochaine attaque, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
-| Peu commun *(proposée)* | Raclette | +50 PV, mais tu sautes ton prochain tour | EPFL | b (M2) |
-| Rare *(proposée)* | Space cake | Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours | Soirée | b (M2) |
+| Commun | Pichet vide | 15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
+| Commun | Cafffeeeeinnnn | Pioche 2 cartes | EPFL | a |
+| Commun | Gaz du bat Inf | 20 dégâts d'un élément aléatoire | EPFL | a |
+| Peu commun | Spritz | +30 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
+| Peu commun | Shot de Jäger | Prochain sort ×2, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
+| Peu commun | Moscow Mule | Annule la prochaine attaque, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
+| Peu commun | Raclette | +50 PV, mais tu sautes ton prochain tour | EPFL | b (M2) |
+| Rare | Space cake | Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours. Si le combat se termine avant, l'effet est reporté au combat suivant | Soirée | b (M2) |
+
+#### Choix assumés
+- **Diplôme EPFL** fait boule de neige avec les 9 trinkets EPFL : c'est voulu (synergies façon *The Binding of Isaac*). **[À DÉCIDER à l'étape 5]** le doublement s'applique-t-il aussi au bonus de set EPFL ?
+- Les soins restent plafonnés aux PV max, même si ça gaspille une partie des gros soins.
 
 #### Nouvelles mécaniques nécessaires
 - **M1 — Ivresse** : compteur du joueur, remis à 0 à chaque fin de combat, seuil de Gueule de bois modifiable.
@@ -122,7 +127,7 @@ Raretés marquées *(proposée)* : à valider.
 - **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.
 - **M6 — Annulation de tour** : revenir à l'état du début du tour précédent (faisable en rejouant la seed et les actions depuis le début).
 - **M7 — Tirage avantageux** : tirer deux fois et garder le meilleur.
-- **M8 — Combats et malédictions** : découper la partie en combats (aujourd'hui : un adversaire = un combat ?), malédictions qui durent jusqu'au combat suivant (Gueule de bois).
+- **M8 — Combats et malédictions** : la partie est découpée en combats (un par adversaire) ; malédictions qui durent jusqu'au combat suivant (Gueule de bois).
 
 ## Shop
 - Monnaie : or gagné à chaque combat (plus en élite/boss).
@@ -147,9 +152,6 @@ Reste : carte de la run, shop, récompenses, affichage des trinkets, transitions
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Obtention des objets/trinkets tant qu'il n'y a ni run ni shop (proposition : choisir 1 récompense parmi 3 après chaque adversaire vaincu).
-- **[À DÉCIDER]** Utiliser un objet : action gratuite ou fin du tour ?
-- **[À DÉCIDER]** Qu'est-ce qu'un « combat » (reset de l'Ivresse, Gueule de bois, Latte macchiato, Ctrl+Z) : un adversaire, ou la série des trois ?
 - **[À DÉCIDER]** Diplôme EPFL : doubler s'applique-t-il aussi aux contreparties (CMS : adversaire +50 % ?) et aux effets entiers (Photocopieuse : 3 cartes ?) ?
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ?
 - **[À DÉCIDER]** Gueule de bois quand la main est déjà pleine au début du combat : on distribue une carte de moins ?
@@ -159,4 +161,8 @@ Reste : carte de la run, shop, récompenses, affichage des trinkets, transitions
 - ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.
 - ~~Cumul des multiplicateurs de stats~~ → ils s'additionnent.
 - ~~Soins sans plafond~~ → les soins sont plafonnés aux PV max, que des objets/trinkets peuvent augmenter.
+- ~~Obtention des objets/trinkets~~ → 1 récompense au choix parmi 3 après chaque adversaire vaincu ; inventaire plein → remplacer ou refuser.
+- ~~Slots~~ → 3 objets, 5 trinkets.
+- ~~Utiliser un objet~~ → action gratuite.
+- ~~Qu'est-ce qu'un combat~~ → un adversaire. Chaque combat commence avec une nouvelle main de 5 cartes.
 - ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
