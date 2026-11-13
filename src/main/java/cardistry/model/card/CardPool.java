@@ -52,6 +52,11 @@ public class CardPool {
         cards.add(new HealCard("Grande potion", NATURE, 20.0));
     }
 
+    /** Cartes du registre (avec leurs doublons), en lecture seule. */
+    public List<Card> cards() {
+        return java.util.Collections.unmodifiableList(cards);
+    }
+
     /** Terrain sur lequel commence la partie. */
     public static TerrainCard startingTerrain() {
         return new TerrainCard("EPFL", FIRE);

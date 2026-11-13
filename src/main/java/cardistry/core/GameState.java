@@ -161,9 +161,14 @@ public final class GameState {
 
     /** Multiplicateur total d'un soin sur le terrain actuel (terrain × efficacité × soin de l'élément). */
     public double healMultiplier(HealCard heal) {
-        return ElementRules.healMultiplier(heal.element(), terrain.element())
+        return healMultiplier(heal.element());
+    }
+
+    /** Multiplicateur d'un soin de l'élément {@code element} (carte ou objet « soin feu »). */
+    public double healMultiplier(cardistry.model.Element element) {
+        return ElementRules.healMultiplier(element, terrain.element())
                 * playerStats.get(StatType.HEAL_EFFICIENCY)
-                * playerStats.get(StatType.healMultiplier(heal.element()));
+                * playerStats.get(StatType.healMultiplier(element));
     }
 
     /** Multiplicateur actuel de l'attaque de l'adversaire (terrain × stat {@link StatType#ENEMY_DAMAGE}). */

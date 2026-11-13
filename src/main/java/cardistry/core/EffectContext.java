@@ -24,13 +24,19 @@ public interface EffectContext {
     /** Remplace la carte à l'index {@code slot} de la main par une carte tirée du pool. */
     void replaceCardInHand(int slot);
 
+    /**
+     * Soin de l'élément {@code element}, comme une carte de soin : terrain, efficacité des soins et
+     * soin de l'élément ; plafonné aux PV max.
+     */
+    void elementalHeal(double amount, Element element);
+
     /** Soigne le joueur de {@code amount} PV × efficacité des soins, plafonné aux PV max. */
     void healPlayer(double amount);
 
     /** Inflige {@code amount} dégâts bruts au joueur (ni réduction ni multiplicateur) ; peut le tuer. */
     void damagePlayer(double amount);
 
-    /** Ajoute {@code amount} points d'Ivresse (peut déclencher une Gueule de bois). */
+    /** Ajoute {@code amount} points d'Ivresse (négatif pour en retirer, jamais sous 0) ; peut déclencher une Gueule de bois. */
     void addDrunkenness(int amount);
 
     /** Pioche jusqu'à {@code count} cartes, sans dépasser la taille de main. */

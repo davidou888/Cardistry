@@ -44,8 +44,8 @@ public final class TextRenderer implements Renderer {
                     console.pause(1);
                 }
             }
-            case GameEvent.CardPlayed e -> console.println("Tu joues " + cardName(e.card()));
-            case GameEvent.ItemUsed e -> console.println("Tu utilises " + Ansi.yellow(e.item().name()));
+            case GameEvent.CardPlayed e -> console.println("Tu joues la carte " + cardName(e.card()));
+            case GameEvent.ItemUsed e -> console.println("Tu utilises l'objet " + Ansi.yellow(e.item().name()));
             case GameEvent.CardReplaced e -> console.println("→ " + cardName(e.removed()) + " est remplacée par "
                     + cardName(e.replacement()));
             case GameEvent.CardDrawn e -> {
@@ -173,7 +173,8 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println("[0] Piocher une carte");
         for (int i = 0; i < state.items().size(); i++) {
-            console.println("[" + ItemKeys.key(i) + "] Utiliser " + describe(state.items().get(i)) + " (gratuit)");
+            console.println("[" + ItemKeys.key(i) + "] Utiliser l'" + describe(state.items().get(i)).replaceFirst("^Objet", "objet")
+                    + " (gratuit)");
         }
         console.println("Tu as " + hand.size() + "/" + state.handSize() + " cartes");
         console.println(SEPARATOR);

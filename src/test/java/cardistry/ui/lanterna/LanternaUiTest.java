@@ -445,6 +445,19 @@ class LanternaUiTest {
         assertTrue(after.contains("Ta main 5/6"));
     }
 
+    @Test
+    void journalDistingueCarteEtObjetHomonymes() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        ui.showStatus(state);
+        ui.onEvent(new GameEvent.CardPlayed(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15)));
+        ui.onEvent(new GameEvent.ItemUsed(ItemRegistry.item("petit-petou")));
+        ui.showHand(state);
+        String text = screen();
+        assertTrue(text.contains("Tu joues la carte Petit pétou"));
+        assertTrue(text.contains("Tu utilises l'objet Petit pétou"));
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {

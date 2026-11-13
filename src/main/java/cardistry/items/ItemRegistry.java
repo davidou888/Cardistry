@@ -196,6 +196,13 @@ public final class ItemRegistry {
                             ctx.damageEnemy(15);
                             ctx.damagePlayer(5);
                         }),
+                new Item("caipirinha", "Caïpirinha", "+20 PV, +1 Ivresse", "", COMMON, Set.of(Tag.PARTY, Tag.DRINK),
+                        ctx -> ctx.healPlayer(20)),
+                new Item("petit-petou", "Petit pétou", "+15 PV (soin feu), −1 Ivresse", "", COMMON, Set.of(Tag.PARTY),
+                        ctx -> {
+                            ctx.elementalHeal(15, Element.FIRE);
+                            ctx.addDrunkenness(-1);
+                        }),
                 new Item("spritz", "Spritz", "+30 PV, +1 Ivresse", "", UNCOMMON, Set.of(Tag.PARTY, Tag.DRINK),
                         ctx -> ctx.healPlayer(30)),
                 new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),

@@ -23,4 +23,12 @@ public sealed interface Collectible permits Item, Trinket {
 
     /** « Objet » ou « Trinket ». */
     String kindName();
+
+    /**
+     * Identifiant qualifié, unique parmi les cartes, objets et trinkets :
+     * « objet:petit-petou », « trinket:pax » (une carte : « carte:petit-petou »).
+     */
+    default String qualifiedId() {
+        return (this instanceof Item ? "objet:" : "trinket:") + id();
+    }
 }

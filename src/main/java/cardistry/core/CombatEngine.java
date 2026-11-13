@@ -180,9 +180,13 @@ public final class CombatEngine {
      * (une seule par combat ; aucune pendant le dernier combat).
      */
     private void addDrunkenness(int amount) {
-        state.setDrunkenness(state.drunkenness() + amount);
+        int updated = Math.max(0, state.drunkenness() + amount);
+        if (updated == state.drunkenness()) {
+            return;
+        }
+        state.setDrunkenness(updated);
         bus.publish(new GameEvent.DrunkennessChanged(state.drunkenness(), state.hangoverThreshold()));
-        if (state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && state.hasNextEnemy()) {
+        if (amount > 0 && state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && state.hasNextEnemy()) {
             state.setHangoverThisCombat(true);
             state.addPendingCurse(Curse.HANGOVER);
             bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
@@ -411,6 +415,12 @@ public final class CombatEngine {
             Card replacement = drawFromPool();
             Card removed = state.replaceInHand(slot, replacement);
             bus.publish(new GameEvent.CardReplaced(removed, replacement));
+        }
+
+        @Override
+        public void elementalHeal(double amount, Element element) {
+            double mult = state.healMultiplier(element);
+            CombatEngine.this.healPlayer(amount * mult, mult);
         }
 
         @Override

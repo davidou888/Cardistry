@@ -32,9 +32,33 @@ class ItemRegistryTest {
         for (String expected : List.of("Redistribution des briquets", "Pichet de Sat", "Plante du Rolex",
                 "Polycopié d'Analyse I", "Pax", "Grinder", "Photocopieuse", "CMS", "Maté",
                 "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George",
-                "Cafffeeeeinnnn", "Gaz du bat Inf", "Spritz", "Pichet vide", "Foie d'ingénieur", "Ptit Sat ?")) {
+                "Cafffeeeeinnnn", "Gaz du bat Inf", "Spritz", "Pichet vide", "Foie d'ingénieur", "Ptit Sat ?",
+                "Caïpirinha", "Petit pétou")) {
             assertTrue(names.contains(expected), expected);
         }
+    }
+
+    @Test
+    void identifiantsQualifiesUniquesEntreCartesObjetsEtTrinkets() {
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        new cardistry.model.card.CardPool().cards().stream()
+                .map(cardistry.model.card.Card::qualifiedId).distinct().forEach(ids::add);
+        for (Collectible c : ItemRegistry.all()) {
+            assertTrue(ids.add(c.qualifiedId()), "identifiant en double : " + c.qualifiedId());
+        }
+        // Les homonymes carte / objet ne se confondent pas.
+        assertTrue(ids.contains("carte:petit-petou"));
+        assertTrue(ids.contains("objet:petit-petou"));
+        assertTrue(ids.contains("carte:caipirinha"));
+        assertTrue(ids.contains("objet:caipirinha"));
+    }
+
+    @Test
+    void grinderNeCibleQueLaCartePetitPetou() {
+        Trinket grinder = ItemRegistry.trinket("grinder");
+        cardistry.model.card.Card card = new cardistry.model.card.CardPool().cards().stream()
+                .filter(c -> c.name().equals("Petit pétou")).findFirst().orElseThrow();
+        assertEquals(2.0, grinder.cardWeight(card), 1e-9);
     }
 
     @Test

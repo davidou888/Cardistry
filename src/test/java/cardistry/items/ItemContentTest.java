@@ -101,6 +101,46 @@ class ItemContentTest {
     }
 
     @Test
+    void caipirinha() {
+        setUp(List.of(), 1);
+        state.player().takeDamage(50);
+        use("caipirinha");
+        assertEquals(70, state.player().hp(), DELTA);
+        assertEquals(1, state.drunkenness());
+    }
+
+    @Test
+    void petitPetouObjetSoinFeuEtMoinsUnIvresse() {
+        setUp(List.of(), 1);
+        state.player().takeDamage(80); // 20 + 20 (Caïpirinha) puis il manque 40 PV
+        use("caipirinha");
+        use("caipirinha");
+        use("petit-petou");
+        // Terrain EPFL (feu) : soin feu ×1.5 → 15 × 1.5 = 22.5
+        assertEquals(new GameEvent.Healed(state.player(), 22.5, 1.5), events.stream()
+                .filter(GameEvent.Healed.class::isInstance).reduce((a, b) -> b).orElseThrow());
+        assertEquals(1, state.drunkenness());
+    }
+
+    @Test
+    void petitPetouNeFaitPasDescendreLIvresseSousZero() {
+        setUp(List.of(), 1);
+        use("petit-petou");
+        assertEquals(0, state.drunkenness());
+        assertEquals(0, events.stream().filter(GameEvent.DrunkennessChanged.class::isInstance).count());
+    }
+
+    @Test
+    void petitPetouEtGrinder() {
+        setUp(List.of(), 1);
+        state.player().takeDamage(60);
+        engine.equip(ItemRegistry.trinket("grinder"));
+        use("petit-petou");
+        // 15 × 1.5 (terrain feu) × 1.5 (Grinder) = 33.75
+        assertEquals(100 - 60 + 33.75, state.player().hp(), DELTA);
+    }
+
+    @Test
     void cafffeeeeinnnn() {
         setUp(List.of(), 1);
         assertEquals(ActionResult.FREE_ACTION, use("cafffeeeeinnnn"));

@@ -21,6 +21,11 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard {
         return element;
     }
 
+    /** Identifiant qualifié, distinct de celui d'un objet ou trinket du même nom : « carte:petit-petou ». */
+    public String qualifiedId() {
+        return "carte:" + cardistry.model.Ids.slug(name);
+    }
+
     /**
      * Nouvelle instance indépendante. Les cartes du registre sont des modèles : on ne met en main
      * que des copies, pour qu'une carte améliorée ou modifiée n'affecte pas les autres.
