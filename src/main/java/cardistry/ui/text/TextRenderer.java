@@ -88,6 +88,15 @@ public final class TextRenderer implements Renderer {
                 case INVALID_REWARD -> "Choix de récompense invalide";
                 case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer";
             });
+            case GameEvent.EffectAdded e -> console.println("→ " + e.effect().describe());
+            case GameEvent.EffectActivated e -> console.println("→ " + Ansi.yellow(e.effect().name()) + " se déclenche !");
+            case GameEvent.EffectEnded e -> console.println("→ " + e.effect().name() + " : terminé.");
+            case GameEvent.PlayerTurnSkipped e -> {
+                console.println(Ansi.RED + "Tu sautes ce tour" + Ansi.END_COLOR + " (" + String.join(", ", e.causes()) + ").");
+                console.pause(1);
+            }
+            case GameEvent.AttackCancelled e -> console.println("→ " + e.cause() + " annule l'attaque de "
+                    + enemyName(e.enemy()) + " !");
             case GameEvent.DrunkennessChanged e -> {
                 if (e.drunkenness() > 0) {
                     console.println("→ Ivresse : " + e.drunkenness() + "/" + e.threshold());

@@ -132,6 +132,19 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }, Palette.WARNING);
                 render();
             }
+            case GameEvent.EffectAdded e -> view.log(e.effect().describe(), Palette.INFO);
+            case GameEvent.EffectActivated e -> {
+                view.log(e.effect().name() + " se déclenche !", Palette.ACCENT);
+                render();
+            }
+            case GameEvent.EffectEnded e -> view.log(e.effect().name() + " : terminé", Palette.DIM);
+            case GameEvent.PlayerTurnSkipped e -> {
+                view.log("Tu sautes ce tour (" + String.join(", ", e.causes()) + ")", Palette.DAMAGE);
+                render();
+                pause(600);
+            }
+            case GameEvent.AttackCancelled e -> view.log(e.cause() + " annule l'attaque de " + e.enemy().name(),
+                    Palette.HEAL);
             case GameEvent.DrunkennessChanged e -> {
                 if (e.drunkenness() > 0) {
                     view.log("Ivresse " + e.drunkenness() + "/" + e.threshold(), Palette.WARNING);

@@ -1,6 +1,7 @@
 package cardistry.core.event;
 
 import cardistry.core.Curse;
+import cardistry.core.TemporaryEffect;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.model.Combatant;
@@ -67,6 +68,30 @@ public sealed interface GameEvent {
 
     /** L'Ivresse change ; {@code threshold} = seuil de Gueule de bois actuel. */
     record DrunkennessChanged(int drunkenness, int threshold) implements GameEvent {
+    }
+
+    /** Nouvel effet temporaire (actif tout de suite ou en attente). */
+    record EffectAdded(TemporaryEffect effect) implements GameEvent {
+    }
+
+    /** Un effet en attente se déclenche. */
+    record EffectActivated(TemporaryEffect effect) implements GameEvent {
+    }
+
+    /** Un effet se termine (durée, charges épuisées ou fin de combat). */
+    record EffectEnded(TemporaryEffect effect) implements GameEvent {
+    }
+
+    /** Le joueur saute ce tour ; {@code causes} = noms des effets responsables. */
+    record PlayerTurnSkipped(List<String> causes) implements GameEvent {
+
+        public PlayerTurnSkipped {
+            causes = List.copyOf(causes);
+        }
+    }
+
+    /** L'attaque de l'adversaire est annulée par un effet. */
+    record AttackCancelled(Enemy enemy, String cause) implements GameEvent {
     }
 
     /** Malédiction obtenue : elle s'activera au prochain combat. */

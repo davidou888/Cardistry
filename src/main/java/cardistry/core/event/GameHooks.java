@@ -59,6 +59,12 @@ public interface GameHooks {
     default void onCurseGained(GameEvent.CurseGained event, EffectContext ctx) {
     }
 
+    default void onTurnSkipped(GameEvent.PlayerTurnSkipped event, EffectContext ctx) {
+    }
+
+    default void onAttackCancelled(GameEvent.AttackCancelled event, EffectContext ctx) {
+    }
+
     default void onRewardOffered(GameEvent.RewardOffered event, EffectContext ctx) {
     }
 

@@ -17,7 +17,16 @@ public final class GameLoop {
             renderer.showIntro(state);
         }
         while (!engine.isOver()) {
-            engine.startTurn();
+            boolean playerActs = engine.startTurn();
+            if (engine.isOver()) {
+                break;
+            }
+            if (!playerActs) {
+                // Tour sauté (ou adversaire tué en début de tour) : rien à choisir.
+                renderer.showStatus(state);
+                resolveRewards(engine, input, state);
+                continue;
+            }
             renderer.showStatus(state);
             input.waitForContinue();
             renderer.showHand(state);
@@ -27,11 +36,15 @@ public final class GameLoop {
                     break;
                 }
             }
-            while (engine.hasPendingReward()) {
-                engine.resolveReward(input.chooseReward(state, engine.pendingReward()));
-            }
+            resolveRewards(engine, input, state);
         }
         renderer.showGameOver(state);
         input.waitForExit();
+    }
+
+    private static void resolveRewards(CombatEngine engine, Input input, GameState state) {
+        while (engine.hasPendingReward()) {
+            engine.resolveReward(input.chooseReward(state, engine.pendingReward()));
+        }
     }
 }

@@ -26,6 +26,7 @@ public final class Trinket implements Collectible {
     private final List<StatModifier> modifiers;
     private final GameHooks hooks;
     private final java.util.Map<String, Double> cardWeights;
+    private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects;
 
     private Trinket(Builder builder) {
         this.id = builder.id;
@@ -37,6 +38,15 @@ public final class Trinket implements Collectible {
         this.modifiers = List.copyOf(builder.modifiers);
         this.hooks = builder.hooks;
         this.cardWeights = java.util.Map.copyOf(builder.cardWeights);
+        this.effects = List.copyOf(builder.effects);
+    }
+
+    /**
+     * Nouveaux effets permanents posés quand on équipe ce trinket (retirés au déséquipement).
+     * Ils sont actifs tout de suite ; {@code onActivate} n'est pas appelé.
+     */
+    public List<cardistry.core.TemporaryEffect> createEffects() {
+        return effects.stream().map(java.util.function.Supplier::get).toList();
     }
 
     public static Builder builder(String id, String name, Rarity rarity) {
@@ -89,6 +99,7 @@ public final class Trinket implements Collectible {
         private GameHooks hooks = new GameHooks() {
         };
         private final java.util.Map<String, Double> cardWeights = new java.util.HashMap<>();
+        private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects = new ArrayList<>();
 
         private Builder(String id, String name, Rarity rarity) {
             this.id = id;
@@ -126,6 +137,12 @@ public final class Trinket implements Collectible {
         /** La carte nommée {@code cardName} est {@code factor} fois plus fréquente dans la pioche. */
         public Builder cardWeight(String cardName, double factor) {
             cardWeights.put(cardName, factor);
+            return this;
+        }
+
+        /** Effet permanent tant que le trinket est équipé (voir {@link cardistry.core.TemporaryEffect}). */
+        public Builder effect(java.util.function.Supplier<cardistry.core.TemporaryEffect> effect) {
+            effects.add(effect);
             return this;
         }
 

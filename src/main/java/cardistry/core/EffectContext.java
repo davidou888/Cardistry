@@ -39,6 +39,9 @@ public interface EffectContext {
     /** Ajoute {@code amount} points d'Ivresse (négatif pour en retirer, jamais sous 0) ; peut déclencher une Gueule de bois. */
     void addDrunkenness(int amount);
 
+    /** Pose un effet temporaire (voir {@link TemporaryEffect}). */
+    void addEffect(TemporaryEffect effect);
+
     /** Pioche jusqu'à {@code count} cartes, sans dépasser la taille de main. */
     void drawCards(int count);
 }

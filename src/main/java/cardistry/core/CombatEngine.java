@@ -69,9 +69,100 @@ public final class CombatEngine {
         beginCombat();
     }
 
-    public void startTurn() {
+    /**
+     * Début de tour : les effets temporaires avancent d'un tour, puis le joueur joue ou saute son
+     * tour (l'adversaire attaque alors directement).
+     *
+     * @return {@code true} si le joueur doit choisir une action ce tour-ci
+     */
+    public boolean startTurn() {
         state.nextTurn();
         bus.publish(new GameEvent.TurnStarted(state.turn()));
+        tickEffects();
+        if (isOver() || resolveEnemyDeath()) {
+            return false;
+        }
+        List<String> skipCauses = skipCauses();
+        if (skipCauses.isEmpty()) {
+            return true;
+        }
+        bus.publish(new GameEvent.PlayerTurnSkipped(skipCauses));
+        enemyAttack();
+        return false;
+    }
+
+    // --- Effets temporaires ---
+
+    private void addEffect(TemporaryEffect effect) {
+        state.addEffect(effect);
+        bus.publish(new GameEvent.EffectAdded(effect));
+        if (effect.delayTurns() <= 0) {
+            activateEffect(effect);
+        }
+    }
+
+    private void activateEffect(TemporaryEffect effect) {
+        state.activateEffect(effect);
+        if (effect.delayTurns() > 0) {
+            bus.publish(new GameEvent.EffectActivated(effect));
+        }
+        effect.runOnActivate(effects);
+    }
+
+    private void endEffect(TemporaryEffect effect) {
+        if (state.effects().contains(effect)) {
+            state.removeEffect(effect);
+            bus.publish(new GameEvent.EffectEnded(effect));
+        }
+    }
+
+    /** Début de tour : compte à rebours, déclenchements, durées, actions de début de tour. */
+    private void tickEffects() {
+        for (TemporaryEffect effect : List.copyOf(state.effects())) {
+            if (!effect.isActive()) {
+                if (effect.tickDelay()) {
+                    activateEffect(effect);
+                }
+            } else if (effect.tickDuration()) {
+                endEffect(effect);
+                continue;
+            }
+            if (effect.isActive() && state.effects().contains(effect)) {
+                effect.runOnTurnStart(effects);
+            }
+        }
+    }
+
+    /** Effets qui font sauter ce tour ; ceux à charges en consomment une. */
+    private List<String> skipCauses() {
+        List<String> causes = new java.util.ArrayList<>();
+        for (TemporaryEffect effect : List.copyOf(state.effects())) {
+            if (!effect.isActive()) {
+                continue;
+            }
+            switch (effect.skipRule()) {
+                case NEXT_TURN -> {
+                    causes.add(effect.name());
+                    if (effect.consumeCharge()) {
+                        endEffect(effect);
+                    }
+                }
+                case EVEN_COMBAT_TURNS -> {
+                    if (state.combatTurn() % 2 == 0) {
+                        causes.add(effect.name());
+                    }
+                }
+                case NONE -> {
+                }
+            }
+        }
+        return causes;
+    }
+
+    private void consume(TemporaryEffect effect) {
+        if (effect.consumeCharge()) {
+            endEffect(effect);
+        }
     }
 
     public boolean isOver() {
@@ -165,6 +256,11 @@ public final class CombatEngine {
 
     /** Fin du combat : l'Ivresse retombe, les malédictions du combat s'arrêtent. */
     private void endCombat() {
+        for (TemporaryEffect effect : List.copyOf(state.effects())) {
+            if (!effect.keepsAcrossCombats()) {
+                endEffect(effect);
+            }
+        }
         if (state.drunkenness() != 0) {
             state.setDrunkenness(0);
             bus.publish(new GameEvent.DrunkennessChanged(0, state.hangoverThreshold()));
@@ -308,8 +404,10 @@ public final class CombatEngine {
         bus.publish(new GameEvent.CardPlayed(card));
         switch (card) {
             case SpellCard spell -> {
+                Optional<TemporaryEffect> boost = state.nextSpellBoost();
                 double mult = state.spellMultiplier(spell);
                 damageEnemy(spell.damage() * mult, mult, GameEvent.DamageDealt.Source.SPELL);
+                boost.ifPresent(this::consume);
             }
             case HealCard heal -> {
                 double mult = state.healMultiplier(heal);
@@ -338,6 +436,13 @@ public final class CombatEngine {
         double mult = state.enemyAttackMultiplier();
         double amount = state.enemyAttackDamage();
         bus.publish(new GameEvent.EnemyAttacked(enemy));
+        Optional<TemporaryEffect> shield = state.effects().stream()
+                .filter(e -> e.isActive() && e.cancelsEnemyAttack()).findFirst();
+        if (shield.isPresent()) {
+            bus.publish(new GameEvent.AttackCancelled(enemy, shield.get().name()));
+            consume(shield.get());
+            return;
+        }
         player.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
         if (!player.isAlive()) {
@@ -403,6 +508,11 @@ public final class CombatEngine {
             if (wasAlive && !player.isAlive()) {
                 bus.publish(new GameEvent.GameLost());
             }
+        }
+
+        @Override
+        public void addEffect(TemporaryEffect effect) {
+            CombatEngine.this.addEffect(effect);
         }
 
         @Override

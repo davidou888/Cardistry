@@ -37,6 +37,7 @@ public final class GameState {
     private boolean hangoverThisCombat = false;
     private final java.util.Set<Curse> pendingCurses = java.util.EnumSet.noneOf(Curse.class);
     private final java.util.Set<Curse> activeCurses = java.util.EnumSet.noneOf(Curse.class);
+    private final List<TemporaryEffect> effects = new ArrayList<>();
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
         if (enemies.isEmpty()) {
@@ -156,7 +157,18 @@ public final class GameState {
     /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
     public double spellMultiplier(SpellCard spell) {
         return ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
-                * playerStats.get(StatType.damageMultiplier(spell.element()));
+                * playerStats.get(StatType.damageMultiplier(spell.element()))
+                * nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0);
+    }
+
+    /** Effet actif qui multipliera le prochain sort (le plus ancien), s'il y en a un. */
+    public java.util.Optional<TemporaryEffect> nextSpellBoost() {
+        return effects.stream().filter(e -> e.isActive() && e.spellMultiplier() != 1.0).findFirst();
+    }
+
+    /** Effets temporaires en cours (en attente ou actifs), dans l'ordre d'arrivée. */
+    public List<TemporaryEffect> effects() {
+        return Collections.unmodifiableList(effects);
     }
 
     /** Multiplicateur total d'un soin sur le terrain actuel (terrain × efficacité × soin de l'élément). */
@@ -250,12 +262,23 @@ public final class GameState {
         }
         trinkets.add(trinket);
         trinket.modifiers().forEach(playerStats::add);
+        for (TemporaryEffect effect : trinket.createEffects()) {
+            effect.assignOwner(trinket.modifierSource());
+            effect.activate();
+            effects.add(effect);
+            effect.modifiers().forEach(playerStats::add);
+        }
     }
 
     /** Retire un trinket et ses modificateurs. */
     Trinket unequipTrinket(int slot) {
         Trinket trinket = trinkets.remove(slot);
         playerStats.removeBySource(trinket.modifierSource());
+        for (TemporaryEffect effect : List.copyOf(effects)) {
+            if (effect.owner().equals(trinket.modifierSource())) {
+                removeEffect(effect);
+            }
+        }
         return trinket;
     }
 
@@ -268,6 +291,22 @@ public final class GameState {
 
     Item removeItem(int slot) {
         return items.remove(slot);
+    }
+
+    void addEffect(TemporaryEffect effect) {
+        effects.add(effect);
+    }
+
+    /** Active l'effet et applique ses modificateurs. */
+    void activateEffect(TemporaryEffect effect) {
+        effect.activate();
+        effect.modifiers().forEach(playerStats::add);
+    }
+
+    /** Retire l'effet et ses modificateurs. */
+    void removeEffect(TemporaryEffect effect) {
+        effects.remove(effect);
+        playerStats.removeBySource(effect.modifierSource());
     }
 
     void setDrunkenness(int value) {
