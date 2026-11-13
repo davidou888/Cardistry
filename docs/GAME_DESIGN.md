@@ -87,6 +87,7 @@ Ordre de calcul : base → bonus plats → multiplicateurs.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - Les soins n'ont pas de plafond : les PV peuvent dépasser 100. Faut-il plafonner aux PV max ?
 - Pioche infinie avec remise (les doublons du registre servent de poids) : voir le passage à un vrai deck dans « Structure d'une run ».
+- Cumul des multiplicateurs de stats : aujourd'hui ils se **multiplient** (deux trinkets +25 % feu → ×1.5625). Ou faut-il les **additionner** (→ +50 %) ? (`core.stats.Stats`)
 
 ### Tranchées
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».

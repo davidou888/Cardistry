@@ -5,24 +5,19 @@ Projet à deux (Louis + David). Le game design détaillé est dans [`docs/GAME_D
 
 ## État actuel du code
 
-Prototype jouable mais monolithique :
-- `Carte.java` — `Carte` (abstraite), `Sortilege`, `Terrain`, `Heal`, `Deck`
-- `Magic.java` — `main`, `Jeu` (boucle + état + affichage mélangés), `Personnage`, `Player`, `Adversaire`, `Helper` (couleurs ANSI, pause), `Ecran` (fond RGB, inutilisé)
-- Pas d'outil de build, pas de packages, pas de tests. Compilation actuelle : `javac *.java && java Magic`.
-- Les commentaires en bas de `Magic.java` contiennent les tables d'éléments (feu > nature > eau > feu).
+Prototype jouable (un combat contre 3 adversaires), migré sur Gradle. Lancement : `./gradlew run` (`--args="--seed 42 --fast"` pour rejouer une seed sans pauses).
 
-### Bugs / dettes connus (à traiter pendant le refactor)
-1. Comparaison de `String` avec `==` (`typeRelation`, `getMult`) → remplacer par un `enum Element`.
-2. **Les tables en commentaire ne correspondent pas au code** :
-   - Sortilège même type que l'adversaire : code ×0.5, table ×1. Sortilège battu par l'adversaire : code ×1, table ×0.5.
-   - Terrain : la table parle des dégâts *reçus* par l'adversaire, le code s'en sert comme multiplicateur de l'*attaque* de l'adversaire.
-   → Ne pas trancher seul : signaler et demander quelle version est la bonne.
-3. `scanner.nextInt()` plante sur une saisie non numérique ; un `Scanner` est recréé à chaque boucle.
-4. `Deck.piocher()` renvoie la même instance partagée → cassera dès qu'une carte pourra être améliorée/modifiée. Pioche infinie avec remise (pas de vrai deck/défausse).
-5. L'intro annonce un « Dragon » mais l'adversaire s'appelle « Hydre ».
-6. Pas de message de défaite quand le joueur meurt ; « Welcome to GAME NAME ».
-7. Quand un adversaire meurt, le suivant attaque dans le même tour (intentionnel ? à confirmer).
-8. Fautes : « Antlantis », « élélments », « éfficaces », « comemncer ».
+- `cardistry.Main` — assemble tout ; options `--seed N`, `--fast`
+- `core/` — `GameState`, `CombatEngine` (règles, aucun affichage), `Action`, `Rng`
+- `core/event/` — `GameEvent` (records scellés), `EventBus`, `GameHooks` + `HookDispatcher` (prêts, aucun trinket encore)
+- `core/stats/` — `Stats`, `StatModifier`, `StatType`. Branchées : taille de main, multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
+- `model/` — `Element`, `ElementRules` (**toutes** les tables de multiplicateurs), `Player`/`Enemy`, `EnemyRoster`, `card/` (`Card` scellée, `CardPool` = registre ; la pioche renvoie des copies)
+- `ui/` — interfaces `Renderer`/`Input`, `GameLoop` ; `ui/text/` = rendu texte provisoire (en attendant Lanterna)
+- Pas encore créés : `items/`, `run/`, Lanterna.
+
+### Dettes restantes
+- Pioche infinie avec remise (pas de vrai deck/défausse) ; soins sans plafond de PV. Voir « Questions ouvertes » dans `docs/GAME_DESIGN.md`.
+- `CardPool` (model) dépend de `core.Rng`.
 
 ## Architecture cible
 
@@ -56,5 +51,5 @@ src/test/java/...             JUnit 5
 
 ## Commandes
 - Build : `./gradlew build`
-- Lancer : `./gradlew run` (le jeu plein écran a besoin d'un vrai terminal ; prévoir un mode texte simple / `--no-ui` pour tester sans Lanterna)
+- Lancer : `./gradlew run` (options : `--args="--seed 42 --fast"`). Le futur mode plein écran Lanterna aura besoin d'un vrai terminal ; garder le rendu texte (`ui/text`) comme mode `--no-ui`.
 - Tests : `./gradlew test`

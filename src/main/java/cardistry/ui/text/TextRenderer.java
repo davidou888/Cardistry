@@ -18,7 +18,7 @@ public final class TextRenderer implements Renderer {
     private static final String SEPARATOR = "===================";
 
     private final Console console;
-    private int handSize = GameState.HAND_SIZE;
+    private int handSize;
 
     public TextRenderer(Console console) {
         this.console = console;

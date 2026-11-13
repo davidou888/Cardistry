@@ -4,6 +4,7 @@ import cardistry.core.CombatEngine;
 import cardistry.core.GameState;
 import cardistry.core.Rng;
 import cardistry.core.event.EventBus;
+import cardistry.core.event.HookDispatcher;
 import cardistry.model.card.CardPool;
 import cardistry.ui.GameLoop;
 import cardistry.ui.text.Console;
@@ -33,6 +34,10 @@ public final class Main {
         EventBus bus = new EventBus();
         CardPool pool = new CardPool();
         CombatEngine engine = new CombatEngine(GameState.newGame(pool, rng), pool, rng, bus);
+
+        // Les trinkets s'enregistreront ici (hooks.register(...)).
+        HookDispatcher hooks = new HookDispatcher();
+        bus.subscribe(hooks);
 
         TextRenderer renderer = new TextRenderer(console);
         bus.subscribe(renderer::onEvent);

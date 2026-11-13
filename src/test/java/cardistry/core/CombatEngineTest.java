@@ -13,6 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameEvent.ActionRejected.Reason;
+import cardistry.core.stats.StatModifier;
+import cardistry.core.stats.StatType;
+import cardistry.core.stats.Stats;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.Test;
 class CombatEngineTest {
 
     private static final double DELTA = 1e-9;
+    private static final int HAND_SIZE = (int) StatType.HAND_SIZE.defaultBase();
 
     private final List<GameEvent> events = new ArrayList<>();
     private GameState state;
@@ -36,7 +40,7 @@ class CombatEngineTest {
     private void setUp(TerrainCard terrain, List<Card> hand, Enemy... enemies) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = new GameState(new Player(), List.of(enemies), terrain, hand, GameState.HAND_SIZE);
+        state = new GameState(new Player(), List.of(enemies), terrain, hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(42), bus);
     }
 
@@ -80,7 +84,7 @@ class CombatEngineTest {
     void nouvellePartieMainPleineEtDeterministe() {
         GameState a = GameState.newGame(new CardPool(), new Rng(5));
         GameState b = GameState.newGame(new CardPool(), new Rng(5));
-        assertEquals(GameState.HAND_SIZE, a.hand().size());
+        assertEquals(HAND_SIZE, a.hand().size());
         assertEquals(a.hand().stream().map(Card::name).toList(), b.hand().stream().map(Card::name).toList());
         assertEquals("Hydre", a.currentEnemy().name());
         assertEquals(1.25, a.enemyAttackMultiplier(), DELTA); // EPFL (feu) contre Hydre (feu)
@@ -176,7 +180,7 @@ class CombatEngineTest {
     @Test
     void piocherMainPleineEstRefuse() {
         List<Card> fullHand = new ArrayList<>();
-        for (int i = 0; i < GameState.HAND_SIZE; i++) {
+        for (int i = 0; i < HAND_SIZE; i++) {
             fullHand.add(new TerrainCard("T" + i, FIRE));
         }
         setUp(new TerrainCard("EPFL", FIRE), fullHand, hydra());
@@ -184,7 +188,7 @@ class CombatEngineTest {
         assertFalse(engine.submit(new Action.DrawCard()));
 
         assertEquals(List.of(new GameEvent.ActionRejected(Reason.HAND_FULL)), events);
-        assertEquals(GameState.HAND_SIZE, state.hand().size());
+        assertEquals(HAND_SIZE, state.hand().size());
         assertEquals(100, state.player().hp(), DELTA);
     }
 
@@ -193,7 +197,7 @@ class CombatEngineTest {
         setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("A", FIRE)), hydra());
 
         assertFalse(engine.submit(new Action.PlayCard(-1)));
-        assertFalse(engine.submit(new Action.PlayCard(GameState.HAND_SIZE)));
+        assertFalse(engine.submit(new Action.PlayCard(HAND_SIZE)));
 
         assertEquals(List.of(
                 new GameEvent.ActionRejected(Reason.INVALID_CHOICE),
@@ -279,5 +283,45 @@ class CombatEngineTest {
         assertEquals(2, events.stream().filter(GameEvent.EnemyArrived.class::isInstance).count());
         // Seules attaques : Sirène au tour 2 (×1 sur EPFL), Goblin au tour 4 (×0.75, feu bat nature).
         assertEquals(100 - 10 - 15 * 0.75, state.player().hp(), DELTA);
+    }
+
+    // --- Stats du joueur ---
+
+    @Test
+    void multiplicateurDeDegatsParElement() {
+        Enemy hydra = hydra();
+        setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Jet d'eau", WATER, 10)), hydra);
+        state.playerStats().add(StatModifier.multiply(StatType.WATER_DAMAGE, 1.25, "test"));
+        state.playerStats().add(StatModifier.multiply(StatType.FIRE_DAMAGE, 3, "autre élément"));
+
+        engine.submit(new Action.PlayCard(0));
+
+        // 10 × 1.5 (eau bat feu) × 1.25 (stat eau)
+        assertEquals(new GameEvent.DamageDealt(hydra, 18.75, 1.875), events.get(1));
+    }
+
+    @Test
+    void efficaciteDesSoins() {
+        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Potion", NATURE, 10)), hydra());
+        state.playerStats().add(StatModifier.multiply(StatType.HEAL_EFFICIENCY, 2, "test"));
+
+        engine.submit(new Action.PlayCard(0));
+
+        // 10 × 0.75 (feu bat nature) × 2
+        assertEquals(new GameEvent.Healed(state.player(), 15, 1.5), events.get(1));
+    }
+
+    @Test
+    void tailleDeMainSuitLaStat() {
+        List<Card> fullHand = new ArrayList<>();
+        for (int i = 0; i < HAND_SIZE; i++) {
+            fullHand.add(new TerrainCard("T" + i, FIRE));
+        }
+        setUp(new TerrainCard("EPFL", FIRE), fullHand, hydra());
+        state.playerStats().add(StatModifier.flat(StatType.HAND_SIZE, 1, "sac"));
+
+        assertEquals(HAND_SIZE + 1, state.handSize());
+        assertTrue(engine.submit(new Action.DrawCard()));
+        assertEquals(HAND_SIZE + 1, state.hand().size());
     }
 }
