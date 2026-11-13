@@ -116,9 +116,15 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case HAND_FULL -> "Ta main est pleine : joue une carte.";
                     case EMPTY_SLOT -> "Cet emplacement est vide.";
                     case NO_ITEM -> "Pas d'objet à cet emplacement.";
+                    case INVALID_REWARD -> "Choix de récompense invalide.";
+                    case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer.";
                 }, Palette.WARNING);
                 render();
             }
+            case GameEvent.RewardOffered e -> view.log("Récompense : choisis 1 parmi " + e.options().size(), Palette.ACCENT);
+            case GameEvent.RewardTaken e -> view.log("Tu prends " + e.taken().name()
+                    + (e.replaced() != null ? " (à la place de " + e.replaced().name() + ")" : ""), Palette.ACCENT);
+            case GameEvent.RewardSkipped e -> view.log("Récompense refusée", Palette.DIM);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
         }

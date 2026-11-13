@@ -1,5 +1,6 @@
 package cardistry.core.event;
 
+import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.model.Combatant;
 import cardistry.model.Enemy;
@@ -46,6 +47,21 @@ public sealed interface GameEvent {
     record EnemyKilled(Enemy enemy) implements GameEvent {
     }
 
+    /** Récompenses proposées après la mort d'un adversaire ; le moteur attend un choix. */
+    record RewardOffered(List<Collectible> options) implements GameEvent {
+
+        public RewardOffered {
+            options = List.copyOf(options);
+        }
+    }
+
+    /** Récompense prise ; {@code replaced} est l'item retiré pour lui faire de la place, ou null. */
+    record RewardTaken(Collectible taken, Collectible replaced) implements GameEvent {
+    }
+
+    record RewardSkipped() implements GameEvent {
+    }
+
     /**
      * Début d'un combat (un par adversaire), y compris le premier.
      *
@@ -73,7 +89,11 @@ public sealed interface GameEvent {
             /** Le slot choisi ne contient pas de carte. */
             EMPTY_SLOT,
             /** Pas d'objet à cet emplacement. */
-            NO_ITEM
+            NO_ITEM,
+            /** Proposition de récompense inexistante. */
+            INVALID_REWARD,
+            /** Inventaire plein : il faut choisir quoi remplacer. */
+            INVENTORY_FULL
         }
     }
 

@@ -27,6 +27,9 @@ public final class GameLoop {
                     break;
                 }
             }
+            while (engine.hasPendingReward()) {
+                engine.resolveReward(input.chooseReward(state, engine.pendingReward()));
+            }
         }
         renderer.showGameOver(state);
         input.waitForExit();

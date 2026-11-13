@@ -14,6 +14,7 @@ import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatType;
 import cardistry.core.stats.Stats;
 import cardistry.items.Item;
+import cardistry.items.LootTable;
 import cardistry.items.Rarity;
 import cardistry.items.Tag;
 import cardistry.items.Trinket;
@@ -41,7 +42,7 @@ class InventoryTest {
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(enemies), new TerrainCard("Forêt", cardistry.model.Element.NATURE),
                 hand, new Stats());
-        engine = new CombatEngine(state, new CardPool(), new Rng(1), bus);
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 
     private static Enemy hydra() {

@@ -6,6 +6,7 @@ import static cardistry.ui.Format.num;
 
 import cardistry.core.GameState;
 import cardistry.core.event.GameEvent;
+import cardistry.items.Collectible;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
@@ -80,7 +81,20 @@ public final class TextRenderer implements Renderer {
                 case HAND_FULL -> "Ta main est pleine";
                 case EMPTY_SLOT -> "Ce slot est vide, choisis une carte";
                 case NO_ITEM -> "Pas d'objet à cet emplacement";
+                case INVALID_REWARD -> "Choix de récompense invalide";
+                case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer";
             });
+            case GameEvent.RewardOffered e -> {
+                console.println();
+                console.println(Ansi.yellow("Récompense !") + " Choisis-en une :");
+                for (int i = 0; i < e.options().size(); i++) {
+                    console.println("[" + (i + 1) + "] " + describe(e.options().get(i)));
+                }
+                console.println("[0] Refuser");
+            }
+            case GameEvent.RewardTaken e -> console.println("Tu prends " + Ansi.yellow(e.taken().name())
+                    + (e.replaced() != null ? " à la place de " + e.replaced().name() : "") + ".");
+            case GameEvent.RewardSkipped e -> console.println("Tu refuses la récompense.");
             case GameEvent.GameWon e -> {
                 console.println();
                 console.println(Ansi.yellow("VICTOIRE !") + " Tu as vaincu tous les adversaires.");
@@ -194,6 +208,10 @@ public final class TextRenderer implements Renderer {
 
     private static String cardName(Card card) {
         return Ansi.element(card.element(), card.name());
+    }
+
+    static String describe(Collectible c) {
+        return c.kindName() + " " + Ansi.yellow(c.name()) + " (" + c.rarity().displayName() + ") : " + c.description();
     }
 
     private static String describe(Card card) {

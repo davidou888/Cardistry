@@ -4,7 +4,9 @@ import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameEvent.ActionRejected.Reason;
 import cardistry.core.event.HookDispatcher;
+import cardistry.items.Collectible;
 import cardistry.items.Item;
+import cardistry.items.LootTable;
 import cardistry.items.Trinket;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
@@ -25,6 +27,9 @@ import java.util.Optional;
  * ({@link ActionResult#TURN_ENDED}). Jouer une carte ou piocher termine le tour et l'adversaire
  * réagit ; utiliser un objet est gratuit.
  *
+ * <p>Après la mort d'un adversaire (sauf le dernier), le moteur propose des récompenses et attend
+ * {@link #resolveReward(RewardChoice)} avant de lancer le combat suivant.
+ *
  * <p>Les trinkets équipés reçoivent chaque événement (voir {@link cardistry.core.event.GameHooks}).
  */
 public final class CombatEngine {
@@ -33,13 +38,20 @@ public final class CombatEngine {
     private final CardPool pool;
     private final Rng rng;
     private final EventBus bus;
+    private final LootTable loot;
     private final EffectContext effects = new Effects();
+    private List<Collectible> pendingReward = List.of();
 
     public CombatEngine(GameState state, CardPool pool, Rng rng, EventBus bus) {
+        this(state, pool, rng, bus, new LootTable());
+    }
+
+    public CombatEngine(GameState state, CardPool pool, Rng rng, EventBus bus, LootTable loot) {
         this.state = state;
         this.pool = pool;
         this.rng = rng;
         this.bus = bus;
+        this.loot = loot;
         bus.subscribe(this::dispatchToTrinkets);
     }
 
@@ -71,6 +83,9 @@ public final class CombatEngine {
     public ActionResult submit(Action action) {
         if (isOver()) {
             throw new IllegalStateException("La partie est terminée");
+        }
+        if (hasPendingReward()) {
+            throw new IllegalStateException("Une récompense attend d'être choisie");
         }
         Optional<Reason> rejection = validate(action);
         if (rejection.isPresent()) {
@@ -146,13 +161,89 @@ public final class CombatEngine {
             return false;
         }
         bus.publish(new GameEvent.EnemyKilled(enemy));
-        if (state.hasNextEnemy()) {
-            state.advanceEnemy();
-            beginCombat();
-        } else {
+        if (!state.hasNextEnemy()) {
             bus.publish(new GameEvent.GameWon());
+            return true;
+        }
+        List<Collectible> offer = loot.offer(state, rng, REWARD_OPTIONS);
+        if (offer.isEmpty()) {
+            nextCombat();
+        } else {
+            pendingReward = offer;
+            bus.publish(new GameEvent.RewardOffered(offer));
         }
         return true;
+    }
+
+    private void nextCombat() {
+        state.advanceEnemy();
+        beginCombat();
+    }
+
+    // --- Récompenses ---
+
+    /** Nombre de propositions après chaque adversaire vaincu. */
+    public static final int REWARD_OPTIONS = 3;
+
+    public boolean hasPendingReward() {
+        return !pendingReward.isEmpty();
+    }
+
+    /** Propositions en attente (vide s'il n'y en a pas). */
+    public List<Collectible> pendingReward() {
+        return pendingReward;
+    }
+
+    /**
+     * Applique le choix du joueur puis lance le combat suivant.
+     *
+     * @return {@code false} si le choix est invalide (un {@link GameEvent.ActionRejected} est publié,
+     *     l'offre reste en attente)
+     */
+    public boolean resolveReward(RewardChoice choice) {
+        if (!hasPendingReward()) {
+            throw new IllegalStateException("Aucune récompense en attente");
+        }
+        switch (choice) {
+            case RewardChoice.Skip skip -> bus.publish(new GameEvent.RewardSkipped());
+            case RewardChoice.Take take -> {
+                Optional<Reason> rejection = validateReward(take);
+                if (rejection.isPresent()) {
+                    bus.publish(new GameEvent.ActionRejected(rejection.get()));
+                    return false;
+                }
+                Collectible taken = pendingReward.get(take.option());
+                Collectible replaced = switch (taken) {
+                    case Trinket trinket -> {
+                        Trinket old = take.replaceSlot() >= 0 ? state.unequipTrinket(take.replaceSlot()) : null;
+                        state.equipTrinket(trinket);
+                        yield old;
+                    }
+                    case Item item -> {
+                        Item old = take.replaceSlot() >= 0 ? state.removeItem(take.replaceSlot()) : null;
+                        state.addItem(item);
+                        yield old;
+                    }
+                };
+                bus.publish(new GameEvent.RewardTaken(taken, replaced));
+            }
+        }
+        pendingReward = List.of();
+        nextCombat();
+        return true;
+    }
+
+    private Optional<Reason> validateReward(RewardChoice.Take take) {
+        if (take.option() < 0 || take.option() >= pendingReward.size()) {
+            return Optional.of(Reason.INVALID_REWARD);
+        }
+        Collectible taken = pendingReward.get(take.option());
+        int used = taken instanceof Trinket ? state.trinkets().size() : state.items().size();
+        int slots = taken instanceof Trinket ? state.trinketSlots() : state.itemSlots();
+        if (take.replaceSlot() < 0) {
+            return used < slots ? Optional.empty() : Optional.of(Reason.INVENTORY_FULL);
+        }
+        return take.replaceSlot() < used ? Optional.empty() : Optional.of(Reason.INVALID_REWARD);
     }
 
     // --- Actions du joueur ---

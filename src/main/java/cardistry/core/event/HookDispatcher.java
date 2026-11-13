@@ -24,6 +24,11 @@ public final class HookDispatcher {
             case GameEvent.EnemyKilled e -> hook.onEnemyKilled(e, ctx);
             case GameEvent.GameWon e -> hook.onGameWon(e, ctx);
             case GameEvent.GameLost e -> hook.onGameLost(e, ctx);
+            case GameEvent.RewardOffered e -> hook.onRewardOffered(e, ctx);
+            case GameEvent.RewardTaken e -> hook.onRewardTaken(e, ctx);
+            case GameEvent.RewardSkipped e -> {
+                // Rien à signaler aux trinkets.
+            }
             case GameEvent.ActionRejected e -> {
                 // Concerne seulement l'UI.
             }

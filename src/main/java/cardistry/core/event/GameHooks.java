@@ -50,6 +50,12 @@ public interface GameHooks {
     default void onEnemyKilled(GameEvent.EnemyKilled event, EffectContext ctx) {
     }
 
+    default void onRewardOffered(GameEvent.RewardOffered event, EffectContext ctx) {
+    }
+
+    default void onRewardTaken(GameEvent.RewardTaken event, EffectContext ctx) {
+    }
+
     default void onGameWon(GameEvent.GameWon event, EffectContext ctx) {
     }
 

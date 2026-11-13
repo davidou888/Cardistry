@@ -16,6 +16,7 @@ import cardistry.core.event.GameEvent.ActionRejected.Reason;
 import cardistry.core.stats.StatModifier;
 import cardistry.core.stats.StatType;
 import cardistry.core.stats.Stats;
+import cardistry.items.LootTable;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
@@ -30,6 +31,8 @@ import org.junit.jupiter.api.Test;
 class CombatEngineTest {
 
     private static final double DELTA = 1e-9;
+    /** Pas de récompense : on enchaîne directement les combats. */
+    private static final LootTable NO_LOOT = new LootTable(List::of);
     private static final int HAND_SIZE = (int) StatType.HAND_SIZE.defaultBase();
 
     private final List<GameEvent> events = new ArrayList<>();
@@ -41,7 +44,7 @@ class CombatEngineTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(enemies), terrain, hand, new Stats());
-        engine = new CombatEngine(state, new CardPool(), new Rng(42), bus);
+        engine = new CombatEngine(state, new CardPool(), new Rng(42), bus, NO_LOOT);
     }
 
     private static Enemy hydra() {
@@ -316,7 +319,7 @@ class CombatEngineTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = GameState.newGame();
-        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40))), new Rng(1), bus);
+        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40))), new Rng(1), bus, NO_LOOT);
 
         engine.start();
         int turns = 0;
