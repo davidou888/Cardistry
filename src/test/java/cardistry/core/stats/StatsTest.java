@@ -1,7 +1,7 @@
 package cardistry.core.stats;
 
 import static cardistry.core.stats.StatModifier.flat;
-import static cardistry.core.stats.StatModifier.multiply;
+import static cardistry.core.stats.StatModifier.percent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
@@ -36,30 +36,40 @@ class StatsTest {
     }
 
     @Test
-    void multiplicateursSeMultiplient() {
-        stats.add(multiply(StatType.FIRE_DAMAGE, 1.25, "briquet"));
-        stats.add(multiply(StatType.FIRE_DAMAGE, 1.25, "briquet2"));
-        assertEquals(1.5625, stats.get(StatType.FIRE_DAMAGE), DELTA);
+    void pourcentagesSAdditionnent() {
+        stats.add(percent(StatType.FIRE_DAMAGE, 0.25, "briquet"));
+        stats.add(percent(StatType.FIRE_DAMAGE, 0.25, "briquet2"));
+        assertEquals(1.5, stats.get(StatType.FIRE_DAMAGE), DELTA);
+    }
+
+    @Test
+    void pourcentagesNegatifsEtPlancherAZero() {
+        stats.add(percent(StatType.FIRE_DAMAGE, 0.5, "a"));
+        stats.add(percent(StatType.FIRE_DAMAGE, -0.2, "b"));
+        assertEquals(1.3, stats.get(StatType.FIRE_DAMAGE), DELTA);
+
+        stats.add(percent(StatType.FIRE_DAMAGE, -5, "c"));
+        assertEquals(0, stats.get(StatType.FIRE_DAMAGE), DELTA);
     }
 
     @Test
     void ordreBasePuisPlatsPuisMultiplicateurs() {
         // L'ordre d'ajout ne compte pas : (100 + 20) × 1.5, jamais 100 × 1.5 + 20.
-        stats.add(multiply(StatType.MAX_HP, 1.5, "a"));
+        stats.add(percent(StatType.MAX_HP, 0.5, "a"));
         stats.add(flat(StatType.MAX_HP, 20, "b"));
         assertEquals(180, stats.get(StatType.MAX_HP), DELTA);
     }
 
     @Test
     void unModificateurNAffecteQueSaStat() {
-        stats.add(multiply(StatType.FIRE_DAMAGE, 2, "a"));
+        stats.add(percent(StatType.FIRE_DAMAGE, 1, "a"));
         assertEquals(1.0, stats.get(StatType.WATER_DAMAGE), DELTA);
     }
 
     @Test
     void retirerParSource() {
         stats.add(flat(StatType.HAND_SIZE, 2, "sac"));
-        stats.add(multiply(StatType.FIRE_DAMAGE, 1.25, "sac"));
+        stats.add(percent(StatType.FIRE_DAMAGE, 0.25, "sac"));
         stats.add(flat(StatType.HAND_SIZE, 1, "autre"));
 
         stats.removeBySource("sac");
@@ -79,7 +89,7 @@ class StatsTest {
 
     @Test
     void getIntArrondiALEntierInferieur() {
-        stats.add(multiply(StatType.HAND_SIZE, 1.1, "a")); // 7.7
+        stats.add(percent(StatType.HAND_SIZE, 0.1, "a")); // 7.7
         assertEquals(7, stats.getInt(StatType.HAND_SIZE));
     }
 }

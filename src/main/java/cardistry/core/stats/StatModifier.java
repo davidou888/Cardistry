@@ -10,15 +10,16 @@ public record StatModifier(StatType stat, Kind kind, double value, String source
     public enum Kind {
         /** Ajouté à la base : +2 taille de main. */
         FLAT,
-        /** Multiplie le total : ×1.25 pour +25 %. */
-        MULTIPLY
+        /** Pourcentage du total : 0.25 pour +25 %, -0.1 pour -10 %. Les pourcentages s'additionnent. */
+        PERCENT
     }
 
     public static StatModifier flat(StatType stat, double value, String source) {
         return new StatModifier(stat, Kind.FLAT, value, source);
     }
 
-    public static StatModifier multiply(StatType stat, double factor, String source) {
-        return new StatModifier(stat, Kind.MULTIPLY, factor, source);
+    /** {@code percent(FIRE_DAMAGE, 0.25, …)} = +25 % de dégâts feu. */
+    public static StatModifier percent(StatType stat, double percent, String source) {
+        return new StatModifier(stat, Kind.PERCENT, percent, source);
     }
 }

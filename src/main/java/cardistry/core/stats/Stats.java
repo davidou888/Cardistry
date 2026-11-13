@@ -8,8 +8,9 @@ import java.util.Map;
 /**
  * Stats calculées, jamais écrasées.
  *
- * <p>Ordre de calcul : {@code (base + somme des FLAT) × produit des MULTIPLY}.
- * Les multiplicateurs se multiplient entre eux : deux ×1.25 donnent ×1.5625.
+ * <p>Ordre de calcul : {@code (base + somme des FLAT) × (1 + somme des PERCENT)}.
+ * Les pourcentages s'additionnent : deux +25 % donnent +50 % (×1.5), pas ×1.5625.
+ * Le multiplicateur total ne descend jamais sous 0.
  */
 public final class Stats {
 
@@ -25,17 +26,17 @@ public final class Stats {
 
     public double get(StatType stat) {
         double flat = 0;
-        double multiplier = 1;
+        double percent = 0;
         for (StatModifier modifier : modifiers) {
             if (modifier.stat() != stat) {
                 continue;
             }
             switch (modifier.kind()) {
                 case FLAT -> flat += modifier.value();
-                case MULTIPLY -> multiplier *= modifier.value();
+                case PERCENT -> percent += modifier.value();
             }
         }
-        return (base.get(stat) + flat) * multiplier;
+        return (base.get(stat) + flat) * Math.max(0, 1 + percent);
     }
 
     /** Valeur arrondie à l'entier inférieur, pour les stats entières (taille de main…). */

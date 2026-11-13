@@ -291,8 +291,8 @@ class CombatEngineTest {
     void multiplicateurDeDegatsParElement() {
         Enemy hydra = hydra();
         setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Jet d'eau", WATER, 10)), hydra);
-        state.playerStats().add(StatModifier.multiply(StatType.WATER_DAMAGE, 1.25, "test"));
-        state.playerStats().add(StatModifier.multiply(StatType.FIRE_DAMAGE, 3, "autre élément"));
+        state.playerStats().add(StatModifier.percent(StatType.WATER_DAMAGE, 0.25, "test"));
+        state.playerStats().add(StatModifier.percent(StatType.FIRE_DAMAGE, 2, "autre élément"));
 
         engine.submit(new Action.PlayCard(0));
 
@@ -303,7 +303,7 @@ class CombatEngineTest {
     @Test
     void efficaciteDesSoins() {
         setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Potion", NATURE, 10)), hydra());
-        state.playerStats().add(StatModifier.multiply(StatType.HEAL_EFFICIENCY, 2, "test"));
+        state.playerStats().add(StatModifier.percent(StatType.HEAL_EFFICIENCY, 1, "test"));
 
         engine.submit(new Action.PlayCard(0));
 
