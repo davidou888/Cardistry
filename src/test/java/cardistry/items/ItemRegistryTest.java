@@ -33,7 +33,8 @@ class ItemRegistryTest {
                 "Polycopié d'Analyse I", "Pax", "Grinder", "Photocopieuse", "CMS", "Maté",
                 "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George",
                 "Cafffeeeeinnnn", "Gaz du bat Inf", "Spritz", "Pichet vide", "Foie d'ingénieur", "Ptit Sat ?",
-                "Caïpirinha", "Petit pétou")) {
+                "Caïpirinha", "Petit pétou", "Shot de Jäger", "Moscow Mule", "Raclette", "Space cake",
+                "Pétou ancestral")) {
             assertTrue(names.contains(expected), expected);
         }
     }

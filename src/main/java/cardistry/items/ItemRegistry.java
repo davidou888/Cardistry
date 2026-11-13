@@ -6,6 +6,7 @@ import static cardistry.items.Rarity.RARE;
 import static cardistry.items.Rarity.UNCOMMON;
 
 import cardistry.core.EffectContext;
+import cardistry.core.TemporaryEffect;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatModifier;
@@ -144,6 +145,16 @@ public final class ItemRegistry {
                         .build(),
 
                 // --- Légendaires ---
+                Trinket.builder("petou-ancestral", "Pétou ancestral", LEGENDARY)
+                        .description("+10 PV par tour, mais tu ne joues qu'un tour sur deux (l'adversaire attaque normalement)")
+                        .tags(Tag.PARTY, Tag.FIRE)
+                        .effect(() -> TemporaryEffect.builder("petou-ancestral", "Pétou ancestral")
+                                .summary("un tour sur deux, +10 PV par tour")
+                                .keepAcrossCombats()
+                                .skips(TemporaryEffect.SkipRule.EVEN_COMBAT_TURNS)
+                                .onTurnStart(ctx -> ctx.healPlayer(10))
+                                .build())
+                        .build(),
                 // Comme CMS (provisoire) : s'applique aux dégâts élémentaires.
                 Trinket.builder("ptit-sat", "Ptit Sat ?", LEGENDARY)
                         .description("+10 % dégâts par point d'Ivresse")
@@ -205,6 +216,43 @@ public final class ItemRegistry {
                         }),
                 new Item("spritz", "Spritz", "+30 PV, +1 Ivresse", "", UNCOMMON, Set.of(Tag.PARTY, Tag.DRINK),
                         ctx -> ctx.healPlayer(30)),
+                new Item("shot-de-jager", "Shot de Jäger", "Prochain sort ×2, +1 Ivresse", "", UNCOMMON,
+                        Set.of(Tag.PARTY, Tag.DRINK),
+                        ctx -> ctx.addEffect(TemporaryEffect.builder("shot-de-jager", "Shot de Jäger")
+                                .summary("prochain sort ×2")
+                                .charges(1)
+                                .multipliesNextSpell(2)
+                                .build())),
+                new Item("moscow-mule", "Moscow Mule", "Annule la prochaine attaque, +1 Ivresse", "", UNCOMMON,
+                        Set.of(Tag.PARTY, Tag.DRINK),
+                        ctx -> ctx.addEffect(TemporaryEffect.builder("moscow-mule", "Moscow Mule")
+                                .summary("annule la prochaine attaque")
+                                .charges(1)
+                                .cancelsNextEnemyAttack()
+                                .build())),
+                new Item("raclette", "Raclette", "+50 PV, mais tu sautes ton prochain tour", "", UNCOMMON,
+                        Set.of(Tag.EPFL),
+                        ctx -> {
+                            ctx.healPlayer(50);
+                            ctx.addEffect(TemporaryEffect.builder("raclette", "Raclette")
+                                    .summary("tu sautes ton prochain tour")
+                                    .charges(1)
+                                    .skips(TemporaryEffect.SkipRule.NEXT_TURN)
+                                    .build());
+                        }),
+                // +50 % dégâts : même portée que CMS (dégâts élémentaires).
+                new Item("space-cake", "Space cake", "Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours",
+                        "", RARE, Set.of(Tag.PARTY),
+                        ctx -> ctx.addEffect(TemporaryEffect.builder("space-cake", "Space cake")
+                                .summary("+50 % dégâts")
+                                .delay(3)
+                                .lasts(2)
+                                .keepAcrossCombats()
+                                .percent(StatType.FIRE_DAMAGE, 0.5)
+                                .percent(StatType.WATER_DAMAGE, 0.5)
+                                .percent(StatType.NATURE_DAMAGE, 0.5)
+                                .onActivate(c -> c.healPlayer(40))
+                                .build())),
                 new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),
                         ctx -> ctx.drawCards(2)),
                 new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,
