@@ -1,10 +1,18 @@
 package cardistry.items;
 
 import static cardistry.items.Rarity.COMMON;
+import static cardistry.items.Rarity.LEGENDARY;
 import static cardistry.items.Rarity.RARE;
 import static cardistry.items.Rarity.UNCOMMON;
 
+import cardistry.core.EffectContext;
+import cardistry.core.event.GameEvent;
+import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatType;
+import cardistry.model.Enemy;
+import cardistry.model.card.Card;
+import cardistry.model.card.TerrainCard;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -42,12 +50,56 @@ public final class ItemRegistry {
                         .tags(Tag.DEFENSE, Tag.EPFL)
                         .flat(StatType.DAMAGE_REDUCTION, 2)
                         .build(),
+                Trinket.builder("latte-macchiato-vanille", "Latte macchiato vanille", COMMON)
+                        .description("+1 carte au premier tour de chaque combat")
+                        .tags(Tag.DRAW, Tag.EPFL)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onTurnStart(GameEvent.TurnStarted event, EffectContext ctx) {
+                                if (ctx.state().combatTurn() == 1) {
+                                    ctx.drawCards(1);
+                                }
+                            }
+                        })
+                        .build(),
 
                 // --- Peu communs ---
                 Trinket.builder("pax", "Pax", UNCOMMON)
                         .description("+1 taille de main")
                         .tags(Tag.DRAW, Tag.PARTY)
                         .flat(StatType.HAND_SIZE, 1)
+                        .build(),
+                Trinket.builder("m1", "M1", UNCOMMON)
+                        .description("Changer de terrain rend 5 PV")
+                        .tags(Tag.TERRAIN, Tag.EPFL)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onTerrainChanged(GameEvent.TerrainChanged event, EffectContext ctx) {
+                                ctx.healPlayer(5);
+                            }
+                        })
+                        .build(),
+                Trinket.builder("monde-snack", "Monde Snack", UNCOMMON)
+                        .description("+10 PV à chaque adversaire vaincu")
+                        .tags(Tag.HEAL, Tag.PARTY)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onEnemyKilled(GameEvent.EnemyKilled event, EffectContext ctx) {
+                                ctx.healPlayer(10);
+                            }
+                        })
+                        .build(),
+                Trinket.builder("plan-du-campus", "Plan du campus", UNCOMMON)
+                        .description("Jouer un terrain inflige aussi 5 dégâts")
+                        .tags(Tag.TERRAIN, Tag.EPFL)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onCardPlayed(GameEvent.CardPlayed event, EffectContext ctx) {
+                                if (event.card() instanceof TerrainCard) {
+                                    ctx.damageEnemy(5);
+                                }
+                            }
+                        })
                         .build(),
                 Trinket.builder("grinder", "Grinder", UNCOMMON)
                         .description("Soins de type feu +50 % ; Petit pétou deux fois plus fréquent dans la pioche")
@@ -62,6 +114,18 @@ public final class ItemRegistry {
                         .tags(Tag.DRAW, Tag.EPFL)
                         .flat(StatType.CARDS_PER_DRAW, 1)
                         .build(),
+                Trinket.builder("comprehension-algebrique", "Compréhension algébrique", RARE)
+                        .description("20 % des dégâts de sorts te soignent")
+                        .tags(Tag.HEAL, Tag.NATURE)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onDamageDealt(GameEvent.DamageDealt event, EffectContext ctx) {
+                                if (event.source() == GameEvent.DamageDealt.Source.SPELL && event.target() instanceof Enemy) {
+                                    ctx.healPlayer(0.2 * event.amount());
+                                }
+                            }
+                        })
+                        .build(),
                 // Provisoire (question ouverte) : +50 % sur les dégâts élémentaires (sorts, objets à élément).
                 Trinket.builder("cms", "CMS", RARE)
                         .description("+50 % dégâts, mais l'adversaire aussi +25 %")
@@ -70,6 +134,29 @@ public final class ItemRegistry {
                         .percent(StatType.WATER_DAMAGE, 0.5)
                         .percent(StatType.NATURE_DAMAGE, 0.5)
                         .percent(StatType.ENEMY_DAMAGE, 0.25)
+                        .build(),
+
+                // --- Légendaires ---
+                Trinket.builder("george", "George", LEGENDARY)
+                        .description("À chaque carte piochée, une autre carte de ta main (tirée au hasard) est"
+                                + " remplacée par une carte aléatoire du pool")
+                        .flavor("À l'origine de la redistribution des biens communs.")
+                        .tags(Tag.PARTY)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onCardDrawn(GameEvent.CardDrawn event, EffectContext ctx) {
+                                List<Card> hand = ctx.state().hand();
+                                List<Integer> others = new ArrayList<>();
+                                for (int i = 0; i < hand.size(); i++) {
+                                    if (hand.get(i) != event.card()) {
+                                        others.add(i);
+                                    }
+                                }
+                                if (!others.isEmpty()) {
+                                    ctx.replaceCardInHand(ctx.rng().pick(others));
+                                }
+                            }
+                        })
                         .build());
     }
 

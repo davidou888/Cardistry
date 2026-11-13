@@ -150,6 +150,105 @@ class TrinketContentTest {
         assertEquals(100 - 12.5, state.player().hp(), DELTA);  // adversaire +25 %
     }
 
+    // --- Trinkets à hooks ---
+
+    @Test
+    void latteMacchiatoVanillePremierTourDeChaqueCombat() {
+        setUp(FIRE, List.of());
+        equip("latte-macchiato-vanille");
+        engine.start();
+        assertEquals(GameState.STARTING_HAND, state.hand().size());
+
+        engine.startTurn();
+        assertEquals(GameState.STARTING_HAND + 1, state.hand().size());
+
+        engine.submit(new Action.PlayCard(0));
+        engine.startTurn();
+        assertEquals(GameState.STARTING_HAND, state.hand().size()); // 6 − 1 jouée, pas de bonus au tour 2
+    }
+
+    @Test
+    void m1ChangerDeTerrainRendCinqPv() {
+        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER)));
+        state.player().takeDamage(30);
+        equip("m1");
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(true, events.contains(new GameEvent.Healed(state.player(), 5, 1.0)));
+        // Marécage (eau) bat l'adversaire feu : attaque ×0.75.
+        assertEquals(70 + 5 - 7.5, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void mondeSnackSoigneAChaqueAdversaireVaincu() {
+        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100)));
+        state.player().takeDamage(30);
+        equip("monde-snack");
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(80, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void planDuCampusUnTerrainInfligeCinqDegats() {
+        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER), new SpellCard("Sort", FIRE, 20)));
+        equip("plan-du-campus");
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(95, enemy.hp(), DELTA);
+
+        engine.submit(new Action.PlayCard(0)); // un sort ne déclenche pas Plan du campus
+        assertEquals(75, enemy.hp(), DELTA);
+    }
+
+    @Test
+    void comprehensionAlgebriqueVingtPourcentDesSorts() {
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20), new TerrainCard("Marécage", WATER)));
+        state.player().takeDamage(50);
+        equip("comprehension-algebrique");
+        equip("plan-du-campus");
+
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(new GameEvent.Healed(state.player(), 4, 1.0), events.stream()
+                .filter(GameEvent.Healed.class::isInstance).findFirst().orElseThrow());
+
+        // Les dégâts d'effets (Plan du campus) ne soignent pas.
+        events.clear();
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(0, events.stream().filter(GameEvent.Healed.class::isInstance).count());
+    }
+
+    @Test
+    void georgeRemplaceUneAutreCarteAChaquePioche() {
+        Card keep = new TerrainCard("Gardée", FIRE);
+        setUp(FIRE, List.of(keep), new CardPool(List.of(new SpellCard("Neuve", WATER, 10))));
+        equip("george");
+
+        engine.submit(new Action.DrawCard());
+
+        // La carte piochée reste ; l'autre (la seule) est remplacée.
+        assertEquals(List.of("Neuve", "Neuve"), state.hand().stream().map(Card::name).toList());
+        GameEvent.CardReplaced replaced = (GameEvent.CardReplaced) events.stream()
+                .filter(GameEvent.CardReplaced.class::isInstance).findFirst().orElseThrow();
+        assertEquals(keep, replaced.removed());
+    }
+
+    @Test
+    void georgeSansAutreCarteNeFaitRien() {
+        setUp(FIRE, List.of());
+        equip("george");
+        engine.submit(new Action.DrawCard());
+        assertEquals(1, state.hand().size());
+        assertEquals(0, events.stream().filter(GameEvent.CardReplaced.class::isInstance).count());
+    }
+
+    @Test
+    void georgeEtPhotocopieuseDeuxRemplacements() {
+        setUp(FIRE, List.of(new TerrainCard("A", FIRE), new TerrainCard("B", FIRE)));
+        equip("george");
+        equip("photocopieuse");
+        engine.submit(new Action.DrawCard());
+        assertEquals(2, events.stream().filter(GameEvent.CardReplaced.class::isInstance).count());
+        assertEquals(4, state.hand().size());
+    }
+
     @Test
     void cmsEtBriquetsSAdditionnent() {
         setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));
