@@ -124,6 +124,19 @@ class InventoryTest {
     }
 
     @Test
+    void lEfficaciteDesSoinsSAppliqueAuxObjets() {
+        setUp(List.of(), hydra());
+        state.player().takeDamage(50);
+        state.playerStats().add(cardistry.core.stats.StatModifier.percent(StatType.HEAL_EFFICIENCY, 0.5, "test"));
+        engine.give(item("mate", ctx -> ctx.healPlayer(10)));
+
+        engine.submit(new Action.UseItem(0));
+
+        assertEquals(new GameEvent.Healed(state.player(), 15, 1.5), events.get(1));
+        assertEquals(65, state.player().hp(), DELTA);
+    }
+
+    @Test
     void objetAbsentRefuse() {
         setUp(List.of(), hydra());
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.UseItem(0)));

@@ -13,7 +13,7 @@ public interface EffectContext {
     /** Inflige {@code amount} dégâts bruts à l'adversaire actuel (aucun multiplicateur). */
     void damageEnemy(double amount);
 
-    /** Soigne le joueur de {@code amount} PV, plafonné aux PV max (aucun multiplicateur). */
+    /** Soigne le joueur de {@code amount} PV × efficacité des soins, plafonné aux PV max. */
     void healPlayer(double amount);
 
     /** Pioche jusqu'à {@code count} cartes, sans dépasser la taille de main. */

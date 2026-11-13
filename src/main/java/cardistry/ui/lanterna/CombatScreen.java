@@ -32,7 +32,7 @@ import java.util.List;
  */
 final class CombatScreen {
 
-    static final String HELP = "←/→ Entrée · 1-7 · P piocher · A/Z/E objets · I inventaire · Q quitter";
+    static final String HELP = "←/→ Entrée · 1-7 · P piocher · W/E/R objets · I inventaire · Q quitter";
     private static final int SPRITE_WIDTH = 30;
     private static final int BAR_WIDTH = 20;
     private static final int CARD_HEIGHT = 6;
@@ -112,7 +112,7 @@ final class CombatScreen {
         drawTrinkets(p, state);
     }
 
-    /** Ligne 8, à droite de « TOI » : [A] Maté  [Z] ·  [E] · */
+    /** Ligne 8, à droite de « TOI » : [W] Maté  [E] ·  [R] · */
     private static void drawItems(Painter p, GameState state) {
         int col = 7;
         int limit = p.cols() - SPRITE_WIDTH - 3;

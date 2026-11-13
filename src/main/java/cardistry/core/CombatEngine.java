@@ -4,6 +4,7 @@ import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameEvent.ActionRejected.Reason;
 import cardistry.core.event.HookDispatcher;
+import cardistry.core.stats.StatType;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.items.LootTable;
@@ -337,7 +338,8 @@ public final class CombatEngine {
 
         @Override
         public void healPlayer(double amount) {
-            CombatEngine.this.healPlayer(amount, 1.0);
+            double mult = state.playerStats().get(StatType.HEAL_EFFICIENCY);
+            CombatEngine.this.healPlayer(amount * mult, mult);
         }
 
         @Override

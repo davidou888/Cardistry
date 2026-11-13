@@ -13,7 +13,7 @@ Prototype jouable en plein écran Lanterna : 3 combats (un par adversaire), nouv
 - `core/stats/` — `Stats`, `StatModifier` (plats + pourcentages qui s'additionnent), `StatType`. Branchées : PV max (PV de départ + plafond des soins), taille de main, emplacements de trinkets (5) et d'objets (3), multiplicateur de dégâts par élément, efficacité des soins. Les autres stats sont déclarées mais pas encore lues par le moteur.
 - `model/` — `Element`, `ElementRules` (**toutes** les tables de multiplicateurs), `Player`/`Enemy`, `EnemyRoster`, `card/` (`Card` scellée, `CardPool` = registre ; la pioche renvoie des copies)
 - `items/` — `Rarity`, `Tag`, `Collectible` (scellée : `Item` consommable, `Trinket` passif = modificateurs de stats + hooks, construit par builder), `ItemRegistry` (**registre de tout le contenu**), `LootTable` (tirage pondéré par rareté, seedé)
-- `ui/` — interfaces `Renderer`/`Input`, `GameLoop`, `Format`, `ItemKeys` (A/Z/E…), `QuitGameException`
+- `ui/` — interfaces `Renderer`/`Input`, `GameLoop`, `Format`, `ItemKeys` (W/E/R…, clavier QWERTZ), `QuitGameException`
   - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `src/main/resources/sprites/<nom-sans-accents>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre

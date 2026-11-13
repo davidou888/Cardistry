@@ -143,7 +143,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 
 ## Interface (terminal ASCII, Lanterna)
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
-Fait aussi : écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec A/Z/E (action gratuite), trinkets affichés en combat.
+Fait aussi : écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
 Reste : carte de la run, shop, transitions d'écran.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).

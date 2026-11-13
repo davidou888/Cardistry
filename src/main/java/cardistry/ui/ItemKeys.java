@@ -1,14 +1,17 @@
 package cardistry.ui;
 
-/** Touches des emplacements d'objets : A, Z, E… (rangée du haut d'un clavier AZERTY). */
+/**
+ * Touches des emplacements d'objets : W, E, R… (rangée du haut d'un clavier QWERTZ, en évitant
+ * Q quitter, I inventaire et P piocher).
+ */
 public final class ItemKeys {
 
-    private static final String LETTERS = "azertyuiop";
+    private static final String LETTERS = "wertzuo";
 
     private ItemKeys() {
     }
 
-    /** Touche de l'emplacement {@code slot} (0 → 'a'). */
+    /** Touche de l'emplacement {@code slot} (0 → 'w'). */
     public static char key(int slot) {
         return LETTERS.charAt(slot);
     }
@@ -19,7 +22,7 @@ public final class ItemKeys {
         return index >= 0 && index < slots ? index : -1;
     }
 
-    /** "A/Z/E" pour 3 emplacements. */
+    /** "W/E/R" pour 3 emplacements. */
     public static String label(int slots) {
         StringBuilder label = new StringBuilder();
         for (int i = 0; i < slots; i++) {

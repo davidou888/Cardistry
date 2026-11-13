@@ -301,19 +301,19 @@ class LanternaUiTest {
         GameState state = withInventory(List.of(mate()), List.of(briquets()));
         ui.showStatus(state);
         String text = dump("08-combat-inventaire");
-        assertTrue(text.contains("[A] Maté"));
-        assertTrue(text.contains("[Z] ·"));
+        assertTrue(text.contains("[W] Maté"));
+        assertTrue(text.contains("[E] ·"));
         assertTrue(text.contains("Trinkets 1/5"));
         assertTrue(text.contains("Redistribution des briquets"));
-        assertTrue(text.contains("A/Z/E objets"));
+        assertTrue(text.contains("W/E/R objets"));
         assertTrue(text.contains("Q quitter ─"), "l'aide tient dans le cadre");
     }
 
     @Test
-    void toucheAUtiliseLePremierObjet() throws IOException {
+    void toucheWUtiliseLePremierObjet() throws IOException {
         open(80, 24);
         GameState state = withInventory(List.of(mate()), List.of());
-        type("a");
+        type("w");
         assertEquals(new Action.UseItem(0), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
     }
 
