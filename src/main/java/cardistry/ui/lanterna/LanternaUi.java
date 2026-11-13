@@ -5,8 +5,11 @@ import static cardistry.ui.Format.num;
 
 import cardistry.core.Action;
 import cardistry.core.GameState;
+import cardistry.core.RewardChoice;
 import cardistry.core.event.GameEvent;
+import cardistry.items.Collectible;
 import cardistry.model.Enemy;
+import cardistry.ui.ItemKeys;
 import cardistry.ui.Input;
 import cardistry.ui.QuitGameException;
 import cardistry.ui.Renderer;
@@ -21,11 +24,12 @@ import com.googlecode.lanterna.terminal.Terminal;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, GAME_OVER }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, GAME_OVER }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -37,6 +41,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private Page page = Page.TITLE;
     private GameState state;
     private long seed;
+    private List<Collectible> rewardOptions = List.of();
+    private int rewardSelected = 0;
+    private int replaceSelected = 0;
 
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast) throws IOException {
@@ -221,6 +228,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         confirmQuit();
                     } else if (c == 'p' || c == '0') {
                         return new Action.DrawCard();
+                    } else if (c == 'i') {
+                        showInventory();
+                    } else if (ItemKeys.slot(c, state.itemSlots()) >= 0) {
+                        return new Action.UseItem(ItemKeys.slot(c, state.itemSlots()));
                     } else if (c >= '1' && c <= '9') {
                         int slot = c - '1';
                         if (slot < handSize) {
@@ -237,6 +248,69 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }
             }
         }
+    }
+
+    @Override
+    public RewardChoice chooseReward(GameState state, List<Collectible> options) {
+        this.state = state;
+        this.rewardOptions = options;
+        rewardSelected = Math.min(rewardSelected, options.size() - 1);
+        page = Page.REWARD;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            if (page == Page.REWARD) {
+                switch (key.getKeyType()) {
+                    case ArrowLeft -> rewardSelected = Math.floorMod(rewardSelected - 1, options.size());
+                    case ArrowRight -> rewardSelected = Math.floorMod(rewardSelected + 1, options.size());
+                    case Enter -> {
+                        if (!ItemScreens.isFull(state, options.get(rewardSelected))) {
+                            return leaveReward(RewardChoice.Take.into(rewardSelected));
+                        }
+                        replaceSelected = 0;
+                        page = Page.REPLACE;
+                    }
+                    case Character -> {
+                        char c = Character.toLowerCase(key.getCharacter());
+                        if (c == 's') {
+                            return leaveReward(new RewardChoice.Skip());
+                        } else if (c == 'q') {
+                            confirmQuit();
+                        }
+                    }
+                    default -> {
+                    }
+                }
+            } else {
+                int owned = options.get(rewardSelected) instanceof cardistry.items.Trinket
+                        ? state.trinkets().size() : state.items().size();
+                switch (key.getKeyType()) {
+                    case ArrowLeft -> replaceSelected = Math.floorMod(replaceSelected - 1, owned);
+                    case ArrowRight -> replaceSelected = Math.floorMod(replaceSelected + 1, owned);
+                    case Enter -> {
+                        return leaveReward(new RewardChoice.Take(rewardSelected, replaceSelected));
+                    }
+                    case Escape -> page = Page.REWARD;
+                    default -> {
+                    }
+                }
+            }
+            render();
+        }
+    }
+
+    private RewardChoice leaveReward(RewardChoice choice) {
+        page = Page.COMBAT;
+        rewardSelected = 0;
+        return choice;
+    }
+
+    private void showInventory() {
+        page = Page.INVENTORY;
+        render();
+        readKey();
+        page = Page.COMBAT;
+        render();
     }
 
     @Override
@@ -401,7 +475,15 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                             CombatScreen.draw(painter, state, view, seed);
                         }
                     }
+                    case INVENTORY -> ItemScreens.inventory(painter, state);
+                    case REWARD -> ItemScreens.reward(painter, state, rewardOptions, rewardSelected, seed);
+                    case REPLACE -> ItemScreens.replace(painter, state, rewardOptions.get(rewardSelected),
+                            replaceSelected, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed);
+                }
+                if (view.confirmingQuit) {
+                    painter.text(1, size.getRows() - 1, "─".repeat(size.getColumns() - 2), Palette.FRAME);
+                    painter.text(2, size.getRows() - 1, " Quitter la partie ? [O]ui / [N]on ", Palette.WARNING, true);
                 }
             }
             screen.refresh();

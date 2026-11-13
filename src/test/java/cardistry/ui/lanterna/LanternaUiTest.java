@@ -9,10 +9,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import cardistry.core.Action;
 import cardistry.core.CombatEngine;
 import cardistry.core.GameState;
+import cardistry.core.RewardChoice;
 import cardistry.core.Rng;
 import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.stats.Stats;
+import cardistry.items.Collectible;
+import cardistry.items.Item;
+import cardistry.items.ItemRegistry;
+import cardistry.items.Trinket;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
 import cardistry.model.EnemyRoster;
@@ -242,7 +247,7 @@ class LanternaUiTest {
 
         press(KeyType.Enter); // titre
         for (int i = 0; i < 200; i++) {
-            type("1p"); // jouer la 1re carte, piocher, etc.
+            type("1ps"); // jouer la 1re carte, piocher, refuser les récompenses
         }
 
         // Capture l'écran de combat au tour 3.
@@ -269,6 +274,129 @@ class LanternaUiTest {
         String text = dump("07-fin");
         assertTrue(text.contains(engine.state().isWon() ? "VICTOIRE" : "DÉFAITE"));
         assertTrue(text.contains("--seed 7"));
+    }
+
+    // --- Objets, trinkets, récompenses ---
+
+    private static Item mate() {
+        return ItemRegistry.items().get(0);
+    }
+
+    private static Trinket briquets() {
+        return ItemRegistry.trinkets().get(0);
+    }
+
+    /** État avec inventaire : passe par le moteur pour équiper. */
+    private static GameState withInventory(List<Item> items, List<Trinket> trinkets) {
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), hydra());
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus());
+        items.forEach(engine::give);
+        trinkets.forEach(engine::equip);
+        return state;
+    }
+
+    @Test
+    void combatAfficheObjetsEtTrinkets() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(mate()), List.of(briquets()));
+        ui.showStatus(state);
+        String text = dump("08-combat-inventaire");
+        assertTrue(text.contains("[A] Maté"));
+        assertTrue(text.contains("[Z] ·"));
+        assertTrue(text.contains("Trinkets 1/5"));
+        assertTrue(text.contains("Redistribution des briquets"));
+        assertTrue(text.contains("A/Z/E objets"));
+        assertTrue(text.contains("Q quitter ─"), "l'aide tient dans le cadre");
+    }
+
+    @Test
+    void toucheAUtiliseLePremierObjet() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(mate()), List.of());
+        type("a");
+        assertEquals(new Action.UseItem(0), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+    }
+
+    @Test
+    void toucheIOuvreLInventaire() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(mate()), List.of(briquets()));
+        Action[] result = new Action[1];
+        Thread player = new Thread(() -> result[0] = ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("i");
+
+        waitFor(() -> screen().contains("Inventaire"));
+        String text = dump("09-inventaire");
+        type("x");   // retour au combat
+        type("p");   // puis piocher
+        player.join(TIMEOUT.toMillis());
+
+        assertTrue(text.contains("Maté"));
+        assertTrue(text.contains("+25 % dégâts feu"));
+        assertEquals(new Action.DrawCard(), result[0]);
+    }
+
+    @Test
+    void ecranDeRecompensePrendreLaDeuxieme() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        List<Collectible> options = List.of(mate(), briquets(), mate());
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+
+        RewardChoice choice = assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options));
+
+        assertEquals(RewardChoice.Take.into(1), choice);
+    }
+
+    @Test
+    void ecranDeRecompenseRenduPuisRefus() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        List<Collectible> options = List.of(mate(), briquets());
+        RewardChoice[] result = new RewardChoice[1];
+        Thread player = new Thread(() -> result[0] = ui.chooseReward(state, options));
+        player.setDaemon(true);
+        player.start();
+
+        waitFor(() -> screen().contains("Choisis une récompense"));
+        String text = dump("10-recompense");
+        type("s");
+        player.join(TIMEOUT.toMillis());
+
+        assertTrue(text.contains("Objet · Commun"));
+        assertTrue(text.contains("Trinket · Commun"));
+        assertTrue(text.contains("Maté"));
+        assertTrue(text.contains("S refuser"));
+        assertEquals(new RewardChoice.Skip(), result[0]);
+    }
+
+    @Test
+    void inventairePleinDemandeQuoiRemplacer() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(mate(), mate(), mate()), List.of());
+        List<Collectible> options = List.of(mate());
+        press(KeyType.Enter);          // prendre → inventaire plein → écran de remplacement
+        press(KeyType.ArrowRight);     // 2e objet
+        press(KeyType.Enter);
+
+        assertEquals(new RewardChoice.Take(0, 1), assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options)));
+    }
+
+    private void waitFor(java.util.function.BooleanSupplier condition) {
+        long end = System.currentTimeMillis() + 5000;
+        while (!condition.getAsBoolean()) {
+            if (System.currentTimeMillis() > end) {
+                throw new AssertionError("Écran attendu non affiché :\n" + screen());
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private static Enemy hydra() {

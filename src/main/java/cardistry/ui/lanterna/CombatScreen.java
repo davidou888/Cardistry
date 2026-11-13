@@ -9,7 +9,10 @@ import cardistry.model.card.Card;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
+import cardistry.items.Item;
+import cardistry.items.Trinket;
 import cardistry.ui.Format;
+import cardistry.ui.ItemKeys;
 import com.googlecode.lanterna.TextColor;
 import java.util.List;
 
@@ -29,7 +32,7 @@ import java.util.List;
  */
 final class CombatScreen {
 
-    static final String HELP = "←/→ choisir · Entrée jouer · 1-7 jouer · P piocher · Q quitter";
+    static final String HELP = "←/→ Entrée · 1-7 · P piocher · A/Z/E objets · I inventaire · Q quitter";
     private static final int SPRITE_WIDTH = 30;
     private static final int BAR_WIDTH = 20;
     private static final int CARD_HEIGHT = 6;
@@ -39,8 +42,7 @@ final class CombatScreen {
     }
 
     static void draw(Painter p, GameState state, ViewState view, long seed) {
-        p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed,
-                view.confirmingQuit ? "" : HELP);
+        p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed, HELP);
         drawEnemy(p, state, view);
         drawSprite(p, state, view);
         drawTerrainAndPlayer(p, state, view);
@@ -50,9 +52,6 @@ final class CombatScreen {
         p.separator(20, "Journal");
         drawLog(p, view);
         drawFloating(p, view);
-        if (view.confirmingQuit) {
-            p.text(2, p.rows() - 1, " Quitter la partie ? [O]ui / [N]on ", Palette.WARNING, true);
-        }
     }
 
     private static void drawEnemy(Painter p, GameState state, ViewState view) {
@@ -107,8 +106,53 @@ final class CombatScreen {
         p.text(11, 6, terrain.name() + " (" + terrain.element().displayName() + ")", terrainColor, true);
 
         p.text(2, 8, "TOI", Palette.TEXT, true);
+        drawItems(p, state);
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
         hpLine(p, 9, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
+        drawTrinkets(p, state);
+    }
+
+    /** Ligne 8, à droite de « TOI » : [A] Maté  [Z] ·  [E] · */
+    private static void drawItems(Painter p, GameState state) {
+        int col = 7;
+        int limit = p.cols() - SPRITE_WIDTH - 3;
+        for (int i = 0; i < state.itemSlots() && col < limit; i++) {
+            String key = "[" + Character.toUpperCase(ItemKeys.key(i)) + "] ";
+            p.text(col, 8, key, Palette.DIM);
+            col += key.length();
+            if (i < state.items().size()) {
+                Item item = state.items().get(i);
+                String name = Painter.fit(item.name(), Math.max(1, Math.min(12, limit - col)));
+                p.text(col, 8, name, Palette.rarity(item.rarity()), true);
+                col += name.length() + 2;
+            } else {
+                p.text(col, 8, "·", Palette.DIM);
+                col += 3;
+            }
+        }
+    }
+
+    /** Ligne 10 : trinkets équipés, colorés par rareté. */
+    private static void drawTrinkets(Painter p, GameState state) {
+        String label = "Trinkets " + state.trinkets().size() + "/" + state.trinketSlots();
+        p.text(2, 10, label, Palette.DIM);
+        int col = 3 + label.length();
+        int limit = p.cols() - SPRITE_WIDTH - 3;
+        List<Trinket> trinkets = state.trinkets();
+        for (int i = 0; i < trinkets.size(); i++) {
+            int room = limit - col;
+            if (room < 4) {
+                p.text(limit - 1, 10, "…", Palette.DIM);
+                break;
+            }
+            Trinket trinket = trinkets.get(i);
+            String name = Painter.fit(trinket.name(), Math.min(room, 28));
+            p.text(col, 10, name, Palette.rarity(trinket.rarity()));
+            col += name.length() + 2;
+        }
+        if (trinkets.isEmpty()) {
+            p.text(col, 10, "aucun", Palette.DIM);
+        }
     }
 
     private static void hpLine(Painter p, int row, double hp, double max, TextColor barColor, TextColor flash) {

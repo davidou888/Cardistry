@@ -1,5 +1,6 @@
 package cardistry.ui.lanterna;
 
+import cardistry.items.Rarity;
 import cardistry.model.Element;
 import com.googlecode.lanterna.TextColor;
 
@@ -23,6 +24,16 @@ final class Palette {
             case FIRE -> TextColor.ANSI.RED_BRIGHT;
             case WATER -> TextColor.ANSI.BLUE_BRIGHT;
             case NATURE -> TextColor.ANSI.GREEN_BRIGHT;
+        };
+    }
+
+    static TextColor rarity(Rarity rarity) {
+        return switch (rarity) {
+            case COMMON -> TextColor.ANSI.WHITE_BRIGHT;
+            case UNCOMMON -> TextColor.ANSI.GREEN_BRIGHT;
+            case RARE -> TextColor.ANSI.BLUE_BRIGHT;
+            case LEGENDARY -> TextColor.ANSI.YELLOW_BRIGHT;
+            case SECRET -> TextColor.ANSI.MAGENTA_BRIGHT;
         };
     }
 

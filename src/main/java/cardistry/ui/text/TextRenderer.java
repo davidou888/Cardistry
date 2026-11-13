@@ -7,6 +7,8 @@ import static cardistry.ui.Format.num;
 import cardistry.core.GameState;
 import cardistry.core.event.GameEvent;
 import cardistry.items.Collectible;
+import cardistry.items.Trinket;
+import cardistry.ui.ItemKeys;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
@@ -125,6 +127,12 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println("TERRAIN ACTUEL :");
         console.println(describe(state.terrain()));
+        console.println();
+        console.println("TRINKETS (" + state.trinkets().size() + "/" + state.trinketSlots() + ") :"
+                + (state.trinkets().isEmpty() ? " aucun" : ""));
+        for (Trinket trinket : state.trinkets()) {
+            console.println("- " + describe(trinket));
+        }
         console.println(SEPARATOR);
         console.pause(0.5);
     }
@@ -142,6 +150,9 @@ public final class TextRenderer implements Renderer {
         }
         console.println();
         console.println("[0] Piocher une carte");
+        for (int i = 0; i < state.items().size(); i++) {
+            console.println("[" + ItemKeys.key(i) + "] Utiliser " + describe(state.items().get(i)) + " (gratuit)");
+        }
         console.println("Tu as " + hand.size() + "/" + state.handSize() + " cartes");
         console.println(SEPARATOR);
         console.println();

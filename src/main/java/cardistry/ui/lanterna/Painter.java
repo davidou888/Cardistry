@@ -78,7 +78,7 @@ final class Painter {
             text(cols() - rightInfo.length() - 4, 0, " " + rightInfo + " ", Palette.DIM);
         }
         if (!help.isEmpty()) {
-            text(2, rows() - 1, " " + help + " ", Palette.DIM);
+            text(2, rows() - 1, fit(" " + help + " ", cols() - 4), Palette.DIM);
         }
     }
 
