@@ -8,6 +8,7 @@ import static cardistry.items.Rarity.UNCOMMON;
 import cardistry.core.EffectContext;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
+import cardistry.core.stats.StatModifier;
 import cardistry.core.stats.StatType;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
@@ -136,8 +137,32 @@ public final class ItemRegistry {
                         .percent(StatType.NATURE_DAMAGE, 0.5)
                         .percent(StatType.ENEMY_DAMAGE, 0.25)
                         .build(),
+                Trinket.builder("foie-d-ingenieur", "Foie d'ingénieur", RARE)
+                        .description("Gueule de bois à 5 Ivresse au lieu de 3")
+                        .tags(Tag.PARTY)
+                        .flat(StatType.HANGOVER_THRESHOLD, 2)
+                        .build(),
 
                 // --- Légendaires ---
+                // Comme CMS (provisoire) : s'applique aux dégâts élémentaires.
+                Trinket.builder("ptit-sat", "Ptit Sat ?", LEGENDARY)
+                        .description("+10 % dégâts par point d'Ivresse")
+                        .tags(Tag.PARTY)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onDrunkennessChanged(GameEvent.DrunkennessChanged event, EffectContext ctx) {
+                                String source = Trinket.sourceOf("ptit-sat");
+                                ctx.state().playerStats().removeBySource(source);
+                                double bonus = 0.1 * event.drunkenness();
+                                if (bonus > 0) {
+                                    for (Element element : Element.values()) {
+                                        ctx.state().playerStats().add(
+                                                StatModifier.percent(StatType.damageMultiplier(element), bonus, source));
+                                    }
+                                }
+                            }
+                        })
+                        .build(),
                 Trinket.builder("george", "George", LEGENDARY)
                         .description("À chaque carte piochée, une autre carte de ta main (tirée au hasard) est"
                                 + " remplacée par une carte aléatoire du pool")
@@ -165,6 +190,14 @@ public final class ItemRegistry {
         return List.of(
                 new Item("mate", "Maté", "+10 PV", "", COMMON, Set.of(Tag.HEAL),
                         ctx -> ctx.healPlayer(10)),
+                new Item("pichet-vide", "Pichet vide", "15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse", "",
+                        COMMON, Set.of(Tag.PARTY, Tag.DRINK),
+                        ctx -> {
+                            ctx.damageEnemy(15);
+                            ctx.damagePlayer(5);
+                        }),
+                new Item("spritz", "Spritz", "+30 PV, +1 Ivresse", "", UNCOMMON, Set.of(Tag.PARTY, Tag.DRINK),
+                        ctx -> ctx.healPlayer(30)),
                 new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),
                         ctx -> ctx.drawCards(2)),
                 new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,

@@ -113,6 +113,9 @@ public final class CombatEngine {
                 yield false;
             }
         };
+        if (state.isLost()) {
+            return ActionResult.TURN_ENDED; // mort de son propre effet (GameLost déjà publié)
+        }
         if (resolveEnemyDeath()) {
             return ActionResult.TURN_ENDED;
         }
@@ -385,6 +388,17 @@ public final class CombatEngine {
             double mult = ElementRules.spellMultiplier(element, state.currentEnemy().element())
                     * state.playerStats().get(StatType.damageMultiplier(element));
             CombatEngine.this.damageEnemy(amount * mult, mult, GameEvent.DamageDealt.Source.EFFECT);
+        }
+
+        @Override
+        public void damagePlayer(double amount) {
+            Player player = state.player();
+            boolean wasAlive = player.isAlive();
+            player.takeDamage(amount);
+            bus.publish(new GameEvent.DamageDealt(player, amount, 1.0, GameEvent.DamageDealt.Source.EFFECT));
+            if (wasAlive && !player.isAlive()) {
+                bus.publish(new GameEvent.GameLost());
+            }
         }
 
         @Override

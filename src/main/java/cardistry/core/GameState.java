@@ -190,8 +190,9 @@ public final class GameState {
         return weight;
     }
 
+    /** Tous les adversaires sont morts, et le joueur est vivant. */
     public boolean isWon() {
-        return enemies.stream().noneMatch(Enemy::isAlive);
+        return player.isAlive() && enemies.stream().noneMatch(Enemy::isAlive);
     }
 
     public boolean isLost() {

@@ -55,6 +55,52 @@ class ItemContentTest {
     }
 
     @Test
+    void spritz() {
+        setUp(List.of(), 1);
+        state.player().takeDamage(50);
+        use("spritz");
+        assertEquals(80, state.player().hp(), DELTA);
+        assertEquals(1, state.drunkenness());
+    }
+
+    @Test
+    void pichetVide() {
+        setUp(List.of(), 1);
+        assertEquals(ActionResult.FREE_ACTION, use("pichet-vide"));
+        assertEquals(85, hydra.hp(), DELTA);
+        assertEquals(95, state.player().hp(), DELTA);
+        assertEquals(1, state.drunkenness());
+    }
+
+    @Test
+    void pichetVideIgnoreLaReductionDeDegats() {
+        setUp(List.of(), 1);
+        engine.equip(ItemRegistry.trinket("polycopie-d-analyse-i"));
+        use("pichet-vide");
+        assertEquals(95, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void pichetVidePeutTuerLeJoueur() {
+        setUp(List.of(), 1);
+        state.player().takeDamage(97);
+        assertEquals(ActionResult.TURN_ENDED, use("pichet-vide"));
+        assertTrue(state.isLost());
+        assertTrue(events.contains(new GameEvent.GameLost()));
+        assertEquals(0, events.stream().filter(GameEvent.EnemyAttacked.class::isInstance).count());
+    }
+
+    @Test
+    void pichetVideMortSimultaneeCEstUneDefaite() {
+        setUp(List.of(), 1);
+        hydra.takeDamage(90);           // l'adversaire meurt aussi
+        state.player().takeDamage(97);
+        use("pichet-vide");
+        assertTrue(state.isLost());
+        assertEquals(false, state.isWon());
+    }
+
+    @Test
     void cafffeeeeinnnn() {
         setUp(List.of(), 1);
         assertEquals(ActionResult.FREE_ACTION, use("cafffeeeeinnnn"));

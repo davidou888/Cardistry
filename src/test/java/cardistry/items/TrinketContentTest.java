@@ -249,6 +249,56 @@ class TrinketContentTest {
         assertEquals(4, state.hand().size());
     }
 
+    // --- Ivresse ---
+
+    private void drink(int times) {
+        for (int i = 0; i < times; i++) {
+            engine.give(ItemRegistry.item("spritz"));
+            engine.submit(new Action.UseItem(0));
+        }
+    }
+
+    @Test
+    void foieDIngenieurSeuilACinq() {
+        setUp(FIRE, List.of());
+        equip("foie-d-ingenieur");
+        drink(4);
+        assertEquals(true, state.pendingCurses().isEmpty());
+        drink(1);
+        assertEquals(java.util.Set.of(cardistry.core.Curse.HANGOVER), state.pendingCurses());
+    }
+
+    @Test
+    void ptitSatDixPourcentParPointDIvresse() {
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));
+        equip("ptit-sat");
+        drink(2);
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(20 * 1.2, lastDamageToEnemy(), DELTA);
+    }
+
+    @Test
+    void ptitSatRetombeAvecLIvresseEtSAdditionneALaCms() {
+        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100), new SpellCard("Sort", FIRE, 20)));
+        equip("ptit-sat");
+        equip("cms");
+        drink(3);
+        assertEquals(1 + 0.5 + 0.3, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
+
+        engine.submit(new Action.PlayCard(0)); // tue l'adversaire : fin du combat, Ivresse à 0
+        assertEquals(1.5, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
+    }
+
+    @Test
+    void ptitSatDesequipeRetireToutSesBonus() {
+        setUp(FIRE, List.of());
+        equip("ptit-sat");
+        drink(2);
+        assertEquals(1.2, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
+        state.playerStats().removeBySource(state.trinkets().get(0).modifierSource());
+        assertEquals(1.0, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
+    }
+
     @Test
     void cmsEtBriquetsSAdditionnent() {
         setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));

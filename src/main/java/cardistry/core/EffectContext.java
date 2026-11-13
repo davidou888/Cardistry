@@ -27,6 +27,9 @@ public interface EffectContext {
     /** Soigne le joueur de {@code amount} PV × efficacité des soins, plafonné aux PV max. */
     void healPlayer(double amount);
 
+    /** Inflige {@code amount} dégâts bruts au joueur (ni réduction ni multiplicateur) ; peut le tuer. */
+    void damagePlayer(double amount);
+
     /** Ajoute {@code amount} points d'Ivresse (peut déclencher une Gueule de bois). */
     void addDrunkenness(int amount);
 

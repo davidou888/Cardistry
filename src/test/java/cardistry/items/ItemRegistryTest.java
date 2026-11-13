@@ -32,7 +32,7 @@ class ItemRegistryTest {
         for (String expected : List.of("Redistribution des briquets", "Pichet de Sat", "Plante du Rolex",
                 "Polycopié d'Analyse I", "Pax", "Grinder", "Photocopieuse", "CMS", "Maté",
                 "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George",
-                "Cafffeeeeinnnn", "Gaz du bat Inf")) {
+                "Cafffeeeeinnnn", "Gaz du bat Inf", "Spritz", "Pichet vide", "Foie d'ingénieur", "Ptit Sat ?")) {
             assertTrue(names.contains(expected), expected);
         }
     }
