@@ -120,13 +120,17 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 |---|---|---|---|---|
 | Commun | Maté | +10 PV | Soin | a |
 | Commun | Pichet vide | 15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
+| Commun | Caïpirinha | +20 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
+| Commun | Petit pétou | +15 PV, −1 Ivresse (minimum 0). Compte comme un soin feu (boosté par Grinder) | Soirée | a + b (M1) |
 | Commun | Cafffeeeeinnnn | Pioche 2 cartes | EPFL | a |
 | Commun | Gaz du bat Inf | 20 dégâts d'un élément aléatoire | EPFL | a |
 | Peu commun | Spritz | +30 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
-| Peu commun | Shot de Jäger | Prochain sort ×2, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
-| Peu commun | Moscow Mule | Annule la prochaine attaque, +1 Ivresse | Soirée, Boisson | b (M1, M2) |
-| Peu commun | Raclette | +50 PV, mais tu sautes ton prochain tour | EPFL | b (M2) |
-| Rare | Space cake | Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours. Si le combat se termine avant, l'effet est reporté au combat suivant | Soirée | b (M2) |
+| Peu commun | Shot de Jäger | Prochain **sort** ×2, +1 Ivresse. Actif jusqu'à ce qu'un sort soit joué, perdu à la fin du combat | Soirée, Boisson | b (M1, M2) |
+| Peu commun | Moscow Mule | Annule la prochaine attaque adverse, +1 Ivresse. Perdu à la fin du combat s'il n'a pas servi | Soirée, Boisson | b (M1, M2) |
+| Peu commun | Raclette | +50 PV, puis tu sautes ton prochain tour (l'adversaire attaque normalement) | EPFL | b (M2) |
+| Rare | Space cake | Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours. Si le combat se termine avant le déclenchement, le compte à rebours continue au combat suivant | Soirée | b (M2) |
+
+Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet et carte gardent le même nom, mais sont toujours distingués à l'écran (voir Interface) et ont des identifiants distincts.
 
 #### Choix assumés
 - **Diplôme EPFL** fait boule de neige avec les 9 trinkets EPFL : c'est voulu (synergies façon *The Binding of Isaac*). **[À DÉCIDER à l'étape 5]** le doublement s'applique-t-il aussi au bonus de set EPFL ?
@@ -134,7 +138,8 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 
 #### Nouvelles mécaniques nécessaires
 - **M1 — Ivresse** : compteur du joueur, remis à 0 à chaque fin de combat, seuil de Gueule de bois modifiable.
-- **M2 — Effets temporaires** : « prochain sort ×2 », « annule la prochaine attaque », effet différé (dans N tours), bonus pendant N tours, tour sauté.
+- **M2 — Effets temporaires** : système générique (comme les malédictions) : délai avant déclenchement, durée en tours et/ou en déclenchements (charges), perdu ou gardé à la fin du combat, modificateurs de stats pendant l'effet, effets possibles : multiplier le prochain sort, annuler la prochaine attaque, faire sauter un tour. Affichés à l'écran avec leur durée restante.
+  - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Pétou ancestral fait jouer les tours impairs de chaque combat et sauter les pairs, +10 PV au début de chaque tour (joué ou sauté) ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
 - **M3 — Pioche au choix** : le jeu propose N cartes, le joueur en choisit une.
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
 - **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.
@@ -168,8 +173,6 @@ Reste : carte de la run, shop, transitions d'écran.
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 - **[À DÉCIDER]** Diplôme EPFL : doubler s'applique-t-il aussi aux contreparties (CMS : adversaire +50 % ?) et aux effets entiers (Photocopieuse : 3 cartes ?) ?
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
-- **[À DÉCIDER]** Gueule de bois : une seule par combat, et aucune pendant le dernier combat (choix provisoires) — ok ?
-- **[À DÉCIDER]** Ptit Sat ? : même portée que CMS (dégâts élémentaires) — ok ?
 
 ### Tranchées
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
@@ -180,5 +183,8 @@ Reste : carte de la run, shop, transitions d'écran.
 - ~~Slots~~ → 3 objets, 5 trinkets.
 - ~~Utiliser un objet~~ → action gratuite.
 - ~~Qu'est-ce qu'un combat~~ → un adversaire. Chaque combat commence avec une nouvelle main de 5 cartes.
+- ~~Gueule de bois : combien, quand~~ → une seule par combat, aucune pendant le dernier combat.
+- ~~Ptit Sat ?~~ → dégâts élémentaires, comme CMS.
+- ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
 - ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
 - ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
