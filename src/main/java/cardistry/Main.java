@@ -7,9 +7,9 @@ import cardistry.core.event.EventBus;
 import cardistry.core.event.HookDispatcher;
 import cardistry.model.card.CardPool;
 import cardistry.ui.GameLoop;
+import cardistry.ui.QuitGameException;
 import cardistry.ui.text.Console;
 import cardistry.ui.text.ConsoleInput;
-import cardistry.ui.text.InputClosedException;
 import cardistry.ui.text.TextRenderer;
 import java.util.List;
 
@@ -44,7 +44,7 @@ public final class Main {
 
         try {
             GameLoop.run(engine, renderer, new ConsoleInput(console));
-        } catch (InputClosedException e) {
+        } catch (QuitGameException e) {
             console.println();
             console.println("Partie interrompue.");
         }

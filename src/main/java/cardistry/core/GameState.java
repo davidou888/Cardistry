@@ -8,6 +8,8 @@ import cardistry.model.EnemyRoster;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
 import cardistry.model.card.CardPool;
+import cardistry.model.card.HealCard;
+import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,6 +85,18 @@ public final class GameState {
 
     public int turn() {
         return turn;
+    }
+
+    /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
+    public double spellMultiplier(SpellCard spell) {
+        return ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
+                * playerStats.get(StatType.damageMultiplier(spell.element()));
+    }
+
+    /** Multiplicateur total d'un soin sur le terrain actuel (terrain × stats). */
+    public double healMultiplier(HealCard heal) {
+        return ElementRules.healMultiplier(heal.element(), terrain.element())
+                * playerStats.get(StatType.HEAL_EFFICIENCY);
     }
 
     /** Multiplicateur actuel de l'attaque de l'adversaire (dépend du terrain). */

@@ -1,0 +1,63 @@
+package cardistry.ui;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/** Mise en forme de texte commune aux rendus. */
+public final class Format {
+
+    private Format() {
+    }
+
+    /** 15.0 → "15", 6.25 → "6.25". */
+    public static String num(double value) {
+        if (value == Math.rint(value)) {
+            return Long.toString((long) value);
+        }
+        return Double.toString(value);
+    }
+
+    /** " (×1.5)", ou "" si le multiplicateur vaut 1. */
+    public static String mult(double multiplier) {
+        return multiplier == 1.0 ? "" : " (×" + num(multiplier) + ")";
+    }
+
+    public static String capitalize(String text) {
+        return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
+    }
+
+    /**
+     * Découpe {@code text} en lignes d'au plus {@code width} caractères, par mots ;
+     * un mot trop long est coupé avec un tiret.
+     */
+    public static List<String> wrap(String text, int width) {
+        if (width < 2) {
+            throw new IllegalArgumentException("Largeur trop petite : " + width);
+        }
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.trim().split("\\s+")) {
+            while (word.length() > width) {
+                if (!line.isEmpty()) {
+                    lines.add(line.toString());
+                    line.setLength(0);
+                }
+                lines.add(word.substring(0, width - 1) + "-");
+                word = word.substring(width - 1);
+            }
+            if (line.isEmpty()) {
+                line.append(word);
+            } else if (line.length() + 1 + word.length() <= width) {
+                line.append(' ').append(word);
+            } else {
+                lines.add(line.toString());
+                line.setLength(0);
+                line.append(word);
+            }
+        }
+        if (!line.isEmpty()) {
+            lines.add(line.toString());
+        }
+        return lines;
+    }
+}

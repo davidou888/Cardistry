@@ -1,5 +1,9 @@
 package cardistry.ui.text;
 
+import static cardistry.ui.Format.capitalize;
+import static cardistry.ui.Format.mult;
+import static cardistry.ui.Format.num;
+
 import cardistry.core.GameState;
 import cardistry.core.event.GameEvent;
 import cardistry.model.Element;
@@ -195,21 +199,5 @@ public final class TextRenderer implements Renderer {
             case HealCard h -> "Soin " + cardName(h) + " (" + type + ") : " + num(h.amount()) + " PV";
             case TerrainCard t -> "Terrain " + cardName(t) + " (" + type + ")";
         };
-    }
-
-    private static String mult(double multiplier) {
-        return multiplier == 1.0 ? "" : " (×" + num(multiplier) + ")";
-    }
-
-    /** 15.0 → "15", 6.25 → "6.25". */
-    static String num(double value) {
-        if (value == Math.rint(value)) {
-            return Long.toString((long) value);
-        }
-        return Double.toString(value);
-    }
-
-    private static String capitalize(String text) {
-        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 }

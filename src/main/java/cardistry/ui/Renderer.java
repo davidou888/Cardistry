@@ -16,4 +16,8 @@ public interface Renderer {
 
     /** Main du joueur et choix possibles. */
     void showHand(GameState state);
+
+    /** Écran de fin (victoire ou défaite), une fois la partie terminée. */
+    default void showGameOver(GameState state) {
+    }
 }

@@ -5,12 +5,19 @@ public class Enemy extends Combatant {
     private final String name;
     private final Element element;
     private final double attack;
+    private final double maxHp;
 
     public Enemy(String name, Element element, double hp, double attack) {
         super(hp);
         this.name = name;
         this.element = element;
         this.attack = attack;
+        this.maxHp = hp;
+    }
+
+    /** PV de départ de l'adversaire. */
+    public double maxHp() {
+        return maxHp;
     }
 
     public String name() {

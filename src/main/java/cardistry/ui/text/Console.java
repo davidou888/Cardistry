@@ -1,5 +1,6 @@
 package cardistry.ui.text;
 
+import cardistry.ui.QuitGameException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Scanner;
@@ -31,10 +32,10 @@ public final class Console {
         out.flush();
     }
 
-    /** @throws InputClosedException si l'entrée est fermée */
+    /** @throws QuitGameException si l'entrée est fermée */
     public String readLine() {
         if (!scanner.hasNextLine()) {
-            throw new InputClosedException();
+            throw new QuitGameException();
         }
         return scanner.nextLine();
     }

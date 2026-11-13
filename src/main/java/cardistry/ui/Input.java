@@ -12,6 +12,14 @@ public interface Input {
     /** Attend que le joueur veuille continuer. */
     void waitForContinue();
 
-    /** Action choisie par le joueur (pas forcément valide : le moteur valide). */
+    /**
+     * Action choisie par le joueur (pas forcément valide : le moteur valide).
+     *
+     * @throws cardistry.ui.QuitGameException si le joueur quitte
+     */
     Action nextAction(GameState state);
+
+    /** Attend avant de fermer le jeu, une fois l'écran de fin affiché. */
+    default void waitForExit() {
+    }
 }

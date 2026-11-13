@@ -3,8 +3,6 @@ package cardistry.core;
 import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameEvent.ActionRejected.Reason;
-import cardistry.core.stats.StatType;
-import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
@@ -103,16 +101,14 @@ public final class CombatEngine {
         switch (card) {
             case SpellCard spell -> {
                 Enemy enemy = state.currentEnemy();
-                double mult = ElementRules.spellMultiplier(spell.element(), enemy.element())
-                        * state.playerStats().get(StatType.damageMultiplier(spell.element()));
+                double mult = state.spellMultiplier(spell);
                 double amount = spell.damage() * mult;
                 enemy.takeDamage(amount);
                 bus.publish(new GameEvent.DamageDealt(enemy, amount, mult));
             }
             case HealCard heal -> {
                 Player player = state.player();
-                double mult = ElementRules.healMultiplier(heal.element(), state.terrain().element())
-                        * state.playerStats().get(StatType.HEAL_EFFICIENCY);
+                double mult = state.healMultiplier(heal);
                 double missing = Math.max(0, state.maxHp() - player.hp());
                 double amount = Math.min(heal.amount() * mult, missing);
                 player.heal(amount);

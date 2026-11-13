@@ -24,5 +24,7 @@ public final class GameLoop {
                 // action refusée : le renderer a affiché pourquoi, on redemande
             }
         }
+        renderer.showGameOver(state);
+        input.waitForExit();
     }
 }
