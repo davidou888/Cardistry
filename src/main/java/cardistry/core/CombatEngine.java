@@ -84,7 +84,8 @@ public final class CombatEngine {
         }
         List<String> skipCauses = skipCauses();
         if (skipCauses.isEmpty()) {
-            return true;
+            bus.publish(new GameEvent.PlayerTurnStarted(state.turn()));
+            return !isOver();
         }
         bus.publish(new GameEvent.PlayerTurnSkipped(skipCauses));
         enemyAttack();

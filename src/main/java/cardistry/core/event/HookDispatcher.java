@@ -14,6 +14,7 @@ public final class HookDispatcher {
             case GameEvent.CombatStarted e -> hook.onCombatStart(e, ctx);
             case GameEvent.HandDealt e -> hook.onHandDealt(e, ctx);
             case GameEvent.TurnStarted e -> hook.onTurnStart(e, ctx);
+            case GameEvent.PlayerTurnStarted e -> hook.onPlayerTurnStart(e, ctx);
             case GameEvent.CardPlayed e -> hook.onCardPlayed(e, ctx);
             case GameEvent.CardDrawn e -> hook.onCardDrawn(e, ctx);
             case GameEvent.ItemUsed e -> hook.onItemUsed(e, ctx);

@@ -90,7 +90,8 @@ class CombatEngineTest {
         engine.startTurn();
         assertEquals(2, state.turn());
         assertEquals(2, state.combatTurn());
-        assertEquals(List.of(new GameEvent.TurnStarted(1), new GameEvent.TurnStarted(2)), events);
+        assertEquals(List.of(new GameEvent.TurnStarted(1), new GameEvent.PlayerTurnStarted(1),
+                new GameEvent.TurnStarted(2), new GameEvent.PlayerTurnStarted(2)), events);
     }
 
     @Test

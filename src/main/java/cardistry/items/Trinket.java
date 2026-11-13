@@ -27,6 +27,7 @@ public final class Trinket implements Collectible {
     private final GameHooks hooks;
     private final java.util.Map<String, Double> cardWeights;
     private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects;
+    private final Gauge gauge;
 
     private Trinket(Builder builder) {
         this.id = builder.id;
@@ -39,6 +40,12 @@ public final class Trinket implements Collectible {
         this.hooks = builder.hooks;
         this.cardWeights = java.util.Map.copyOf(builder.cardWeights);
         this.effects = List.copyOf(builder.effects);
+        this.gauge = builder.gauge;
+    }
+
+    /** Jauge affichée par l'interface, s'il y en a une. */
+    public java.util.Optional<Gauge> gauge() {
+        return java.util.Optional.ofNullable(gauge);
     }
 
     /**
@@ -100,6 +107,7 @@ public final class Trinket implements Collectible {
         };
         private final java.util.Map<String, Double> cardWeights = new java.util.HashMap<>();
         private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects = new ArrayList<>();
+        private Gauge gauge;
 
         private Builder(String id, String name, Rarity rarity) {
             this.id = id;
@@ -131,6 +139,18 @@ public final class Trinket implements Collectible {
         /** Bonus en pourcentage : {@code percent(FIRE_DAMAGE, 0.25)} = +25 % dégâts feu. */
         public Builder percent(StatType stat, double percent) {
             modifiers.add(StatModifier.percent(stat, percent, sourceOf(id)));
+            return this;
+        }
+
+        /** Multiplicateur final : {@code multiply(HEAL_EFFICIENCY, 2)} = ×2 après tous les autres bonus. */
+        public Builder multiply(StatType stat, double factor) {
+            modifiers.add(StatModifier.multiply(stat, factor, sourceOf(id)));
+            return this;
+        }
+
+        /** Jauge affichée par l'interface (les hooks la font avancer). */
+        public Builder gauge(Gauge gauge) {
+            this.gauge = gauge;
             return this;
         }
 

@@ -26,6 +26,10 @@ public interface GameHooks {
     default void onTurnStart(GameEvent.TurnStarted event, EffectContext ctx) {
     }
 
+    /** Tour où le joueur joue vraiment (pas les tours sautés). */
+    default void onPlayerTurnStart(GameEvent.PlayerTurnStarted event, EffectContext ctx) {
+    }
+
     default void onCardPlayed(GameEvent.CardPlayed event, EffectContext ctx) {
     }
 

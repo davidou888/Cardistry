@@ -22,6 +22,10 @@ public sealed interface GameEvent {
     record TurnStarted(int turn) implements GameEvent {
     }
 
+    /** Le joueur va jouer ce tour (publié après {@link TurnStarted}, sauf si le tour est sauté). */
+    record PlayerTurnStarted(int turn) implements GameEvent {
+    }
+
     record CardPlayed(Card card) implements GameEvent {
     }
 

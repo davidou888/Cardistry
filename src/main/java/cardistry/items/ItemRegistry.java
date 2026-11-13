@@ -53,6 +53,7 @@ public final class ItemRegistry {
                         .tags(Tag.DEFENSE, Tag.EPFL)
                         .flat(StatType.DAMAGE_REDUCTION, 2)
                         .build(),
+                honore(),
                 Trinket.builder("latte-macchiato-vanille", "Latte macchiato vanille", COMMON)
                         .description("+1 carte au premier tour de chaque combat")
                         .tags(Tag.DRAW, Tag.EPFL)
@@ -71,6 +72,12 @@ public final class ItemRegistry {
                         .description("+1 taille de main")
                         .tags(Tag.DRAW, Tag.PARTY)
                         .flat(StatType.HAND_SIZE, 1)
+                        .build(),
+                Trinket.builder("googz", "Googz", UNCOMMON)
+                        .description("Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou"
+                                + " (son effet à la place des −5 PV)")
+                        .tags(Tag.PARTY)
+                        .flat(StatType.CIGARETTE_TRANSFORM_CHANCE, 0.2)
                         .build(),
                 Trinket.builder("m1", "M1", UNCOMMON)
                         .description("Changer de terrain rend 5 PV")
@@ -145,6 +152,12 @@ public final class ItemRegistry {
                         .build(),
 
                 // --- Légendaires ---
+                Trinket.builder("ross", "Ross", LEGENDARY)
+                        .description("Tous les soins ×2 (après les autres bonus) et ne sont plus plafonnés par les PV max")
+                        .tags(Tag.HEAL)
+                        .multiply(StatType.HEAL_EFFICIENCY, 2)
+                        .flat(StatType.UNCAPPED_HEALING, 1)
+                        .build(),
                 Trinket.builder("petou-ancestral", "Pétou ancestral", LEGENDARY)
                         .description("+10 PV par tour, mais tu ne joues qu'un tour sur deux (l'adversaire attaque normalement)")
                         .tags(Tag.PARTY, Tag.FIRE)
@@ -195,6 +208,37 @@ public final class ItemRegistry {
                             }
                         })
                         .build());
+    }
+
+    /**
+     * Honoré : +1 par tour joué ; à 5, une clope et retour à 0. Paquet plein : la jauge reste à 5
+     * et la clope arrive dès qu'une place se libère.
+     */
+    private static Trinket honore() {
+        Gauge gauge = new Gauge("Honoré", 5);
+        return Trinket.builder("honore", "Honoré", COMMON)
+                .description("+1 par tour joué ; à 5, une clope gratuite et la jauge repart à 0")
+                .tags(Tag.PARTY)
+                .gauge(gauge)
+                .hooks(new GameHooks() {
+                    @Override
+                    public void onPlayerTurnStart(GameEvent.PlayerTurnStarted event, EffectContext ctx) {
+                        gauge.add(1);
+                        deliver(ctx);
+                    }
+
+                    @Override
+                    public void onCigarettesChanged(GameEvent.CigarettesChanged event, EffectContext ctx) {
+                        deliver(ctx);
+                    }
+
+                    private void deliver(EffectContext ctx) {
+                        if (gauge.isFull() && ctx.addCigarettes(1) == 1) {
+                            gauge.reset();
+                        }
+                    }
+                })
+                .build();
     }
 
     public static List<Item> items() {

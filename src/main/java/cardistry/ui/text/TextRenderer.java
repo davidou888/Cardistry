@@ -39,6 +39,9 @@ public final class TextRenderer implements Renderer {
                 console.println("Seed : " + e.seed());
                 console.println();
             }
+            case GameEvent.PlayerTurnStarted e -> {
+                // Rien de plus à afficher.
+            }
             case GameEvent.TurnStarted e -> {
                 if (e.turn() > 1) {
                     console.pause(1);
