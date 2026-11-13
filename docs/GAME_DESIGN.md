@@ -68,7 +68,19 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Synergies de set : 2/3/4 trinkets du même tag → bonus croissant.
 - Synergies directes : un trinket qui modifie l'effet d'un autre (ex. « tes trinkets Feu affectent aussi les Heals »).
 - Tags utilisés par le premier jet : **EPFL**, **Soirée**, **Boisson**, **Méta**, éléments (Feu, Eau, Nature), archétypes (Soin, Pioche, Terrain, Défense).
-- **[À DÉCIDER]** quels tags déclenchent des bonus de set, et lesquels.
+
+#### Bonus de set (décidés, étape 6)
+Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte pour **chacun de ses tags**. Les paliers se **cumulent** (à 4, on a aussi ceux de 2 et 3). Recalculés à chaque changement d'inventaire ; notification quand un palier s'active ; détail dans l'inventaire (I). Noms provisoires.
+
+| Set | 2 | 3 | 4 |
+|---|---|---|---|
+| EPFL « Cursus » | +10 % dégâts élémentaires | +1 taille de main | +25 PV max et +15 % dégâts élémentaires |
+| Soirée « Before → Afterparty » | +1 clope au début de chaque combat (respecte le max du paquet) | Seuil de Gueule de bois +1 | Chaque boisson soigne aussi 5 PV |
+| Soin | +15 % soins | — | — |
+| Pioche | +1 carte dans la main de départ | — | — |
+
+**Diplôme EPFL** (Légendaire, EPFL) : +1 emplacement de trinket, effet des trinkets EPFL ×2, bonus de set EPFL ×2 ; il compte lui-même dans le set EPFL. Effet boule de neige **voulu**.
+- Choix provisoires : « effet ×2 » s'applique à tout l'effet, contrepartie comprise (CMS : +100 % / adversaire +50 % ; Photocopieuse : 3 cartes ; Latte macchiato vanille : +2 cartes ; M1 et Plan du campus : 10) ; le Diplôme ne se double pas lui-même (+1 emplacement).
 
 ### Ivresse
 - Chaque **boisson** (objet tagué Boisson) donne **+1 Ivresse**. L'Ivresse retombe à 0 après chaque combat.
@@ -105,7 +117,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Commun | Pichet de Sat | +25 % dégâts eau | Eau, EPFL | a |
 | Commun | Plante du Rolex | +25 % dégâts nature | Nature, EPFL | a |
 | Commun | Polycopié d'Analyse I | −2 dégâts à chaque attaque subie | Défense, EPFL | a |
-| Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère | Soirée | b (M9) |
+| Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère (validé) | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
 | Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des −5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
@@ -143,7 +155,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet et carte gardent le même nom, mais sont toujours distingués à l'écran (voir Interface) et ont des identifiants distincts.
 
 #### Choix assumés
-- **Diplôme EPFL** fait boule de neige avec les 9 trinkets EPFL : c'est voulu (synergies façon *The Binding of Isaac*). **[À DÉCIDER à l'étape 5]** le doublement s'applique-t-il aussi au bonus de set EPFL ?
+- **Diplôme EPFL** fait boule de neige avec les trinkets EPFL et double aussi le bonus de set EPFL : c'est voulu (synergies façon *The Binding of Isaac*).
 - Les soins restent plafonnés aux PV max, même si ça gaspille une partie des gros soins — **sauf avec Ross**.
 - **Ross + Pétou ancestral** : +20 PV par tour sans plafond, presque invincible. Voulu (synergie façon Isaac), comme Diplôme EPFL.
 - Ross : ×2 appliqué **après** tous les autres bonus de soin (multiplicateur final, pas +100 % additif). Les PV peuvent dépasser le max (affichés en doré) ; les PV max ne bougent pas. Si on perd Ross, les PV en trop sont gardés mais les soins suivants sont de nouveau plafonnés.
@@ -185,7 +197,6 @@ Reste : carte de la run, shop, transitions d'écran.
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Diplôme EPFL : doubler s'applique-t-il aussi aux contreparties (CMS : adversaire +50 % ?) et aux effets entiers (Photocopieuse : 3 cartes ?) ?
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
