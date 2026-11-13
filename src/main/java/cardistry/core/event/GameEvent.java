@@ -4,6 +4,7 @@ import cardistry.core.Curse;
 import cardistry.core.TemporaryEffect;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
+import cardistry.items.Tag;
 import cardistry.model.Combatant;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
@@ -139,6 +140,14 @@ public sealed interface GameEvent {
     }
 
     record RewardSkipped() implements GameEvent {
+    }
+
+    /** Un palier de set s'active (ex. set « EPFL « Cursus » », palier 3). */
+    record SetTierActivated(String setName, Tag tag, int count, String description) implements GameEvent {
+    }
+
+    /** Un palier de set se désactive (trinket perdu). */
+    record SetTierDeactivated(String setName, Tag tag, int count, String description) implements GameEvent {
     }
 
     /**

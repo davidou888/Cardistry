@@ -183,6 +183,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.RewardOffered e -> view.log("Récompense : choisis 1 parmi " + e.options().size(), Palette.ACCENT);
             case GameEvent.RewardTaken e -> view.log("Tu prends " + e.taken().name()
                     + (e.replaced() != null ? " (à la place de " + e.replaced().name() + ")" : ""), Palette.ACCENT);
+            case GameEvent.SetTierActivated e -> view.log("Set " + e.setName() + " " + e.count() + " activé : "
+                    + e.description(), Palette.ACCENT);
+            case GameEvent.SetTierDeactivated e -> view.log("Set " + e.setName() + " " + e.count() + " perdu : "
+                    + e.description(), Palette.WARNING);
             case GameEvent.RewardSkipped e -> view.log("Récompense refusée", Palette.DIM);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);

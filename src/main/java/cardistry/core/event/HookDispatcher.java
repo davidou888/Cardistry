@@ -55,6 +55,12 @@ public final class HookDispatcher {
             }
             case GameEvent.RewardOffered e -> hook.onRewardOffered(e, ctx);
             case GameEvent.RewardTaken e -> hook.onRewardTaken(e, ctx);
+            case GameEvent.SetTierActivated e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.SetTierDeactivated e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.RewardSkipped e -> {
                 // Rien à signaler aux trinkets.
             }

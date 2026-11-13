@@ -2,7 +2,11 @@ package cardistry.core;
 
 import cardistry.core.stats.StatType;
 import cardistry.core.stats.Stats;
+import cardistry.core.stats.StatModifier;
 import cardistry.items.Item;
+import cardistry.items.SetBonus;
+import cardistry.items.SetBonuses;
+import cardistry.items.Tag;
 import cardistry.items.Trinket;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
@@ -20,8 +24,16 @@ import java.util.List;
 /** L'état d'une partie. Lisible par tous, modifiable uniquement par le moteur (package core). */
 public final class GameState {
 
-    /** Cartes distribuées au début de chaque combat. */
+    /** Cartes distribuées au début de chaque combat (valeur de base de la stat {@link StatType#STARTING_HAND}). */
     public static final int STARTING_HAND = 5;
+
+    /** Palier de set actif. */
+    public record ActiveSetTier(SetBonus set, SetBonus.Tier tier) {
+    }
+
+    /** Changement de palier depuis le dernier recalcul (pour les notifications). */
+    record SetChange(ActiveSetTier tier, boolean activated) {
+    }
 
     /** Clopes au début de chaque partie. */
     public static final int STARTING_CIGARETTES = 5;
@@ -41,6 +53,9 @@ public final class GameState {
     private final java.util.Map<Curse, Integer> pendingCurses = new java.util.EnumMap<>(Curse.class);
     private final java.util.Map<Curse, Integer> activeCurses = new java.util.EnumMap<>(Curse.class);
     private int cigarettes = STARTING_CIGARETTES;
+    private final List<SetBonus> setBonuses = SetBonuses.all();
+    private List<ActiveSetTier> activeSetTiers = List.of();
+    private final List<SetChange> pendingSetChanges = new ArrayList<>();
     private final List<TemporaryEffect> effects = new ArrayList<>();
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
@@ -124,6 +139,57 @@ public final class GameState {
 
     public boolean hasTrinket(String id) {
         return trinkets.stream().anyMatch(t -> t.id().equals(id));
+    }
+
+    // --- Sets ---
+
+    /** Nombre de trinkets équipés portant {@code tag}. */
+    public int tagCount(Tag tag) {
+        return (int) trinkets.stream().filter(t -> t.tags().contains(tag)).count();
+    }
+
+    /** Tous les sets connus. */
+    public List<SetBonus> setBonuses() {
+        return setBonuses;
+    }
+
+    /** Paliers de set actifs (les paliers se cumulent). */
+    public List<ActiveSetTier> activeSetTiers() {
+        return activeSetTiers;
+    }
+
+    /** Recalcule les modificateurs de set et note les paliers qui s'activent ou se désactivent. */
+    private void refreshSets() {
+        for (ActiveSetTier active : activeSetTiers) {
+            playerStats.removeBySource(active.set().source(active.tier()));
+        }
+        List<ActiveSetTier> now = new ArrayList<>();
+        for (SetBonus set : setBonuses) {
+            for (SetBonus.Tier tier : set.reached(tagCount(set.tag()))) {
+                now.add(new ActiveSetTier(set, tier));
+                for (StatModifier m : tier.modifiers()) {
+                    playerStats.add(new StatModifier(m.stat(), m.kind(), m.value(), set.source(tier)));
+                }
+            }
+        }
+        for (ActiveSetTier tier : now) {
+            if (!activeSetTiers.contains(tier)) {
+                pendingSetChanges.add(new SetChange(tier, true));
+            }
+        }
+        for (ActiveSetTier tier : activeSetTiers) {
+            if (!now.contains(tier)) {
+                pendingSetChanges.add(new SetChange(tier, false));
+            }
+        }
+        activeSetTiers = List.copyOf(now);
+    }
+
+    /** Changements de palier depuis le dernier appel. */
+    List<SetChange> drainSetChanges() {
+        List<SetChange> changes = List.copyOf(pendingSetChanges);
+        pendingSetChanges.clear();
+        return changes;
     }
 
     // --- Ivresse et malédictions ---
@@ -299,6 +365,7 @@ public final class GameState {
             effects.add(effect);
             effect.modifiers().forEach(playerStats::add);
         }
+        refreshSets();
     }
 
     /** Retire un trinket et ses modificateurs. */
@@ -310,6 +377,7 @@ public final class GameState {
                 removeEffect(effect);
             }
         }
+        refreshSets();
         return trinket;
     }
 

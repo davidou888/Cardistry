@@ -14,6 +14,8 @@ public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
     MAX_HP(100),
     HAND_SIZE(7),
+    /** Cartes distribuées au début de chaque combat (sans dépasser la taille de main). */
+    STARTING_HAND(5),
     /** Emplacements de trinkets. */
     TRINKET_SLOTS(5),
     /** Emplacements d'objets. */

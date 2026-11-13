@@ -132,6 +132,10 @@ public final class TextRenderer implements Renderer {
             }
             case GameEvent.RewardTaken e -> console.println("Tu prends " + Ansi.yellow(e.taken().name())
                     + (e.replaced() != null ? " à la place de " + e.replaced().name() : "") + ".");
+            case GameEvent.SetTierActivated e -> console.println(Ansi.yellow("Set " + e.setName() + " " + e.count())
+                    + " activé : " + e.description());
+            case GameEvent.SetTierDeactivated e -> console.println("Set " + e.setName() + " " + e.count()
+                    + " perdu : " + e.description());
             case GameEvent.RewardSkipped e -> console.println("Tu refuses la récompense.");
             case GameEvent.GameWon e -> {
                 console.println();

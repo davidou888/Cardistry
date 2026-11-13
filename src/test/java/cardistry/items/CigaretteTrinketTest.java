@@ -215,10 +215,11 @@ class CigaretteTrinketTest {
         equip("monde-snack");
         engine.give(ItemRegistry.item("mate"));
         engine.submit(new Action.UseItem(0));
-        assertEquals(120, state.player().hp(), DELTA);   // Maté 10 × 2
+        // Ross et Monde Snack sont tous deux « Soin » : set Soin 2 (+15 %), puis Ross ×2 en final.
+        assertEquals(123, state.player().hp(), DELTA);   // Maté 10 × 1.15 × 2
         state.currentEnemy().takeDamage(1000);
         engine.submit(new Action.DrawCard());
-        assertEquals(140, state.player().hp(), DELTA);   // Monde Snack 10 × 2
+        assertEquals(146, state.player().hp(), DELTA);   // Monde Snack 10 × 1.15 × 2
     }
 
     @Test
@@ -229,9 +230,13 @@ class CigaretteTrinketTest {
         equip("grinder");
         state.playerStats().add(StatModifier.percent(StatType.HEAL_EFFICIENCY, 0.5, "autre bonus"));
         engine.submit(new Action.PlayCard(0));
-        // 10 × 1.5 (terrain) × [(1 + 0.5) × 2] (efficacité, Ross en final) × 1.5 (Grinder) = 67.5
-        // (un ×2 additif aurait donné 10 × 1.5 × 2.5 × 1.5 = 56.25)
-        assertEquals(new GameEvent.Healed(state.player(), 67.5, 6.75), events.get(1));
+        // Ross et Grinder sont « Soin » : set Soin 2 (+15 %).
+        // 10 × 1.5 (terrain) × [(1 + 0.5 + 0.15) × 2] (efficacité, Ross en final) × 1.5 (Grinder) = 74.25
+        // (un ×2 additif aurait donné 10 × 1.5 × 2.65 × 1.5 = 59.625)
+        GameEvent.Healed healed = (GameEvent.Healed) events.stream()
+                .filter(GameEvent.Healed.class::isInstance).findFirst().orElseThrow();
+        assertEquals(74.25, healed.amount(), DELTA);
+        assertEquals(7.425, healed.multiplier(), DELTA);
     }
 
     @Test

@@ -264,7 +264,7 @@ public final class CombatEngine {
         for (Curse curse : state.activatePendingCurses()) {
             bus.publish(new GameEvent.CurseStarted(curse));
         }
-        int dealt = Math.min(GameState.STARTING_HAND, state.handSize());
+        int dealt = Math.min(state.playerStats().getInt(StatType.STARTING_HAND), state.handSize());
         for (int i = 0; i < dealt; i++) {
             state.addToHand(drawFromPool());
         }
@@ -384,6 +384,7 @@ public final class CombatEngine {
                     }
                 };
                 bus.publish(new GameEvent.RewardTaken(taken, replaced));
+                publishSetChanges();
             }
         }
         pendingReward = List.of();
@@ -534,6 +535,20 @@ public final class CombatEngine {
         for (Trinket trinket : equipped) {
             HookDispatcher.dispatch(trinket.hooks(), event, effects);
         }
+        for (GameState.ActiveSetTier active : List.copyOf(state.activeSetTiers())) {
+            HookDispatcher.dispatch(active.tier().hooks(), event, effects);
+        }
+    }
+
+    /** Notifie les paliers de set activés / désactivés depuis le dernier changement d'inventaire. */
+    private void publishSetChanges() {
+        for (GameState.SetChange change : state.drainSetChanges()) {
+            var set = change.tier().set();
+            var tier = change.tier().tier();
+            bus.publish(change.activated()
+                    ? new GameEvent.SetTierActivated(set.displayName(), set.tag(), tier.count(), tier.description())
+                    : new GameEvent.SetTierDeactivated(set.displayName(), set.tag(), tier.count(), tier.description()));
+        }
     }
 
     /** Actions offertes aux objets et trinkets. */
@@ -624,6 +639,7 @@ public final class CombatEngine {
     /** Équipe un trinket (ses modificateurs de stats s'appliquent immédiatement). */
     public void equip(Trinket trinket) {
         state.equipTrinket(trinket);
+        publishSetChanges();
     }
 
     /** Ajoute un objet à l'inventaire. */
