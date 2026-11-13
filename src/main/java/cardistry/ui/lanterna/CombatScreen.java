@@ -21,7 +21,7 @@ import java.util.List;
  *
  * <pre>
  *  ligne 0        cadre : titre, tour, seed
- *  lignes 1-10    adversaire (infos à gauche, sprite à droite), terrain, joueur
+ *  lignes 1-10    adversaire (infos à gauche, sprite à droite), terrain, joueur (PV, objets, trinkets)
  *  ligne 11       séparateur « Ta main »
  *  lignes 12-18   cartes (la carte sélectionnée est surélevée d'une ligne)
  *  ligne 19       détail de la carte sélectionnée
@@ -112,29 +112,31 @@ final class CombatScreen {
         TextColor terrainColor = view.terrainFlash != null ? view.terrainFlash : Palette.element(terrain.element());
         p.text(11, 6, terrain.name() + " (" + terrain.element().displayName() + ")", terrainColor, true);
 
-        p.text(2, 8, "TOI", Palette.TEXT, true);
-        drawItems(p, state);
+        p.text(2, 7, "TOI", Palette.TEXT, true);
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
-        hpLine(p, 9, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
+        hpLine(p, 8, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
+        drawItems(p, state);
         drawTrinkets(p, state);
     }
 
-    /** Ligne 8, à droite de « TOI » : [W] Maté  [E] ·  [R] · */
+    /** Ligne 9 : [W] Maté  [E] ·  [R] · — chaque emplacement a la même largeur. */
     private static void drawItems(Painter p, GameState state) {
-        int col = 7;
         int limit = p.cols() - SPRITE_WIDTH - 3;
-        for (int i = 0; i < state.itemSlots() && col < limit; i++) {
+        int slots = state.itemSlots();
+        int slotWidth = Math.max(6, (limit - 2) / Math.max(1, slots));
+        for (int i = 0; i < slots; i++) {
+            int col = 2 + i * slotWidth;
+            if (col + 5 > limit) {
+                break;
+            }
             String key = "[" + Character.toUpperCase(ItemKeys.key(i)) + "] ";
-            p.text(col, 8, key, Palette.DIM);
-            col += key.length();
+            p.text(col, 9, key, Palette.DIM);
             if (i < state.items().size()) {
                 Item item = state.items().get(i);
-                String name = Painter.fit(item.name(), Math.max(1, Math.min(12, limit - col)));
-                p.text(col, 8, name, Palette.rarity(item.rarity()), true);
-                col += name.length() + 2;
+                String name = Painter.fit(item.name(), slotWidth - key.length() - 1);
+                p.text(col + key.length(), 9, name, Palette.rarity(item.rarity()), true);
             } else {
-                p.text(col, 8, "·", Palette.DIM);
-                col += 3;
+                p.text(col + key.length(), 9, "·", Palette.DIM);
             }
         }
     }
@@ -280,7 +282,7 @@ final class CombatScreen {
                 int col = p.cols() - SPRITE_WIDTH / 2 - 2 - f.text().length() / 2;
                 p.text(col, Math.max(1, 5 - f.rise()), f.text(), f.color(), true);
             } else {
-                p.text(9 + BAR_WIDTH + 8, Math.max(1, 9 - f.rise()), f.text(), f.color(), true);
+                p.text(9 + BAR_WIDTH + 8, Math.max(1, 8 - f.rise()), f.text(), f.color(), true);
             }
         }
     }

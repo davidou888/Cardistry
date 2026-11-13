@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /** Écrans de récompense et d'inventaire. */
 final class ItemScreens {
 
-    private static final int CARD_HEIGHT = 13;
+    private static final int CARD_HEIGHT = 17;
     private static final int MAX_CARD_WIDTH = 26;
 
     private ItemScreens() {
@@ -21,14 +21,13 @@ final class ItemScreens {
 
     /** Choix d'une récompense : les propositions côte à côte, la sélectionnée en double trait. */
     static void reward(Painter p, GameState state, List<Collectible> options, int selected, long seed) {
-        p.frame("Récompense", "Seed " + seed, "←/→ choisir · Entrée prendre · S refuser · Q quitter");
+        p.frame("Récompense", inventorySummary(state), "←/→ choisir · Entrée prendre · S refuser · Q quitter");
         p.centered(2, "Adversaire vaincu ! Choisis une récompense.", Palette.ACCENT, true);
         drawCards(p, options, selected, 4);
-        p.centered(5 + CARD_HEIGHT, inventorySummary(state), Palette.DIM, false);
         Collectible chosen = options.get(selected);
         if (isFull(state, chosen)) {
-            p.centered(6 + CARD_HEIGHT, "Tes " + (chosen instanceof Trinket ? "trinkets" : "objets")
-                    + " sont au complet : prendre celle-ci remplacera un de tes items.", Palette.WARNING, false);
+            p.centered(5 + CARD_HEIGHT, Painter.fit("Tes " + (chosen instanceof Trinket ? "trinkets" : "objets")
+                    + " sont au complet : la prendre remplacera un de tes items.", p.cols() - 4), Palette.WARNING, false);
         }
     }
 
@@ -94,23 +93,28 @@ final class ItemScreens {
     private static void drawCard(Painter p, int col, int row, int width, Collectible c, boolean selected) {
         int inner = width - 2;
         p.box(col, row, width, CARD_HEIGHT, Palette.rarity(c.rarity()), selected);
+        int last = row + CARD_HEIGHT - 3; // dernière ligne de texte libre (la suivante = tags)
         int r = row + 1;
         p.text(col + 1, r++, Painter.fit(c.kindName() + " · " + c.rarity().displayName(), inner),
                 Palette.rarity(c.rarity()));
-        r++;
         for (String line : Format.wrap(c.name(), inner)) {
-            if (r < row + 5) {
+            if (r < row + 4) {
                 p.text(col + 1, r++, line, Palette.TEXT, true);
             }
         }
-        r = Math.max(r, row + 5);
+        r = Math.max(r, row + 4);
         for (String line : Format.wrap(c.description(), inner)) {
-            if (r < row + CARD_HEIGHT - 2) {
+            if (r <= last) {
                 p.text(col + 1, r++, line, Palette.TEXT);
             }
         }
-        if (!c.flavor().isEmpty() && r < row + CARD_HEIGHT - 2) {
-            p.text(col + 1, r, Painter.fit("« " + c.flavor() + " »", inner), Palette.DIM);
+        if (!c.flavor().isEmpty()) {
+            r++;
+            for (String line : Format.wrap("« " + c.flavor() + " »", inner)) {
+                if (r <= last) {
+                    p.text(col + 1, r++, line, Palette.DIM);
+                }
+            }
         }
         p.text(col + 1, row + CARD_HEIGHT - 2, Painter.fit(tags(c), inner), Palette.DIM);
     }

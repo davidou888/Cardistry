@@ -385,6 +385,40 @@ class LanternaUiTest {
         assertEquals(new RewardChoice.Take(0, 1), assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options)));
     }
 
+    @Test
+    void inventairePleinTientALEcran() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(
+                List.of(ItemRegistry.item("cafffeeeeinnnn"), ItemRegistry.item("gaz-du-bat-inf"), mate()),
+                List.of(ItemRegistry.trinket("latte-macchiato-vanille"), ItemRegistry.trinket("comprehension-algebrique"),
+                        ItemRegistry.trinket("george"), ItemRegistry.trinket("cms"), ItemRegistry.trinket("pax")));
+        ui.showStatus(state);
+        String text = dump("11-inventaire-plein");
+        assertTrue(text.contains("[W] "));
+        assertTrue(text.contains("[E] "));
+        assertTrue(text.contains("[R] Maté"));
+        assertTrue(text.contains("Trinkets 5/5"));
+    }
+
+    @Test
+    void recompenseAvecDescriptionLongue() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        List<Collectible> options = List.of(ItemRegistry.trinket("george"),
+                ItemRegistry.trinket("comprehension-algebrique"), ItemRegistry.item("gaz-du-bat-inf"));
+        Thread player = new Thread(() -> ui.chooseReward(state, options));
+        player.setDaemon(true);
+        player.start();
+        waitFor(() -> screen().contains("Choisis une récompense"));
+        String text = dump("12-recompense-george");
+        type("s");
+        player.join(TIMEOUT.toMillis());
+        assertTrue(text.contains("George"));
+        assertTrue(text.contains("Légendaire"));
+        assertTrue(text.contains("║pool "), "description complète (dernier mot)");
+        assertTrue(text.contains("biens communs"), "phrase d'ambiance");
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {
