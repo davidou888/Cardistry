@@ -114,6 +114,15 @@ class EngineExtensionsTest {
         assertEquals(new GameEvent.Healed(state.player(), 15, 1.5), events.get(1)); // Forêt : nature ×1.5
     }
 
+    @Test
+    void soinsNonPlafonnes() {
+        setUp(List.of());
+        state.playerStats().add(flat(StatType.UNCAPPED_HEALING, 1, "ross"));
+        use(ctx -> ctx.healPlayer(30));
+        assertEquals(130, state.player().hp(), DELTA);
+        assertEquals(100, state.maxHp(), DELTA);
+    }
+
     // --- Pioche ---
 
     @Test

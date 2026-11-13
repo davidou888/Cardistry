@@ -36,7 +36,9 @@ public enum StatType {
     /** Multiplicateur des dégâts infligés par l'adversaire. */
     ENEMY_DAMAGE(1.0),
     /** Ivresse à partir de laquelle on attrape une Gueule de bois. */
-    HANGOVER_THRESHOLD(3);
+    HANGOVER_THRESHOLD(3),
+    /** Si &gt; 0 : les soins ne sont plus plafonnés par les PV max. */
+    UNCAPPED_HEALING(0);
 
     private final double defaultBase;
 

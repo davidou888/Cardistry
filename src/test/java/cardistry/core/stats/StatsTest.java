@@ -88,6 +88,24 @@ class StatsTest {
     }
 
     @Test
+    void multiplicateurFinalApresPlatsEtPourcentages() {
+        stats.add(StatModifier.multiply(StatType.HEAL_EFFICIENCY, 2, "ross"));
+        stats.add(percent(StatType.HEAL_EFFICIENCY, 0.5, "pansement"));
+        stats.add(flat(StatType.HEAL_EFFICIENCY, 1, "x"));
+        // (1 + 1) × (1 + 0.5) × 2 — et non (1 + 1) × (1 + 0.5 + 1)
+        assertEquals(6, stats.get(StatType.HEAL_EFFICIENCY), DELTA);
+    }
+
+    @Test
+    void multiplicateursFinauxSeMultiplient() {
+        stats.add(StatModifier.multiply(StatType.FIRE_DAMAGE, 2, "a"));
+        stats.add(StatModifier.multiply(StatType.FIRE_DAMAGE, 3, "b"));
+        assertEquals(6, stats.get(StatType.FIRE_DAMAGE), DELTA);
+        stats.removeBySource("b");
+        assertEquals(2, stats.get(StatType.FIRE_DAMAGE), DELTA);
+    }
+
+    @Test
     void getIntArrondiALEntierInferieur() {
         stats.add(percent(StatType.HAND_SIZE, 0.1, "a")); // 7.7
         assertEquals(7, stats.getInt(StatType.HAND_SIZE));

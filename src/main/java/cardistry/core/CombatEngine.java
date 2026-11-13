@@ -458,11 +458,14 @@ public final class CombatEngine {
         bus.publish(new GameEvent.DamageDealt(enemy, amount, mult, source));
     }
 
-    /** Soigne sans dépasser les PV max ; l'événement porte les PV réellement rendus. */
+    /**
+     * Soigne sans dépasser les PV max (sauf si les soins ne sont pas plafonnés) ; l'événement porte
+     * les PV réellement rendus.
+     */
     private void healPlayer(double amount, double mult) {
         Player player = state.player();
         double missing = Math.max(0, state.maxHp() - player.hp());
-        double healed = Math.min(amount, missing);
+        double healed = state.healingUncapped() ? amount : Math.min(amount, missing);
         player.heal(healed);
         bus.publish(new GameEvent.Healed(player, healed, mult));
     }

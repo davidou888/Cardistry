@@ -8,9 +8,10 @@ import java.util.Map;
 /**
  * Stats calculées, jamais écrasées.
  *
- * <p>Ordre de calcul : {@code (base + somme des FLAT) × (1 + somme des PERCENT)}.
- * Les pourcentages s'additionnent : deux +25 % donnent +50 % (×1.5), pas ×1.5625.
- * Le multiplicateur total ne descend jamais sous 0.
+ * <p>Ordre de calcul : {@code (base + somme des FLAT) × (1 + somme des PERCENT) × produit des FINAL}.
+ * Les pourcentages s'additionnent : deux +25 % donnent +50 % (×1.5), pas ×1.5625. Le facteur des
+ * pourcentages ne descend jamais sous 0. Les multiplicateurs finaux (légendaires comme Ross) se
+ * multiplient entre eux et s'appliquent en dernier.
  */
 public final class Stats {
 
@@ -27,6 +28,7 @@ public final class Stats {
     public double get(StatType stat) {
         double flat = 0;
         double percent = 0;
+        double finalFactor = 1;
         for (StatModifier modifier : modifiers) {
             if (modifier.stat() != stat) {
                 continue;
@@ -34,9 +36,10 @@ public final class Stats {
             switch (modifier.kind()) {
                 case FLAT -> flat += modifier.value();
                 case PERCENT -> percent += modifier.value();
+                case FINAL -> finalFactor *= modifier.value();
             }
         }
-        return (base.get(stat) + flat) * Math.max(0, 1 + percent);
+        return (base.get(stat) + flat) * Math.max(0, 1 + percent) * finalFactor;
     }
 
     /** Valeur arrondie à l'entier inférieur, pour les stats entières (taille de main…). */

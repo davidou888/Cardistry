@@ -88,6 +88,11 @@ public final class GameState {
         return playerStats.get(StatType.MAX_HP);
     }
 
+    /** {@code true} si les soins peuvent dépasser les PV max (stat {@link StatType#UNCAPPED_HEALING}). */
+    public boolean healingUncapped() {
+        return playerStats.get(StatType.UNCAPPED_HEALING) > 0;
+    }
+
     /** Stats du joueur : c'est ici que trinkets et objets ajouteront leurs modificateurs. */
     public Stats playerStats() {
         return playerStats;
