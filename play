@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+# Compile puis lance Cardistry en plein écran dans ce terminal.
+# (./gradlew run ne donne pas de vrai terminal au jeu : il passe alors en mode texte.)
+# Options : --seed N, --fast, --no-ui
+set -e
+cd "$(dirname "$0")"
+./gradlew -q installDist
+exec build/install/cardistry/bin/cardistry "$@"

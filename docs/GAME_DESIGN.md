@@ -77,6 +77,9 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Existant : terrain « EPFL » de type feu, heal « Petit pétou ».
 
 ## Interface (terminal ASCII, Lanterna)
+Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
+Reste : carte de la run, shop, récompenses, affichage des trinkets, transitions d'écran.
+
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
 - Combat : sprite ASCII de l'ennemi, barres de PV, main de cartes dessinées en cadres ASCII, trinkets affichés, journal de combat.
