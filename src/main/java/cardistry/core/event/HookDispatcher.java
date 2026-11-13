@@ -25,6 +25,14 @@ public final class HookDispatcher {
             case GameEvent.EnemyKilled e -> hook.onEnemyKilled(e, ctx);
             case GameEvent.GameWon e -> hook.onGameWon(e, ctx);
             case GameEvent.GameLost e -> hook.onGameLost(e, ctx);
+            case GameEvent.DrunkennessChanged e -> hook.onDrunkennessChanged(e, ctx);
+            case GameEvent.CurseGained e -> hook.onCurseGained(e, ctx);
+            case GameEvent.CurseStarted e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CurseEnded e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.RewardOffered e -> hook.onRewardOffered(e, ctx);
             case GameEvent.RewardTaken e -> hook.onRewardTaken(e, ctx);
             case GameEvent.RewardSkipped e -> {

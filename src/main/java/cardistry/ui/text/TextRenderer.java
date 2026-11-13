@@ -88,6 +88,16 @@ public final class TextRenderer implements Renderer {
                 case INVALID_REWARD -> "Choix de récompense invalide";
                 case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer";
             });
+            case GameEvent.DrunkennessChanged e -> {
+                if (e.drunkenness() > 0) {
+                    console.println("→ Ivresse : " + e.drunkenness() + "/" + e.threshold());
+                }
+            }
+            case GameEvent.CurseGained e -> console.println(Ansi.RED + "Gueule de bois en vue !" + Ansi.END_COLOR
+                    + " " + e.curse().displayName() + " (" + e.curse().description() + ") au prochain combat.");
+            case GameEvent.CurseStarted e -> console.println(Ansi.RED + e.curse().displayName() + Ansi.END_COLOR
+                    + " : " + e.curse().description() + " pendant ce combat.");
+            case GameEvent.CurseEnded e -> console.println(e.curse().displayName() + " terminée.");
             case GameEvent.RewardOffered e -> {
                 console.println();
                 console.println(Ansi.yellow("Récompense !") + " Choisis-en une :");

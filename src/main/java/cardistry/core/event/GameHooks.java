@@ -53,6 +53,12 @@ public interface GameHooks {
     default void onEnemyKilled(GameEvent.EnemyKilled event, EffectContext ctx) {
     }
 
+    default void onDrunkennessChanged(GameEvent.DrunkennessChanged event, EffectContext ctx) {
+    }
+
+    default void onCurseGained(GameEvent.CurseGained event, EffectContext ctx) {
+    }
+
     default void onRewardOffered(GameEvent.RewardOffered event, EffectContext ctx) {
     }
 

@@ -33,6 +33,10 @@ public final class GameState {
     private int combatTurn = 0;
     private final List<Trinket> trinkets = new ArrayList<>();
     private final List<Item> items = new ArrayList<>();
+    private int drunkenness = 0;
+    private boolean hangoverThisCombat = false;
+    private final java.util.Set<Curse> pendingCurses = java.util.EnumSet.noneOf(Curse.class);
+    private final java.util.Set<Curse> activeCurses = java.util.EnumSet.noneOf(Curse.class);
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
         if (enemies.isEmpty()) {
@@ -110,6 +114,28 @@ public final class GameState {
 
     public boolean hasTrinket(String id) {
         return trinkets.stream().anyMatch(t -> t.id().equals(id));
+    }
+
+    // --- Ivresse et malédictions ---
+
+    /** Ivresse actuelle (remise à 0 à la fin de chaque combat). */
+    public int drunkenness() {
+        return drunkenness;
+    }
+
+    /** Ivresse à partir de laquelle on attrape une Gueule de bois (stat {@link StatType#HANGOVER_THRESHOLD}). */
+    public int hangoverThreshold() {
+        return playerStats.getInt(StatType.HANGOVER_THRESHOLD);
+    }
+
+    /** Malédictions actives pendant ce combat. */
+    public java.util.Set<Curse> activeCurses() {
+        return java.util.Collections.unmodifiableSet(activeCurses);
+    }
+
+    /** Malédictions qui s'activeront au prochain combat. */
+    public java.util.Set<Curse> pendingCurses() {
+        return java.util.Collections.unmodifiableSet(pendingCurses);
     }
 
     /** Nombre total de tours joués dans la partie. */
@@ -236,5 +262,42 @@ public final class GameState {
 
     Item removeItem(int slot) {
         return items.remove(slot);
+    }
+
+    void setDrunkenness(int value) {
+        drunkenness = value;
+    }
+
+    boolean hangoverThisCombat() {
+        return hangoverThisCombat;
+    }
+
+    void setHangoverThisCombat(boolean value) {
+        hangoverThisCombat = value;
+    }
+
+    void addPendingCurse(Curse curse) {
+        pendingCurses.add(curse);
+    }
+
+    /** Active les malédictions en attente (modificateurs compris) et les renvoie. */
+    java.util.List<Curse> activatePendingCurses() {
+        java.util.List<Curse> activated = java.util.List.copyOf(pendingCurses);
+        for (Curse curse : activated) {
+            activeCurses.add(curse);
+            curse.modifiers().forEach(playerStats::add);
+        }
+        pendingCurses.clear();
+        return activated;
+    }
+
+    /** Termine les malédictions actives (modificateurs retirés) et les renvoie. */
+    java.util.List<Curse> endActiveCurses() {
+        java.util.List<Curse> ended = java.util.List.copyOf(activeCurses);
+        for (Curse curse : ended) {
+            playerStats.removeBySource(curse.modifierSource());
+        }
+        activeCurses.clear();
+        return ended;
     }
 }

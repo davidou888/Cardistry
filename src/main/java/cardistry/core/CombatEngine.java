@@ -8,6 +8,7 @@ import cardistry.core.stats.StatType;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.items.LootTable;
+import cardistry.items.Tag;
 import cardistry.items.Trinket;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
@@ -148,11 +149,41 @@ public final class CombatEngine {
     private void beginCombat() {
         state.resetCombatTurn();
         state.clearHand();
-        for (int i = 0; i < GameState.STARTING_HAND; i++) {
+        bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
+        for (Curse curse : state.activatePendingCurses()) {
+            bus.publish(new GameEvent.CurseStarted(curse));
+        }
+        int dealt = Math.min(GameState.STARTING_HAND, state.handSize());
+        for (int i = 0; i < dealt; i++) {
             state.addToHand(drawFromPool());
         }
-        bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
         bus.publish(new GameEvent.HandDealt(state.hand()));
+    }
+
+    /** Fin du combat : l'Ivresse retombe, les malédictions du combat s'arrêtent. */
+    private void endCombat() {
+        if (state.drunkenness() != 0) {
+            state.setDrunkenness(0);
+            bus.publish(new GameEvent.DrunkennessChanged(0, state.hangoverThreshold()));
+        }
+        state.setHangoverThisCombat(false);
+        for (Curse curse : state.endActiveCurses()) {
+            bus.publish(new GameEvent.CurseEnded(curse));
+        }
+    }
+
+    /**
+     * Ajoute de l'Ivresse. Au seuil, une Gueule de bois est programmée pour le combat suivant
+     * (une seule par combat ; aucune pendant le dernier combat).
+     */
+    private void addDrunkenness(int amount) {
+        state.setDrunkenness(state.drunkenness() + amount);
+        bus.publish(new GameEvent.DrunkennessChanged(state.drunkenness(), state.hangoverThreshold()));
+        if (state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && state.hasNextEnemy()) {
+            state.setHangoverThisCombat(true);
+            state.addPendingCurse(Curse.HANGOVER);
+            bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
+        }
     }
 
     /**
@@ -167,6 +198,7 @@ public final class CombatEngine {
             return false;
         }
         bus.publish(new GameEvent.EnemyKilled(enemy));
+        endCombat();
         if (!state.hasNextEnemy()) {
             bus.publish(new GameEvent.GameWon());
             return true;
@@ -288,6 +320,9 @@ public final class CombatEngine {
         Item item = state.removeItem(slot);
         bus.publish(new GameEvent.ItemUsed(item));
         item.use(effects);
+        if (item.tags().contains(Tag.DRINK)) {
+            addDrunkenness(1);
+        }
     }
 
     private void enemyAttack() {
@@ -350,6 +385,11 @@ public final class CombatEngine {
             double mult = ElementRules.spellMultiplier(element, state.currentEnemy().element())
                     * state.playerStats().get(StatType.damageMultiplier(element));
             CombatEngine.this.damageEnemy(amount * mult, mult, GameEvent.DamageDealt.Source.EFFECT);
+        }
+
+        @Override
+        public void addDrunkenness(int amount) {
+            CombatEngine.this.addDrunkenness(amount);
         }
 
         @Override

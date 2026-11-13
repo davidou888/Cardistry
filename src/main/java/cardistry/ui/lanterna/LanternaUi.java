@@ -132,6 +132,17 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }, Palette.WARNING);
                 render();
             }
+            case GameEvent.DrunkennessChanged e -> {
+                if (e.drunkenness() > 0) {
+                    view.log("Ivresse " + e.drunkenness() + "/" + e.threshold(), Palette.WARNING);
+                }
+                render();
+            }
+            case GameEvent.CurseGained e -> view.log(e.curse().displayName() + " au prochain combat ("
+                    + e.curse().description() + ")", Palette.DAMAGE);
+            case GameEvent.CurseStarted e -> view.log(e.curse().displayName() + " : " + e.curse().description(),
+                    Palette.DAMAGE);
+            case GameEvent.CurseEnded e -> view.log(e.curse().displayName() + " terminée", Palette.DIM);
             case GameEvent.RewardOffered e -> view.log("Récompense : choisis 1 parmi " + e.options().size(), Palette.ACCENT);
             case GameEvent.RewardTaken e -> view.log("Tu prends " + e.taken().name()
                     + (e.replaced() != null ? " (à la place de " + e.replaced().name() + ")" : ""), Palette.ACCENT);

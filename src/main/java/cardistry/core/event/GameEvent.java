@@ -1,5 +1,6 @@
 package cardistry.core.event;
 
+import cardistry.core.Curse;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.model.Combatant;
@@ -62,6 +63,22 @@ public sealed interface GameEvent {
     }
 
     record EnemyKilled(Enemy enemy) implements GameEvent {
+    }
+
+    /** L'Ivresse change ; {@code threshold} = seuil de Gueule de bois actuel. */
+    record DrunkennessChanged(int drunkenness, int threshold) implements GameEvent {
+    }
+
+    /** Malédiction obtenue : elle s'activera au prochain combat. */
+    record CurseGained(Curse curse) implements GameEvent {
+    }
+
+    /** Malédiction active pour ce combat. */
+    record CurseStarted(Curse curse) implements GameEvent {
+    }
+
+    /** Malédiction terminée (fin du combat). */
+    record CurseEnded(Curse curse) implements GameEvent {
     }
 
     /** Récompenses proposées après la mort d'un adversaire ; le moteur attend un choix. */
