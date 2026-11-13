@@ -5,8 +5,34 @@
 ## Boucle de jeu (existant)
 - Combat tour par tour contre une suite d'adversaires (Hydre/feu, Sirène/eau, Goblin/nature).
 - À chaque tour : jouer une carte **ou** piocher. Main de 7 max. Puis l'adversaire attaque.
+- Quand un adversaire meurt, le suivant arrive mais **n'attaque pas** ce tour-là.
 - Cartes : **Sortilège** (dégâts), **Heal** (soin, boosté dans le terrain du même type), **Terrain** (change le terrain, modifie l'attaque adverse).
 - Éléments : **Feu > Nature > Eau > Feu**.
+
+### Multiplicateurs d'éléments (décidés)
+Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
+
+**Sortilège → dégâts infligés**
+
+| Sort \ Adversaire | Feu | Eau | Nature |
+|---|---|---|---|
+| Feu | ×1 | ×0.5 | ×1.5 |
+| Eau | ×1.5 | ×1 | ×0.5 |
+| Nature | ×0.5 | ×1.5 | ×1 |
+
+×1.5 si le sort bat l'adversaire, ×0.5 si l'adversaire bat le sort, ×1 si même élément.
+
+**Terrain → attaque de l'adversaire** (le terrain modifie ce que l'adversaire *inflige*, pas ce qu'il reçoit)
+
+| Terrain \ Adversaire | Feu | Eau | Nature |
+|---|---|---|---|
+| Feu | ×1.25 | ×1 | ×0.75 |
+| Eau | ×0.75 | ×1.25 | ×1 |
+| Nature | ×1 | ×0.75 | ×1.25 |
+
+×1.25 sur un terrain de son élément, ×0.75 si le terrain bat son élément, ×1 sinon.
+
+**Soin → PV rendus selon le terrain** : ×1.5 sur un terrain du même élément, ×0.75 si le terrain bat l'élément du soin, ×1 sinon.
 
 ## Structure d'une run (cible)
 - Carte à **embranchements** façon Slay the Spire, générée par seed.
@@ -58,6 +84,10 @@ Ordre de calcul : base → bonus plats → multiplicateurs.
 - Couleur de rareté et d'élément partout.
 
 ## Questions ouvertes
-- Tables d'éléments : le code et les commentaires de `Magic.java` se contredisent (voir `CLAUDE.md`). Quelle est la bonne version ?
-- Le nouvel adversaire doit-il attaquer le tour où il arrive ?
-- Nom définitif du jeu.
+- Nom définitif du jeu (« Cardistry » affiché en attendant).
+- Les soins n'ont pas de plafond : les PV peuvent dépasser 100. Faut-il plafonner aux PV max ?
+- Pioche infinie avec remise (les doublons du registre servent de poids) : voir le passage à un vrai deck dans « Structure d'une run ».
+
+### Tranchées
+- ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
+- ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.

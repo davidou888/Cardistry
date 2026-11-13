@@ -33,7 +33,7 @@ public class CardPool {
         cards.add(new TerrainCard("Marécage", WATER));
         cards.add(new TerrainCard("Forêt", NATURE));
         cards.add(new TerrainCard("Enfer", FIRE));
-        cards.add(new TerrainCard("Antlantis", WATER));
+        cards.add(new TerrainCard("Atlantis", WATER));
         cards.add(new TerrainCard("Amazonie", NATURE));
 
         // --- Soins (nom, élément, PV rendus) ---

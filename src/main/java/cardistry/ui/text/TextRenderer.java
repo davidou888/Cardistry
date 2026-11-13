@@ -3,17 +3,22 @@ package cardistry.ui.text;
 import cardistry.core.GameState;
 import cardistry.core.event.GameEvent;
 import cardistry.model.Element;
+import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
+import cardistry.ui.Renderer;
 import java.util.List;
 
 /** Rendu texte provisoire (avant Lanterna) : println + couleurs ANSI + pauses. */
-public final class TextRenderer implements cardistry.ui.Renderer {
+public final class TextRenderer implements Renderer {
+
+    private static final String SEPARATOR = "===================";
 
     private final Console console;
+    private int handSize = GameState.HAND_SIZE;
 
     public TextRenderer(Console console) {
         this.console = console;
@@ -23,7 +28,7 @@ public final class TextRenderer implements cardistry.ui.Renderer {
     public void onEvent(GameEvent event) {
         switch (event) {
             case GameEvent.GameStarted e -> {
-                console.println("Welcome to GAME NAME");
+                console.println("Bienvenue dans " + Ansi.yellow("Cardistry") + " !");
                 console.println("Seed : " + e.seed());
                 console.println();
             }
@@ -32,62 +37,73 @@ public final class TextRenderer implements cardistry.ui.Renderer {
                     console.pause(1);
                 }
             }
-            case GameEvent.CardPlayed e -> console.println("Tu joues " + e.card().name());
+            case GameEvent.CardPlayed e -> console.println("Tu joues " + cardName(e.card()));
             case GameEvent.CardDrawn e -> {
-                console.println("Tu as reçu : " + describe(e.card()));
+                console.println("Tu pioches : " + describe(e.card()));
                 console.pause(1);
             }
             case GameEvent.DamageDealt e -> {
                 if (e.target() instanceof Enemy enemy) {
-                    console.println("→ " + enemy.name() + " subit " + e.amount() + " dégâts (×" + e.multiplier() + ")");
+                    console.println("→ " + enemy.name() + " subit " + num(e.amount()) + " dégâts" + mult(e.multiplier()));
                 } else {
-                    console.println("→ Tu subis " + e.amount() + " dégâts (×" + e.multiplier() + ")");
+                    console.println("→ Tu subis " + num(e.amount()) + " dégâts" + mult(e.multiplier()));
                 }
                 console.pause(1);
             }
             case GameEvent.Healed e -> {
-                console.println("→ Tu récupères " + e.amount() + " PV (×" + e.multiplier() + ")");
+                console.println("→ Tu récupères " + num(e.amount()) + " PV" + mult(e.multiplier()));
                 console.pause(1);
             }
             case GameEvent.TerrainChanged e -> {
-                console.println("→ Tu es téléporté de " + e.previous().name() + " à " + e.current().name());
+                console.println("→ Tu es téléporté de " + cardName(e.previous()) + " à " + cardName(e.current()));
                 console.pause(1);
             }
-            case GameEvent.EnemyAttacked e -> console.println(e.enemy().name() + " t'attaque");
+            case GameEvent.EnemyAttacked e -> console.println(enemyName(e.enemy()) + " t'attaque !");
             case GameEvent.EnemyKilled e -> {
+                console.println("Tu as vaincu " + enemyName(e.enemy()) + " !");
+                console.pause(1);
             }
             case GameEvent.EnemyArrived e -> {
-                console.println("change adv");
-                console.println("NEW CHALLENGER");
-                console.println(describe(e.enemy()));
+                console.println("Un nouvel adversaire arrive : " + enemyName(e.enemy())
+                        + " (" + Ansi.element(e.enemy().element()) + ", " + num(e.enemy().hp()) + " PV)");
+                console.pause(1);
             }
             case GameEvent.ActionRejected e -> console.println(switch (e.reason()) {
-                case INVALID_CHOICE -> "Veuillez choisir un nombre entre 0 et 7";
-                case HAND_FULL -> "Votre main est pleine";
-                case EMPTY_SLOT -> "Veuillez choisir un slot qui contient une carte";
+                case INVALID_CHOICE -> "Choisis un nombre entre 0 et " + handSize;
+                case HAND_FULL -> "Ta main est pleine";
+                case EMPTY_SLOT -> "Ce slot est vide, choisis une carte";
             });
-            case GameEvent.GameWon e -> console.println("WINNNNNEEERRRRRRR");
+            case GameEvent.GameWon e -> {
+                console.println();
+                console.println(Ansi.yellow("VICTOIRE !") + " Tu as vaincu tous les adversaires.");
+            }
             case GameEvent.GameLost e -> {
+                console.println();
+                console.println(Ansi.RED + "DÉFAITE..." + Ansi.END_COLOR + " Tu n'as plus de points de vie.");
             }
         }
     }
 
     @Override
     public void showStatus(GameState state) {
+        handSize = state.handSize();
+        Enemy enemy = state.currentEnemy();
         console.println();
-        console.println("===================");
-        console.println("PLAYER:");
-        console.println("Vous avez " + state.player().hp() + " points de vie");
+        console.println(SEPARATOR + " Tour " + state.turn());
+        console.println("JOUEUR :");
+        console.println("Tu as " + num(state.player().hp()) + " points de vie");
         console.pause(1);
         console.println();
-        console.println("ADVERSARY:");
-        console.println(describe(state.currentEnemy()));
-        console.println("Multiplicateur de l'adversaire: " + state.enemyAttackMultiplier());
+        console.println("ADVERSAIRE :");
+        console.println(enemyName(enemy) + ", de type " + Ansi.element(enemy.element())
+                + ", il lui reste " + num(enemy.hp()) + " points de vie");
+        console.println("Attaque : " + num(enemy.attack()) + mult(state.enemyAttackMultiplier())
+                + " = " + num(enemy.attack() * state.enemyAttackMultiplier()));
         console.pause(0.7);
         console.println();
-        console.println("TERRAIN ACTUEL:");
+        console.println("TERRAIN ACTUEL :");
         console.println(describe(state.terrain()));
-        console.println("===================");
+        console.println(SEPARATOR);
         console.pause(0.5);
     }
 
@@ -95,60 +111,68 @@ public final class TextRenderer implements cardistry.ui.Renderer {
     public void showHand(GameState state) {
         console.println();
         console.println();
-        console.println("===================");
-        console.println("VOS CARTES:");
+        console.println(SEPARATOR);
+        console.println("TES CARTES :");
         List<Card> hand = state.hand();
         for (int i = 0; i < state.handSize(); i++) {
-            String line = i < hand.size() ? describe(hand.get(i)) : "NO CARDS";
+            String line = i < hand.size() ? describe(hand.get(i)) : "(vide)";
             console.println("[" + (i + 1) + "] " + line);
         }
         console.println();
-        console.println("[0] GET A NEW CARD");
-        console.println("Vous avez " + hand.size() + "/" + state.handSize() + " cartes");
-        console.println("===================");
+        console.println("[0] Piocher une carte");
+        console.println("Tu as " + hand.size() + "/" + state.handSize() + " cartes");
+        console.println(SEPARATOR);
         console.println();
         console.pause(1);
     }
 
     @Override
     public void showIntro(GameState state) {
-        console.println("Il y 3 ennemis");
+        List<Enemy> enemies = state.enemies();
+        console.println("Il y a " + enemies.size() + " ennemis :");
         console.pause(0.7);
-        console.println("Le " + Ansi.yellow("Dragon") + " de type " + Ansi.element(Element.FIRE));
-        console.pause(0.7);
-        console.println("La " + Ansi.yellow("Sirène") + " de type " + Ansi.element(Element.WATER));
-        console.pause(0.7);
-        console.println("et le " + Ansi.yellow("Goblin") + " de type " + Ansi.element(Element.NATURE));
-        console.pause(0.7);
+        for (Enemy enemy : enemies) {
+            console.println("- " + enemyName(enemy) + ", de type " + Ansi.element(enemy.element()));
+            console.pause(0.7);
+        }
         waitForEnter("(Appuie sur Entrée pour continuer)");
 
-        console.println("à chaque tour");
+        console.println("À chaque tour,");
         console.pause(0.7);
-        console.println("Vous pouvez jouer une carte ou piocher");
+        console.println("tu peux jouer une carte ou piocher.");
         console.pause(0.7);
-        console.println("Une carte peut être un " + Ansi.yellow("sortilège") + " qui fait des dégats à la créature");
+        console.println("Une carte peut être un " + Ansi.yellow("sortilège") + ", qui fait des dégâts à la créature,");
         console.pause(0.9);
-        console.println("Un " + Ansi.yellow("heal") + " qui vous rends des PV");
+        console.println("un " + Ansi.yellow("soin") + ", qui te rend des PV,");
         console.pause(0.8);
-        console.println("Ou un " + Ansi.yellow("terrain") + " qui vous téléporte à un autre endroit");
+        console.println("ou un " + Ansi.yellow("terrain") + ", qui te téléporte à un autre endroit.");
         console.pause(0.7);
         waitForEnter("(Appuie sur Entrée pour continuer)");
 
-        console.println("Il y a des " + Ansi.yellow("élélments") + " !");
+        console.println("Il y a des " + Ansi.yellow("éléments") + " !");
         console.pause(0.7);
-        console.println(Ansi.element(Element.WATER, "Eau") + " bat " + Ansi.element(Element.FIRE, "Feu"));
-        console.pause(0.7);
-        console.println(Ansi.element(Element.FIRE, "Feu") + " bat " + Ansi.element(Element.NATURE, "Nature"));
-        console.pause(0.7);
-        console.println(Ansi.element(Element.NATURE, "Nature") + " bat " + Ansi.element(Element.WATER, "Eau"));
-        console.pause(1);
-        console.println("Un élément contraire donne un malus d'attaque à la créature");
+        for (Element winner : Element.values()) {
+            for (Element loser : Element.values()) {
+                if (winner.beats(loser)) {
+                    console.println(Ansi.element(winner, capitalize(winner.displayName()))
+                            + " bat " + Ansi.element(loser, capitalize(loser.displayName())));
+                    console.pause(0.7);
+                }
+            }
+        }
+        console.pause(0.3);
+        console.println("Un sortilège fait ×" + num(ElementRules.ADVANTAGE) + " contre une créature qu'il bat,"
+                + " et ×" + num(ElementRules.DISADVANTAGE) + " contre une créature qui le bat.");
         console.pause(0.8);
-        console.println("Et vous donne un bonus contre une créature");
+        console.println("Sur un terrain de son élément, la créature attaque plus fort (×"
+                + num(ElementRules.TERRAIN_STRENGTHENS) + ") ;");
+        console.println("sur un terrain qui la bat, elle attaque moins fort (×" + num(ElementRules.TERRAIN_WEAKENS) + ").");
         console.pause(0.8);
-        console.println("Les heals sont plus éfficaces dans leurs terrains et moins dans le mauvais");
+        console.println("Les soins sont plus efficaces sur un terrain de leur élément (×"
+                + num(ElementRules.HEAL_SAME_TERRAIN) + ")");
+        console.println("et moins sur un terrain qui les bat (×" + num(ElementRules.HEAL_HOSTILE_TERRAIN) + ").");
         console.pause(0.8);
-        waitForEnter("(Appuie sur Entrée pour comemncer la partie)");
+        waitForEnter("(Appuie sur Entrée pour commencer la partie)");
     }
 
     private void waitForEnter(String prompt) {
@@ -156,17 +180,36 @@ public final class TextRenderer implements cardistry.ui.Renderer {
         console.readLine();
     }
 
-    private static String describe(Enemy enemy) {
-        return "Adversaire actuel: " + enemy.name() + " de type " + Ansi.element(enemy.element())
-                + ", il lui reste " + enemy.hp() + " points de vie";
+    private static String enemyName(Enemy enemy) {
+        return Ansi.yellow(enemy.name());
+    }
+
+    private static String cardName(Card card) {
+        return Ansi.element(card.element(), card.name());
     }
 
     private static String describe(Card card) {
         String type = Ansi.element(card.element());
         return switch (card) {
-            case SpellCard s -> "Sortilege, nom: " + s.name() + ", type: " + type + ", dégats: " + s.damage();
-            case HealCard h -> "Heal, nom: " + h.name() + ", type: " + type + ", heal: " + h.amount();
-            case TerrainCard t -> "Terrain, " + t.name() + " de type " + type;
+            case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : " + num(s.damage()) + " dégâts";
+            case HealCard h -> "Soin " + cardName(h) + " (" + type + ") : " + num(h.amount()) + " PV";
+            case TerrainCard t -> "Terrain " + cardName(t) + " (" + type + ")";
         };
+    }
+
+    private static String mult(double multiplier) {
+        return multiplier == 1.0 ? "" : " (×" + num(multiplier) + ")";
+    }
+
+    /** 15.0 → "15", 6.25 → "6.25". */
+    static String num(double value) {
+        if (value == Math.rint(value)) {
+            return Long.toString((long) value);
+        }
+        return Double.toString(value);
+    }
+
+    private static String capitalize(String text) {
+        return Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 }

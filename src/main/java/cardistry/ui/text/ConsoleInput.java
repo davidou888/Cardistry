@@ -14,8 +14,8 @@ public final class ConsoleInput implements Input {
 
     @Override
     public boolean wantsIntro() {
-        console.println("(Appuie sur Entrée pour continuer or s to skip)");
-        return !console.readLine().equals("s");
+        console.println("(Appuie sur Entrée pour continuer, ou s puis Entrée pour passer l'intro)");
+        return !console.readLine().trim().equalsIgnoreCase("s");
     }
 
     @Override
@@ -24,10 +24,18 @@ public final class ConsoleInput implements Input {
         console.readLine();
     }
 
+    /** 0 = piocher, n = jouer la carte n. Redemande tant que la saisie n'est pas un nombre. */
     @Override
     public Action nextAction(GameState state) {
-        console.print("Que veux-tu jouer ? ");
-        int choice = Integer.parseInt(console.readLine().trim());
-        return choice == 0 ? new Action.DrawCard() : new Action.PlayCard(choice - 1);
+        while (true) {
+            console.print("Que veux-tu jouer ? ");
+            String line = console.readLine().trim();
+            try {
+                int choice = Integer.parseInt(line);
+                return choice == 0 ? new Action.DrawCard() : new Action.PlayCard(choice - 1);
+            } catch (NumberFormatException e) {
+                console.println("Entre un nombre entre 0 et " + state.handSize());
+            }
+        }
     }
 }

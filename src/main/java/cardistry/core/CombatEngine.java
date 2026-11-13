@@ -122,18 +122,23 @@ public final class CombatEngine {
         }
     }
 
+    /**
+     * Si l'adversaire est mort, le suivant arrive mais n'attaque pas ce tour-ci.
+     * Sinon, l'adversaire attaque.
+     */
     private void enemyPhase() {
         Enemy enemy = state.currentEnemy();
-        if (!enemy.isAlive()) {
-            bus.publish(new GameEvent.EnemyKilled(enemy));
-            if (!state.hasNextEnemy()) {
-                bus.publish(new GameEvent.GameWon());
-                return;
-            }
+        if (enemy.isAlive()) {
+            enemyAttack();
+            return;
+        }
+        bus.publish(new GameEvent.EnemyKilled(enemy));
+        if (state.hasNextEnemy()) {
             state.advanceEnemy();
             bus.publish(new GameEvent.EnemyArrived(state.currentEnemy()));
+        } else {
+            bus.publish(new GameEvent.GameWon());
         }
-        enemyAttack();
     }
 
     private void enemyAttack() {

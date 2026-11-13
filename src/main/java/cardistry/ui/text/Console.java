@@ -31,7 +31,11 @@ public final class Console {
         out.flush();
     }
 
+    /** @throws InputClosedException si l'entrée est fermée */
     public String readLine() {
+        if (!scanner.hasNextLine()) {
+            throw new InputClosedException();
+        }
         return scanner.nextLine();
     }
 

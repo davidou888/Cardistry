@@ -8,6 +8,7 @@ import cardistry.model.card.CardPool;
 import cardistry.ui.GameLoop;
 import cardistry.ui.text.Console;
 import cardistry.ui.text.ConsoleInput;
+import cardistry.ui.text.InputClosedException;
 import cardistry.ui.text.TextRenderer;
 import java.util.List;
 
@@ -36,7 +37,12 @@ public final class Main {
         TextRenderer renderer = new TextRenderer(console);
         bus.subscribe(renderer::onEvent);
 
-        GameLoop.run(engine, renderer, new ConsoleInput(console));
+        try {
+            GameLoop.run(engine, renderer, new ConsoleInput(console));
+        } catch (InputClosedException e) {
+            console.println();
+            console.println("Partie interrompue.");
+        }
     }
 
     private static Rng parseSeed(List<String> options) {
