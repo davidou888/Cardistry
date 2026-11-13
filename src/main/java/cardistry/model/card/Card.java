@@ -20,4 +20,10 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard {
     public Element element() {
         return element;
     }
+
+    /**
+     * Nouvelle instance indépendante. Les cartes du registre sont des modèles : on ne met en main
+     * que des copies, pour qu'une carte améliorée ou modifiée n'affecte pas les autres.
+     */
+    public abstract Card copy();
 }

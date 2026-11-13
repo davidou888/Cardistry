@@ -8,4 +8,9 @@ public final class TerrainCard extends Card {
     public TerrainCard(String name, Element element) {
         super(name, element);
     }
+
+    @Override
+    public TerrainCard copy() {
+        return new TerrainCard(name(), element());
+    }
 }

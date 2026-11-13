@@ -48,7 +48,8 @@ public class CardPool {
         return new TerrainCard("EPFL", FIRE);
     }
 
+    /** Tire une carte au hasard et en renvoie une copie. */
     public Card draw(Rng rng) {
-        return rng.pick(cards);
+        return rng.pick(cards).copy();
     }
 }

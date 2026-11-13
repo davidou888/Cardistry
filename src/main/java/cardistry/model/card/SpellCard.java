@@ -16,4 +16,9 @@ public final class SpellCard extends Card {
     public double damage() {
         return damage;
     }
+
+    @Override
+    public SpellCard copy() {
+        return new SpellCard(name(), element(), damage);
+    }
 }

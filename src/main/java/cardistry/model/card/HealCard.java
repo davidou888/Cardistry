@@ -16,4 +16,9 @@ public final class HealCard extends Card {
     public double amount() {
         return amount;
     }
+
+    @Override
+    public HealCard copy() {
+        return new HealCard(name(), element(), amount);
+    }
 }
