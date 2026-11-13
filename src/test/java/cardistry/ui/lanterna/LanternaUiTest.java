@@ -327,7 +327,8 @@ class LanternaUiTest {
         player.start();
         type("i");
 
-        waitFor(() -> screen().contains("Inventaire"));
+        // La ligne d'aide du bas est écrite en dernier : l'écran est alors complet.
+        waitFor(() -> screen().contains("Appuie sur une touche pour revenir"));
         String text = dump("09-inventaire");
         type("x");   // retour au combat
         type("p");   // puis piocher
@@ -361,7 +362,7 @@ class LanternaUiTest {
         player.setDaemon(true);
         player.start();
 
-        waitFor(() -> screen().contains("Choisis une récompense"));
+        waitFor(() -> screen().contains("S refuser · Q quitter"));
         String text = dump("10-recompense");
         type("s");
         player.join(TIMEOUT.toMillis());
@@ -409,7 +410,7 @@ class LanternaUiTest {
         Thread player = new Thread(() -> ui.chooseReward(state, options));
         player.setDaemon(true);
         player.start();
-        waitFor(() -> screen().contains("Choisis une récompense"));
+        waitFor(() -> screen().contains("S refuser · Q quitter"));
         String text = dump("12-recompense-george");
         type("s");
         player.join(TIMEOUT.toMillis());
@@ -417,6 +418,31 @@ class LanternaUiTest {
         assertTrue(text.contains("Légendaire"));
         assertTrue(text.contains("║pool "), "description complète (dernier mot)");
         assertTrue(text.contains("biens communs"), "phrase d'ambiance");
+    }
+
+    @Test
+    void ivresseEtGueuleDeBoisAffichees() throws IOException {
+        open(80, 24);
+        Enemy first = hydra();
+        GameState state = new GameState(new Player(100), List.of(first, new Enemy("Sirène", Element.WATER, 30, 10),
+                new Enemy("Goblin", Element.NATURE, 40, 15)), new TerrainCard("EPFL", Element.FIRE),
+                List.of(new SpellCard("Tsunami", Element.WATER, 100)), new Stats());
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
+                new cardistry.items.LootTable(List::of));
+        for (int i = 0; i < 3; i++) {
+            engine.give(ItemRegistry.item("spritz"));
+            engine.submit(new Action.UseItem(0));
+        }
+        ui.showStatus(state);
+        String during = dump("13-ivresse");
+        assertTrue(during.contains("Ivresse 3/3"));
+        assertTrue(during.contains("Gueule de bois à venir"));
+
+        engine.submit(new Action.PlayCard(0)); // tue l'Hydre → combat suivant avec Gueule de bois
+        ui.showStatus(state);
+        String after = dump("14-gueule-de-bois");
+        assertTrue(after.contains("Gueule de bois (−1 taille de main)"));
+        assertTrue(after.contains("Ta main 5/6"));
     }
 
     private void waitFor(java.util.function.BooleanSupplier condition) {

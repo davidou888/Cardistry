@@ -141,6 +141,15 @@ public final class TextRenderer implements Renderer {
         console.println("TERRAIN ACTUEL :");
         console.println(describe(state.terrain()));
         console.println();
+        if (state.drunkenness() > 0) {
+            console.println("Ivresse : " + state.drunkenness() + "/" + state.hangoverThreshold());
+        }
+        for (cardistry.core.Curse curse : state.activeCurses()) {
+            console.println(Ansi.RED + curse.displayName() + Ansi.END_COLOR + " : " + curse.description());
+        }
+        for (cardistry.core.Curse curse : state.pendingCurses()) {
+            console.println(curse.displayName() + " au prochain combat");
+        }
         console.println("TRINKETS (" + state.trinkets().size() + "/" + state.trinketSlots() + ") :"
                 + (state.trinkets().isEmpty() ? " aucun" : ""));
         for (Trinket trinket : state.trinkets()) {

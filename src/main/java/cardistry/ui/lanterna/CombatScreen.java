@@ -2,6 +2,7 @@ package cardistry.ui.lanterna;
 
 import static cardistry.ui.Format.num;
 
+import cardistry.core.Curse;
 import cardistry.core.GameState;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
@@ -113,10 +114,33 @@ final class CombatScreen {
         p.text(11, 6, terrain.name() + " (" + terrain.element().displayName() + ")", terrainColor, true);
 
         p.text(2, 7, "TOI", Palette.TEXT, true);
+        drawDrunkennessAndCurses(p, state);
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
         hpLine(p, 8, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
         drawItems(p, state);
         drawTrinkets(p, state);
+    }
+
+    /** Ligne 7, après « TOI » : Ivresse (si non nulle) et malédictions. */
+    private static void drawDrunkennessAndCurses(Painter p, GameState state) {
+        int col = 7;
+        int limit = p.cols() - SPRITE_WIDTH - 3;
+        if (state.drunkenness() > 0) {
+            String text = "Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold();
+            boolean over = state.drunkenness() >= state.hangoverThreshold();
+            p.text(col, 7, text, over ? Palette.DAMAGE : Palette.WARNING, true);
+            col += text.length() + 2;
+        }
+        for (Curse curse : state.activeCurses()) {
+            String text = Painter.fit(curse.displayName() + " (" + curse.description() + ")", Math.max(1, limit - col));
+            p.text(col, 7, text, Palette.DAMAGE);
+            col += text.length() + 2;
+        }
+        for (Curse curse : state.pendingCurses()) {
+            if (col < limit - 4) {
+                p.text(col, 7, Painter.fit(curse.displayName() + " à venir", limit - col), Palette.DIM);
+            }
+        }
     }
 
     /** Ligne 9 : [W] Maté  [E] ·  [R] · — chaque emplacement a la même largeur. */
