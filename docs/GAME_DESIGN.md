@@ -76,7 +76,14 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Modifiée par : Foie d'ingénieur (seuil à 5), Ptit Sat ? (+10 % dégâts par point d'Ivresse).
 
 ### Contenu — premier jet
-Implémentés à ce jour : **Maté**, **Redistribution des briquets** (étape 1). Le reste suit l'ordre de « Nouvelles mécaniques ».
+Implémentés à ce jour (étape 2, tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
+
+Précisions d'implémentation :
+- Les soins des objets et trinkets passent par l'efficacité des soins ; Grinder ajoute +50 % aux cartes de soin feu en plus.
+- Polycopié d'Analyse I ne réduit que les attaques adverses (pas les dégâts qu'on s'inflige soi-même), jamais sous 0.
+- Compréhension algébrique ne compte que les dégâts des sorts joués (pas ceux des objets ni de Plan du campus).
+- Plan du campus et les dégâts « bruts » des objets ignorent éléments et stats ; Gaz du bat Inf est traité comme un sort de l'élément tiré.
+- George ne se déclenche que sur les pioches (pas sur la main distribuée en début de combat).
 
 Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, hooks sur les événements actuels, dégâts / soins / pioche / terrain) ; **b** = demande une nouvelle mécanique (voir « Nouvelles mécaniques »).
 
@@ -156,7 +163,7 @@ Reste : carte de la run, shop, transitions d'écran.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 - **[À DÉCIDER]** Diplôme EPFL : doubler s'applique-t-il aussi aux contreparties (CMS : adversaire +50 % ?) et aux effets entiers (Photocopieuse : 3 cartes ?) ?
-- **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ?
+- **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 - **[À DÉCIDER]** Gueule de bois quand la main est déjà pleine au début du combat : on distribue une carte de moins ?
 
 ### Tranchées
