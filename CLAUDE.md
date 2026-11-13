@@ -42,6 +42,7 @@ src/test/java/...             JUnit 5
 - Contenu (cartes, ennemis, objets, trinkets) déclaré dans des registres centralisés, faciles à étendre par quelqu'un qui ne connaît pas le moteur.
 
 ## Conventions
+- Fork indépendante de davidou888/Cardistry. Ne jamais pousser, merger ni ouvrir de PR vers upstream.
 - Java 17+ (vérifier `java -version` sur la machine), Gradle avec wrapper, JUnit 5.
 - UI terminal : **Lanterna 3.x** (vérifier la dernière version sur Maven Central).
 - Noms de code en anglais, **textes affichés au joueur en français**.
