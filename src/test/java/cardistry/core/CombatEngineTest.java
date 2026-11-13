@@ -65,10 +65,19 @@ class CombatEngineTest {
     // --- Démarrage et tours ---
 
     @Test
-    void startPublieLaSeed() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(), hydra());
+    void startPublieLaSeedEtLancePremierCombat() {
+        Enemy hydra = hydra();
+        setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("Ancienne", FIRE)), hydra, siren());
+
         engine.start();
-        assertEquals(List.of(new GameEvent.GameStarted(42)), events);
+
+        assertEquals(new GameEvent.GameStarted(42), events.get(0));
+        assertEquals(new GameEvent.CombatStarted(hydra, 1, 2), events.get(1));
+        assertEquals(new GameEvent.HandDealt(state.hand()), events.get(2));
+        assertEquals(3, events.size());
+        assertEquals(GameState.STARTING_HAND, state.hand().size());
+        assertFalse(state.hand().stream().anyMatch(c -> c.name().equals("Ancienne")));
+        assertEquals(1, state.combatNumber());
     }
 
     @Test
@@ -77,19 +86,27 @@ class CombatEngineTest {
         engine.startTurn();
         engine.startTurn();
         assertEquals(2, state.turn());
+        assertEquals(2, state.combatTurn());
         assertEquals(List.of(new GameEvent.TurnStarted(1), new GameEvent.TurnStarted(2)), events);
     }
 
     @Test
-    void nouvellePartieMainPleineEtDeterministe() {
-        GameState a = GameState.newGame(new CardPool(), new Rng(5));
-        GameState b = GameState.newGame(new CardPool(), new Rng(5));
-        assertEquals(HAND_SIZE, a.hand().size());
+    void nouvellePartieMainDeCinqEtDeterministe() {
+        GameState a = startedGame(5);
+        GameState b = startedGame(5);
+        assertEquals(GameState.STARTING_HAND, a.hand().size());
         assertEquals(100, a.player().hp(), DELTA);
         assertEquals(100, a.maxHp(), DELTA);
         assertEquals(a.hand().stream().map(Card::name).toList(), b.hand().stream().map(Card::name).toList());
         assertEquals("Hydre", a.currentEnemy().name());
         assertEquals(1.25, a.enemyAttackMultiplier(), DELTA); // EPFL (feu) contre Hydre (feu)
+    }
+
+    private static GameState startedGame(long seed) {
+        GameState game = GameState.newGame();
+        assertTrue(game.hand().isEmpty());
+        new CombatEngine(game, new CardPool(), new Rng(seed), new EventBus()).start();
+        return game;
     }
 
     // --- Cartes ---
@@ -243,11 +260,13 @@ class CombatEngineTest {
     // --- Mort des adversaires, victoire, défaite ---
 
     @Test
-    void adversaireTueLeSuivantArriveSansAttaquer() {
+    void adversaireTueCombatSuivantNouvelleMainSansAttaque() {
         Enemy hydra = hydra();
         Enemy siren = siren();
         SpellCard tsunami = new SpellCard("Tsunami", WATER, 15);
         setUp(new TerrainCard("EPFL", FIRE), List.of(tsunami), hydra, siren);
+        engine.startTurn();
+        events.clear();
 
         engine.submit(new Action.PlayCard(0));
 
@@ -255,8 +274,12 @@ class CombatEngineTest {
                 new GameEvent.CardPlayed(tsunami),
                 new GameEvent.DamageDealt(hydra, 22.5, 1.5),
                 new GameEvent.EnemyKilled(hydra),
-                new GameEvent.EnemyArrived(siren)), events);
+                new GameEvent.CombatStarted(siren, 2, 2),
+                new GameEvent.HandDealt(state.hand())), events);
         assertSame(siren, state.currentEnemy());
+        assertEquals(2, state.combatNumber());
+        assertEquals(0, state.combatTurn());
+        assertEquals(GameState.STARTING_HAND, state.hand().size());
         assertEquals(100, state.player().hp(), DELTA);
         assertFalse(engine.isOver());
     }
@@ -289,14 +312,13 @@ class CombatEngineTest {
 
     @Test
     void combatCompletContreLesTroisAdversaires() {
-        // Chaque sort bat l'adversaire visé (15 × 1.5 = 22.5 dégâts).
-        List<Card> hand = List.of(
-                new SpellCard("Tsunami", WATER, 15),
-                new SpellCard("Fouet", NATURE, 15), new SpellCard("Fouet", NATURE, 15),
-                new SpellCard("Boule", FIRE, 15), new SpellCard("Boule", FIRE, 15));
-        setUp(new TerrainCard("EPFL", FIRE), hand,
-                hydra(), siren(), new Enemy("Goblin", NATURE, 40, 15));
+        // Pool à une seule carte : Boule de feu 40 → Hydre ×1 (40), Sirène ×0.5 (20), Goblin ×1.5 (60).
+        EventBus bus = new EventBus();
+        bus.subscribe(events::add);
+        state = GameState.newGame();
+        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40))), new Rng(1), bus);
 
+        engine.start();
         int turns = 0;
         while (!engine.isOver()) {
             engine.startTurn();
@@ -305,10 +327,10 @@ class CombatEngineTest {
         }
 
         assertTrue(state.isWon());
-        assertEquals(1 + 2 + 2, turns); // Hydre 20 → 1 sort (22.5), Sirène 30 → 2, Goblin 40 → 2
-        assertEquals(2, events.stream().filter(GameEvent.EnemyArrived.class::isInstance).count());
-        // Seules attaques : Sirène au tour 2 (×1 sur EPFL), Goblin au tour 4 (×0.75, feu bat nature).
-        assertEquals(100 - 10 - 15 * 0.75, state.player().hp(), DELTA);
+        assertEquals(1 + 2 + 1, turns); // Hydre 20 → 1 sort, Sirène 30 → 2, Goblin 40 → 1
+        assertEquals(3, events.stream().filter(GameEvent.CombatStarted.class::isInstance).count());
+        // Seule attaque : Sirène au tour où elle survit (×1 sur EPFL contre eau).
+        assertEquals(100 - 10, state.player().hp(), DELTA);
     }
 
     // --- Stats du joueur ---

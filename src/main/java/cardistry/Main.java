@@ -36,7 +36,7 @@ public final class Main {
 
         EventBus bus = new EventBus();
         CardPool pool = new CardPool();
-        CombatEngine engine = new CombatEngine(GameState.newGame(pool, rng), pool, rng, bus);
+        CombatEngine engine = new CombatEngine(GameState.newGame(), pool, rng, bus);
 
         // Les trinkets s'enregistreront ici (hooks.register(...)).
         HookDispatcher hooks = new HookDispatcher();

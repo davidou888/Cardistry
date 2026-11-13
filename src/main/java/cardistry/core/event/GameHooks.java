@@ -38,7 +38,10 @@ public interface GameHooks {
     default void onEnemyKilled(GameEvent.EnemyKilled event) {
     }
 
-    default void onEnemyArrived(GameEvent.EnemyArrived event) {
+    default void onCombatStart(GameEvent.CombatStarted event) {
+    }
+
+    default void onHandDealt(GameEvent.HandDealt event) {
     }
 
     default void onGameWon(GameEvent.GameWon event) {

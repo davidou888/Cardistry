@@ -96,9 +96,15 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 view.log("Tu as vaincu " + e.enemy().name() + " !", Palette.ACCENT);
                 animateEnemyDeath();
             }
-            case GameEvent.EnemyArrived e -> {
-                view.log("Un nouvel adversaire arrive : " + e.enemy().name(), Palette.WARNING);
-                animateEnemyArrival();
+            case GameEvent.CombatStarted e -> {
+                view.log("Combat " + e.number() + "/" + e.total() + " : " + e.enemy().name(), Palette.WARNING);
+                if (e.number() > 1) {
+                    animateEnemyArrival();
+                }
+            }
+            case GameEvent.HandDealt e -> {
+                view.log("Nouvelle main : " + e.cards().size() + " cartes", Palette.INFO);
+                view.selected = 0;
             }
             case GameEvent.ActionRejected e -> {
                 view.log(switch (e.reason()) {

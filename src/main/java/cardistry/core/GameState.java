@@ -18,6 +18,9 @@ import java.util.List;
 /** L'état d'une partie. Lisible par tous, modifiable uniquement par le moteur (package core). */
 public final class GameState {
 
+    /** Cartes distribuées au début de chaque combat. */
+    public static final int STARTING_HAND = 5;
+
     private final Player player;
     private final List<Enemy> enemies;
     private int currentEnemyIndex = 0;
@@ -25,6 +28,7 @@ public final class GameState {
     private final List<Card> hand;
     private final Stats playerStats;
     private int turn = 0;
+    private int combatTurn = 0;
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
         if (enemies.isEmpty()) {
@@ -37,14 +41,11 @@ public final class GameState {
         this.playerStats = playerStats;
     }
 
-    /** Nouvelle partie : adversaires par défaut, terrain de départ, main pleine. */
-    public static GameState newGame(CardPool pool, Rng rng) {
+    /** Nouvelle partie : adversaires par défaut, terrain de départ, main vide (distribuée au début du combat). */
+    public static GameState newGame() {
         Stats stats = new Stats();
-        List<Card> hand = new ArrayList<>();
-        for (int i = 0; i < stats.getInt(StatType.HAND_SIZE); i++) {
-            hand.add(pool.draw(rng));
-        }
-        return new GameState(new Player(stats.get(StatType.MAX_HP)), EnemyRoster.createDefault(), CardPool.startingTerrain(), hand, stats);
+        return new GameState(new Player(stats.get(StatType.MAX_HP)), EnemyRoster.createDefault(),
+                CardPool.startingTerrain(), List.of(), stats);
     }
 
     public Player player() {
@@ -83,8 +84,19 @@ public final class GameState {
         return playerStats;
     }
 
+    /** Nombre total de tours joués dans la partie. */
     public int turn() {
         return turn;
+    }
+
+    /** Tour dans le combat actuel, à partir de 1 (0 avant le premier tour du combat). */
+    public int combatTurn() {
+        return combatTurn;
+    }
+
+    /** Numéro du combat actuel, à partir de 1. */
+    public int combatNumber() {
+        return currentEnemyIndex + 1;
     }
 
     /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
@@ -134,7 +146,16 @@ public final class GameState {
         hand.add(card);
     }
 
+    void clearHand() {
+        hand.clear();
+    }
+
     void nextTurn() {
         turn++;
+        combatTurn++;
+    }
+
+    void resetCombatTurn() {
+        combatTurn = 0;
     }
 }

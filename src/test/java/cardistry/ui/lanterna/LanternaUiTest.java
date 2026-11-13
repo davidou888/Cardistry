@@ -116,7 +116,7 @@ class LanternaUiTest {
         type("r");
         assertTrue(assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
 
-        GameState state = GameState.newGame(new CardPool(), new Rng(1));
+        GameState state = GameState.newGame();
         press(KeyType.Enter);
         assertTimeoutPreemptively(TIMEOUT, () -> ui.showIntro(state));
 
@@ -149,7 +149,7 @@ class LanternaUiTest {
 
         String text = dump("03-combat");
         assertTrue(text.contains("HYDRE"));
-        assertTrue(text.contains("Adversaire 1/3"));
+        assertTrue(text.contains("Combat 1/3"));
         assertTrue(text.contains("Attaque 5 ×1.25 = 6.25"));
         assertTrue(text.contains("EPFL (feu)"));
         assertTrue(text.contains("100/100"));
@@ -237,7 +237,7 @@ class LanternaUiTest {
         Rng rng = new Rng(7);
         CardPool pool = new CardPool();
         EventBus bus = new EventBus();
-        CombatEngine engine = new CombatEngine(GameState.newGame(pool, rng), pool, rng, bus);
+        CombatEngine engine = new CombatEngine(GameState.newGame(), pool, rng, bus);
         bus.subscribe(ui::onEvent);
 
         press(KeyType.Enter); // titre

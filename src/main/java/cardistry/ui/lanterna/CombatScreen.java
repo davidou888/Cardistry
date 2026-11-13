@@ -58,7 +58,7 @@ final class CombatScreen {
     private static void drawEnemy(Painter p, GameState state, ViewState view) {
         Enemy enemy = state.currentEnemy();
         int index = state.enemies().indexOf(enemy) + 1;
-        p.text(2, 1, "Adversaire " + index + "/" + state.enemies().size(), Palette.DIM);
+        p.text(2, 1, "Combat " + index + "/" + state.enemies().size(), Palette.DIM);
         p.text(2, 2, enemy.name().toUpperCase(), Palette.element(enemy.element()), true);
         p.text(3 + enemy.name().length(), 2, "· " + enemy.element().displayName(), Palette.element(enemy.element()));
 

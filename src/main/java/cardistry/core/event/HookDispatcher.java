@@ -35,7 +35,8 @@ public final class HookDispatcher implements Consumer<GameEvent> {
             case GameEvent.TerrainChanged e -> hook.onTerrainChanged(e);
             case GameEvent.EnemyAttacked e -> hook.onEnemyAttack(e);
             case GameEvent.EnemyKilled e -> hook.onEnemyKilled(e);
-            case GameEvent.EnemyArrived e -> hook.onEnemyArrived(e);
+            case GameEvent.CombatStarted e -> hook.onCombatStart(e);
+            case GameEvent.HandDealt e -> hook.onHandDealt(e);
             case GameEvent.GameWon e -> hook.onGameWon(e);
             case GameEvent.GameLost e -> hook.onGameLost(e);
             case GameEvent.ActionRejected e -> {

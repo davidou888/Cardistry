@@ -4,6 +4,7 @@ import cardistry.model.Combatant;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
 import cardistry.model.card.TerrainCard;
+import java.util.List;
 
 /**
  * Tout ce qui se passe dans la partie. Le moteur les publie sur l'{@link EventBus} ;
@@ -41,7 +42,21 @@ public sealed interface GameEvent {
     record EnemyKilled(Enemy enemy) implements GameEvent {
     }
 
-    record EnemyArrived(Enemy enemy) implements GameEvent {
+    /**
+     * Début d'un combat (un par adversaire), y compris le premier.
+     *
+     * @param number numéro du combat, à partir de 1
+     * @param total nombre de combats de la partie
+     */
+    record CombatStarted(Enemy enemy, int number, int total) implements GameEvent {
+    }
+
+    /** Nouvelle main distribuée en début de combat (l'ancienne est défaussée). */
+    record HandDealt(List<Card> cards) implements GameEvent {
+
+        public HandDealt {
+            cards = List.copyOf(cards);
+        }
     }
 
     record ActionRejected(Reason reason) implements GameEvent {

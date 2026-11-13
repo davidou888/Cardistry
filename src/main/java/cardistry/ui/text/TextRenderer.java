@@ -67,11 +67,13 @@ public final class TextRenderer implements Renderer {
                 console.println("Tu as vaincu " + enemyName(e.enemy()) + " !");
                 console.pause(1);
             }
-            case GameEvent.EnemyArrived e -> {
-                console.println("Un nouvel adversaire arrive : " + enemyName(e.enemy())
+            case GameEvent.CombatStarted e -> {
+                console.println();
+                console.println(Ansi.yellow("Combat " + e.number() + "/" + e.total()) + " : " + enemyName(e.enemy())
                         + " (" + Ansi.element(e.enemy().element()) + ", " + num(e.enemy().hp()) + " PV)");
                 console.pause(1);
             }
+            case GameEvent.HandDealt e -> console.println("Tu reçois une nouvelle main de " + e.cards().size() + " cartes.");
             case GameEvent.ActionRejected e -> console.println(switch (e.reason()) {
                 case INVALID_CHOICE -> "Choisis un nombre entre 0 et " + handSize;
                 case HAND_FULL -> "Ta main est pleine";

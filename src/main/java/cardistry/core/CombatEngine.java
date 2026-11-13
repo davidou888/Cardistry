@@ -15,8 +15,10 @@ import java.util.Optional;
 /**
  * Règles du combat. N'affiche rien : chaque changement d'état est publié sur le bus.
  *
- * <p>Déroulement d'un tour : {@link #startTurn()}, puis {@link #submit(Action)} jusqu'à ce
- * qu'une action soit acceptée ; l'adversaire réagit dans la foulée.
+ * <p>Une partie est une suite de combats, un par adversaire ; chaque combat commence avec une
+ * nouvelle main de {@link GameState#STARTING_HAND} cartes. Déroulement d'un tour :
+ * {@link #startTurn()}, puis {@link #submit(Action)} jusqu'à ce qu'une action soit acceptée ;
+ * l'adversaire réagit dans la foulée.
  */
 public final class CombatEngine {
 
@@ -36,8 +38,21 @@ public final class CombatEngine {
         return state;
     }
 
+    /** Lance la partie et son premier combat. */
     public void start() {
         bus.publish(new GameEvent.GameStarted(rng.seed()));
+        beginCombat();
+    }
+
+    /** Nouvelle main, compteur de tours du combat remis à zéro. */
+    private void beginCombat() {
+        state.resetCombatTurn();
+        state.clearHand();
+        for (int i = 0; i < GameState.STARTING_HAND; i++) {
+            state.addToHand(pool.draw(rng));
+        }
+        bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
+        bus.publish(new GameEvent.HandDealt(state.hand()));
     }
 
     public void startTurn() {
@@ -123,8 +138,8 @@ public final class CombatEngine {
     }
 
     /**
-     * Si l'adversaire est mort, le suivant arrive mais n'attaque pas ce tour-ci.
-     * Sinon, l'adversaire attaque.
+     * Si l'adversaire est mort, le combat suivant commence (le nouvel adversaire n'attaque pas
+     * ce tour-ci). Sinon, l'adversaire attaque.
      */
     private void enemyPhase() {
         Enemy enemy = state.currentEnemy();
@@ -135,7 +150,7 @@ public final class CombatEngine {
         bus.publish(new GameEvent.EnemyKilled(enemy));
         if (state.hasNextEnemy()) {
             state.advanceEnemy();
-            bus.publish(new GameEvent.EnemyArrived(state.currentEnemy()));
+            beginCombat();
         } else {
             bus.publish(new GameEvent.GameWon());
         }

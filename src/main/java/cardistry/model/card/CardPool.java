@@ -16,6 +16,15 @@ public class CardPool {
 
     private final List<Card> cards = new ArrayList<>();
 
+    /** Pool de cartes personnalisé (tests, variantes). */
+    public CardPool(List<Card> cards) {
+        if (cards.isEmpty()) {
+            throw new IllegalArgumentException("Le pool est vide");
+        }
+        this.cards.addAll(cards);
+    }
+
+    /** Pool standard du jeu. */
     public CardPool() {
         // --- Sortilèges (nom, élément, dégâts) ---
         cards.add(new SpellCard("Boule de feu", FIRE, 10.0));
