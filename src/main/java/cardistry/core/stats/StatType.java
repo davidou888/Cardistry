@@ -38,7 +38,11 @@ public enum StatType {
     /** Ivresse à partir de laquelle on attrape une Gueule de bois. */
     HANGOVER_THRESHOLD(3),
     /** Si &gt; 0 : les soins ne sont plus plafonnés par les PV max. */
-    UNCAPPED_HEALING(0);
+    UNCAPPED_HEALING(0),
+    /** Taille du paquet de clopes. */
+    CIGARETTE_MAX(20),
+    /** Chance (0 à 1) qu'une clope fumée se transforme en Petit pétou. */
+    CIGARETTE_TRANSFORM_CHANCE(0);
 
     private final double defaultBase;
 

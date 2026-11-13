@@ -35,6 +35,12 @@ public final class ConsoleInput implements Input {
         while (true) {
             console.print("Que veux-tu jouer ? ");
             String line = console.readLine().trim();
+            if (line.equalsIgnoreCase("f")) {
+                return new Action.Smoke();
+            }
+            if (line.equalsIgnoreCase("g")) {
+                return new Action.RollCigarette();
+            }
             if (line.length() == 1 && ItemKeys.slot(line.charAt(0), state.itemSlots()) >= 0) {
                 return new Action.UseItem(ItemKeys.slot(line.charAt(0), state.itemSlots()));
             }

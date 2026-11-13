@@ -11,6 +11,14 @@ public sealed interface Action {
     record DrawCard() implements Action {
     }
 
+    /** Fumer une clope : action gratuite. */
+    record Smoke() implements Action {
+    }
+
+    /** Rouler une clope : termine le tour, comme piocher. */
+    record RollCigarette() implements Action {
+    }
+
     /** Utiliser l'objet à l'index {@code slot} de l'inventaire : action gratuite. */
     record UseItem(int slot) implements Action {
     }

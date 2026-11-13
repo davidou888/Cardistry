@@ -188,7 +188,8 @@ final class CombatScreen {
             col += text.length() + 2;
         }
         for (Curse curse : state.activeCurses()) {
-            String text = Painter.fit(curse.displayName() + " (" + curse.description() + ")", Math.max(1, limit - col));
+            String text = Painter.fit(curse.displayName() + " (" + curse.description(state.activeIntensity(curse)) + ")",
+                    Math.max(1, limit - col));
             p.text(col, 7, text, Palette.DAMAGE);
             col += text.length() + 2;
         }

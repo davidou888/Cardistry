@@ -129,6 +129,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case NO_ITEM -> "Pas d'objet à cet emplacement.";
                     case INVALID_REWARD -> "Choix de récompense invalide.";
                     case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer.";
+                    case NO_CIGARETTE -> "Plus de clope : G pour en rouler une.";
+                    case PACK_FULL -> "Paquet plein : impossible de rouler.";
                 }, Palette.WARNING);
                 render();
             }
@@ -152,9 +154,22 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 render();
             }
             case GameEvent.CurseGained e -> view.log(e.curse().displayName() + " au prochain combat ("
-                    + e.curse().description() + ")", Palette.DAMAGE);
-            case GameEvent.CurseStarted e -> view.log(e.curse().displayName() + " : " + e.curse().description(),
-                    Palette.DAMAGE);
+                    + e.curse().description(1) + ")", Palette.DAMAGE);
+            case GameEvent.CurseStarted e -> view.log(e.curse().displayName() + " : "
+                    + e.curse().description(state == null ? 1 : state.activeIntensity(e.curse())), Palette.DAMAGE);
+            case GameEvent.CurseReduced e -> view.log(e.curse().displayName()
+                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + e.curse().description(e.intensity()) + ")"),
+                    Palette.HEAL);
+            case GameEvent.CigarettesChanged e -> render();
+            case GameEvent.CigaretteSmoked e -> {
+                if (e.transformedIntoPetitPetou()) {
+                    view.log("La clope se transforme en Petit pétou !", Palette.ACCENT);
+                } else {
+                    view.log("Tu fumes une clope", Palette.TEXT);
+                }
+                render();
+            }
+            case GameEvent.CigaretteRolled e -> view.log("Tu roules une clope", Palette.TEXT);
             case GameEvent.CurseEnded e -> view.log(e.curse().displayName() + " terminée", Palette.DIM);
             case GameEvent.RewardOffered e -> view.log("Récompense : choisis 1 parmi " + e.options().size(), Palette.ACCENT);
             case GameEvent.RewardTaken e -> view.log("Tu prends " + e.taken().name()
@@ -256,6 +271,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         confirmQuit();
                     } else if (c == 'p' || c == '0') {
                         return new Action.DrawCard();
+                    } else if (c == 'f') {
+                        return new Action.Smoke();
+                    } else if (c == 'g') {
+                        return new Action.RollCigarette();
                     } else if (c == 'i') {
                         showInventory();
                     } else if (ItemKeys.slot(c, state.itemSlots()) >= 0) {

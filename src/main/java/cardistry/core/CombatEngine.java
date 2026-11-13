@@ -203,6 +203,16 @@ public final class CombatEngine {
                 useItem(use.slot());
                 yield false;
             }
+            case Action.Smoke smoke -> {
+                smoke();
+                yield false;
+            }
+            case Action.RollCigarette roll -> {
+                state.setCigarettes(state.cigarettes() + 1);
+                bus.publish(new GameEvent.CigaretteRolled());
+                bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+                yield true;
+            }
         };
         if (state.isLost()) {
             return ActionResult.TURN_ENDED; // mort de son propre effet (GameLost déjà publié)
@@ -233,6 +243,12 @@ public final class CombatEngine {
             }
             case Action.UseItem use -> use.slot() < 0 || use.slot() >= state.items().size()
                     ? Optional.of(Reason.NO_ITEM)
+                    : Optional.empty();
+            case Action.Smoke smoke -> state.cigarettes() <= 0
+                    ? Optional.of(Reason.NO_CIGARETTE)
+                    : Optional.empty();
+            case Action.RollCigarette roll -> state.cigarettes() >= state.cigaretteMax()
+                    ? Optional.of(Reason.PACK_FULL)
                     : Optional.empty();
         };
     }
@@ -284,7 +300,7 @@ public final class CombatEngine {
         bus.publish(new GameEvent.DrunkennessChanged(state.drunkenness(), state.hangoverThreshold()));
         if (amount > 0 && state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && state.hasNextEnemy()) {
             state.setHangoverThisCombat(true);
-            state.addPendingCurse(Curse.HANGOVER);
+            state.addPendingCurse(Curse.HANGOVER, 1);
             bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
         }
     }
@@ -421,6 +437,48 @@ public final class CombatEngine {
         }
     }
 
+    /** Identifiant de l'objet dont une clope transformée donne l'effet (Googz). */
+    static final String PETIT_PETOU = "petit-petou";
+
+    /**
+     * Fumer : −5 PV bruts (ou, selon la stat {@link StatType#CIGARETTE_TRANSFORM_CHANCE}, l'effet de
+     * l'objet Petit pétou à la place), puis la Gueule de bois perd 1 d'intensité.
+     */
+    private void smoke() {
+        state.setCigarettes(state.cigarettes() - 1);
+        bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+        double chance = state.playerStats().get(StatType.CIGARETTE_TRANSFORM_CHANCE);
+        boolean transformed = chance > 0 && rng.nextDouble() < chance;
+        bus.publish(new GameEvent.CigaretteSmoked(transformed));
+        if (transformed) {
+            cardistry.items.ItemRegistry.item(PETIT_PETOU).use(effects);
+        } else {
+            effects.damagePlayer(5);
+        }
+        if (state.player().isAlive()) {
+            reduceCurse(Curse.HANGOVER);
+        }
+    }
+
+    /** Retire 1 d'intensité : d'abord à la malédiction active, sinon à celle à venir. */
+    private void reduceCurse(Curse curse) {
+        int active = state.activeIntensity(curse);
+        if (active > 0) {
+            state.setActiveIntensity(curse, active - 1);
+            if (active - 1 == 0) {
+                bus.publish(new GameEvent.CurseEnded(curse));
+            } else {
+                bus.publish(new GameEvent.CurseReduced(curse, active - 1, false));
+            }
+            return;
+        }
+        int pending = state.pendingIntensity(curse);
+        if (pending > 0) {
+            state.setPendingIntensity(curse, pending - 1);
+            bus.publish(new GameEvent.CurseReduced(curse, pending - 1, true));
+        }
+    }
+
     private void useItem(int slot) {
         Item item = state.removeItem(slot);
         bus.publish(new GameEvent.ItemUsed(item));
@@ -511,6 +569,16 @@ public final class CombatEngine {
             if (wasAlive && !player.isAlive()) {
                 bus.publish(new GameEvent.GameLost());
             }
+        }
+
+        @Override
+        public int addCigarettes(int count) {
+            int added = Math.max(0, Math.min(count, state.cigaretteMax() - state.cigarettes()));
+            if (added > 0) {
+                state.setCigarettes(state.cigarettes() + added);
+                bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+            }
+            return added;
         }
 
         @Override

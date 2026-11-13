@@ -65,6 +65,12 @@ public interface GameHooks {
     default void onAttackCancelled(GameEvent.AttackCancelled event, EffectContext ctx) {
     }
 
+    default void onCigaretteSmoked(GameEvent.CigaretteSmoked event, EffectContext ctx) {
+    }
+
+    default void onCigarettesChanged(GameEvent.CigarettesChanged event, EffectContext ctx) {
+    }
+
     default void onRewardOffered(GameEvent.RewardOffered event, EffectContext ctx) {
     }
 

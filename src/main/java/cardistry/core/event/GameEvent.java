@@ -98,6 +98,22 @@ public sealed interface GameEvent {
     record CurseGained(Curse curse) implements GameEvent {
     }
 
+    /** Intensité d'une malédiction réduite (par une clope) ; {@code pending} si elle était à venir. */
+    record CurseReduced(Curse curse, int intensity, boolean pending) implements GameEvent {
+    }
+
+    /** Le nombre de clopes change. */
+    record CigarettesChanged(int cigarettes, int max) implements GameEvent {
+    }
+
+    /** Une clope est fumée ; {@code transformedIntoPetitPetou} si Googz l'a transformée. */
+    record CigaretteSmoked(boolean transformedIntoPetitPetou) implements GameEvent {
+    }
+
+    /** Une clope est roulée (fin du tour). */
+    record CigaretteRolled() implements GameEvent {
+    }
+
     /** Malédiction active pour ce combat. */
     record CurseStarted(Curse curse) implements GameEvent {
     }
@@ -152,7 +168,11 @@ public sealed interface GameEvent {
             /** Proposition de récompense inexistante. */
             INVALID_REWARD,
             /** Inventaire plein : il faut choisir quoi remplacer. */
-            INVENTORY_FULL
+            INVENTORY_FULL,
+            /** Plus de clope à fumer. */
+            NO_CIGARETTE,
+            /** Paquet plein : impossible de rouler. */
+            PACK_FULL
         }
     }
 

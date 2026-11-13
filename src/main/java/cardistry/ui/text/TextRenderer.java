@@ -87,6 +87,8 @@ public final class TextRenderer implements Renderer {
                 case NO_ITEM -> "Pas d'objet à cet emplacement";
                 case INVALID_REWARD -> "Choix de récompense invalide";
                 case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer";
+                case NO_CIGARETTE -> "Plus de clope : roule-en une (g)";
+                case PACK_FULL -> "Paquet plein : impossible de rouler";
             });
             case GameEvent.EffectAdded e -> console.println("→ " + e.effect().describe());
             case GameEvent.EffectActivated e -> console.println("→ " + Ansi.yellow(e.effect().name()) + " se déclenche !");
@@ -103,9 +105,19 @@ public final class TextRenderer implements Renderer {
                 }
             }
             case GameEvent.CurseGained e -> console.println(Ansi.RED + "Gueule de bois en vue !" + Ansi.END_COLOR
-                    + " " + e.curse().displayName() + " (" + e.curse().description() + ") au prochain combat.");
+                    + " " + e.curse().displayName() + " (" + e.curse().description(1) + ") au prochain combat.");
             case GameEvent.CurseStarted e -> console.println(Ansi.RED + e.curse().displayName() + Ansi.END_COLOR
-                    + " : " + e.curse().description() + " pendant ce combat.");
+                    + " : " + e.curse().description(lastState.activeIntensity(e.curse())) + " pendant ce combat.");
+            case GameEvent.CurseReduced e -> console.println("→ " + e.curse().displayName()
+                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + e.curse().description(e.intensity()) + ")")
+                    + (e.pending() && e.intensity() > 0 ? " au prochain combat" : ""));
+            case GameEvent.CigarettesChanged e -> {
+                // Affiché dans l'état.
+            }
+            case GameEvent.CigaretteSmoked e -> console.println(e.transformedIntoPetitPetou()
+                    ? Ansi.yellow("La clope se transforme en Petit pétou !")
+                    : "Tu fumes une clope.");
+            case GameEvent.CigaretteRolled e -> console.println("Tu roules une clope.");
             case GameEvent.CurseEnded e -> console.println(e.curse().displayName() + " terminée.");
             case GameEvent.RewardOffered e -> {
                 console.println();
@@ -129,8 +141,12 @@ public final class TextRenderer implements Renderer {
         }
     }
 
+    /** Dernier état affiché (pour les événements qui ne portent pas l'état). */
+    private GameState lastState = GameState.newGame();
+
     @Override
     public void showStatus(GameState state) {
+        lastState = state;
         handSize = state.handSize();
         Enemy enemy = state.currentEnemy();
         console.println();
@@ -154,7 +170,8 @@ public final class TextRenderer implements Renderer {
             console.println("Ivresse : " + state.drunkenness() + "/" + state.hangoverThreshold());
         }
         for (cardistry.core.Curse curse : state.activeCurses()) {
-            console.println(Ansi.RED + curse.displayName() + Ansi.END_COLOR + " : " + curse.description());
+            console.println(Ansi.RED + curse.displayName() + Ansi.END_COLOR + " : "
+                    + curse.description(state.activeIntensity(curse)));
         }
         for (cardistry.core.Curse curse : state.pendingCurses()) {
             console.println(curse.displayName() + " au prochain combat");

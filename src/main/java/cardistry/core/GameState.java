@@ -23,6 +23,9 @@ public final class GameState {
     /** Cartes distribuées au début de chaque combat. */
     public static final int STARTING_HAND = 5;
 
+    /** Clopes au début de chaque partie. */
+    public static final int STARTING_CIGARETTES = 5;
+
     private final Player player;
     private final List<Enemy> enemies;
     private int currentEnemyIndex = 0;
@@ -35,8 +38,9 @@ public final class GameState {
     private final List<Item> items = new ArrayList<>();
     private int drunkenness = 0;
     private boolean hangoverThisCombat = false;
-    private final java.util.Set<Curse> pendingCurses = java.util.EnumSet.noneOf(Curse.class);
-    private final java.util.Set<Curse> activeCurses = java.util.EnumSet.noneOf(Curse.class);
+    private final java.util.Map<Curse, Integer> pendingCurses = new java.util.EnumMap<>(Curse.class);
+    private final java.util.Map<Curse, Integer> activeCurses = new java.util.EnumMap<>(Curse.class);
+    private int cigarettes = STARTING_CIGARETTES;
     private final List<TemporaryEffect> effects = new ArrayList<>();
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
@@ -136,12 +140,34 @@ public final class GameState {
 
     /** Malédictions actives pendant ce combat. */
     public java.util.Set<Curse> activeCurses() {
-        return java.util.Collections.unmodifiableSet(activeCurses);
+        return java.util.Collections.unmodifiableSet(activeCurses.keySet());
+    }
+
+    /** Intensité d'une malédiction active (0 si absente). */
+    public int activeIntensity(Curse curse) {
+        return activeCurses.getOrDefault(curse, 0);
+    }
+
+    /** Intensité d'une malédiction à venir (0 si absente). */
+    public int pendingIntensity(Curse curse) {
+        return pendingCurses.getOrDefault(curse, 0);
+    }
+
+    // --- Clopes ---
+
+    /** Clopes dans le paquet. */
+    public int cigarettes() {
+        return cigarettes;
+    }
+
+    /** Taille du paquet (stat {@link StatType#CIGARETTE_MAX}). */
+    public int cigaretteMax() {
+        return playerStats.getInt(StatType.CIGARETTE_MAX);
     }
 
     /** Malédictions qui s'activeront au prochain combat. */
     public java.util.Set<Curse> pendingCurses() {
-        return java.util.Collections.unmodifiableSet(pendingCurses);
+        return java.util.Collections.unmodifiableSet(pendingCurses.keySet());
     }
 
     /** Nombre total de tours joués dans la partie. */
@@ -326,16 +352,36 @@ public final class GameState {
         hangoverThisCombat = value;
     }
 
-    void addPendingCurse(Curse curse) {
-        pendingCurses.add(curse);
+    /** Ajoute une malédiction à venir (son intensité s'additionne si elle l'est déjà). */
+    void addPendingCurse(Curse curse, int intensity) {
+        pendingCurses.merge(curse, intensity, Integer::sum);
+    }
+
+    /** Fixe l'intensité d'une malédiction à venir (0 = retirée). */
+    void setPendingIntensity(Curse curse, int intensity) {
+        if (intensity <= 0) {
+            pendingCurses.remove(curse);
+        } else {
+            pendingCurses.put(curse, intensity);
+        }
+    }
+
+    /** Fixe l'intensité d'une malédiction active, modificateurs compris (0 = terminée). */
+    void setActiveIntensity(Curse curse, int intensity) {
+        playerStats.removeBySource(curse.modifierSource());
+        if (intensity <= 0) {
+            activeCurses.remove(curse);
+        } else {
+            activeCurses.put(curse, intensity);
+            curse.modifiers(intensity).forEach(playerStats::add);
+        }
     }
 
     /** Active les malédictions en attente (modificateurs compris) et les renvoie. */
     java.util.List<Curse> activatePendingCurses() {
-        java.util.List<Curse> activated = java.util.List.copyOf(pendingCurses);
+        java.util.List<Curse> activated = java.util.List.copyOf(pendingCurses.keySet());
         for (Curse curse : activated) {
-            activeCurses.add(curse);
-            curse.modifiers().forEach(playerStats::add);
+            setActiveIntensity(curse, activeIntensity(curse) + pendingCurses.get(curse));
         }
         pendingCurses.clear();
         return activated;
@@ -343,11 +389,14 @@ public final class GameState {
 
     /** Termine les malédictions actives (modificateurs retirés) et les renvoie. */
     java.util.List<Curse> endActiveCurses() {
-        java.util.List<Curse> ended = java.util.List.copyOf(activeCurses);
+        java.util.List<Curse> ended = java.util.List.copyOf(activeCurses.keySet());
         for (Curse curse : ended) {
-            playerStats.removeBySource(curse.modifierSource());
+            setActiveIntensity(curse, 0);
         }
-        activeCurses.clear();
         return ended;
+    }
+
+    void setCigarettes(int value) {
+        cigarettes = value;
     }
 }
