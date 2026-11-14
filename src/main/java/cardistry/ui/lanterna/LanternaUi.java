@@ -36,6 +36,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private final Screen screen;
     private final boolean fast;
+    private final boolean ascii;
     private final ViewState view = new ViewState();
 
     private Page page = Page.TITLE;
@@ -51,17 +52,26 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private boolean showMetaPhrase = false;
 
     /** Ouvre le terminal courant en plein écran. */
-    public static LanternaUi open(boolean fast) throws IOException {
+    public static LanternaUi open(boolean fast, boolean ascii) throws IOException {
         Terminal terminal = new DefaultTerminalFactory(System.out, System.in, StandardCharsets.UTF_8)
                 .setForceTextTerminal(true)
                 .createTerminal();
-        return new LanternaUi(terminal, fast);
+        return new LanternaUi(terminal, fast, ascii);
     }
 
     /** @param fast si {@code true}, les animations ne font aucune pause */
     public LanternaUi(Terminal terminal, boolean fast) throws IOException {
+        this(terminal, fast, false);
+    }
+
+    /**
+     * @param fast si {@code true}, les animations ne font aucune pause
+     * @param ascii si {@code true}, affichage en ASCII pur (cadres, barres, flèches, accents)
+     */
+    public LanternaUi(Terminal terminal, boolean fast, boolean ascii) throws IOException {
         this.screen = new TerminalScreen(terminal);
         this.fast = fast;
+        this.ascii = ascii;
         screen.startScreen();
         screen.setCursorPosition(null);
     }
@@ -605,7 +615,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             screen.doResizeIfNecessary();
             TerminalSize size = screen.getTerminalSize();
             screen.clear();
-            Painter painter = new Painter(screen.newTextGraphics(), size);
+            Painter painter = new Painter(screen.newTextGraphics(), size, ascii);
             if (size.getColumns() < MenuScreens.MIN_COLS || size.getRows() < MenuScreens.MIN_ROWS) {
                 MenuScreens.tooSmall(painter);
             } else {

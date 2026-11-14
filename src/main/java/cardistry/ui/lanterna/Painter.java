@@ -13,10 +13,17 @@ final class Painter {
 
     private final TextGraphics g;
     private final TerminalSize size;
+    private final boolean ascii;
 
     Painter(TextGraphics g, TerminalSize size) {
+        this(g, size, false);
+    }
+
+    /** @param ascii si {@code true}, tout texte est converti en ASCII pur (voir {@link cardistry.ui.Glyphs}) */
+    Painter(TextGraphics g, TerminalSize size, boolean ascii) {
         this.g = g;
         this.size = size;
+        this.ascii = ascii;
     }
 
     int cols() {
@@ -44,6 +51,9 @@ final class Painter {
         }
         if (col + text.length() > cols()) {
             text = text.substring(0, cols() - col);
+        }
+        if (ascii) {
+            text = cardistry.ui.Glyphs.toAscii(text);
         }
         g.setForegroundColor(color);
         g.setBackgroundColor(TextColor.ANSI.DEFAULT);

@@ -610,6 +610,26 @@ class LanternaUiTest {
         assertTrue(!secondScreen.contains("Un jeu de cartes dans ton jeu de cartes."), "phrase méta seulement la 1re fois");
     }
 
+    @Test
+    void modeAsciiPurSurTousLesEcrans() throws Exception {
+        terminal = new DefaultVirtualTerminal(new TerminalSize(80, 24));
+        ui = new LanternaUi(terminal, true, true);
+        GameState state = withInventory(List.of(ItemRegistry.item("caipirinha")), List.of(ItemRegistry.trinket("diplome-epfl")));
+        ui.onEvent(new GameEvent.GameStarted(7));
+        ui.showStatus(state);
+        String combat = dump("22-ascii-combat");
+        assertTrue(combat.chars().allMatch(c -> c < 128), combat);
+        assertTrue(combat.contains("+- Cardistry -"), combat);
+        assertTrue(combat.contains("####################"), "barres de PV");
+        assertTrue(combat.contains("Caipirinha"), "accents retirés");
+
+        type("q");
+        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
+        String title = dump("23-ascii-titre");
+        assertTrue(title.chars().allMatch(c -> c < 128), title);
+        assertTrue(title.contains("###"), "bannière en #");
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {

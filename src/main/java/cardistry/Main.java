@@ -6,6 +6,7 @@ import cardistry.core.Rng;
 import cardistry.core.event.EventBus;
 import cardistry.model.card.CardPool;
 import cardistry.ui.GameLoop;
+import cardistry.ui.Glyphs;
 import cardistry.ui.QuitGameException;
 import cardistry.ui.lanterna.LanternaUi;
 import cardistry.ui.text.Console;
@@ -26,11 +27,13 @@ public final class Main {
      *   <li>{@code --fast} supprime les pauses et animations (pratique pour tester)</li>
      *   <li>{@code --no-ui} rendu texte simple au lieu du plein écran ; automatique si l'entrée
      *       n'est pas un vrai terminal (pipe, {@code ./gradlew run})</li>
+     *   <li>{@code --ascii} affichage en ASCII pur ; automatique si la sortie n'est pas en UTF-8</li>
      * </ul>
      */
     public static void main(String[] args) {
         List<String> options = List.of(args);
         boolean fast = options.contains("--fast");
+        boolean ascii = options.contains("--ascii") || !Glyphs.unicodeLikely();
         Rng rng = parseSeed(options);
 
         EventBus bus = new EventBus();
@@ -38,14 +41,14 @@ public final class Main {
         CombatEngine engine = new CombatEngine(GameState.newGame(), pool, rng, bus);
 
         if (!options.contains("--no-ui") && isInteractiveTerminal()) {
-            runFullScreen(engine, bus, fast);
+            runFullScreen(engine, bus, fast, ascii);
         } else {
-            runText(engine, bus, fast);
+            runText(engine, bus, fast, ascii);
         }
     }
 
-    private static void runFullScreen(CombatEngine engine, EventBus bus, boolean fast) {
-        try (LanternaUi ui = LanternaUi.open(fast)) {
+    private static void runFullScreen(CombatEngine engine, EventBus bus, boolean fast, boolean ascii) {
+        try (LanternaUi ui = LanternaUi.open(fast, ascii)) {
             bus.subscribe(ui::onEvent);
             GameLoop.run(engine, ui, ui);
         } catch (QuitGameException e) {
@@ -55,8 +58,8 @@ public final class Main {
         }
     }
 
-    private static void runText(CombatEngine engine, EventBus bus, boolean fast) {
-        Console console = new Console(System.in, System.out, fast);
+    private static void runText(CombatEngine engine, EventBus bus, boolean fast, boolean ascii) {
+        Console console = new Console(System.in, System.out, fast, ascii);
         TextRenderer renderer = new TextRenderer(console);
         bus.subscribe(renderer::onEvent);
         try {

@@ -11,16 +11,30 @@ public final class Console {
     private final Scanner scanner;
     private final PrintStream out;
     private final boolean fast;
+    private final boolean ascii;
 
     /** @param fast si {@code true}, les pauses sont ignorées */
     public Console(InputStream in, PrintStream out, boolean fast) {
+        this(in, out, fast, false);
+    }
+
+    /**
+     * @param fast si {@code true}, les pauses sont ignorées
+     * @param ascii si {@code true}, tout texte est converti en ASCII pur
+     */
+    public Console(InputStream in, PrintStream out, boolean fast, boolean ascii) {
         this.scanner = new Scanner(in);
         this.out = out;
         this.fast = fast;
+        this.ascii = ascii;
+    }
+
+    private String encode(String text) {
+        return ascii ? cardistry.ui.Glyphs.toAscii(text) : text;
     }
 
     public void println(String line) {
-        out.println(line);
+        out.println(encode(line));
     }
 
     public void println() {
@@ -28,7 +42,7 @@ public final class Console {
     }
 
     public void print(String text) {
-        out.print(text);
+        out.print(encode(text));
         out.flush();
     }
 
