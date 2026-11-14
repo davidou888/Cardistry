@@ -73,6 +73,10 @@ icônes, carte (voir « Interface de la fenêtre »).
 ### Menus
 
 - Écran titre : **Jouer**, **Règles**, **Options**, **Quitter** (↑/↓ ou ←/→, Entrée ; R et Q en raccourci).
+- Puis le **choix du personnage** (←/→ ou 1-3, Entrée ; Échap revient au titre) : **Louis** (MAN : premier
+  sort de chaque combat +50 %, Gueule de bois doublée), **Dave** (Full skill Mr. Le Juge : un sort du
+  terrain qui bat l'adversaire le soigne des PV enlevés), **Sassy** (wadayatalkinabit : 130 PV, un alien
+  inflige 4 dégâts à chaque tour, sauf quand il fume un joint).
 - En jeu, **Échap** ouvre le menu **pause** (Reprendre, Options, Quitter la partie) sur la carte, en combat, à la
   Sieste, dans un événement et sur les écrans de récompense. Dans un sous-écran (remplacer un objet,
   faire le tri, inventaire…), Échap annule d'abord ; au shop, P fait partir.
@@ -217,7 +221,8 @@ Tout est dans `src/main/resources/images/`, en pixel art agrandi d'un facteur **
 | Dossier | Contenu | Taille |
 |---|---|---|
 | `enemies/` | `<id>.<animation>.<n>.png` (`n` à partir de 1 ; animations `idle`, `attack`, `hurt`, `death`) et `<id>.png`, l'image de base | 64×64 |
-| `player/player.png` | le joueur (placeholder) | 64×64 |
+| `player/player.png` | le joueur (placeholder) ; `player/louis.png`, `dave.png`, `sassy.png` sont pris s'ils existent | 64×64 |
+| `npc/marchand.idle.<n>.png` | le marchand du shop (fenêtre d'au moins 100×30) | 64×64 |
 | `cards/<id>.png` | illustration d'une carte ; `id` = nom en minuscules, sans accents, avec des tirets (`jet-d-eau`) | 24×24 |
 | `items/<id>.png` | icône d'un objet ou d'un trinket (même `id` que dans le registre) | 16×16 |
 | `map/<type>.png` | nœuds de la carte : `combat`, `elite`, `boss`, `shop`, `rest`, `event` | 16×16 |
@@ -246,6 +251,7 @@ frame avec un tag à son id.
 | `art/items.aseprite`, `art/trinkets.aseprite` | icônes d'objets et de trinkets, 16×16 | `images/items/<tag>.png` |
 | `art/cards.aseprite` | illustrations de cartes, 24×24 | `images/cards/<tag>.png` |
 | `art/enemies/<id>.aseprite` | sprite d'un adversaire, 64×64, tourné vers la gauche ; tags `idle`, `attack`, `hurt`, `death` | `images/enemies/<id>.<tag>.<n>.png` et `<id>.png` |
+| `art/npc/marchand.aseprite` | le marchand du shop, 64×64, tourné vers la droite ; tag `idle` (frame 2 = il tire sur sa clope). Le bout de la clope doit rester en (51, 27) : la fumée animée part de là | `images/npc/marchand.idle.<n>.png` et `marchand.png` |
 
 Une icône = une frame, avec un **tag** qui porte son id (`space-cake`, `m1`, `boule-de-feu`…) : c'est le
 tag qui donne le nom du PNG. Pour un adversaire, un tag = une animation (une ou plusieurs frames).

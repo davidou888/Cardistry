@@ -122,6 +122,27 @@ Règles communes :
   registre (elle ne reste pas dans le deck).
 - Écran de combat : « Ta main 5/7 · Pioche 7 · Défausse 0 » ; inventaire (I) : le deck.
 
+## Personnages
+Au début de chaque partie (après l'écran titre), on choisit un personnage. Sa capacité est permanente,
+comme un trinket qu'on ne peut ni perdre ni remplacer. Code : `hero.HeroRegistry` (tous les chiffres).
+
+| Personnage | PV | Capacité | Effet |
+|---|---|---|---|
+| **Louis** | 100 | MAN | Le premier sort de chaque combat inflige +50 % de dégâts (×1.5). Le malus de Gueule de bois est doublé : −2 taille de main par point d'intensité. |
+| **Dave** | 100 | Full skill Mr. Le Juge | Un sort du même élément que le terrain **et** qui bat l'élément de l'adversaire (ex. Boule de feu à l'EPFL contre un adversaire plante) soigne des PV enlevés à l'adversaire. |
+| **Sassy** | 130 | wadayatalkinabit | À chaque début de tour, son alien inflige 4 dégâts bruts à l'adversaire, en plus de l'action du joueur. 10 % de chance que l'alien rate son tour et fume un joint à la place (aucun effet, pour le lore). |
+
+Choix d'implémentation :
+- Louis : MAN est un effet « prochain sort ×1.5 » posé au début de chaque combat. Il se consomme au premier
+  sort joué, même esquivé ; avec un Shot de Jäger, un seul bonus par sort (MAN d'abord). Une clope retire
+  toujours 1 d'intensité, donc annule −2 d'un coup.
+- Dave : le soin vaut les PV **réellement** enlevés (pas les dégâts en trop sur un adversaire achevé) ; rien
+  si le sort est esquivé. *Provisoire : c'est un soin comme les autres (efficacité des soins, Ross, plafond
+  des PV max).*
+- Sassy : l'alien attaque aussi pendant un tour sauté et peut achever l'adversaire. Dégâts bruts (aucun
+  multiplicateur, le Rebond du Peneu s'applique). Son raté n'est pas un tirage de chance : CLAUDE.md ne le
+  double pas.
+
 ## Objets et trinkets
 | | Objet | Trinket |
 |---|---|---|
@@ -327,7 +348,9 @@ Reste : transitions d'écran ; vrais sons et musiques.
 ## Questions ouvertes
 - **[À DÉCIDER]** Noms et attaques des 3 boss (placeholders « Boss du niveau 1/2/3 »).
 - **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
-- **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil.
+- **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil. Il a un sprite (ébauche : bonnet, barbe, clope au bec) et il fume.
+- **[À DÉCIDER]** Dave : son soin profite-t-il des bonus de soin (efficacité, Ross) ou est-il brut ? *Provisoire : il en profite.*
+- **[À DÉCIDER]** Sprites des trois personnages (placeholder commun en attendant) et affichage de l'alien de Sassy.
 - **[À DÉCIDER]** Les vrais événements (les 3 actuels sont des placeholders).
 - Provisoire : rareté des cartes au shop (voir « Shop »).
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
