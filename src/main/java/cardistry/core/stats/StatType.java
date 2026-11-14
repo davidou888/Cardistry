@@ -8,7 +8,7 @@ import cardistry.model.Element;
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
  * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
- * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #LUCKY_ROLLS}. {@link #GOLD_GAIN} attend le shop.
+ * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
  */
 public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
@@ -23,8 +23,8 @@ public enum StatType {
     /** Emplacements d'objets. */
     ITEM_SLOTS(3),
     CARDS_PER_DRAW(1),
-    /** Multiplicateur de l'or gagné. */
-    GOLD_GAIN(1.0),
+    /** Multiplicateur des Choomies gagnés en combat. */
+    CHOOMIES_GAIN(1.0),
     /** Multiplicateur des dégâts des sorts de feu. */
     FIRE_DAMAGE(1.0),
     WATER_DAMAGE(1.0),

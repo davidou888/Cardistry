@@ -47,7 +47,7 @@ final class CombatScreen {
     }
 
     static void draw(Painter p, GameState state, ViewState view, long seed) {
-        p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed,
+        p.frame("Cardistry", "Tour " + state.turn() + " · " + state.choomies() + " Choomies · Seed " + seed,
                 state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z) ? HELP_UNDO : HELP);
         drawEnemy(p, state, view);
         drawEffects(p, state);

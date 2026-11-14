@@ -190,7 +190,8 @@ public final class TextRenderer implements Renderer {
                 + " points de vie" + (hp > state.maxHp() ? " (" + Ansi.yellow("+" + num(hp - state.maxHp())) + " au-dessus du max)" : ""));
         String gauge = state.trinkets().stream().flatMap(t -> t.gauge().stream()).findFirst()
                 .map(g -> " · " + g.label() + " " + g.value() + "/" + g.max()).orElse("");
-        console.println("Clopes : " + state.cigarettes() + "/" + state.cigaretteMax() + gauge);
+        console.println("Clopes : " + state.cigarettes() + "/" + state.cigaretteMax() + gauge
+                + " · Choomies : " + state.choomies());
         console.pause(1);
         console.println();
         console.println("ADVERSAIRE :");

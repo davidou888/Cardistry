@@ -361,6 +361,7 @@ public final class CombatEngine {
         }
         lastKilled = enemy;
         bus.publish(new GameEvent.EnemyKilled(enemy));
+        changeChoomies(choomiesFor(enemy));
         endCombat();
         if (state.isFinalCombat()) {
             state.setWon();
@@ -377,6 +378,27 @@ public final class CombatEngine {
             bus.publish(new GameEvent.RewardOffered(offer));
         }
         return true;
+    }
+
+    /** Choomies gagnés par rang : [min, max] (tirés au hasard), avant la stat {@link StatType#CHOOMIES_GAIN}. */
+    public static final int[] COMMON_CHOOMIES = {12, 18};
+    public static final int[] ELITE_CHOOMIES = {30, 40};
+    public static final int[] BOSS_CHOOMIES = {80, 100};
+
+    /** Choomies pour avoir battu {@code enemy} : sa valeur propre (Clarence), sinon selon son rang. */
+    private int choomiesFor(Enemy enemy) {
+        int base;
+        if (enemy.choomiesReward() >= 0) {
+            base = enemy.choomiesReward();
+        } else {
+            int[] range = switch (enemy.rank()) {
+                case COMMON -> COMMON_CHOOMIES;
+                case ELITE -> ELITE_CHOOMIES;
+                case BOSS -> BOSS_CHOOMIES;
+            };
+            base = range[0] + rng.nextInt(range[1] - range[0] + 1);
+        }
+        return (int) Math.round(base * state.playerStats().get(StatType.CHOOMIES_GAIN));
     }
 
     /** Dernier adversaire dont la mort a été traitée (une seule fois par adversaire). */

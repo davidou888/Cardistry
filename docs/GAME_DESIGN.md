@@ -85,7 +85,7 @@ Règles communes :
 | Exemple | Maté : +10 PV | Redistribution des briquets : +25 % dégâts feu |
 
 ### Effets sur les stats
-Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, or gagné, multiplicateur par élément, efficacité des soins, réduction de dégâts. **[À DÉCIDER]** ajouter crit / esquive ?
+Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, Choomies gagnés, multiplicateur par élément, efficacité des soins, réduction de dégâts. **[À DÉCIDER]** ajouter crit / esquive ?
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
@@ -208,8 +208,14 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - **M9 — Clopes** : ressource de run, actions Fumer / Rouler, intensité de malédiction, multiplicateur final de stat (Ross), soins non plafonnés.
 - **M8 — Combats et malédictions** : la partie est découpée en combats (un par adversaire) ; malédictions qui durent jusqu'au combat suivant (Gueule de bois).
 
+## Choomies (monnaie)
+- **15 Choomies** au début de la partie. Gagnés à chaque victoire : commun 12-18, élite 30-40, boss 80-100
+  (tirés au hasard), Clarence 75. Multipliés par la stat `CHOOMIES_GAIN` (arrondi).
+- Les Choomah en volent (5 par vol). Jamais sous 0.
+- Affichage : en haut de l'écran de combat (« 15 Choomies »), dans l'état en mode texte.
+
 ## Shop
-- Monnaie : or gagné à chaque combat (plus en élite/boss).
+- Monnaie : Choomies.
 - Vend : cartes, objets, trinkets. Services : retirer une carte, soin. **[À DÉCIDER]**
 - Reroll payant, coût croissant.
 

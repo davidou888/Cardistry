@@ -279,6 +279,7 @@ class CombatEngineTest {
                 new GameEvent.CardPlayed(tsunami),
                 new GameEvent.DamageDealt(hydra, 22.5, 1.5, GameEvent.DamageDealt.Source.SPELL),
                 new GameEvent.EnemyKilled(hydra),
+                new GameEvent.ChoomiesChanged(state.choomies(), state.choomies() - GameState.STARTING_CHOOMIES),
                 new GameEvent.CombatStarted(siren, 2, 2),
                 new GameEvent.HandDealt(state.hand()),
                 new GameEvent.IntentChosen(siren, siren.intent())), events);
