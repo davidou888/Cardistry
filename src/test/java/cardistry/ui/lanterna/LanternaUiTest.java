@@ -528,6 +528,35 @@ class LanternaUiTest {
         assertEquals(new Action.RollCigarette(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
     }
 
+    @Test
+    void setsDansLInventaireEtNotification() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
+                new cardistry.items.LootTable(List::of));
+        ui.showStatus(state);
+        engine.equip(ItemRegistry.trinket("diplome-epfl"));
+        // L'UI n'est pas abonnée au bus de ce moteur : on lui envoie l'événement de palier directement.
+        ui.onEvent(new GameEvent.SetTierActivated("EPFL « Cursus »", cardistry.items.Tag.EPFL, 2, "+10 % dégâts élémentaires"));
+        engine.equip(ItemRegistry.trinket("pichet-de-sat"));
+        engine.equip(ItemRegistry.trinket("pax"));
+        ui.showHand(state);
+        String combat = dump("18-notification-set");
+        assertTrue(combat.contains("★ Set EPFL « Cursus » 2 activé"), combat);
+
+        Thread player = new Thread(() -> ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("i");
+        waitFor(() -> screen().contains("Appuie sur une touche pour revenir"));
+        String inventory = dump("19-inventaire-sets");
+        type("xqo");
+        player.join(TIMEOUT.toMillis());
+        assertTrue(inventory.contains("EPFL « Cursus » (2) ×2 : palier 2 · prochain 3 : +1 taille de main"), inventory);
+        assertTrue(inventory.contains("+25 % dégâts eau (effet ×2)"), inventory);
+        assertTrue(inventory.contains("Soirée « Before → Afterparty » (1) : aucun palier · prochain 2"), inventory);
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {

@@ -72,7 +72,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     public void onEvent(GameEvent event) {
         switch (event) {
             case GameEvent.GameStarted e -> seed = e.seed();
-            case GameEvent.TurnStarted e -> view.log("— Tour " + e.turn() + " —", Palette.DIM);
+            case GameEvent.TurnStarted e -> {
+                view.log("— Tour " + e.turn() + " —", Palette.DIM);
+                view.toast = null;
+            }
             case GameEvent.PlayerTurnStarted e -> {
                 // Rien de plus à afficher.
             }
@@ -183,8 +186,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.RewardOffered e -> view.log("Récompense : choisis 1 parmi " + e.options().size(), Palette.ACCENT);
             case GameEvent.RewardTaken e -> view.log("Tu prends " + e.taken().name()
                     + (e.replaced() != null ? " (à la place de " + e.replaced().name() + ")" : ""), Palette.ACCENT);
-            case GameEvent.SetTierActivated e -> view.log("Set " + e.setName() + " " + e.count() + " activé : "
-                    + e.description(), Palette.ACCENT);
+            case GameEvent.SetTierActivated e -> {
+                String text = "Set " + e.setName() + " " + e.count() + " activé : " + e.description();
+                view.log(text, Palette.ACCENT);
+                view.toast = text;
+            }
             case GameEvent.SetTierDeactivated e -> view.log("Set " + e.setName() + " " + e.count() + " perdu : "
                     + e.description(), Palette.WARNING);
             case GameEvent.RewardSkipped e -> view.log("Récompense refusée", Palette.DIM);

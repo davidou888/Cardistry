@@ -3,6 +3,7 @@ package cardistry.ui.lanterna;
 import cardistry.core.GameState;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
+import cardistry.items.SetBonus;
 import cardistry.items.Tag;
 import cardistry.items.Trinket;
 import cardistry.ui.Format;
@@ -47,7 +48,7 @@ final class ItemScreens {
                 + "  (action gratuite : " + ItemKeys.label(state.itemSlots()) + " en combat)", Palette.TEXT, true);
         for (int i = 0; i < state.items().size(); i++) {
             Item item = state.items().get(i);
-            row = line(p, row, "[" + Character.toUpperCase(ItemKeys.key(i)) + "] ", item);
+            row = line(p, row, "[" + Character.toUpperCase(ItemKeys.key(i)) + "] ", item, "");
         }
         if (state.items().isEmpty()) {
             p.text(5, row++, "aucun", Palette.DIM);
@@ -55,9 +56,25 @@ final class ItemScreens {
         row++;
         p.text(3, row++, "Trinkets " + state.trinkets().size() + "/" + state.trinketSlots(), Palette.TEXT, true);
         for (Trinket trinket : state.trinkets()) {
-            row = line(p, row, "• ", trinket);
+            double potency = state.potency(trinket);
+            row = line(p, row, "• ", trinket, potency == 1.0 ? "" : " (effet ×" + cardistry.ui.Format.num(potency) + ")");
         }
         if (state.trinkets().isEmpty()) {
+            p.text(5, row++, "aucun", Palette.DIM);
+        }
+        row++;
+        p.text(3, row++, "Sets", Palette.TEXT, true);
+        boolean anySet = false;
+        for (SetBonus set : state.setBonuses()) {
+            int count = state.tagCount(set.tag());
+            if (count == 0 || row >= p.rows() - 1) {
+                continue;
+            }
+            anySet = true;
+            p.text(5, row++, Painter.fit(setLine(state, set, count), p.cols() - 7),
+                    set.reached(count).isEmpty() ? Palette.DIM : Palette.ACCENT);
+        }
+        if (!anySet) {
             p.text(5, row++, "aucun", Palette.DIM);
         }
         row++;
@@ -73,7 +90,7 @@ final class ItemScreens {
         }
     }
 
-    private static int line(Painter p, int row, String prefix, Collectible c) {
+    private static int line(Painter p, int row, String prefix, Collectible c, String suffix) {
         if (row >= p.rows() - 1) {
             return row;
         }
@@ -81,7 +98,7 @@ final class ItemScreens {
         int col = 5 + prefix.length();
         p.text(col, row, c.name(), Palette.rarity(c.rarity()), true);
         col += c.name().length();
-        String rest = "  " + c.rarity().displayName() + " · " + tags(c) + " — " + c.description();
+        String rest = "  " + c.rarity().displayName() + " · " + tags(c) + " — " + c.description() + suffix;
         List<String> lines = Format.wrap(rest.strip(), Math.max(10, p.cols() - col - 3));
         p.text(col + 2, row, lines.get(0), Palette.TEXT);
         for (int i = 1; i < lines.size() && row + i < p.rows() - 1; i++) {
@@ -128,6 +145,21 @@ final class ItemScreens {
             }
         }
         p.text(col + 1, row + CARD_HEIGHT - 2, Painter.fit(tags(c), inner), Palette.DIM);
+    }
+
+    /** « EPFL « Cursus » (3) ×2 : palier 3 · prochain 4 : +25 PV max et +15 % dégâts élémentaires ». */
+    static String setLine(GameState state, SetBonus set, int count) {
+        StringBuilder line = new StringBuilder("• ").append(set.displayName()).append(" (").append(count).append(")");
+        double potency = state.setPotency(set.tag());
+        if (potency != 1.0) {
+            line.append(" ×").append(cardistry.ui.Format.num(potency));
+        }
+        List<SetBonus.Tier> reached = set.reached(count);
+        line.append(" : ").append(reached.isEmpty() ? "aucun palier" : "palier " + reached.get(reached.size() - 1).count());
+        set.next(count).ifPresentOrElse(
+                next -> line.append(" · prochain ").append(next.count()).append(" : ").append(next.description()),
+                () -> line.append(" · complet"));
+        return line.toString();
     }
 
     static String tags(Collectible c) {

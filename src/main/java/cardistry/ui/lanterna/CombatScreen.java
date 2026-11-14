@@ -53,6 +53,9 @@ final class CombatScreen {
         drawHand(p, state, view);
         drawDetail(p, state, view);
         p.separator(20, "Journal");
+        if (view.toast != null) {
+            p.text(2, 20, Painter.fit(" ★ " + view.toast + " ", p.cols() - 4), Palette.ACCENT, true);
+        }
         int packCol = drawPack(p, state);
         drawLog(p, view, packCol);
         drawFloating(p, view);

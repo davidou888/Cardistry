@@ -18,6 +18,8 @@ final class ViewState {
 
     int selected = 0;
     boolean confirmingQuit = false;
+    /** Bandeau de notification (palier de set…), affiché jusqu'au tour suivant ; null si aucun. */
+    String toast;
     final List<LogLine> log = new ArrayList<>();
 
     // --- Effets d'animation (remis à zéro après chaque animation) ---

@@ -188,6 +188,14 @@ public final class TextRenderer implements Renderer {
         for (cardistry.core.Curse curse : state.pendingCurses()) {
             console.println(curse.displayName() + " au prochain combat");
         }
+        for (cardistry.items.SetBonus set : state.setBonuses()) {
+            int count = state.tagCount(set.tag());
+            var reached = set.reached(count);
+            if (!reached.isEmpty()) {
+                console.println(Ansi.yellow("Set " + set.displayName()) + " : palier " + reached.get(reached.size() - 1).count()
+                        + set.next(count).map(n -> " (prochain à " + n.count() + ")").orElse(" (complet)"));
+            }
+        }
         if (!state.effects().isEmpty()) {
             console.println("EFFETS EN COURS :");
             for (cardistry.core.TemporaryEffect effect : state.effects()) {
