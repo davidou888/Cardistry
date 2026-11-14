@@ -19,10 +19,11 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
 - `items/` — `SetBonus` + `SetBonuses` (registre des sets, paliers cumulables), `Gauge` (jauge de trinket), `Rarity`, `Tag`, `Collectible` (scellée : `Item` consommable, `Trinket` passif = modificateurs de stats + hooks, construit par builder), `ItemRegistry` (**registre de tout le contenu**), `LootTable` (tirage pondéré par rareté, seedé ; secrets débloqués au poids 2 ; rareté doublée par CLAUDE.md), `NullPointerRoll`
 - `ui/` — interfaces `Renderer`/`Input`, `GameLoop` (pilote un `run.Run`), `TitleChoice` (règles + codes de l'écran titre), `Format`, `ItemKeys` (W/E/R…, clavier QWERTZ), `QuitGameException`
   - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
+  - `ui/window/` — fenêtre par défaut : `CellWindow` (Swing, double buffer, redimensionnable, F10 CRT, F11, Ctrl ±) dessine elle-même un terminal virtuel Lanterna ; `GridRenderer` (grille → image, testable sans écran), `CellFonts` (Departure Mono + JetBrains Mono, OFL), `CellPalette`, `KeyMapper`, `ImageLayer` + `Images` (PNG alignés sur la grille, repli ASCII), `AppIcon` (icône provisoire). `LanternaUi` est le même dans la fenêtre et en `--terminal`.
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `ui/sprite/` — `Sprite` (format multi-frames + carte de couleurs, voir README), `Sprites` (chargement, catalogue de la visionneuse `--sprites`)
 - `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
-- Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` pour relire la mise en page.
+- Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` (et le rendu fenêtre en `.png`) pour relire la mise en page. Les tests tournent en `java.awt.headless`.
 - `core/Shop` + `core/shop/` — shop ouvert (articles, vendus, rerolls), `ShopPrices` (tous les prix), `ShopOffer`, `ShopAction` ; joué par `CombatEngine.shopAction`
 - `run/` reste à compléter : événements.
 
@@ -70,7 +71,7 @@ src/test/java/...             JUnit 5
 
 ## Commandes
 - Build : `./gradlew build`
-- Lancer : `./play` (Linux/macOS, plein écran terminal), `play.bat` (Windows, fenêtre Lanterna). Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--no-ui`, `--window`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
+- Lancer : `./play` (Linux/macOS), `play.bat` (Windows) : fenêtre du jeu par défaut. Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--terminal`, `--no-ui`, `--crt`, `--no-images`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
 - Mode texte : `./play --no-ui`
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Tests : `./gradlew test`

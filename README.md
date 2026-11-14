@@ -11,16 +11,32 @@ Jeu de cartes roguelite au tour par tour, en Java, joué dans le terminal (inter
 
 ## Lancer le jeu
 
-| OS | Commande | Affichage |
-|---|---|---|
-| Linux | `./play` | plein écran dans le terminal |
-| macOS | `./play` | plein écran dans le terminal (Terminal.app, iTerm2…) |
-| Windows | `play.bat` | **fenêtre** dédiée (voir ci-dessous) |
+| OS | Commande |
+|---|---|
+| Linux, macOS | `./play` |
+| Windows | `play.bat` |
 
-Mode texte simple, partout : `./play --no-ui` (Linux, macOS) ou `play.bat --no-ui` (Windows).
+Par défaut, le jeu s'ouvre dans **sa propre fenêtre** sur les trois OS : il y dessine lui-même sa grille
+de caractères avec une police pixel embarquée (aucun scintillement), et peut afficher des images.
 
-> `./gradlew run` lance aussi le jeu, mais Gradle ne transmet pas un vrai terminal : le jeu passe
-> alors automatiquement en mode texte. Utilisez `play` / `play.bat` pour le plein écran.
+- `--terminal` : plein écran dans le terminal (Lanterna), comme avant. Il faut un vrai terminal d'au
+  moins **80×24**.
+- `--no-ui` : mode texte simple (lignes, saisie + Entrée).
+- Sans affichage graphique (SSH, CI) : plein écran terminal si c'est un vrai terminal, sinon mode texte.
+
+> `./gradlew run` lance aussi le jeu ; en `--terminal`, Gradle ne transmet pas un vrai terminal et le
+> jeu passe en mode texte.
+
+### Dans la fenêtre
+
+| Touche | Effet |
+|---|---|
+| F10 | filtre CRT (lignes de balayage) : activer / couper |
+| F11 | agrandir / restaurer la fenêtre |
+| Ctrl + / Ctrl − (Cmd sous macOS) | taille de la police (multiples nets de la police pixel) |
+
+La fenêtre se redimensionne librement (80×24 cellules au minimum). La fermer, ou Cmd+Q sous macOS,
+quitte le jeu (les déblocages sont déjà sauvegardés).
 
 ### Options
 
@@ -30,32 +46,35 @@ Mode texte simple, partout : `./play --no-ui` (Linux, macOS) ou `play.bat --no-u
 | `--reset-unlocks` | efface les secrets débloqués, puis lance le jeu |
 | `--sprites` | visionneuse : fait défiler les sprites des adversaires et leurs animations, sans partie |
 | `--fast` | sans pauses ni animations |
-| `--no-ui` | mode texte simple (lignes, saisie au clavier + Entrée) |
-| `--window` | jeu dans une fenêtre (par défaut sous Windows) |
-| `--ascii` | affichage en ASCII pur (cadres `+-|`, barres `#`, accents retirés) |
+| `--terminal` | plein écran dans le terminal au lieu de la fenêtre |
+| `--no-ui` | mode texte simple |
+| `--crt` | fenêtre : filtre CRT activé au départ (désactivé par défaut) |
+| `--no-images` | fenêtre : sprites ASCII même quand une image existe |
+| `--ascii` | ASCII pur (cadres `+-|`, barres `#`, accents retirés) |
 | `--no-color` | mode texte sans couleurs ANSI |
+| `--window` | ancien nom de la fenêtre (c'est le mode par défaut) |
 
-Exemples : `./play --seed 42 --fast`, `play.bat --no-ui --no-color`.
+Exemples : `./play --seed 42 --crt`, `./play --terminal`, `play.bat --no-ui --no-color`.
 
 ## Particularités par OS
 
-### Linux et macOS
-- Plein écran directement dans le terminal.
-- L'**ASCII pur** s'active tout seul si le terminal n'est pas en UTF-8 (ex. `LANG=C`).
-- En plein écran, Ctrl+Z est une touche du jeu : il ne suspend pas le programme.
+- **Linux et macOS**, en `--terminal` : l'ASCII pur s'active tout seul si le terminal n'est pas en UTF-8
+  (ex. `LANG=C`) ; Ctrl+Z est une touche du jeu, il ne suspend pas le programme.
+- **Windows**, en `--no-ui` dans la console : les couleurs ne sont activées que dans **Windows Terminal**
+  ou un terminal de type Unix (Git Bash) ; dans la vieille console `cmd`, elles sont coupées
+  automatiquement. Si la console n'est pas en UTF-8, le mode texte passe en ASCII pur (`chcp 65001` pour
+  les accents). Lanterna 3.1 n'a pas de plein écran dans la console Windows : sous Windows, utiliser la
+  fenêtre (par défaut).
 
-### Windows
-- **Lanterna 3.1 n'a pas de mode plein écran dans la console Windows** (cmd, PowerShell, Windows
-  Terminal) : seule une version 3.2 *alpha* (2020) en contient un. `play.bat` ouvre donc le jeu dans
-  la **fenêtre de l'émulateur de terminal de Lanterna** (Swing), en Unicode, avec toutes les touches.
-  Fermer la fenêtre quitte le jeu.
-- Sans affichage graphique (session distante sans bureau…), le jeu passe en **mode texte** dans la
-  console.
-- Mode texte dans la console (`play.bat --no-ui`) : les couleurs ne sont activées que dans
-  **Windows Terminal** ou un terminal de type Unix (Git Bash) ; dans la vieille console `cmd`, elles
-  sont coupées automatiquement (sinon des codes parasites s'affichent). `--no-color` les coupe partout.
-- Si la console n'est pas en UTF-8 (page de code 850/437 par défaut), le mode texte passe en ASCII pur
-  automatiquement. Pour les accents : `chcp 65001` avant de lancer.
+## Polices
+
+La fenêtre embarque deux polices, toutes deux sous **SIL Open Font License 1.1** (licences complètes dans
+`src/main/resources/fonts/`) :
+
+- **Departure Mono** 1.500 (© 2022–2024 Helena Zhang) — police pixel principale ;
+  https://github.com/rektdeckard/departure-mono
+- **JetBrains Mono** 2.304 (© 2020 The JetBrains Mono Project Authors) — secours pour les caractères
+  absents de la première (▶) ; https://github.com/JetBrains/JetBrainsMono
 
 ## Sauvegarde
 
@@ -97,6 +116,21 @@ adversaires, ex. `caddie-enerve`). Zone maximale : **30 colonnes × 10 lignes**.
   remplacer.
 - Pour voir le résultat : `./play --sprites` (←/→ change de sprite, 1-4 joue idle / attaque / dégâts /
   mort, Q quitte ; en mode texte, les frames défilent).
+
+## Images (fenêtre)
+
+Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou avec `--terminal`,
+`--no-images`), le sprite ASCII reste affiché.
+
+- Adversaire : `src/main/resources/images/enemies/<id>.png` (même `id` que le sprite ASCII). Frames
+  d'animation : `<id>.<animation>.<n>.png`, `n` à partir de 1, animations `idle`, `attack`, `hurt`,
+  `death` (ex. `came.idle.1.png`, `came.idle.2.png`, `came.attack.1.png`). Une frame absente → `<id>.png`.
+- L'image est centrée dans la zone du sprite (30×10 cellules, soit 210×140 pixels à la taille 1),
+  agrandie d'un facteur **entier** sans lissage : dessiner en pixel art à petite taille (ex. 70×35).
+  Les dégâts la font clignoter en blanc ; la mort l'estompe.
+- Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône de 2×1 cellules, ex. 14×14 px),
+  affichée dans l'inventaire, les récompenses et le shop.
+- `./play --sprites` montre l'image et son repli ASCII côte à côte.
 
 ## Développement
 

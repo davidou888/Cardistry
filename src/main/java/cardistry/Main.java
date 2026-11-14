@@ -32,25 +32,58 @@ public final class Main {
      *   <li>{@code --reset-unlocks} efface les secrets débloqués, puis lance le jeu</li>
      *   <li>{@code --sprites} visionneuse : fait défiler les sprites et leurs animations, sans partie</li>
      *   <li>{@code --fast} supprime les pauses et animations (pratique pour tester)</li>
-     *   <li>{@code --no-ui} rendu texte simple ; automatique si l'entrée n'est pas un vrai terminal
-     *       (pipe, {@code ./gradlew run}) ou s'il n'y a pas d'affichage graphique pour la fenêtre</li>
-     *   <li>{@code --window} jeu dans une fenêtre (émulateur Lanterna) ; par défaut sous Windows,
-     *       où Lanterna 3.1 n'a pas de console native</li>
+     *   <li>par défaut : le jeu dans sa propre fenêtre (police pixel, images, sans scintillement),
+     *       sur les trois OS ; {@code --window} est gardée comme alias</li>
+     *   <li>{@code --terminal} plein écran dans le terminal (Lanterna)</li>
+     *   <li>{@code --no-ui} rendu texte simple</li>
+     *   <li>{@code --crt} filtre CRT (lignes de balayage) dans la fenêtre ; F10 le bascule</li>
+     *   <li>{@code --no-images} sprites ASCII même dans la fenêtre</li>
+     *   <li>sans affichage graphique : plein écran terminal si c'est un vrai terminal, sinon texte</li>
      *   <li>{@code --ascii} affichage en ASCII pur ; automatique si la sortie n'est pas en UTF-8</li>
      *   <li>{@code --no-color} mode texte sans couleurs ANSI ; automatique dans la vieille console
      *       Windows (hors Windows Terminal et terminaux de type Unix)</li>
      * </ul>
      */
+    /** Comment afficher le jeu. */
+    enum Mode {
+        WINDOW,
+        TERMINAL,
+        TEXT
+    }
+
+    /**
+     * Mode d'affichage : {@code --no-ui} → texte ; {@code --terminal} → plein écran terminal (texte si
+     * ce n'est pas un vrai terminal) ; sinon la fenêtre, ou, sans affichage graphique, le plein écran
+     * terminal (texte si ce n'est pas un vrai terminal).
+     */
+    static Mode mode(List<String> options, boolean headless, boolean interactiveTerminal) {
+        if (options.contains("--no-ui")) {
+            return Mode.TEXT;
+        }
+        if (options.contains("--terminal") || headless) {
+            return interactiveTerminal ? Mode.TERMINAL : Mode.TEXT;
+        }
+        return Mode.WINDOW;
+    }
+
     public static void main(String[] args) {
         List<String> options = List.of(args);
         Os os = Os.current();
         boolean fast = options.contains("--fast");
-        boolean window = options.contains("--window") || os == Os.WINDOWS;
         boolean asciiRequested = options.contains("--ascii");
         boolean color = !options.contains("--no-color") && ansiColorsLikely(os);
         boolean textAscii = asciiRequested || !Glyphs.unicodeLikely();
+        boolean headless = GraphicsEnvironment.isHeadless();
+        Mode mode = mode(options, headless, isInteractiveTerminal());
+        if (headless && mode != Mode.TEXT && !options.contains("--terminal") && !options.contains("--no-ui")) {
+            System.err.println("Pas d'affichage graphique : plein écran dans le terminal.");
+        } else if (headless && mode == Mode.TEXT && !options.contains("--no-ui")) {
+            System.err.println("Pas d'affichage graphique ni de vrai terminal : mode texte.");
+        }
+        Display display = new Display(mode, fast, asciiRequested, textAscii, color, options.contains("--crt"),
+                !options.contains("--no-images"));
         if (options.contains("--sprites")) {
-            viewSprites(options, os, window, fast, asciiRequested, textAscii, color);
+            viewSprites(display);
             return;
         }
         UnlockStore store = UnlockFile.inSaveDirectory();
@@ -58,33 +91,27 @@ public final class Main {
             System.out.println("Secrets débloqués effacés.");
         }
         Game game = prepare(options, store);
-        EventBus bus = game.bus();
-
-        if (options.contains("--no-ui")) {
-            runText(game, bus, fast, textAscii, color);
-        } else if (window) {
-            if (GraphicsEnvironment.isHeadless()) {
-                System.err.println("Pas d'affichage graphique pour la fenêtre : mode texte.");
-                runText(game, bus, fast, textAscii, color);
-            } else {
-                runWindow(game, bus, fast, asciiRequested);
-            }
-        } else if (isInteractiveTerminal()) {
-            runFullScreen(game, bus, fast, textAscii, color);
-        } else {
-            runText(game, bus, fast, textAscii, color);
+        switch (mode) {
+            case TEXT -> runText(game, game.bus(), fast, textAscii, color);
+            case TERMINAL -> runFullScreen(game, game.bus(), fast, textAscii, color);
+            case WINDOW -> runWindow(game, game.bus(), display);
         }
     }
 
-    /** Visionneuse de sprites, dans le même affichage que le jeu (plein écran, fenêtre ou texte). */
-    private static void viewSprites(List<String> options, Os os, boolean window, boolean fast, boolean asciiRequested,
-            boolean textAscii, boolean color) {
-        boolean text = options.contains("--no-ui") || (window ? GraphicsEnvironment.isHeadless() : !isInteractiveTerminal());
-        if (text) {
-            SpriteViewerText.run(new Console(System.in, System.out, fast, textAscii, color));
+    /** Options d'affichage. */
+    record Display(Mode mode, boolean fast, boolean asciiRequested, boolean textAscii, boolean color, boolean crt,
+            boolean images) {
+    }
+
+    /** Visionneuse de sprites, dans le même affichage que le jeu (fenêtre, plein écran ou texte). */
+    private static void viewSprites(Display d) {
+        if (d.mode() == Mode.TEXT) {
+            SpriteViewerText.run(new Console(System.in, System.out, d.fast(), d.textAscii(), d.color()));
             return;
         }
-        try (LanternaUi ui = window ? LanternaUi.openWindow(fast, asciiRequested) : LanternaUi.open(fast, textAscii)) {
+        boolean window = d.mode() == Mode.WINDOW;
+        try (LanternaUi ui = window ? LanternaUi.openWindow(d.fast(), d.asciiRequested(), d.crt(), d.images())
+                : LanternaUi.open(d.fast(), d.textAscii())) {
             ui.viewSprites();
         } catch (QuitGameException e) {
             // Fermé.
@@ -142,9 +169,9 @@ public final class Main {
         }
     }
 
-    /** Fenêtre de l'émulateur Lanterna (Unicode toujours disponible) ; quitte la JVM à la fin. */
-    private static void runWindow(Game game, EventBus bus, boolean fast, boolean ascii) {
-        try (LanternaUi ui = LanternaUi.openWindow(fast, ascii)) {
+    /** Fenêtre du jeu (police embarquée : Unicode toujours disponible) ; quitte la JVM à la fin. */
+    private static void runWindow(Game game, EventBus bus, Display d) {
+        try (LanternaUi ui = LanternaUi.openWindow(d.fast(), d.asciiRequested(), d.crt(), d.images())) {
             bus.subscribe(ui::onEvent);
             play(game, ui, ui);
         } catch (QuitGameException e) {

@@ -30,4 +30,6 @@ tasks.named<JavaExec>("run") {
 
 tasks.test {
     useJUnitPlatform()
+    // Rendu de la fenêtre testé dans des images, jamais à l'écran (CI sans affichage).
+    systemProperty("java.awt.headless", "true")
 }

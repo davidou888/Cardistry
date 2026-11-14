@@ -41,6 +41,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private final boolean fast;
     private final boolean ascii;
     private final ViewState view = new ViewState();
+    private final cardistry.ui.window.ImageLayer images;
+    private cardistry.ui.window.CellWindow window;
 
     private Page page = Page.TITLE;
     private GameState state;
@@ -69,21 +71,20 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     /**
-     * Ouvre le jeu dans la fenêtre de l'émulateur de terminal de Lanterna (Swing) : utilisé sous
-     * Windows, où Lanterna 3.1 n'a pas de console native. Fermer la fenêtre quitte le jeu.
+     * Ouvre le jeu dans sa propre fenêtre ({@link cardistry.ui.window.CellWindow}) : grille dessinée
+     * par le jeu, police pixel embarquée, images PNG, filtre CRT. Fermer la fenêtre quitte le jeu.
+     *
+     * @param crt filtre CRT activé au départ (F10 le bascule)
+     * @param showImages {@code false} : sprites ASCII même si une image existe ({@code --no-images})
      */
-    public static LanternaUi openWindow(boolean fast, boolean ascii) {
-        Terminal terminal = new DefaultTerminalFactory()
-                .setInitialTerminalSize(new TerminalSize(100, 32))
-                .setTerminalEmulatorTitle("Cardistry")
-                .setTerminalEmulatorFrameAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode)
-                .createTerminalEmulator();
-        if (terminal instanceof javax.swing.JFrame frame) {
-            frame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        }
+    public static LanternaUi openWindow(boolean fast, boolean ascii, boolean crt, boolean showImages) {
+        cardistry.ui.window.CellWindow window = cardistry.ui.window.CellWindow.open("Cardistry", crt);
         try {
-            return new LanternaUi(terminal, fast, ascii);
+            LanternaUi ui = new LanternaUi(window.terminal(), fast, ascii, showImages ? window.images() : null);
+            ui.window = window;
+            return ui;
         } catch (IOException e) {
+            window.close();
             throw new UncheckedIOException(e);
         }
     }
@@ -98,6 +99,13 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
      * @param ascii si {@code true}, affichage en ASCII pur (cadres, barres, flèches, accents)
      */
     public LanternaUi(Terminal terminal, boolean fast, boolean ascii) throws IOException {
+        this(terminal, fast, ascii, null);
+    }
+
+    /** @param images calque d'images (fenêtre) ; {@code null} = pas d'images */
+    public LanternaUi(Terminal terminal, boolean fast, boolean ascii, cardistry.ui.window.ImageLayer images)
+            throws IOException {
+        this.images = images;
         this.screen = new TerminalScreen(terminal);
         this.fast = fast;
         this.ascii = ascii;
@@ -108,6 +116,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     @Override
     public void close() throws IOException {
         screen.stopScreen();
+        if (window != null) {
+            window.close();
+        }
     }
 
     // ===================== Renderer =====================
@@ -1077,7 +1088,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             screen.doResizeIfNecessary();
             TerminalSize size = screen.getTerminalSize();
             screen.clear();
-            Painter painter = new Painter(screen.newTextGraphics(), size, ascii);
+            if (images != null) {
+                images.begin();
+            }
+            Painter painter = new Painter(screen.newTextGraphics(), size, ascii, images);
             if (size.getColumns() < MenuScreens.MIN_COLS || size.getRows() < MenuScreens.MIN_ROWS) {
                 MenuScreens.tooSmall(painter);
             } else {
@@ -1109,6 +1123,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     painter.text(1, size.getRows() - 1, "─".repeat(size.getColumns() - 2), Palette.FRAME);
                     painter.text(2, size.getRows() - 1, " Quitter la partie ? [O]ui / [N]on ", Palette.WARNING, true);
                 }
+            }
+            if (images != null) {
+                images.commit(); // avant refresh : la fenêtre lit le calque au flush
             }
             screen.refresh();
         } catch (IOException e) {
@@ -1149,7 +1166,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             return true;
         }
         return page == Page.COMBAT && state != null && state.hasEnemy() && state.currentEnemy().isAlive()
-                && currentSprite().idle().size() > 1;
+                && (currentSprite().idle().size() > 1
+                        || images != null && cardistry.ui.window.Images.idleFrames(state.currentEnemy().spriteId()) > 1);
     }
 
     private static boolean isChar(KeyStroke key, char expected) {

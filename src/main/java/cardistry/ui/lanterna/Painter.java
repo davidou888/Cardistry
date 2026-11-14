@@ -14,6 +14,7 @@ final class Painter {
     private final TextGraphics g;
     private final TerminalSize size;
     private final boolean ascii;
+    private final cardistry.ui.window.ImageLayer images;
 
     Painter(TextGraphics g, TerminalSize size) {
         this(g, size, false);
@@ -21,9 +22,52 @@ final class Painter {
 
     /** @param ascii si {@code true}, tout texte est converti en ASCII pur (voir {@link cardistry.ui.Glyphs}) */
     Painter(TextGraphics g, TerminalSize size, boolean ascii) {
+        this(g, size, ascii, null);
+    }
+
+    /** @param images calque d'images de la fenêtre ; {@code null} en terminal (pas d'images) */
+    Painter(TextGraphics g, TerminalSize size, boolean ascii, cardistry.ui.window.ImageLayer images) {
         this.g = g;
         this.size = size;
         this.ascii = ascii;
+        this.images = images;
+    }
+
+    /** Largeur (en cellules) d'une icône d'objet ou de trinket. */
+    static final int ICON_WIDTH = 2;
+
+    /**
+     * Icône de l'objet ou du trinket {@code id} à ({@code col}, {@code row}), si elle existe.
+     *
+     * @return colonnes occupées (icône + espace), 0 sans icône
+     */
+    int icon(int col, int row, String id) {
+        if (images == null) {
+            return 0;
+        }
+        return cardistry.ui.window.Images.item(id)
+                .filter(path -> image(col, row, ICON_WIDTH, 1, path, null, 1f))
+                .map(path -> ICON_WIDTH + 1).orElse(0);
+    }
+
+    /** {@code true} si ce dessin peut afficher des images (fenêtre, images activées). */
+    boolean hasImages() {
+        return images != null;
+    }
+
+    /**
+     * Image {@code path} (relative à {@code images/}) dans le rectangle de cellules donné, si les
+     * images sont affichées et que le fichier existe.
+     *
+     * @return {@code true} si l'image sera dessinée (sinon, dessiner le repli ASCII)
+     */
+    boolean image(int col, int row, int cols, int rows, String path, TextColor tint, float alpha) {
+        if (images == null || cardistry.ui.window.Images.get(path).isEmpty()) {
+            return false;
+        }
+        java.awt.Color color = tint == null ? null : cardistry.ui.window.CellPalette.foreground(tint);
+        images.add(new cardistry.ui.window.ImageLayer.Placement(col, row, cols, rows, path, color, alpha));
+        return true;
     }
 
     int cols() {
