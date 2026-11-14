@@ -35,13 +35,90 @@ public final class Pcm {
         return samples.length / 2;
     }
 
-    /** Son du fichier {@code /audio/<path>} ; vide s'il manque ou est illisible. */
+    // --- Normalisation ---
+
+    /** Niveau visé pour tous les sons : RMS de leurs passages forts, en dBFS. */
+    public static final double TARGET_DB = -18;
+    /** Crête maximale après normalisation (un peu sous 1 : pas de saturation). */
+    static final double PEAK_LIMIT = 0.97;
+    /** Amplification maximale : au-delà, on ne ferait que monter le bruit de fond. */
+    static final double MAX_BOOST_DB = 30;
+    /** Sous ce niveau de crête (dBFS), le fichier est considéré comme silencieux et laissé tel quel. */
+    static final double SILENCE_DB = -70;
+    private static final int WINDOW = RATE / 50; // 20 ms
+    private static final double GATE_DB = 20;
+
+    /**
+     * Niveau perçu, en dBFS : RMS des fenêtres de 20 ms situées à moins de {@value #GATE_DB} dB de la
+     * plus forte. Les silences et les queues de réverbération ne comptent donc pas : un son court
+     * suivi de silence et une musique continue se comparent. {@code -Infinity} pour un son vide.
+     */
+    public double loudnessDb() {
+        int frames = frames();
+        int windows = Math.max(1, (frames + WINDOW - 1) / WINDOW);
+        double[] power = new double[windows];
+        double loudest = 0;
+        for (int w = 0; w < windows; w++) {
+            int from = w * WINDOW;
+            int to = Math.min(frames, from + WINDOW);
+            double sum = 0;
+            for (int i = from * 2; i < to * 2; i++) {
+                sum += samples[i] * samples[i];
+            }
+            power[w] = to > from ? sum / ((to - from) * 2) : 0;
+            loudest = Math.max(loudest, power[w]);
+        }
+        if (loudest <= 0) {
+            return Double.NEGATIVE_INFINITY;
+        }
+        double gate = loudest * Math.pow(10, -GATE_DB / 10);
+        double sum = 0;
+        int kept = 0;
+        for (double p : power) {
+            if (p >= gate) {
+                sum += p;
+                kept++;
+            }
+        }
+        return 10 * Math.log10(sum / kept);
+    }
+
+    /** Crête : plus grande valeur absolue d'un échantillon (0 à 1). */
+    public double peak() {
+        double peak = 0;
+        for (float sample : samples) {
+            peak = Math.max(peak, Math.abs(sample));
+        }
+        return peak;
+    }
+
+    /**
+     * Le même son ramené à {@link #TARGET_DB} : tous les fichiers sonnent au même niveau, quel que soit
+     * leur enregistrement ; le volume de {@code sounds.txt} règle ensuite le mixage. Le gain est limité
+     * par la crête ({@link #PEAK_LIMIT} : un son très dynamique reste un peu sous le niveau visé plutôt
+     * que de saturer) et par {@link #MAX_BOOST_DB}. Un fichier silencieux n'est pas touché.
+     */
+    public Pcm normalized() {
+        double peak = peak();
+        if (peak < Math.pow(10, SILENCE_DB / 20)) {
+            return this;
+        }
+        double gain = Math.pow(10, Math.min(MAX_BOOST_DB, TARGET_DB - loudnessDb()) / 20);
+        gain = Math.min(gain, PEAK_LIMIT / peak);
+        float[] out = new float[samples.length];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = (float) (samples[i] * gain);
+        }
+        return new Pcm(out);
+    }
+
+    /** Son du fichier {@code /audio/<path>}, normalisé ({@link #normalized()}) ; vide s'il manque ou est illisible. */
     public static Optional<Pcm> load(String path) {
         try (InputStream raw = Pcm.class.getResourceAsStream("/audio/" + path)) {
             if (raw == null) {
                 return Optional.empty();
             }
-            return Optional.of(decode(new BufferedInputStream(raw)));
+            return Optional.of(decode(new BufferedInputStream(raw)).normalized());
         } catch (IOException | UnsupportedAudioFileException | IllegalArgumentException e) {
             return Optional.empty();
         }

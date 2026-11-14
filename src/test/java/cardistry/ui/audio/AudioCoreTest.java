@@ -85,6 +85,67 @@ class AudioCoreTest {
         }
     }
 
+    // --- Normalisation ---
+
+    private static Pcm tone(double amplitude, double seconds, double silenceAfter) {
+        int frames = (int) (Pcm.RATE * (seconds + silenceAfter));
+        float[] samples = new float[frames * 2];
+        for (int f = 0; f < (int) (Pcm.RATE * seconds); f++) {
+            float v = (float) (Math.sin(f * 0.2) * amplitude);
+            samples[f * 2] = v;
+            samples[f * 2 + 1] = v;
+        }
+        return new Pcm(samples);
+    }
+
+    @Test
+    void sonFaibleEtSonFortRamenesAuMemeNiveau() {
+        Pcm quiet = tone(0.02, 0.5, 0).normalized();
+        Pcm loud = tone(0.9, 0.5, 0).normalized();
+        assertEquals(Pcm.TARGET_DB, quiet.loudnessDb(), 0.1);
+        assertEquals(Pcm.TARGET_DB, loud.loudnessDb(), 0.1);
+    }
+
+    @Test
+    void leSilenceAutourDuSonNeCompteePas() {
+        assertEquals(tone(0.5, 0.2, 0).loudnessDb(), tone(0.5, 0.2, 3).loudnessDb(), 0.5);
+    }
+
+    @Test
+    void laNormalisationNeSatureJamais() {
+        // Un clic très bref : son niveau moyen est bas, mais sa crête est déjà au maximum.
+        float[] samples = new float[Pcm.RATE * 2];
+        samples[0] = 1f;
+        samples[1] = 1f;
+        Pcm click = new Pcm(samples).normalized();
+        assertTrue(click.peak() <= Pcm.PEAK_LIMIT + 1e-6);
+    }
+
+    @Test
+    void fichierSilencieuxLaisseTelQuel() {
+        Pcm silent = new Pcm(new float[Pcm.RATE * 2]);
+        assertTrue(silent.normalized() == silent);
+        Pcm almost = tone(0.00002, 0.5, 0); // −94 dB : du bruit, pas un son
+        assertTrue(almost.normalized() == almost);
+    }
+
+    @Test
+    void tousLesSonsDuJeuSontAuMemeNiveauOuLimitesParLeurCrete() {
+        SoundTable table = SoundTable.load();
+        for (SoundTable.Entry entry : table.entries().values()) {
+            for (String file : entry.files()) {
+                Pcm pcm = Pcm.load(file).orElseThrow(() -> new AssertionError(file));
+                if (pcm.peak() < 0.001) {
+                    continue; // fichier silencieux (signalé ailleurs)
+                }
+                assertTrue(pcm.peak() <= Pcm.PEAK_LIMIT + 1e-6, file);
+                boolean atTarget = Math.abs(pcm.loudnessDb() - Pcm.TARGET_DB) < 0.5;
+                boolean peakLimited = pcm.peak() > Pcm.PEAK_LIMIT - 0.01 && pcm.loudnessDb() < Pcm.TARGET_DB;
+                assertTrue(atTarget || peakLimited, file + " : " + pcm.loudnessDb() + " dB");
+            }
+        }
+    }
+
     // --- Décodage ---
 
     @Test

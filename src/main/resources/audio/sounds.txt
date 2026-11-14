@@ -1,6 +1,7 @@
 # Table des sons de Cardistry : nom = fichier[, variante, ...] [; volume=0..1] [; loop=secondes|no]
 # Les fichiers sont relatifs à ce dossier (src/main/resources/audio/). Fichier ou ligne absente : silence.
 # Sons et musiques choisis par Louis. Seule music/victory.ogg est encore un placeholder généré (tools/generate-sounds.sh).
+# Tous les fichiers sont ramenés au même niveau au chargement (Pcm.normalized) : volume= règle le mixage, pas l'enregistrement.
 # Guide (formats, niveaux, boucles) : README, section « Sons et musiques ».
 
 # --- Musiques (une à la fois, en boucle ; loop = point de boucle en secondes, ou no) ---

@@ -279,6 +279,11 @@ victoire (`music/victory.ogg`) est encore un placeholder généré ; `tools/gene
 placeholders (bips et petites boucles chiptune ; Java + ffmpeg avec libvorbis) et **écraserait les vrais
 sons** : ne plus le lancer sans sauvegarde.
 
+**Niveaux** — le jeu ramène chaque fichier au même niveau quand il le charge (−18 dB RMS, mesuré sur les
+passages forts, sans jamais saturer) : inutile de normaliser les fichiers à la main. Un son très sec dont
+la crête est déjà au maximum peut rester quelques dB en dessous. Le `volume=` de `sounds.txt` sert
+seulement à doser un son par rapport aux autres.
+
 ### Ajouter ou remplacer un son
 
 1. Mettre le fichier dans `src/main/resources/audio/` (`sfx/` pour les effets, `music/` pour les
