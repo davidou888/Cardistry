@@ -54,6 +54,7 @@ src/test/java/...             JUnit 5
 ## Conventions
 - Fork indépendante de davidou888/Cardistry. Ne jamais pousser, merger ni ouvrir de PR vers upstream.
 - À la fin de chaque tâche, quand les tests passent, pousser sur origin sans demander.
+- Le jeu doit tourner sur Linux, macOS et Windows : aucun chemin, raccourci clavier ou caractère spécifique à un OS sans repli.
 - Java 17+ (vérifier `java -version` sur la machine), Gradle avec wrapper, JUnit 5.
 - UI terminal : **Lanterna 3.x** (vérifier la dernière version sur Maven Central).
 - Noms de code en anglais, **textes affichés au joueur en français**.
