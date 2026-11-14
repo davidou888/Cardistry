@@ -1,0 +1,33 @@
+GIMP Palette
+Name: Cardistry
+Columns: 9
+#
+# Palette commune du jeu : les 16 couleurs de la fenêtre (CellPalette), le fond, le texte,
+# et 9 teintes pour les sprites. Les couleurs d'élément et de rareté en font partie.
+ 18  17  23	fond
+ 28  27  34	noir
+ 58  56  66	gris sombre
+106 103 114	gris
+191 187 178	gris clair (neutre)
+216 212 200	texte
+255 251 240	blanc (Commun)
+194  59  59	rouge
+255  94  87	rouge vif (feu)
+201 154  46	jaune
+255 216  79	jaune vif (Légendaire)
+ 79 154  72	vert
+126 217 107	vert vif (plante, Peu commun)
+ 61 107 196	bleu
+110 156 255	bleu vif (eau, Rare)
+162  77 176	magenta
+224 123 240	magenta vif (Secret)
+ 60 160 174	cyan
+111 224 238	cyan vif
+122  46  46	rouge sombre
+224 138  60	orange
+138  90  60	brun
+ 90  58  42	brun sombre
+240 184 144	peau
+ 42  74 140	bleu sombre
+ 46  94  54	vert sombre
+242 160 180	rose

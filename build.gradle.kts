@@ -56,6 +56,64 @@ tasks.test {
     systemProperty("cardistry.audio", "off")
 }
 
+// ===================== Art (Aseprite) =====================
+// Sources dans art/*.aseprite (une frame taguée par icône, le tag = l'id) ; les PNG exportés sont
+// commités dans src/main/resources/images/. Sans Aseprite (CI, autre machine), exportArt est ignorée
+// et les PNG commités restent utilisés.
+// ./gradlew exportArt : art/<fichier>.aseprite → images/<dossier>/<tag>.png
+// ./gradlew planche   : art/planche.png, toutes les icônes agrandies avec leur nom et leur id
+
+/** Fichier source (sans extension) → dossier de sortie dans images/. */
+val artExports = mapOf("map" to "map", "items" to "items", "trinkets" to "items", "cards" to "cards")
+
+/** Chemin d'Aseprite : variable ASEPRITE, sinon « aseprite » dans le PATH ; null s'il est absent. */
+fun findAseprite(): String? {
+    System.getenv("ASEPRITE")?.takeIf { File(it).canExecute() }?.let { return it }
+    val names = if (os.isWindows) listOf("aseprite.exe", "Aseprite.exe") else listOf("aseprite")
+    return (System.getenv("PATH") ?: "").split(File.pathSeparator)
+            .flatMap { dir -> names.map { File(dir, it) } }
+            .firstOrNull { it.isFile && it.canExecute() }?.absolutePath
+}
+
+val exportArt by tasks.registering {
+    group = "art"
+    description = "Exporte les icônes des sources Aseprite (art/) vers src/main/resources/images/."
+    val aseprite = findAseprite()
+    val artDir = layout.projectDirectory.dir("art").asFile
+    val imagesDir = layout.projectDirectory.dir("src/main/resources/images").asFile
+    onlyIf {
+        if (aseprite == null) {
+            logger.lifecycle("Aseprite introuvable : export ignoré, les PNG commités restent utilisés.")
+        }
+        aseprite != null
+    }
+    doLast {
+        for ((source, folder) in artExports) {
+            val file = File(artDir, "$source.aseprite")
+            if (!file.isFile) {
+                continue
+            }
+            val out = File(imagesDir, folder)
+            out.mkdirs()
+            val process = ProcessBuilder(aseprite!!, "-b", file.path, "--save-as",
+                    File(out, "{tag}.png").path).inheritIO().start()
+            if (process.waitFor() != 0) {
+                throw GradleException("Export Aseprite en échec : $file")
+            }
+        }
+    }
+}
+
+val planche by tasks.registering(JavaExec::class) {
+    group = "art"
+    description = "Dessine art/planche.png : toutes les icônes avec leur nom et leur id."
+    // Classes de test (l'outil) + jeu, sans les ressources de test (elles contiennent de fausses images).
+    classpath = sourceSets["test"].output.classesDirs + sourceSets["main"].runtimeClasspath
+    mainClass = "cardistry.tools.ArtSheet"
+    args("art/planche.png")
+    systemProperty("java.awt.headless", "true")
+}
+
 // ===================== Packaging (jpackage) =====================
 // ./gradlew jpackageImage : l'app autonome (Java embarqué) dans build/jpackage/out, pour tester.
 // ./gradlew jpackage      : les installateurs de l'OS courant (macOS .dmg ; Windows .msi + .zip

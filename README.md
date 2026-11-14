@@ -197,6 +197,26 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
   accessibles qui pulsent. En `--terminal` ou `--no-images`, elle reste en lettres.
 - `./play --sprites` montre l'image et son repli ASCII côte à côte.
 
+## Pixel art (Aseprite)
+
+Les sources sont dans `art/` (hors du jeu), les PNG exportés sont commités dans
+`src/main/resources/images/` : sans Aseprite, rien à faire, le jeu utilise les PNG.
+
+| Source | Contenu | Export |
+|---|---|---|
+| `art/palette.gpl` | palette commune (27 couleurs : celles de la fenêtre, des éléments, des raretés, plus 9 teintes) | — |
+| `art/map.aseprite` | icônes de la carte du monde, 16×16 | `images/map/<tag>.png` |
+| `art/items.aseprite`, `art/trinkets.aseprite` | icônes d'objets et de trinkets, 16×16 | `images/items/<tag>.png` |
+| `art/cards.aseprite` | illustrations de cartes, 24×24 | `images/cards/<tag>.png` |
+
+Une icône = une frame, avec un **tag** qui porte son id (`space-cake`, `m1`, `boule-de-feu`…) : c'est le
+tag qui donne le nom du PNG.
+
+- `./gradlew exportArt` : réexporte tous les PNG (`aseprite -b`). Aseprite est cherché dans le `PATH`
+  ou dans la variable `ASEPRITE` ; s'il est absent, la tâche est ignorée.
+- `./gradlew planche` : `art/planche.png`, toutes les icônes agrandies avec leur nom et leur id, par
+  catégorie et rareté ; les icônes manquantes sont marquées « à faire ».
+
 ## Sons et musiques
 
 Le son passe par une seule sortie audio (44,1 kHz stéréo) : il marche dans la fenêtre, en `--terminal` et
