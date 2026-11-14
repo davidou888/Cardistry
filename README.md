@@ -73,7 +73,7 @@ de caractères avec une police pixel embarquée (aucun scintillement), et peut a
 - Écran titre : **Jouer**, **Règles**, **Options**, **Quitter** (↑/↓ ou ←/→, Entrée ; R et Q en raccourci).
 - En jeu, **Échap** ouvre le menu **pause** (Reprendre, Options, Quitter) sur la carte, en combat, à la
   Sieste, dans un événement et sur les écrans de récompense. Dans un sous-écran (remplacer un objet,
-  faire le tri, inventaire…), Échap annule d'abord ; au shop, Échap fait partir.
+  faire le tri, inventaire…), Échap annule d'abord ; au shop, P fait partir.
 - **Options** : volume de la musique et des effets (0 à 10, ←/→, appliqué tout de suite) et son coupé.
   Sauvegardé dans `settings.txt`, à côté des déblocages. En mode texte : taper `options` à l'écran titre.
 
@@ -177,13 +177,13 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
 - Adversaire : `src/main/resources/images/enemies/<id>.png` (même `id` que le sprite ASCII). Frames
   d'animation : `<id>.<animation>.<n>.png`, `n` à partir de 1, animations `idle`, `attack`, `hurt`,
   `death` (ex. `came.idle.1.png`, `came.idle.2.png`, `came.attack.1.png`). Une frame absente → `<id>.png`.
-- L'image est centrée dans la zone du sprite (carrée : 14×7 cellules en 80×24, 24×12 en 100×32),
-  agrandie d'un facteur **entier** sans lissage : dessiner en pixel art, 64×64 px conseillé.
+- L'image est centrée dans la zone du sprite (carrée : 14×7 cellules en 80×24, 30×15 en 100×32),
+  agrandie d'un facteur **entier** sans lissage (64×64 px : ×3 en 80×24, ×6 en 100×32).
   Les dégâts la font clignoter en blanc ; la mort l'estompe.
 - Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône 16×16 px),
   affichée en combat, dans l'inventaire, les récompenses et le shop.
 - Combat (fenêtre) : joueur à gauche (`images/player/player.png`, placeholder), adversaire à droite,
-  intent avec icône au-dessus de lui ; la main en cartes illustrées (`images/cards/<id>.png`, 24×24 px,
+  une barre de PV sous chaque sprite, intent avec icône au-dessus de l'adversaire ; la main en cartes illustrées (`images/cards/<id>.png`, 24×24 px,
   `id` = nom sans accents ni espaces ; sans image, l'icône de type à la couleur de l'élément) avec une
   icône de type (`images/ui/type-*.png`, 8×8 px) et un cadre à la couleur de l'élément ; une barre
   d'icônes pour les objets, les trinkets (cadre à la couleur de rareté) et les clopes. Le journal est
@@ -208,14 +208,22 @@ Les sources sont dans `art/` (hors du jeu), les PNG exportés sont commités dan
 | `art/map.aseprite` | icônes de la carte du monde, 16×16 | `images/map/<tag>.png` |
 | `art/items.aseprite`, `art/trinkets.aseprite` | icônes d'objets et de trinkets, 16×16 | `images/items/<tag>.png` |
 | `art/cards.aseprite` | illustrations de cartes, 24×24 | `images/cards/<tag>.png` |
+| `art/enemies/<id>.aseprite` | sprite d'un adversaire, 64×64, tourné vers la gauche ; tags `idle`, `attack`, `hurt`, `death` | `images/enemies/<id>.<tag>.<n>.png` et `<id>.png` |
 
 Une icône = une frame, avec un **tag** qui porte son id (`space-cake`, `m1`, `boule-de-feu`…) : c'est le
-tag qui donne le nom du PNG.
+tag qui donne le nom du PNG. Pour un adversaire, un tag = une animation (une ou plusieurs frames).
 
-- `./gradlew exportArt` : réexporte tous les PNG (`aseprite -b`). Aseprite est cherché dans le `PATH`
-  ou dans la variable `ASEPRITE` ; s'il est absent, la tâche est ignorée.
-- `./gradlew planche` : `art/planche.png`, toutes les icônes agrandies avec leur nom et leur id, par
-  catégorie et rareté ; les icônes manquantes sont marquées « à faire ».
+- `./gradlew art` : tout d'un coup (les trois tâches ci-dessous).
+- `./gradlew generateArt` : ajoute aux `.aseprite` les ébauches **manquantes** (`art/tools/generate.lua`,
+  lancé par `aseprite -b`). **Un tag déjà présent n'est jamais redessiné** : tes retouches sont à l'abri,
+  le script n'ajoute que de nouvelles frames à la fin, et ne réenregistre pas un fichier complet. Les
+  ébauches viennent de `art/tools/items.txt` et `trinkets.txt` (grilles de lettres), `cards.lua` et
+  `enemies.lua` (dessin par formes). Pour refaire une ébauche : supprimer son tag (et sa frame).
+- `./gradlew exportArt` : réexporte tous les PNG. Aseprite est cherché dans le `PATH` ou dans la
+  variable `ASEPRITE` ; s'il est absent, `generateArt` et `exportArt` sont ignorées.
+- `./gradlew planche` : `art/planche.png` (toutes les icônes agrandies avec leur nom et leur id, par
+  catégorie et rareté ; les manquantes sont marquées « à faire ») et `art/planche-ennemis.png` (toutes
+  les frames des adversaires qui ont un sprite).
 
 ## Sons et musiques
 

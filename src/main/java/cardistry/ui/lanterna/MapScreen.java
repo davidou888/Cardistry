@@ -42,7 +42,9 @@ final class MapScreen {
     private static final int MAP_TOP_ROWS = 2;
     private static final int MAP_BOTTOM_ROWS = 4;
     private static final int MAP_SIDE_COLS = 3;
-    private static final TextColor UNREACHABLE = new TextColor.RGB(0x3A, 0x38, 0x42);
+    /** Chemins : inatteignable (sombre), à venir (gris clair), ouvert depuis la position (texte). */
+    private static final TextColor UNREACHABLE = new TextColor.RGB(0x4A, 0x48, 0x54);
+    private static final TextColor AHEAD = new TextColor.RGB(0x9A, 0x96, 0xA2);
 
     /** Zone de la carte en unités du calque : x, y, largeur, hauteur. */
     static int[] mapArea(Painter p) {
@@ -70,9 +72,10 @@ final class MapScreen {
                     && view.visited().get(from + 1).equals(path.to());
             boolean open = path.from().equals(view.position());
             boolean toChosen = open && path.to().equals(chosen);
+            boolean ahead = reachable.contains(path.from());
             TextColor color = travelled ? Palette.ACCENT : toChosen ? TextColor.ANSI.WHITE_BRIGHT
-                    : open ? Palette.FRAME : reachable.contains(path.from()) ? Palette.DIM : UNREACHABLE;
-            int dot = travelled || toChosen ? 3 : 2;
+                    : open ? Palette.TEXT : ahead ? AHEAD : UNREACHABLE;
+            int dot = travelled || toChosen ? 4 : open || ahead ? 3 : 2;
             for (MapLayout.Point point : path.dots()) {
                 p.fill(area[0] + point.x() - dot / 2, area[1] + point.y() - dot / 2, dot, dot, color);
             }

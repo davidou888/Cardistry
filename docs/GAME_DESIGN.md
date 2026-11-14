@@ -297,7 +297,7 @@ Code : `CombatEngine.openShop` / `shopAction`, `core.Shop`, `core.shop` (`ShopPr
   9 articles (vendus compris).
 - Inventaire plein à l'achat : même écran de remplacement que pour les récompenses (ou retour au shop).
 - Écran : cartes en haut, objets et trinkets en dessous, prix grisés si pas assez de Choomies, « vendu »
-  après achat, détail de l'article sélectionné ; R reroll, T retirer une carte, Échap partir. Mode texte :
+  après achat, détail de l'article sélectionné ; R reroll, T retirer une carte, P partir (Échap ouvre la pause, comme ailleurs). Mode texte :
   liste numérotée, `r`, `t`, `0`.
 - Accueil **provisoire** : « Entre, entre ! Tout est à vendre... enfin, presque. » (nom du vendeur et
   réplique à venir).

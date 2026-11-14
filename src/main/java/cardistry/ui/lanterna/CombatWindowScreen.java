@@ -31,9 +31,10 @@ import java.util.List;
  * <pre>
  *  ligne 0          cadre : titre, tour, Choomies, seed
  *  ligne 1          lieu à gauche, terrain à droite
- *  lignes 2..s-1    arène : sprite + état du joueur | intent, état + sprite de l'adversaire
+ *  lignes 2..s-1    arène : intent de l'adversaire, les deux sprites face à face (états du joueur
+ *                   à côté du sien), puis une barre de PV sous chaque sprite
  *  ligne s          séparateur « Ta main »
- *  s+1..s+h+1       cartes (h = 6, ou 8 à partir de 32 lignes ; la sélection est surélevée)
+ *  s+1..s+h+1       cartes (h = 6, ou 8 à partir de 36 lignes ; la sélection est surélevée)
  *  s+h+2            détail de la carte sélectionnée
  *  s+h+3, s+h+4     barre : objets, trinkets, clopes
  *  s+h+5            dernière action (ou notification)
@@ -43,13 +44,18 @@ import java.util.List;
  */
 final class CombatWindowScreen {
 
-    static final String HELP = "←/→ Entrée · 1-7 · P pioche · W/E/R objets · F/G clopes · J journal · I · Q";
+    static final String HELP = "←/→ · 1-7 jouer · P pioche · W/E/R objets · F/G clopes · J journal · I · Q";
     static final String HELP_UNDO = "←/→ 1-7 · P pioche · W/E/R objets · F/G clopes · J journal · Ctrl+Z · Q";
     static final String PLAYER_IMAGE = "player/player.png";
     /** Largeur d'un emplacement d'icône (objet, trinket, paquet), sur 2 lignes. */
     static final int SLOT_COLS = 4;
     private static final int SLOT_ROWS = 2;
-    private static final int MAX_INFO_WIDTH = 24;
+    static final String PLAYER_NAME = "TOI";
+    private static final int MAX_HP_BAR = 20;
+    /** Largeur minimale gardée à côté du sprite du joueur pour ses états (Ivresse, effets). */
+    private static final int MIN_STATUS_WIDTH = 14;
+    /** À partir de cette hauteur d'écran, les cartes gagnent 2 lignes ; en dessous, la place va aux sprites. */
+    static final int TALL_CARD_ROWS = 36;
     private static final int MAX_CARD_WIDTH = 16;
     /** En dessous, la carte n'a pas la place pour une illustration : dessin en texte. */
     private static final int MIN_ART_CARD_WIDTH = 9;
@@ -59,19 +65,19 @@ final class CombatWindowScreen {
 
     /** Géométrie de l'écran pour une taille de grille. */
     record Layout(int cols, int rows, int cardHeight, int separator, int top, int half, int spriteRows,
-            int spriteCols, int spriteTop, int infoWidth) {
+            int spriteCols, int spriteTop, int statusWidth) {
 
         static Layout of(int cols, int rows) {
-            int cardHeight = rows >= 32 ? 8 : 6;
+            int cardHeight = rows >= TALL_CARD_ROWS ? 8 : 6;
             int separator = rows - (cardHeight + 7);
             int top = 2;
             int arenaRows = separator - top;
             int half = (cols - 4) / 2;
-            int spriteRows = Math.max(3, Math.min(arenaRows - 2, (half - 24) / 2));
-            int infoWidth = Math.min(MAX_INFO_WIDTH, half - spriteRows * 2 - 4);
-            int spriteTop = top + 1 + (arenaRows - 1 - spriteRows) / 2;
+            // L'arène : une ligne d'intent, le sprite (carré : 2 colonnes par ligne), une ligne de PV.
+            int spriteRows = Math.max(3, Math.min(arenaRows - 2, (half - MIN_STATUS_WIDTH - 3) / 2));
+            int spriteTop = top + 1 + (arenaRows - 2 - spriteRows) / 2;
             return new Layout(cols, rows, cardHeight, separator, top, half, spriteRows, spriteRows * 2, spriteTop,
-                    infoWidth);
+                    half - spriteRows * 2 - 3);
         }
 
         int playerCol() {
@@ -80,6 +86,11 @@ final class CombatWindowScreen {
 
         int enemyCol() {
             return cols - 3 - spriteCols;
+        }
+
+        /** Ligne des PV, juste sous les deux sprites. */
+        int hpRow() {
+            return spriteTop + spriteRows;
         }
 
         int detailRow() {
@@ -132,33 +143,40 @@ final class CombatWindowScreen {
 
     // --- Joueur ---
 
+    /** Largeur d'une barre de PV : ce qui reste de la moitié d'écran après le nom et la valeur. */
+    static int hpBarWidth(Layout l, int nameLength, int valueLength) {
+        return Math.max(6, Math.min(MAX_HP_BAR, l.half() - 2 - nameLength - valueLength - 2));
+    }
+
     private static void drawPlayer(Painter p, GameState state, ViewState view, Layout l) {
         if (!p.image(l.playerCol(), l.spriteTop(), l.spriteCols(), l.spriteRows(), PLAYER_IMAGE, view.playerFlash,
                 1f)) {
             p.text(l.playerCol() + Math.max(0, (l.spriteCols() - 5) / 2), l.spriteTop() + l.spriteRows() / 2, "(toi)",
                     Palette.DIM);
         }
-        int col = l.playerCol() + l.spriteCols() + 2;
-        int row = l.spriteTop();
-        p.text(col, row, "TOI", Palette.TEXT, true);
+        // Sous le sprite : « TOI ████████ 82/100 ».
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
         boolean overMax = hp > state.maxHp();
         TextColor barColor = view.playerFlash != null ? view.playerFlash
                 : overMax ? Palette.ACCENT : Palette.health(hp / state.maxHp());
         String value = num(Math.max(0, hp)) + "/" + num(state.maxHp());
-        int barWidth = Math.max(4, l.infoWidth() - value.length() - 1);
-        p.text(col, row + 1, Painter.bar(hp, state.maxHp(), barWidth), barColor, view.playerFlash != null || overMax);
-        p.text(col + barWidth + 1, row + 1, value, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
+        int barWidth = hpBarWidth(l, PLAYER_NAME.length(), value.length());
+        int col = l.playerCol();
+        p.text(col, l.hpRow(), PLAYER_NAME, Palette.TEXT, true);
+        col += PLAYER_NAME.length() + 1;
+        p.text(col, l.hpRow(), Painter.bar(hp, state.maxHp(), barWidth), barColor, view.playerFlash != null || overMax);
+        p.text(col + barWidth + 1, l.hpRow(), value, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
 
-        List<StatusLine> lines = statusLines(state, l.infoWidth());
-        int first = row + 2;
-        int capacity = l.separator() - first;
+        // À côté du sprite : Ivresse, Gueule de bois, effets en cours.
+        int statusCol = l.playerCol() + l.spriteCols() + 2;
+        List<StatusLine> lines = statusLines(state, l.statusWidth());
+        int capacity = l.spriteRows();
         for (int i = 0; i < lines.size() && i < capacity; i++) {
             boolean overflow = i == capacity - 1 && lines.size() > capacity;
             if (overflow) {
-                p.text(col, first + i, "+" + (lines.size() - i) + " autres", Palette.DIM);
+                p.text(statusCol, l.spriteTop() + i, "+" + (lines.size() - i) + " autres", Palette.DIM);
             } else {
-                p.text(col, first + i, lines.get(i).text(), lines.get(i).color(), lines.get(i).bold());
+                p.text(statusCol, l.spriteTop() + i, lines.get(i).text(), lines.get(i).color(), lines.get(i).bold());
             }
         }
     }
@@ -213,32 +231,39 @@ final class CombatWindowScreen {
                 p.image(l.enemyCol() + view.enemyOffsetX, l.spriteTop(), l.spriteCols(), l.spriteRows(), image.get(),
                         view.enemyFlash, view.enemyDim ? 0.5f : 1f);
             }
-            int width = l.infoWidth();
-            int col = l.enemyCol() - 2 - width;
-            int row = l.spriteTop();
-            String name = Painter.fit(enemy.name().toUpperCase(), width);
-            p.text(col + width - name.length(), row, name, color, true);
-            int barWidth = Math.max(4, width - value.length() - 1);
-            p.text(col + width - barWidth - 1 - value.length(), row + 1, value, Palette.TEXT);
-            p.text(col + width - barWidth, row + 1, Painter.bar(hp, enemy.maxHp(), barWidth), Palette.DAMAGE);
-            String element = "■ " + enemy.element().displayName();
-            p.text(col + width - element.length(), row + 2, element, color);
+            // Sous le sprite, en miroir du joueur : « 21/28 ████████ CADDIE ÉNERVÉ ».
+            enemyHp(p, l, l.hpRow(), enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
             return;
         }
-        // Pas d'image : nom et PV sur deux lignes à droite, sprite ASCII dessous.
-        int right = p.cols() - 3;
-        String name = Painter.fit(enemy.name().toUpperCase() + " · " + enemy.element().displayName(), l.half());
-        p.text(right - name.length(), l.top() + 1, name, color, true);
-        int barWidth = Math.min(20, l.half() - value.length() - 1);
-        p.text(right - barWidth - 1 - value.length(), l.top() + 2, value, Palette.TEXT);
-        p.text(right - barWidth, l.top() + 2, Painter.bar(hp, enemy.maxHp(), barWidth), Palette.DAMAGE);
+        // Pas d'image : PV sous l'intent, puis le sprite ASCII (trop large pour la zone carrée).
+        enemyHp(p, l, l.top() + 1, enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
         if (view.enemyHidden) {
             return;
         }
         cardistry.ui.sprite.Sprite sprite = cardistry.ui.sprite.Sprites.of(enemy);
+        int right = p.cols() - 3;
         int col = Math.max(2 + l.half(), right - sprite.width()) + view.enemyOffsetX;
-        SpriteArt.draw(p, CombatScreen.frameFor(sprite, view), col, l.top() + 3, l.separator() - 1,
+        SpriteArt.draw(p, CombatScreen.frameFor(sprite, view), col, l.top() + 2, l.separator() - 1,
                 view.enemyDim ? Palette.DIM : color, view.enemyFlash, p.cols() - 1);
+    }
+
+    /** « CADDIE ÉNERVÉ · neutre » ; l'élément est omis s'il ne laisse pas la place à la barre de PV. */
+    static String enemyLabel(Enemy enemy, Layout l, String value) {
+        String name = enemy.name().toUpperCase();
+        String full = name + " · " + enemy.element().displayName();
+        return full.length() <= l.half() - 2 - value.length() - 6 - 2 ? full : name;
+    }
+
+    /** « 21/28 ████████ NOM », aligné à droite sur la ligne {@code row}. */
+    private static void enemyHp(Painter p, Layout l, int row, String name, String value, double hp, double max,
+            TextColor color) {
+        int right = p.cols() - 3;
+        String shown = Painter.fit(name, Math.max(4, l.half() - 2 - value.length() - 6 - 2));
+        int barWidth = hpBarWidth(l, shown.length(), value.length());
+        p.text(right - shown.length(), row, shown, color, true);
+        int barCol = right - shown.length() - 1 - barWidth;
+        p.text(barCol, row, Painter.bar(hp, max, barWidth), Palette.DAMAGE);
+        p.text(barCol - 1 - value.length(), row, value, Palette.TEXT);
     }
 
     /** Icône de l'attaque annoncée : épée si elle frappe, « ! » sinon. */
@@ -343,12 +368,9 @@ final class CombatWindowScreen {
                 TextColor.ANSI.WHITE_BRIGHT, true, back);
 
         int inner = width - 2;
-        List<String> name = Format.wrap(card.name(), inner);
-        if (name.size() > 2) {
-            name = List.of(name.get(0), Painter.fit(name.get(1) + "…", inner));
-        }
+        List<String> name = nameLines(card.name(), inner);
         for (int i = 0; i < name.size(); i++) {
-            p.text(col + 1, row + 1 + artRows + i, Painter.fit(name.get(i), inner), Palette.TEXT, selected, back);
+            p.text(col + 1, row + 1 + artRows + i, name.get(i), Palette.TEXT, selected, back);
         }
         if (height >= 8) {
             String elementName = card.element() == null ? "null" : card.element().displayName();
@@ -356,6 +378,31 @@ final class CombatWindowScreen {
             p.text(col + 1, row + height - 2, label.length() <= inner ? label : Painter.fit(elementName, inner),
                     element, false, back);
         }
+    }
+
+    /**
+     * Nom d'une carte sur 2 lignes au plus, sans jamais couper un mot par un tiret : un mot trop long
+     * ou un nom trop long est abrégé par « … » (« Caïpiri… »).
+     */
+    static List<String> nameLines(String name, int width) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : name.trim().split("\\s+")) {
+            if (!line.isEmpty() && line.length() + 1 + word.length() > width) {
+                lines.add(line.toString());
+                line.setLength(0);
+            }
+            if (!line.isEmpty()) {
+                line.append(' ');
+            }
+            line.append(word);
+        }
+        lines.add(line.toString());
+        if (lines.size() > 2) {
+            lines = new ArrayList<>(List.of(lines.get(0), String.join(" ", lines.subList(1, lines.size()))));
+        }
+        lines.replaceAll(text -> Painter.fit(text, width));
+        return lines;
     }
 
     private static void drawDetail(Painter p, GameState state, ViewState view, Layout l) {

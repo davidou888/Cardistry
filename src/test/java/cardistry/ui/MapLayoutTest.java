@@ -118,7 +118,8 @@ class MapLayoutTest {
                     MapLayout.Point a = path.dots().get(i - 1);
                     MapLayout.Point b = path.dots().get(i);
                     double gap = Math.hypot(a.x() - b.x(), a.y() - b.y());
-                    assertTrue(gap >= MapLayout.DOT_STEP - 2 && gap <= MapLayout.DOT_STEP + 3, "pointillé régulier : " + gap);
+                    // Distance le long de la courbe = DOT_STEP ; la corde est plus courte dans un virage serré.
+                    assertTrue(gap >= MapLayout.DOT_STEP / 2.0 && gap <= MapLayout.DOT_STEP + 3, "pointillé régulier : " + gap);
                 }
             }
         }

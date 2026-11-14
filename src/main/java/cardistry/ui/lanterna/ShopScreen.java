@@ -15,7 +15,8 @@ final class ShopScreen {
 
     /** Réplique d'accueil provisoire (le vendeur et sa réplique viendront plus tard). */
     static final String GREETING = "« Entre, entre ! Tout est à vendre... enfin, presque. »";
-    static final String HELP = "←/→ ↑/↓ · Entrée acheter · R reroll · T retirer · Échap partir";
+    static final String HELP = "←/→ ↑/↓ · Entrée acheter · R reroll · T retirer · P partir · Échap pause";
+    static final String LEAVE = "[P] Partir";
     private static final int CARD_TOP = 4;
 
     private ShopScreen() {
@@ -60,11 +61,15 @@ final class ShopScreen {
             String price = shop.isSold(i) ? "" : offer.price() + " Ch.";
             p.text(col + (width - price.length()) / 2, CARD_TOP + 7, price, priceColor(state, offer), isSelected);
         }
-        int row = CARD_TOP + 9;
-        row = collectibles(p, state, shop, selected, "Objets", rows.get(1), row);
-        row = collectibles(p, state, shop, selected, "Trinkets", rows.get(2), row);
+        // L'espace en plus (grand écran) est réparti entre les rangées au lieu de rester en bas.
+        int gap = Math.max(0, (p.rows() - 24) / 4);
+        int step = (p.hasImages() ? 2 : 1) + 1 + gap;
+        int row = CARD_TOP + 9 + gap;
+        collectibles(p, state, shop, selected, "Objets", rows.get(1), row);
+        collectibles(p, state, shop, selected, "Trinkets", rows.get(2), row + step);
+        int detail = Math.min(p.rows() - 6, row + 2 * step + gap);
         if (selected >= 0 && selected < shop.offers().size()) {
-            p.text(2, row, Painter.fit(describe(shop.offers().get(selected)), p.cols() - 4), Palette.TEXT);
+            p.text(2, detail, Painter.fit(describe(shop.offers().get(selected)), p.cols() - 4), Palette.TEXT);
         }
         if (toast != null) {
             p.text(2, p.rows() - 5, Painter.fit("★ " + toast, p.cols() - 4), Palette.ACCENT, true);
@@ -77,9 +82,10 @@ final class ShopScreen {
                 && state.deck().size() > cardistry.core.CombatEngine.MIN_DECK_SIZE ? Palette.INFO : Palette.DIM, true);
         p.text(6 + reroll.length() + removal.length(), services, "Deck " + state.deck().size() + " cartes",
                 Palette.DIM);
+        p.text(p.cols() - 2 - LEAVE.length(), services, LEAVE, Palette.ACCENT, true);
     }
 
-    private static int collectibles(Painter p, GameState state, Shop shop, int selected, String title,
+    private static void collectibles(Painter p, GameState state, Shop shop, int selected, String title,
             java.util.List<Integer> indices, int row) {
         p.text(3, row, title, Palette.TEXT, true);
         for (int i = 0; i < indices.size(); i++) {
@@ -103,7 +109,6 @@ final class ShopScreen {
             p.text(col + icon, row, name, Palette.rarity(c.rarity()), isSelected);
             p.text(col + 24, row, offer.price() + " Ch.", priceColor(state, offer), isSelected);
         }
-        return row + 2;
     }
 
     static TextColor priceColor(GameState state, ShopOffer offer) {

@@ -521,7 +521,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 case ArrowUp -> shopSelected = shopRow(-1);
                 case ArrowDown -> shopSelected = shopRow(1);
                 case Escape -> {
-                    return leaveShop();
+                    pauseMenu();
+                    page = Page.SHOP;
                 }
                 case Enter -> {
                     cardistry.core.shop.ShopAction buy = buyChoice(state, shop);
@@ -533,7 +534,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }
                 case Character -> {
                     char c = Character.toLowerCase(key.getCharacter());
-                    if (c == 'r') {
+                    if (c == 'p') {
+                        return leaveShop();
+                    } else if (c == 'r') {
                         return new cardistry.core.shop.ShopAction.Reroll();
                     } else if (c == 't') {
                         int index = chooseCardToRemove(state);

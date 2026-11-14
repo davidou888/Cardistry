@@ -934,7 +934,7 @@ class LanternaUiTest {
     void shopPrixAbordablesEnCouleur() throws IOException {
         open(80, 24);
         cardistry.core.CombatEngine engine = shopEngine(1000, 0);
-        press(KeyType.Escape); // l'écran du shop reste affiché après le départ
+        type("p"); // l'écran du shop reste affiché après le départ
         assertEquals(new cardistry.core.shop.ShopAction.Leave(), assertTimeoutPreemptively(TIMEOUT,
                 () -> ui.chooseShopAction(engine.state(), engine.shop().orElseThrow(), 75)));
         String text = screen();
@@ -1086,13 +1086,36 @@ class LanternaUiTest {
         assertEquals(7, l.spriteRows());
         assertEquals(22, l.lastActionRow());
         assertEquals(l.lastActionRow() - 1, l.barRow() + 1, "barre sur 2 lignes, puis la dernière action");
-        assertTrue(l.infoWidth() >= 18, "PV et états à côté du sprite");
-        assertTrue(l.playerCol() + l.spriteCols() + 2 + l.infoWidth() <= l.enemyCol() - 2 - l.infoWidth(),
-                "les deux blocs d'état ne se touchent pas");
+        assertEquals(l.separator() - 1, l.hpRow(), "PV sous le sprite, juste au-dessus de la main");
+        assertEquals(3, l.spriteTop(), "une ligne d'intent au-dessus");
+        assertTrue(l.statusWidth() >= 14, "états du joueur à côté de son sprite");
+        // 64 px ×3 = 192 px : il faut 7 lignes de 28 px, sinon le sprite retombe à ×2.
+        assertTrue(l.spriteRows() * 28 >= 64 * 3, "sprite ×3 en 80×24");
         CombatWindowScreen.Layout big = CombatWindowScreen.Layout.of(100, 32);
-        assertEquals(8, big.cardHeight());
-        assertTrue(big.spriteRows() > l.spriteRows(), "le sprite profite de la place");
-        assertTrue(big.playerCol() + big.spriteCols() + 2 + big.infoWidth() <= big.enemyCol() - 2 - big.infoWidth());
+        assertEquals(6, big.cardHeight(), "en 100×32 la place va aux sprites");
+        assertEquals(big.separator() - big.top() - 2, big.spriteRows(), "le sprite occupe toute la hauteur de l'arène");
+        assertTrue(big.spriteRows() * 28 >= 64 * 6, "sprite ×6 en 100×32");
+        assertTrue(big.statusWidth() >= 14);
+        assertEquals(8, CombatWindowScreen.Layout.of(120, 40).cardHeight(), "grandes cartes sur un grand écran");
+        assertEquals(big.separator() - 1, big.hpRow());
+        assertTrue(CombatWindowScreen.HELP.length() <= 80 - 6 && CombatWindowScreen.HELP_UNDO.length() <= 80 - 6,
+                "aide jamais tronquée en 80 colonnes");
+        assertTrue(ShopScreen.HELP.length() <= 80 - 6);
+    }
+
+    @Test
+    void nomsDeCartesSansCoupureDeMot() {
+        assertEquals(List.of("Caïpiri…"), CombatWindowScreen.nameLines("Caïpirinha", 8));
+        assertEquals(List.of("Caïpirinha"), CombatWindowScreen.nameLines("Caïpirinha", 10));
+        assertEquals(List.of("Fouet de", "lianes"), CombatWindowScreen.nameLines("Fouet de lianes", 8));
+        assertEquals(List.of("Tempête", "d'épines"), CombatWindowScreen.nameLines("Tempête d'épines", 8));
+        assertEquals(List.of("Un nom", "bien tr…"), CombatWindowScreen.nameLines("Un nom bien trop long ici", 8));
+        for (cardistry.model.card.Card card : new CardPool().cards()) {
+            for (String line : CombatWindowScreen.nameLines(card.name(), 8)) {
+                assertFalse(line.endsWith("-"), card.name());
+                assertTrue(line.length() <= 8, line);
+            }
+        }
     }
 
     @Test
@@ -1103,10 +1126,12 @@ class LanternaUiTest {
         ui.showStatus(state);
         String text = dump("84-fenetre-combat-texte");
         List<String> lines = text.lines().toList();
-        String info = lines.stream().filter(line -> line.contains("TOI")).findFirst().orElseThrow();
-        assertTrue(info.indexOf("TOI") < 40 && info.indexOf("IMAGÉ") > 40, info);
+        CombatWindowScreen.Layout l = CombatWindowScreen.Layout.of(80, 24);
+        String info = lines.get(l.hpRow());
+        assertTrue(info.indexOf("TOI") == 3 && info.strip().endsWith("IMAGÉ │") || info.contains("IMAGÉ"), info);
+        assertTrue(info.indexOf("100/100") < 40 && info.indexOf("20/20") > 40, "une barre de PV sous chaque sprite");
         assertTrue(text.contains("100/100") && text.contains("20/20"), text);
-        assertTrue(text.contains("■ feu"));
+        assertTrue(text.contains("IMAGÉ · feu"), "élément à côté du nom");
         assertTrue(text.contains("Terrain : EPFL (feu)"));
         assertFalse(text.contains("Journal ─"), "journal fermé par défaut");
         assertTrue(text.contains("J journal"));
@@ -1119,15 +1144,19 @@ class LanternaUiTest {
     @Test
     void cartesIllustreesAvecIconeDeTypeEtCouleurDElement() throws IOException {
         openWithImages(80, 24);
-        ui.showStatus(combat(List.of(new SpellCard("Tsunami", Element.WATER, 15),
-                new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE),
-                new cardistry.model.card.DeadCard()), hydra()));
+        // Cartes inconnues : pas de images/cards/<id>.png, donc l'illustration générique.
+        ui.showStatus(combat(List.of(new SpellCard("Sort test", Element.WATER, 15),
+                new HealCard("Soin test", Element.NATURE, 10), new TerrainCard("Terrain test", Element.NATURE),
+                new cardistry.model.card.DeadCard("Morte test"), new SpellCard("Tsunami", Element.WATER, 15)),
+                hydra()));
         List<cardistry.ui.window.ImageLayer.Placement> images = layer.snapshot();
+        assertEquals(2, placed("cards/tsunami.png").rows(), "illustration de la carte quand elle existe");
+        assertEquals(null, placed("cards/tsunami.png").tint());
         for (String type : List.of("spell", "heal", "terrain", "dead")) {
             List<cardistry.ui.window.ImageLayer.Placement> ofType = images.stream()
                     .filter(p -> p.path().equals("ui/type-" + type + ".png")).toList();
-            assertEquals(2, ofType.size(), type + " : illustration générique + icône de type");
-            assertEquals(1, ofType.stream().filter(p -> p.tint() == null && p.rows() == 1).count());
+            assertEquals(type.equals("spell") ? 3 : 2, ofType.size(), type + " : illustration générique + icône de type");
+            assertEquals(type.equals("spell") ? 2 : 1, ofType.stream().filter(p -> p.tint() == null && p.rows() == 1).count());
         }
         // Sans images/cards/<id>.png : l'icône de type en grand, à la couleur de l'élément.
         assertEquals(rgb(Palette.element(Element.WATER)), images.stream()
@@ -1136,6 +1165,7 @@ class LanternaUiTest {
                 .filter(p -> p.path().equals("ui/type-heal.png") && p.rows() == 2).findFirst().orElseThrow().tint());
         String text = screen();
         assertTrue(text.contains("Tsunami") && text.contains("15") && text.contains("+10"), text);
+        assertFalse(text.contains("-\n"), "pas de mot coupé par un tiret");
         assertEquals("", CombatWindowScreen.value(new TerrainCard("Forêt", Element.NATURE)));
         assertEquals("ui/type-dead.png", CombatWindowScreen.typeIcon(new cardistry.model.card.DeadCard()));
     }
@@ -1160,8 +1190,8 @@ class LanternaUiTest {
         assertTrue(frames.contains(rgb(Palette.rarity(Rarity.LEGENDARY))), "cadre légendaire");
         List<String> icons = marks.stream().filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp)
                 .map(m -> ((cardistry.ui.window.ImageLayer.Stamp) m).path()).toList();
-        assertEquals(List.of("items/mate.png", "ui/trinket.png", "ui/trinket.png"), icons,
-                "icône de l'objet, placeholder pour les trinkets sans image");
+        assertEquals(List.of("items/mate.png", "items/" + rare.id() + ".png", "items/" + legendary.id() + ".png"),
+                icons, "une icône par objet et par trinket");
         String text = screen();
         assertTrue(text.contains("Maté") && text.contains("[W]"), text);
         assertFalse(text.contains(rare.name()), "trinkets en icônes seules");
@@ -1239,8 +1269,40 @@ class LanternaUiTest {
         assertEquals(1, inventory.get(0).rows());
         assertTrue(drawn(p -> ItemScreens.inventory(p, withInventory(List.of(), List.of()))).isEmpty());
         List<cardistry.ui.window.ImageLayer.Placement> trinkets = drawn(p -> ItemScreens.inventory(p,
-                withInventory(List.of(), List.of(ItemRegistry.trinket("pax")))));
-        assertEquals("ui/trinket.png", trinkets.get(0).path(), "sans image : le placeholder de la catégorie");
+                withInventory(List.of(), List.of(ItemRegistry.trinket("pax"), sansImage()))));
+        assertEquals("items/pax.png", trinkets.get(0).path());
+        assertEquals("ui/trinket.png", trinkets.get(1).path(), "sans image : le placeholder de la catégorie");
+        assertEquals("ui/item.png", CombatWindowScreen.icon(new Item("sans-image", "Sans image", "rien", "",
+                Rarity.COMMON, java.util.Set.of(), ctx -> { })));
+    }
+
+    /** Trinket sans icône dans images/items/. */
+    private static Trinket sansImage() {
+        return Trinket.builder("sans-image", "Sans image", Rarity.COMMON).description("rien").build();
+    }
+
+    @Test
+    void toutLeContenuAUneIcone() {
+        for (Item item : ItemRegistry.items()) {
+            assertTrue(cardistry.ui.window.Images.item(item.id()).isPresent(), "objet sans icône : " + item.id());
+        }
+        for (Trinket trinket : ItemRegistry.trinkets()) {
+            assertTrue(cardistry.ui.window.Images.item(trinket.id()).isPresent(), "trinket sans icône : " + trinket.id());
+        }
+        List<String> cards = new java.util.ArrayList<>(new CardPool().cards().stream()
+                .map(c -> cardistry.model.Ids.slug(c.name())).distinct().toList());
+        cards.add(cardistry.model.Ids.slug(cardistry.model.card.DeadCard.NAME));
+        cards.add("exercice-3b");
+        for (String id : cards) {
+            java.awt.image.BufferedImage image = cardistry.ui.window.Images.get("cards/" + id + ".png")
+                    .orElseThrow(() -> new AssertionError("carte sans illustration : " + id));
+            assertEquals(24, image.getWidth());
+            assertEquals(24, image.getHeight());
+        }
+        for (cardistry.run.map.NodeType type : cardistry.run.map.NodeType.values()) {
+            assertTrue(cardistry.ui.window.Images.mapNode(type).isPresent(), "nœud sans icône : " + type);
+        }
+        assertEquals(16, cardistry.ui.window.Images.get("items/mate.png").orElseThrow().getWidth());
     }
 
     /** Marques posées par un dessin (cadres de rareté, icônes encadrées). */
@@ -1265,7 +1327,7 @@ class LanternaUiTest {
         List<cardistry.ui.window.ImageLayer.Mark> reward = marked(p -> ItemScreens.reward(p, state,
                 List.of(mate(), rare), 0, 1));
         assertTrue(framed(reward, mate().rarity()) && framed(reward, Rarity.RARE), "cadres de rareté");
-        assertEquals(List.of("items/mate.png", "ui/trinket.png"), reward.stream()
+        assertEquals(List.of("items/mate.png", "items/" + rare.id() + ".png"), reward.stream()
                 .filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp)
                 .map(m -> ((cardistry.ui.window.ImageLayer.Stamp) m).path()).toList());
 
@@ -1284,16 +1346,20 @@ class LanternaUiTest {
         List<cardistry.ui.window.ImageLayer.Placement> shopImages = drawn(p -> ShopScreen.draw(p, engine.state(),
                 shop, 0, 75, 1, null));
         assertEquals(2 * cardistry.core.Shop.CARDS, shopImages.size(), "illustration + icône de type par carte");
-        assertTrue(shopImages.stream().anyMatch(i -> i.tint() != null), "illustration à la couleur de l'élément");
+        assertEquals(cardistry.core.Shop.CARDS, shopImages.stream().filter(i -> i.path().startsWith("cards/")).count(),
+                "une illustration par carte");
     }
 
     @Test
     void cartesIllustreesDansLesChoixDeCartes() {
         GameState state = withInventory(List.of(), List.of());
         List<cardistry.ui.window.ImageLayer.Placement> images = drawn(p -> ItemScreens.cardReward(p, state,
-                List.of(new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE)), 0, 1));
-        assertEquals(2, images.stream().filter(i -> i.path().equals("ui/type-heal.png")).count());
-        assertEquals(2, images.stream().filter(i -> i.path().equals("ui/type-terrain.png")).count());
+                List.of(new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Terrain test", Element.NATURE)),
+                0, 1));
+        assertEquals(1, images.stream().filter(i -> i.path().equals("cards/potion.png")).count());
+        assertEquals(1, images.stream().filter(i -> i.path().equals("ui/type-heal.png")).count());
+        assertEquals(2, images.stream().filter(i -> i.path().equals("ui/type-terrain.png")).count(),
+                "sans illustration : l'icône de type en grand");
     }
 
     // --- Événements ---

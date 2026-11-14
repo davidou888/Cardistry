@@ -26,7 +26,7 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `ui/sprite/` — `Sprite` (format multi-frames + carte de couleurs, voir README), `Sprites` (chargement, catalogue de la visionneuse `--sprites`)
 - `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
-- `art/` — sources Aseprite (une frame taguée par icône, tag = id), `palette.gpl`, `planche.png` ; `./gradlew exportArt` → PNG commités dans `src/main/resources/images/` (ignorée sans Aseprite), `./gradlew planche` (`cardistry.tools.ArtSheet`, côté tests)
+- `art/` — sources Aseprite (icônes : une frame taguée par icône, tag = id ; `art/enemies/<id>.aseprite` : un tag par animation), `palette.gpl`, planches ; `art/tools/generate.lua` ajoute les ébauches manquantes et **n'écrase jamais un tag existant** (Louis retouche les .aseprite à la main) ; `./gradlew art` = `generateArt` + `exportArt` (PNG commités dans `src/main/resources/images/`, ignorées sans Aseprite) + `planche` (`cardistry.tools.ArtSheet`, côté tests)
 - Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` (et le rendu fenêtre en `.png`) pour relire la mise en page. Les tests tournent en `java.awt.headless`.
 - `core/Shop` + `core/shop/` — shop ouvert (articles, vendus, rerolls), `ShopPrices` (tous les prix), `ShopOffer`, `ShopAction` ; joué par `CombatEngine.shopAction`
 - `story/` — événements des nœuds `?` : `Story` (texte + choix), `StoryChoice` (condition, conséquence), `StoryContext` (ce qu'une conséquence peut faire, fourni par le moteur), `StoryRegistry` (**registre**, 3 placeholders)
@@ -80,4 +80,4 @@ src/test/java/...             JUnit 5
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Paquets : `./gradlew jpackageImage` (app autonome), `./gradlew jpackage` (installateurs de l'OS courant ; JDK avec jmods requise). Release : tag `v*` → `.github/workflows/release.yml` (paquets des 3 OS → GitHub Release ; titre = message du tag annoté). Identifiant `io.github.megaray.cardistry`, éditeur « Cardistry ».
 - Tests : `./gradlew test`
-- Art : `./gradlew exportArt` (Aseprite → PNG), `./gradlew planche` (planche des icônes)
+- Art : `./gradlew art` (ébauches manquantes + export PNG + planches) ; détail : `generateArt`, `exportArt`, `planche`

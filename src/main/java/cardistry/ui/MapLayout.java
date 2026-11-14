@@ -25,7 +25,7 @@ public final class MapLayout {
     /** Décalage maximal d'un nœud, en fraction de l'écart entre deux colonnes. */
     public static final double JITTER_Y = 0.18;
     /** Distance entre deux points d'un chemin. */
-    public static final int DOT_STEP = 5;
+    public static final int DOT_STEP = 6;
     /** Marge sans point autour d'une icône. */
     public static final int CLEARANCE = 5;
     /** Le boss est dessiné plus grand que les autres nœuds. */

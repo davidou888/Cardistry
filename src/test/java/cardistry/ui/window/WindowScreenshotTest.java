@@ -54,8 +54,12 @@ class WindowScreenshotTest {
         cardistry.run.Run run = new cardistry.run.Run(42, java.util.Set.of(), new EventBus());
         run.start();
         ui.onEvent(new GameEvent.GameStarted(42));
-        ui.showMap(new cardistry.run.map.MapView(run.state(), run.map().orElseThrow(), run.visited(),
-                run.position(), run.choices()));
+        // Deux nœuds déjà parcourus : le nœud actuel est cerclé d'or, le choix sélectionné de blanc.
+        cardistry.run.map.RunMap map = run.map().orElseThrow();
+        cardistry.run.map.MapNode first = map.floor(1).get(1);
+        cardistry.run.map.MapNode second = map.choicesAfter(first).get(0);
+        ui.showMap(new cardistry.run.map.MapView(run.state(), map, java.util.List.of(first, second), second,
+                map.choicesAfter(second)));
         ImageLayer.Frame frame = layer.frame();
         save(new GridRenderer(new CellFonts(2)).render(terminal, frame.images(), frame.marks(), false), name);
         ui.close();
@@ -113,7 +117,7 @@ class WindowScreenshotTest {
         save(renderer.render(terminal, layer.snapshot(), layer.marks(), false), "89-fenetre-recompense");
 
         engine.openShop();
-        terminal.addInput(new com.googlecode.lanterna.input.KeyStroke(com.googlecode.lanterna.input.KeyType.Escape));
+        terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('p', false, false));
         ui.chooseShopAction(state, engine.shop().orElseThrow(), 75);
         save(renderer.render(terminal, layer.snapshot(), layer.marks(), false), "90-fenetre-shop");
         ui.close();
