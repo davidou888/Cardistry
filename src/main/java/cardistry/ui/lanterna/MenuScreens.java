@@ -18,8 +18,15 @@ final class MenuScreens {
     private MenuScreens() {
     }
 
+    /** Entrées du menu de l'écran titre. */
+    static final List<String> TITLE_ENTRIES = List.of("Jouer", "Règles", "Options", "Quitter");
+
     static void title(Painter p, long seed, List<cardistry.run.Secret> codes) {
-        p.frame("Cardistry", "Seed " + seed, "Entrée jouer · R règles · Q quitter");
+        title(p, seed, codes, 0);
+    }
+
+    static void title(Painter p, long seed, List<cardistry.run.Secret> codes, int selected) {
+        p.frame("Cardistry", "Seed " + seed, "↑/↓ choisir · Entrée valider · R règles · Q quitter");
         List<String> banner = Resources.banner("title");
         int width = banner.stream().mapToInt(String::length).max().orElse(0);
         int top = Math.max(2, p.rows() / 2 - 7);
@@ -29,7 +36,21 @@ final class MenuScreens {
         int row = top + banner.size() + 2;
         p.centered(row, "Un jeu de cartes élémentaire, au tour par tour", Palette.TEXT, false);
         p.centered(row + 2, elementsLine(), Palette.DIM, false);
-        p.centered(row + 5, "[Entrée] Jouer     [R] Règles     [Q] Quitter", Palette.TEXT, true);
+        StringBuilder menu = new StringBuilder();
+        int selectedCol = 0;
+        for (int i = 0; i < TITLE_ENTRIES.size(); i++) {
+            if (i > 0) {
+                menu.append("     ");
+            }
+            if (i == selected) {
+                selectedCol = menu.length();
+            }
+            menu.append(i == selected ? "▶ " : "  ").append(TITLE_ENTRIES.get(i));
+        }
+        int menuCol = Math.max(1, (p.cols() - menu.length()) / 2);
+        p.text(menuCol, row + 5, menu.toString(), Palette.TEXT, false);
+        String chosen = "▶ " + TITLE_ENTRIES.get(selected);
+        p.text(menuCol + selectedCol, row + 5, chosen, Palette.ACCENT, true);
         for (int i = 0; i < codes.size(); i++) {
             p.centered(row + 7 + i, "✦ Code accepté : " + codes.get(i).displayName() + " équipé pour cette partie",
                     Palette.SECRET, true);
@@ -134,6 +155,47 @@ final class MenuScreens {
                     + option.description();
             p.centered(row + i * 2, line, i == selected ? Palette.ACCENT : Palette.TEXT, i == selected);
         }
+    }
+
+    /** Menu pause. */
+    static void pause(Painter p, int selected, long seed) {
+        p.frame("Pause", "Seed " + seed, "↑/↓ choisir · Entrée valider · Échap reprendre");
+        int top = Math.max(3, p.rows() / 2 - 4);
+        p.centered(top, "— PAUSE —", Palette.ACCENT, true);
+        for (int i = 0; i < LanternaUi.PAUSE_ENTRIES.size(); i++) {
+            boolean isSelected = i == selected;
+            p.centered(top + 3 + i * 2, (isSelected ? "▶ " : "  ") + LanternaUi.PAUSE_ENTRIES.get(i) + "  ",
+                    isSelected ? Palette.ACCENT : Palette.TEXT, isSelected);
+        }
+    }
+
+    /** Options : volumes et muet (appliqués en direct, sauvegardés). */
+    static void options(Painter p, cardistry.ui.Settings settings, int selected, long seed) {
+        p.frame("Options", "Seed " + seed, "↑/↓ choisir · ←/→ régler · Entrée valider · Échap retour");
+        int top = Math.max(3, p.rows() / 2 - 5);
+        p.centered(top, "— OPTIONS —", Palette.ACCENT, true);
+        String[] labels = {
+            "Musique  " + gauge(settings.music()),
+            "Effets   " + gauge(settings.effects()),
+            "Muet     " + (settings.muted() ? "[x] oui" : "[ ] non"),
+            "Retour",
+        };
+        int width = java.util.Arrays.stream(labels).mapToInt(String::length).max().orElse(0) + 2;
+        int col = Math.max(2, (p.cols() - width) / 2);
+        for (int i = 0; i < labels.length; i++) {
+            boolean isSelected = i == selected;
+            p.text(col, top + 3 + i * 2, (isSelected ? "▶ " : "  ") + labels[i],
+                    isSelected ? Palette.ACCENT : Palette.TEXT, isSelected);
+        }
+        if (settings.muted()) {
+            p.centered(top + 12, "Son coupé : les volumes sont gardés pour plus tard.", Palette.DIM, false);
+        }
+    }
+
+    /** « ◀ ██████░░░░ ▶ 6/10 ». */
+    static String gauge(int level) {
+        return "◀ " + "█".repeat(level) + "░".repeat(cardistry.ui.Settings.MAX_LEVEL - level) + " ▶ " + level + "/"
+                + cardistry.ui.Settings.MAX_LEVEL;
     }
 
     static void tooSmall(Painter p) {

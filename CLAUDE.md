@@ -20,6 +20,8 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
 - `ui/` — interfaces `Renderer`/`Input`, `GameLoop` (pilote un `run.Run`), `TitleChoice` (règles + codes de l'écran titre), `Format`, `ItemKeys` (W/E/R…, clavier QWERTZ), `QuitGameException`
   - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
   - `ui/window/` — fenêtre par défaut : `CellWindow` (Swing, double buffer, redimensionnable, F10 CRT, F11, Ctrl ±) dessine elle-même un terminal virtuel Lanterna ; `GridRenderer` (grille → image, testable sans écran), `CellFonts` (Departure Mono + JetBrains Mono, OFL), `CellPalette`, `KeyMapper`, `ImageLayer` + `Images` (PNG alignés sur la grille, repli ASCII), `AppIcon` (icône provisoire). `LanternaUi` est le même dans la fenêtre et en `--terminal`.
+  - `ui/audio/` — son : `AudioDirector` (écoute le bus → effets ; l'écran → la musique ; jamais appelé par la logique), `Audio` (+ `silent()`, muet automatique sans carte son et en test via `cardistry.audio=off`), `SoftwareAudio` (une sortie 44,1 kHz, un fil), `Mixer` (pur, testé : musique en boucle + fondu, 16 effets), `SoundTable` (`audio/sounds.txt`, **table éditable**), `Pcm` (WAV et OGG via VorbisSPI), `Volume` (échelle perceptive). Placeholders : `tools/generate-sounds.sh`.
+  - `ui/Settings` + `ui/OptionsController` + `platform/SettingsFile` (`settings.txt`) : volumes et muet ; menu pause (Échap) et Options dans `LanternaUi`, commande `options` en mode texte
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `ui/sprite/` — `Sprite` (format multi-frames + carte de couleurs, voir README), `Sprites` (chargement, catalogue de la visionneuse `--sprites`)
 - `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
@@ -71,7 +73,7 @@ src/test/java/...             JUnit 5
 
 ## Commandes
 - Build : `./gradlew build`
-- Lancer : `./play` (Linux/macOS), `play.bat` (Windows) : fenêtre du jeu par défaut. Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--terminal`, `--no-ui`, `--crt`, `--no-images`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
+- Lancer : `./play` (Linux/macOS), `play.bat` (Windows) : fenêtre du jeu par défaut. Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--terminal`, `--no-ui`, `--crt`, `--no-images`, `--mute`, `--no-music`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
 - Mode texte : `./play --no-ui`
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Tests : `./gradlew test`

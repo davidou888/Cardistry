@@ -309,7 +309,8 @@ Fait aussi : écran de pioche au choix (Paquet de cartes : 3 cartes, touches 1/2
 Fait aussi : carte de la run (écran Lanterna + mode texte), intents des adversaires, sprites animés et visionneuse `--sprites`.
 Fait aussi : shop (plein écran + mode texte) ; fenêtre du jeu par défaut (police pixel embarquée, double buffer, images PNG avec repli ASCII, filtre CRT désactivé par défaut).
 Fait aussi : événements (plein écran + mode texte).
-Reste : transitions d'écran, son et musique.
+Fait aussi : son (musique par contexte avec fondu, effets sur les événements, placeholders), menu pause (Échap), Options (volumes, muet) depuis le titre et la pause.
+Reste : transitions d'écran ; vrais sons et musiques.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.

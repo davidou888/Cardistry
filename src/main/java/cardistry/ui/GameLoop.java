@@ -23,6 +23,17 @@ public final class GameLoop {
      * @param unlockedThisRun secrets débloqués pendant la partie, affichés sur l'écran de fin
      */
     public static void run(Run run, Renderer renderer, Input input, Supplier<List<Secret>> unlockedThisRun) {
+        run(run, renderer, input, unlockedThisRun, null);
+    }
+
+    /**
+     * @param audio chef d'orchestre du son (musique selon l'écran) ; {@code null} = pas de son
+     */
+    public static void run(Run run, Renderer renderer, Input input, Supplier<List<Secret>> unlockedThisRun,
+            cardistry.ui.audio.AudioDirector audio) {
+        if (audio != null) {
+            audio.title();
+        }
         TitleChoice title = input.title(run.seed());
         title.codes().forEach(run::addCode);
         run.setDecisions(input);
@@ -31,6 +42,9 @@ public final class GameLoop {
             renderer.showIntro(run.state());
         }
         while (!run.isOver()) {
+            if (audio != null) {
+                audio.phase(run.phase(), run.state());
+            }
             switch (run.phase()) {
                 case MAP -> chooseNode(run, renderer, input);
                 case COMBAT -> playTurn(run, renderer, input);
@@ -46,6 +60,9 @@ public final class GameLoop {
                 case OVER -> {
                 }
             }
+        }
+        if (audio != null) {
+            audio.phase(Run.Phase.OVER, run.state());
         }
         renderer.showGameOver(run.state(), unlockedThisRun.get().stream().map(Secret::displayName).toList());
         input.waitForExit();

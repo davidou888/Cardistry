@@ -110,7 +110,8 @@ class LanternaUiTest {
         assertFalse(assertTimeoutPreemptively(TIMEOUT, () -> ui.title(42)).showRules());
 
         String text = dump("01-titre");
-        assertTrue(text.contains("[Entrée] Jouer"));
+        assertTrue(text.contains("▶ Jouer"));
+        assertTrue(text.contains("Options") && text.contains("Quitter"));
         assertTrue(text.contains("Seed 42"));
     }
 
@@ -1071,5 +1072,124 @@ class LanternaUiTest {
         String result = dump("91-evenement-resultat");
         assertTrue(result.contains("Tu choisis : Taper dessus"), result);
         assertTrue(result.contains("Deux clopes tombent !"));
+    }
+
+    // --- Menu pause, options, sons d'interface ---
+
+    @Test
+    void titreOptionsPuisJouer() throws IOException {
+        open(80, 24);
+        cardistry.ui.OptionsController settings = cardistry.ui.OptionsController.inMemory(cardistry.ui.Settings.defaults());
+        ui.setOptions(settings);
+        press(KeyType.ArrowRight);
+        press(KeyType.ArrowRight); // Options
+        press(KeyType.Enter);
+        press(KeyType.ArrowLeft); // musique 6 → 5
+        press(KeyType.ArrowDown);
+        press(KeyType.ArrowRight); // effets 8 → 9
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter); // muet
+        press(KeyType.Escape); // retour au titre
+        press(KeyType.ArrowLeft);
+        press(KeyType.ArrowLeft); // Jouer
+        press(KeyType.Enter);
+        assertFalse(assertTimeoutPreemptively(TIMEOUT, () -> ui.title(1)).showRules());
+        assertEquals(new cardistry.ui.Settings(5, 9, true), settings.settings());
+    }
+
+    @Test
+    void ecranOptions() throws IOException {
+        open(80, 24);
+        ui.setOptions(cardistry.ui.OptionsController.inMemory(new cardistry.ui.Settings(6, 8, false)));
+        press(KeyType.ArrowDown);
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter); // Options
+        // Capture pendant l'écran Options : Échap (retour au titre) puis Échap (quitter le jeu).
+        press(KeyType.Escape);
+        press(KeyType.Escape);
+        assertThrows(cardistry.ui.QuitGameException.class,
+                () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.title(1)));
+        String text = MenuScreensProbe.options(new cardistry.ui.Settings(6, 8, false), 0);
+        assertTrue(text.contains("Musique  ◀ ██████░░░░ ▶ 6/10"), text);
+        assertTrue(text.contains("Effets   ◀ ████████░░ ▶ 8/10"));
+        assertTrue(text.contains("Muet     [ ] non"));
+        assertTrue(text.contains("Retour"));
+    }
+
+    /** Rendu d'un écran de menu dans un terminal virtuel, en texte. */
+    static final class MenuScreensProbe {
+        static String options(cardistry.ui.Settings settings, int selected) {
+            DefaultVirtualTerminal t = new DefaultVirtualTerminal(new TerminalSize(80, 24));
+            MenuScreens.options(new Painter(t.newTextGraphics(), new TerminalSize(80, 24)), settings, selected, 1);
+            StringBuilder text = new StringBuilder();
+            for (int row = 0; row < 24; row++) {
+                for (int col = 0; col < 80; col++) {
+                    text.append(t.getCharacter(col, row).getCharacterString());
+                }
+                text.append('\n');
+            }
+            return text.toString();
+        }
+    }
+
+    @Test
+    void echapOuvreLaPauseEnCombatPuisReprendre() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), hydra());
+        press(KeyType.Escape); // pause
+        press(KeyType.Enter); // Reprendre
+        type("p");
+        assertEquals(new Action.DrawCard(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+    }
+
+    @Test
+    void pauseOptionsPuisQuitter() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(), hydra());
+        cardistry.ui.OptionsController settings = cardistry.ui.OptionsController.inMemory(cardistry.ui.Settings.defaults());
+        ui.setOptions(settings);
+        press(KeyType.Escape); // pause
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter); // Options
+        press(KeyType.ArrowRight); // musique 7
+        press(KeyType.Escape); // retour à la pause
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter); // Quitter
+        type("o"); // confirmer
+        assertThrows(cardistry.ui.QuitGameException.class,
+                () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        assertEquals(7, settings.settings().music());
+    }
+
+    @Test
+    void echapAnnuleDAbordDansLesSousEcrans() throws IOException {
+        open(80, 24);
+        GameState state = deckState();
+        // « Faire le tri » : Échap annule (−1), sans ouvrir la pause.
+        press(KeyType.Escape);
+        assertEquals(-1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardToRemove(state)));
+        // Remplacement d'objet : Échap revient à la récompense, puis S refuse.
+        GameState full = withInventory(List.of(mate(), mate(), mate()), List.of());
+        press(KeyType.Enter); // inventaire plein → remplacement
+        press(KeyType.Escape); // retour à la récompense (pas la pause)
+        type("s");
+        assertEquals(new RewardChoice.Skip(),
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(full, List.of(mate()))));
+    }
+
+    @Test
+    void sonsDesTouches() throws IOException {
+        open(80, 24);
+        List<cardistry.ui.audio.UiSound> played = new java.util.ArrayList<>();
+        ui.setSounds(played::add);
+        GameState state = combat(List.of(new SpellCard("A", Element.WATER, 10), new SpellCard("B", Element.WATER, 10)),
+                hydra());
+        press(KeyType.ArrowRight);
+        press(KeyType.Escape);
+        press(KeyType.Escape);
+        press(KeyType.Enter);
+        assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state));
+        assertEquals(List.of(cardistry.ui.audio.UiSound.CURSOR, cardistry.ui.audio.UiSound.BACK,
+                cardistry.ui.audio.UiSound.BACK, cardistry.ui.audio.UiSound.CONFIRM), played);
     }
 }

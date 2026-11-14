@@ -32,8 +32,12 @@ public final class ConsoleInput implements Input {
         console.println();
         List<Secret> codes = new java.util.ArrayList<>();
         while (true) {
-            console.println("(Appuie sur Entrée pour continuer, ou s puis Entrée pour passer l'intro)");
+            console.println("(Entrée : règles puis partie · s : passer les règles · options : réglages du son)");
             String line = console.readLine().trim();
+            if (line.equalsIgnoreCase(OPTIONS_COMMAND)) {
+                optionsMenu();
+                continue;
+            }
             if (line.equalsIgnoreCase(CLAUDE_CODE)) {
                 if (!codes.contains(Secret.CLAUDE_MD)) {
                     codes.add(Secret.CLAUDE_MD);
@@ -43,6 +47,38 @@ public final class ConsoleInput implements Input {
                 continue;
             }
             return new TitleChoice(!line.equalsIgnoreCase("s"), codes);
+        }
+    }
+
+    /** Commande de l'écran titre qui ouvre les réglages. */
+    static final String OPTIONS_COMMAND = "options";
+
+    private cardistry.ui.OptionsController options = cardistry.ui.OptionsController.inMemory(
+            cardistry.ui.Settings.defaults());
+
+    /** Réglages modifiables depuis la commande « options » de l'écran titre. */
+    public void setOptions(cardistry.ui.OptionsController options) {
+        this.options = options;
+    }
+
+    /** Menu des réglages : 1 musique, 2 effets (0 à 10), 3 muet, 0 retour. Appliqués tout de suite. */
+    private void optionsMenu() {
+        while (true) {
+            cardistry.ui.Settings s = options.settings();
+            console.println();
+            console.println(Ansi.yellow("Options"));
+            console.println("[1] Musique : " + s.music() + "/10");
+            console.println("[2] Effets : " + s.effects() + "/10");
+            console.println("[3] Muet : " + (s.muted() ? "oui" : "non"));
+            console.println("[0] Retour");
+            switch (readNumber("Ton choix ? ", 0, 3)) {
+                case 1 -> options.apply(s.withMusic(readNumber("Volume de la musique (0 à 10) ? ", 0, 10)));
+                case 2 -> options.apply(s.withEffects(readNumber("Volume des effets (0 à 10) ? ", 0, 10)));
+                case 3 -> options.apply(s.withMuted(!s.muted()));
+                default -> {
+                    return;
+                }
+            }
         }
     }
 

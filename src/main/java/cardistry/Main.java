@@ -15,6 +15,11 @@ import cardistry.ui.lanterna.LanternaUi;
 import cardistry.ui.text.Console;
 import cardistry.ui.text.ConsoleInput;
 import cardistry.ui.text.SpriteViewerText;
+import cardistry.platform.SettingsFile;
+import cardistry.ui.OptionsController;
+import cardistry.ui.Settings;
+import cardistry.ui.audio.Audio;
+import cardistry.ui.audio.AudioDirector;
 import cardistry.ui.text.TextRenderer;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
@@ -38,6 +43,8 @@ public final class Main {
      *   <li>{@code --no-ui} rendu texte simple</li>
      *   <li>{@code --crt} filtre CRT (lignes de balayage) dans la fenêtre ; F10 le bascule</li>
      *   <li>{@code --no-images} sprites ASCII même dans la fenêtre</li>
+     *   <li>{@code --mute} sans aucun son, {@code --no-music} sans musique (pour cette session : les
+     *       réglages sauvegardés ne changent pas)</li>
      *   <li>sans affichage graphique : plein écran terminal si c'est un vrai terminal, sinon texte</li>
      *   <li>{@code --ascii} affichage en ASCII pur ; automatique si la sortie n'est pas en UTF-8</li>
      *   <li>{@code --no-color} mode texte sans couleurs ANSI ; automatique dans la vieille console
@@ -91,10 +98,39 @@ public final class Main {
             System.out.println("Secrets débloqués effacés.");
         }
         Game game = prepare(options, store);
+        Sound sound = Sound.open(options, SettingsFile.inSaveDirectory());
+        game.bus().subscribe(sound.director()); // avant l'interface : le son part avec l'animation
         switch (mode) {
-            case TEXT -> runText(game, game.bus(), fast, textAscii, color);
-            case TERMINAL -> runFullScreen(game, game.bus(), fast, textAscii, color);
-            case WINDOW -> runWindow(game, game.bus(), display);
+            case TEXT -> runText(game, game.bus(), fast, textAscii, color, sound);
+            case TERMINAL -> runFullScreen(game, game.bus(), fast, textAscii, color, sound);
+            case WINDOW -> runWindow(game, game.bus(), display, sound);
+        }
+        sound.director().audio().close();
+    }
+
+    /** Le son et les réglages : réglages sauvegardés, {@code --mute} / {@code --no-music} pour la session. */
+    record Sound(AudioDirector director, OptionsController settings) {
+
+        static Sound open(List<String> options, SettingsFile file) {
+            Settings saved = file.load();
+            Audio audio = Audio.open(saved.music(), saved.effects(), saved.muted(), options.contains("--mute"),
+                    options.contains("--no-music"));
+            OptionsController controller = new OptionsController() {
+                private Settings current = saved;
+
+                @Override
+                public Settings settings() {
+                    return current;
+                }
+
+                @Override
+                public void apply(Settings settings) {
+                    current = settings;
+                    audio.setLevels(settings.music(), settings.effects(), settings.muted());
+                    file.save(settings);
+                }
+            };
+            return new Sound(new AudioDirector(audio), controller);
         }
     }
 
@@ -146,22 +182,24 @@ public final class Main {
         return new Game(run, tracker, bus);
     }
 
-    private static void play(Game game, cardistry.ui.Renderer renderer, cardistry.ui.Input input) {
-        GameLoop.run(game.run(), renderer, input, game.tracker()::unlockedThisRun);
+    private static void play(Game game, cardistry.ui.Renderer renderer, cardistry.ui.Input input, Sound sound) {
+        GameLoop.run(game.run(), renderer, input, game.tracker()::unlockedThisRun, sound.director());
     }
 
-    private static void runFullScreen(Game game, EventBus bus, boolean fast, boolean ascii, boolean color) {
+    private static void runFullScreen(Game game, EventBus bus, boolean fast, boolean ascii, boolean color, Sound sound) {
         LanternaUi ui;
         try {
             ui = LanternaUi.open(fast, ascii);
         } catch (IOException e) {
             System.err.println("Impossible d'ouvrir le plein écran (" + e.getMessage() + ") : mode texte.");
-            runText(game, bus, fast, ascii, color);
+            runText(game, bus, fast, ascii, color, sound);
             return;
         }
         try (ui) {
             bus.subscribe(ui::onEvent);
-            play(game, ui, ui);
+            ui.setSounds(sound.director()::ui);
+            ui.setOptions(sound.settings());
+            play(game, ui, ui, sound);
         } catch (QuitGameException e) {
             // Le joueur a quitté : l'écran est restauré par close().
         } catch (IOException e) {
@@ -170,10 +208,12 @@ public final class Main {
     }
 
     /** Fenêtre du jeu (police embarquée : Unicode toujours disponible) ; quitte la JVM à la fin. */
-    private static void runWindow(Game game, EventBus bus, Display d) {
+    private static void runWindow(Game game, EventBus bus, Display d, Sound sound) {
         try (LanternaUi ui = LanternaUi.openWindow(d.fast(), d.asciiRequested(), d.crt(), d.images())) {
             bus.subscribe(ui::onEvent);
-            play(game, ui, ui);
+            ui.setSounds(sound.director()::ui);
+            ui.setOptions(sound.settings());
+            play(game, ui, ui, sound);
         } catch (QuitGameException e) {
             // Le joueur a quitté.
         } catch (IOException e) {
@@ -190,12 +230,14 @@ public final class Main {
         return os != Os.WINDOWS || System.getenv("WT_SESSION") != null || System.getenv("TERM") != null;
     }
 
-    private static void runText(Game game, EventBus bus, boolean fast, boolean ascii, boolean color) {
+    private static void runText(Game game, EventBus bus, boolean fast, boolean ascii, boolean color, Sound sound) {
         Console console = new Console(System.in, System.out, fast, ascii, color);
         TextRenderer renderer = new TextRenderer(console);
         bus.subscribe(renderer::onEvent);
         try {
-            play(game, renderer, new ConsoleInput(console));
+            ConsoleInput input = new ConsoleInput(console);
+            input.setOptions(sound.settings());
+            play(game, renderer, input, sound);
         } catch (QuitGameException e) {
             console.println();
             console.println("Partie interrompue.");

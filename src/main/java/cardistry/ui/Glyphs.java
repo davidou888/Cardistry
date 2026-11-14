@@ -22,7 +22,7 @@ public final class Glyphs {
             Map.entry('█', '#'), Map.entry('░', '.'),
             // Flèches et symboles
             Map.entry('→', '>'), Map.entry('←', '<'), Map.entry('↑', '^'), Map.entry('↓', 'v'),
-            Map.entry('▶', '>'), Map.entry('★', '*'), Map.entry('✦', '*'), Map.entry('•', '*'), Map.entry('×', 'x'),
+            Map.entry('▶', '>'), Map.entry('◀', '<'), Map.entry('★', '*'), Map.entry('✦', '*'), Map.entry('•', '*'), Map.entry('×', 'x'),
             Map.entry('−', '-'), Map.entry('—', '-'), Map.entry('·', '.'), Map.entry('…', '.'),
             Map.entry('«', '"'), Map.entry('»', '"'), Map.entry('’', '\''), Map.entry(' ', ' '));
 

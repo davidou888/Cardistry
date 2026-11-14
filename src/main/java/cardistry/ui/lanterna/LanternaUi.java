@@ -32,7 +32,8 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
+        PAUSE, OPTIONS }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -385,7 +386,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     mapSelected = 0;
                     return chosen;
                 }
-                case Escape -> confirmQuit();
+                case Escape -> pauseMenu();
                 case Character -> {
                     char c = Character.toLowerCase(key.getCharacter());
                     if (c == 'q') {
@@ -416,6 +417,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             switch (key.getKeyType()) {
                 case ArrowLeft -> cardSelected = Math.floorMod(cardSelected - 1, options.size());
                 case ArrowRight -> cardSelected = Math.floorMod(cardSelected + 1, options.size());
+                case Escape -> pauseMenu();
                 case Enter -> {
                     return cardSelected;
                 }
@@ -459,7 +461,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         return storySelected;
                     }
                 }
-                case Escape -> confirmQuit();
+                case Escape -> pauseMenu();
                 case Character -> {
                     char c = Character.toLowerCase(key.getCharacter());
                     if (c == 'q') {
@@ -643,7 +645,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 case Enter -> {
                     return options.get(restSelected);
                 }
-                case Escape -> confirmQuit();
+                case Escape -> pauseMenu();
                 case Character -> {
                     char c = Character.toLowerCase(key.getCharacter());
                     if (c == 'q') {
@@ -684,6 +686,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     public TitleChoice title(long seed) {
         this.seed = seed;
         titleCodes.clear();
+        titleSelected = 0;
         page = Page.TITLE;
         render();
         StringBuilder typed = new StringBuilder();
@@ -696,23 +699,45 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             if (isQuit(key)) {
                 throw new QuitGameException();
             }
-            if (key.getKeyType() == KeyType.Enter) {
-                return new TitleChoice(false, titleCodes);
-            }
-            if (isChar(key, 'r')) {
-                return new TitleChoice(true, titleCodes);
-            }
-            if (key.getKeyType() == KeyType.Character) {
-                typed.append(Character.toLowerCase(key.getCharacter()));
-                if (typed.length() > CLAUDE_CODE.length()) {
-                    typed.deleteCharAt(0);
+            switch (key.getKeyType()) {
+                case ArrowUp, ArrowLeft -> titleSelected = Math.floorMod(titleSelected - 1, MenuScreens.TITLE_ENTRIES.size());
+                case ArrowDown, ArrowRight -> titleSelected = Math.floorMod(titleSelected + 1,
+                        MenuScreens.TITLE_ENTRIES.size());
+                case Enter -> {
+                    switch (titleSelected) {
+                        case 0 -> {
+                            return new TitleChoice(false, titleCodes);
+                        }
+                        case 1 -> {
+                            return new TitleChoice(true, titleCodes);
+                        }
+                        case 2 -> {
+                            optionsMenu();
+                            page = Page.TITLE;
+                        }
+                        default -> throw new QuitGameException();
+                    }
                 }
-                if (typed.toString().equals(CLAUDE_CODE)) {
-                    addTitleCode(Secret.CLAUDE_MD);
+                case Character -> {
+                    if (isChar(key, 'r')) {
+                        return new TitleChoice(true, titleCodes);
+                    }
+                    typed.append(Character.toLowerCase(key.getCharacter()));
+                    if (typed.length() > CLAUDE_CODE.length()) {
+                        typed.deleteCharAt(0);
+                    }
+                    if (typed.toString().equals(CLAUDE_CODE)) {
+                        addTitleCode(Secret.CLAUDE_MD);
+                    }
+                }
+                default -> {
                 }
             }
+            render();
         }
     }
+
+    private int titleSelected = 0;
 
     private void addTitleCode(Secret secret) {
         if (!titleCodes.contains(secret)) {
@@ -747,7 +772,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     }
                     return new Action.DrawCard();
                 }
-                case Escape -> confirmQuit();
+                case Escape -> pauseMenu();
                 case Character -> {
                     char c = Character.toLowerCase(key.getCharacter());
                     if (c == 'q') {
@@ -793,6 +818,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 switch (key.getKeyType()) {
                     case ArrowLeft -> rewardSelected = Math.floorMod(rewardSelected - 1, options.size());
                     case ArrowRight -> rewardSelected = Math.floorMod(rewardSelected + 1, options.size());
+                    case Escape -> pauseMenu();
                     case Enter -> {
                         if (!ItemScreens.isFull(state, options.get(rewardSelected))) {
                             return leaveReward(RewardChoice.Take.into(rewardSelected));
@@ -922,6 +948,124 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private void clampSelection() {
         int size = state.hand().size();
         view.selected = size == 0 ? 0 : Math.min(view.selected, size - 1);
+    }
+
+    // ===================== Son, pause, options =====================
+
+    private java.util.function.Consumer<cardistry.ui.audio.UiSound> sounds = s -> { };
+    private cardistry.ui.OptionsController options = cardistry.ui.OptionsController.inMemory(
+            cardistry.ui.Settings.defaults());
+    private int menuSelected = 0;
+    private int optionsSelected = 0;
+
+    /** Sons des touches (curseur, validation, retour). */
+    public void setSounds(java.util.function.Consumer<cardistry.ui.audio.UiSound> sounds) {
+        this.sounds = sounds;
+    }
+
+    /** Réglages modifiables depuis l'écran Options. */
+    public void setOptions(cardistry.ui.OptionsController options) {
+        this.options = options;
+    }
+
+    /** Son d'une touche : flèches = curseur, Entrée = validation, Échap = retour. */
+    private void keySound(KeyStroke key) {
+        switch (key.getKeyType()) {
+            case ArrowLeft, ArrowRight, ArrowUp, ArrowDown -> sounds.accept(cardistry.ui.audio.UiSound.CURSOR);
+            case Enter -> sounds.accept(cardistry.ui.audio.UiSound.CONFIRM);
+            case Escape -> sounds.accept(cardistry.ui.audio.UiSound.BACK);
+            default -> {
+            }
+        }
+    }
+
+    /** Entrées du menu pause. */
+    static final List<String> PAUSE_ENTRIES = List.of("Reprendre", "Options", "Quitter");
+
+    /**
+     * Menu pause (Échap au niveau principal) : Reprendre, Options, Quitter (avec confirmation).
+     * Échap ou « Reprendre » revient où on était.
+     */
+    private void pauseMenu() {
+        Page previous = page;
+        menuSelected = 0;
+        page = Page.PAUSE;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowUp -> menuSelected = Math.floorMod(menuSelected - 1, PAUSE_ENTRIES.size());
+                case ArrowDown -> menuSelected = Math.floorMod(menuSelected + 1, PAUSE_ENTRIES.size());
+                case Escape -> {
+                    page = previous;
+                    render();
+                    return;
+                }
+                case Enter -> {
+                    switch (menuSelected) {
+                        case 0 -> {
+                            page = previous;
+                            render();
+                            return;
+                        }
+                        case 1 -> {
+                            optionsMenu();
+                            page = Page.PAUSE;
+                        }
+                        default -> confirmQuit();
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    /** Lignes de l'écran Options : musique, effets, muet, retour. */
+    static final int OPTION_ROWS = 4;
+
+    /** Écran Options : ↑/↓ choisir, ←/→ régler, Entrée (muet, retour), Échap retour. Appliqué en direct. */
+    private void optionsMenu() {
+        Page previous = page;
+        optionsSelected = 0;
+        page = Page.OPTIONS;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            cardistry.ui.Settings s = options.settings();
+            switch (key.getKeyType()) {
+                case ArrowUp -> optionsSelected = Math.floorMod(optionsSelected - 1, OPTION_ROWS);
+                case ArrowDown -> optionsSelected = Math.floorMod(optionsSelected + 1, OPTION_ROWS);
+                case ArrowLeft, ArrowRight -> {
+                    int delta = key.getKeyType() == KeyType.ArrowRight ? 1 : -1;
+                    switch (optionsSelected) {
+                        case 0 -> options.apply(s.withMusic(s.music() + delta));
+                        case 1 -> options.apply(s.withEffects(s.effects() + delta));
+                        case 2 -> options.apply(s.withMuted(!s.muted()));
+                        default -> {
+                        }
+                    }
+                }
+                case Enter -> {
+                    if (optionsSelected == 2) {
+                        options.apply(s.withMuted(!s.muted()));
+                    } else if (optionsSelected == 3) {
+                        page = previous;
+                        render();
+                        return;
+                    }
+                }
+                case Escape -> {
+                    page = previous;
+                    render();
+                    return;
+                }
+                default -> {
+                }
+            }
+            render();
+        }
     }
 
     private void confirmQuit() {
@@ -1153,7 +1297,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 MenuScreens.tooSmall(painter);
             } else {
                 switch (page) {
-                    case TITLE -> MenuScreens.title(painter, seed, titleCodes);
+                    case TITLE -> MenuScreens.title(painter, seed, titleCodes, titleSelected);
                     case RULES -> MenuScreens.rules(painter, state);
                     case COMBAT -> {
                         if (state != null) {
@@ -1165,6 +1309,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case REPLACE -> ItemScreens.replace(painter, state, replaceTarget, replaceSelected, seed);
                     case STORY -> StoryScreen.choices(painter, state, story, storySelected, seed);
                     case STORY_RESULT -> StoryScreen.result(painter, state, storyResult, seed);
+                    case PAUSE -> MenuScreens.pause(painter, menuSelected, seed);
+                    case OPTIONS -> MenuScreens.options(painter, options.settings(), optionsSelected, seed);
                     case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
@@ -1202,6 +1348,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     if (key.getKeyType() == KeyType.EOF) {
                         throw new QuitGameException();
                     }
+                    keySound(key);
                     return key;
                 }
                 if (screen.doResizeIfNecessary() != null) {

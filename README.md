@@ -27,6 +27,15 @@ de caractères avec une police pixel embarquée (aucun scintillement), et peut a
 > `./gradlew run` lance aussi le jeu ; en `--terminal`, Gradle ne transmet pas un vrai terminal et le
 > jeu passe en mode texte.
 
+### Menus
+
+- Écran titre : **Jouer**, **Règles**, **Options**, **Quitter** (↑/↓ ou ←/→, Entrée ; R et Q en raccourci).
+- En jeu, **Échap** ouvre le menu **pause** (Reprendre, Options, Quitter) sur la carte, en combat, à la
+  Sieste, dans un événement et sur les écrans de récompense. Dans un sous-écran (remplacer un objet,
+  faire le tri, inventaire…), Échap annule d'abord ; au shop, Échap fait partir.
+- **Options** : volume de la musique et des effets (0 à 10, ←/→, appliqué tout de suite) et son coupé.
+  Sauvegardé dans `settings.txt`, à côté des déblocages. En mode texte : taper `options` à l'écran titre.
+
 ### Dans la fenêtre
 
 | Touche | Effet |
@@ -50,6 +59,8 @@ quitte le jeu (les déblocages sont déjà sauvegardés).
 | `--no-ui` | mode texte simple |
 | `--crt` | fenêtre : filtre CRT activé au départ (désactivé par défaut) |
 | `--no-images` | fenêtre : sprites ASCII même quand une image existe |
+| `--mute` | sans aucun son (cette session seulement) |
+| `--no-music` | sans musique, effets gardés (cette session seulement) |
 | `--ascii` | ASCII pur (cadres `+-|`, barres `#`, accents retirés) |
 | `--no-color` | mode texte sans couleurs ANSI |
 | `--window` | ancien nom de la fenêtre (c'est le mode par défaut) |
@@ -131,6 +142,53 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
 - Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône de 2×1 cellules, ex. 14×14 px),
   affichée dans l'inventaire, les récompenses et le shop.
 - `./play --sprites` montre l'image et son repli ASCII côte à côte.
+
+## Sons et musiques
+
+Le son passe par une seule sortie audio (44,1 kHz stéréo) : il marche dans la fenêtre, en `--terminal` et
+en `--no-ui`, sous Linux (PipeWire, PulseAudio), macOS et Windows. Sans carte son, le jeu tourne
+simplement en silence. Les tests ne jouent jamais de son.
+
+**Les sons actuels sont des placeholders générés** (bips et petites boucles chiptune) :
+`tools/generate-sounds.sh` les recrée (Java + ffmpeg avec libvorbis).
+
+### Ajouter ou remplacer un son
+
+1. Mettre le fichier dans `src/main/resources/audio/` (`sfx/` pour les effets, `music/` pour les
+   musiques).
+2. Le déclarer dans **`src/main/resources/audio/sounds.txt`**, la table nom → fichier :
+
+   ```
+   music.combat = music/combat.ogg ; loop=4.0      point de boucle (secondes)
+   music.victory = music/victory.ogg ; loop=no     jouée une seule fois (jingle)
+   sfx.card.fire = sfx/card-fire.wav ; volume=0.8  volume propre à ce son (0 à 1)
+   sfx.choomah = sfx/choomah-1.wav, sfx/choomah-2.wav   variantes, jouées chacune à son tour
+   ```
+
+   Les noms (`music.*`, `sfx.*`) sont ceux que le jeu demande : garder le nom, changer le fichier. Un
+   fichier ou une ligne absente donne du silence, jamais une erreur.
+
+| | Effets | Musiques |
+|---|---|---|
+| Format | **WAV** PCM 16 bits | **OGG Vorbis** (qualité 4 à 6) ; WAV accepté |
+| Fréquence | 44,1 kHz (22,05 kHz possible) | 44,1 kHz |
+| Canaux | mono conseillé | stéréo |
+| Niveau | crête vers **−3 dBFS** | environ **−16 LUFS** intégré, crêtes sous **−1 dBFS** |
+| Durée | court ; **pas de silence au début** (sinon le son paraît en retard) | boucle de 30 s à 2 min |
+
+- **Boucles** : la musique reprend au point `loop=` (0 par défaut) quand elle arrive au bout. Pour une
+  boucle propre : couper sur un temps fort, sans fondu ni silence à la fin, et faire coïncider la fin
+  avec le point de boucle (pas de clic : couper sur un passage à zéro). Une intro qui ne doit pas se
+  répéter va avant le point de boucle.
+- Les **sons fréquents** (curseur, pioche, gain de Choomies) sont réglés plus bas dans la table
+  (`volume=0.35` à `0.4`) : garder ce genre de réglage pour qu'ils restent discrets.
+- Changement d'écran : fondu enchaîné de 1,5 s entre deux musiques.
+- Licence : n'ajouter que des sons dont on a le droit (les siens, CC0, CC-BY avec crédit dans ce README).
+
+### Composants tiers
+
+Polices et bibliothèques OGG (JOrbis, VorbisSPI, Tritonus-share, sous LGPL, livrées comme jars
+séparés) : voir [`licenses/THIRD-PARTY.md`](licenses/THIRD-PARTY.md).
 
 ## Développement
 
