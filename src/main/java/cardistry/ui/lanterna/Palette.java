@@ -29,6 +29,7 @@ final class Palette {
             case FIRE -> TextColor.ANSI.RED_BRIGHT;
             case WATER -> TextColor.ANSI.BLUE_BRIGHT;
             case NATURE -> TextColor.ANSI.GREEN_BRIGHT;
+            case NEUTRAL -> TextColor.ANSI.WHITE;
         };
     }
 

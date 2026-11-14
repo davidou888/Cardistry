@@ -45,6 +45,7 @@ class TrinketContentTest {
             case FIRE -> new TerrainCard("Forêt", NATURE);
             case WATER -> new TerrainCard("EPFL", FIRE);
             case NATURE -> new TerrainCard("Marécage", WATER);
+            case NEUTRAL -> new TerrainCard("EPFL", FIRE);
         };
         state = new GameState(new Player(100), List.of(enemy, new Enemy("Suivant", FIRE, 100, 10)), neutral, hand,
                 new Stats());

@@ -75,6 +75,9 @@ public final class ElementRules {
 
     /** Multiplicateur de l'attaque d'un adversaire selon le terrain. */
     public static double terrainAttackMultiplier(Element terrain, Element enemy) {
+        if (enemy == Element.NEUTRAL) {
+            return NEUTRAL; // les terrains n'ont aucun effet sur un adversaire neutre
+        }
         if (terrain == enemy) {
             return TERRAIN_STRENGTHENS;
         } else if (terrain.beats(enemy)) {

@@ -1,10 +1,20 @@
 package cardistry.model;
 
-/** Les trois éléments du jeu. Cycle : Feu > Nature > Eau > Feu. */
+import java.util.List;
+
+/**
+ * Éléments du jeu. Cycle : Feu > Plante > Eau > Feu. {@link #NEUTRAL} n'existe que pour des
+ * adversaires : il ne bat rien et n'est battu par rien (×1 contre tout sort, terrain sans effet).
+ * L'élément nature s'affiche « plante ».
+ */
 public enum Element {
     FIRE("feu"),
     WATER("eau"),
-    NATURE("nature");
+    NATURE("plante"),
+    NEUTRAL("neutre");
+
+    /** Éléments des cartes, terrains et soins (tout sauf {@link #NEUTRAL}). */
+    public static final List<Element> PLAYABLE = List.of(FIRE, WATER, NATURE);
 
     private final String displayName;
 
@@ -23,6 +33,7 @@ public enum Element {
             case FIRE -> other == NATURE;
             case NATURE -> other == WATER;
             case WATER -> other == FIRE;
+            case NEUTRAL -> false;
         };
     }
 }

@@ -30,6 +30,7 @@ public final class Ansi {
             case FIRE -> RED;
             case WATER -> BLUE;
             case NATURE -> GREEN;
+            case NEUTRAL -> "";
         };
         return color + text + END_COLOR;
     }

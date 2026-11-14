@@ -46,7 +46,7 @@ public final class ItemRegistry {
                         .percent(StatType.WATER_DAMAGE, 0.25)
                         .build(),
                 Trinket.builder("plante-du-rolex", "Plante du Rolex", COMMON)
-                        .description("+25 % dégâts nature")
+                        .description("+25 % dégâts plante")
                         .tags(Tag.NATURE, Tag.EPFL)
                         .percent(StatType.NATURE_DAMAGE, 0.25)
                         .build(),
@@ -204,7 +204,7 @@ public final class ItemRegistry {
                                 ctx.state().playerStats().removeBySource(source);
                                 double bonus = 0.1 * event.drunkenness();
                                 if (bonus > 0) {
-                                    for (Element element : Element.values()) {
+                                    for (Element element : Element.PLAYABLE) {
                                         ctx.state().playerStats().add(
                                                 StatModifier.percent(StatType.damageMultiplier(element), bonus, source));
                                     }
@@ -377,7 +377,7 @@ public final class ItemRegistry {
                         ctx -> ctx.drawCards(2)),
                 new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,
                         Set.of(Tag.EPFL),
-                        ctx -> ctx.elementalDamage(20, ctx.rng().pick(List.of(Element.values())))));
+                        ctx -> ctx.elementalDamage(20, ctx.rng().pick(Element.PLAYABLE))));
     }
 
     /** Tous les objets et trinkets. */

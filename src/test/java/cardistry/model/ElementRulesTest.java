@@ -19,6 +19,9 @@ class ElementRulesTest {
         "NATURE, FIRE,   0.5",
         "NATURE, WATER,  1.5",
         "NATURE, NATURE, 1.0",
+        "FIRE,   NEUTRAL, 1.0",
+        "WATER,  NEUTRAL, 1.0",
+        "NATURE, NEUTRAL, 1.0",
     })
     void spellMultiplier(Element spell, Element enemy, double expected) {
         assertEquals(expected, ElementRules.spellMultiplier(spell, enemy));
@@ -51,8 +54,21 @@ class ElementRulesTest {
         "NATURE, FIRE,   1.0",
         "NATURE, WATER,  0.75",
         "NATURE, NATURE, 1.25",
+        "FIRE,   NEUTRAL, 1.0",
+        "WATER,  NEUTRAL, 1.0",
+        "NATURE, NEUTRAL, 1.0",
     })
     void terrainAttackMultiplier(Element terrain, Element enemy, double expected) {
         assertEquals(expected, ElementRules.terrainAttackMultiplier(terrain, enemy));
+    }
+
+    @org.junit.jupiter.api.Test
+    void neutreNeBatRienEtNEstBattuParRien() {
+        for (Element element : Element.values()) {
+            org.junit.jupiter.api.Assertions.assertFalse(Element.NEUTRAL.beats(element));
+            org.junit.jupiter.api.Assertions.assertFalse(element.beats(Element.NEUTRAL));
+        }
+        assertEquals(java.util.List.of(Element.FIRE, Element.WATER, Element.NATURE), Element.PLAYABLE);
+        assertEquals("plante", Element.NATURE.displayName());
     }
 }

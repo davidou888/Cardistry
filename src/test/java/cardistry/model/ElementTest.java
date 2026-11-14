@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -22,10 +21,10 @@ class ElementTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Element.class)
+    @EnumSource(value = Element.class, names = {"FIRE", "WATER", "NATURE"})
     void chaqueElementBatExactementUnAutreEtEstBattuParExactementUnAutre(Element element) {
         assertFalse(element.beats(element));
-        assertEquals(1, Arrays.stream(Element.values()).filter(element::beats).count());
-        assertEquals(1, Arrays.stream(Element.values()).filter(other -> other.beats(element)).count());
+        assertEquals(1, Element.PLAYABLE.stream().filter(element::beats).count());
+        assertEquals(1, Element.PLAYABLE.stream().filter(other -> other.beats(element)).count());
     }
 }

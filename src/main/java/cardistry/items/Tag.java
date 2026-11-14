@@ -4,7 +4,7 @@ package cardistry.items;
 public enum Tag {
     FIRE("Feu"),
     WATER("Eau"),
-    NATURE("Nature"),
+    NATURE("Plante"),
     HEAL("Soin"),
     DRAW("Pioche"),
     TERRAIN("Terrain"),

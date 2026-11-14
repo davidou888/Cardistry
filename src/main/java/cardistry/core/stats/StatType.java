@@ -66,6 +66,7 @@ public enum StatType {
             case FIRE -> FIRE_HEAL;
             case WATER -> WATER_HEAL;
             case NATURE -> NATURE_HEAL;
+            case NEUTRAL -> throw new IllegalArgumentException("Aucun soin neutre");
         };
     }
 
@@ -75,6 +76,7 @@ public enum StatType {
             case FIRE -> FIRE_DAMAGE;
             case WATER -> WATER_DAMAGE;
             case NATURE -> NATURE_DAMAGE;
+            case NEUTRAL -> throw new IllegalArgumentException("Aucun sort neutre");
         };
     }
 }

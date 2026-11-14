@@ -38,8 +38,8 @@ final class MenuScreens {
 
     private static String elementsLine() {
         StringBuilder line = new StringBuilder();
-        for (Element winner : Element.values()) {
-            for (Element loser : Element.values()) {
+        for (Element winner : Element.PLAYABLE) {
+            for (Element loser : Element.PLAYABLE) {
                 if (winner.beats(loser)) {
                     if (!line.isEmpty()) {
                         line.append(" · ");
