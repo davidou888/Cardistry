@@ -94,6 +94,33 @@ class WindowScreenshotTest {
     }
 
     @Test
+    void recompenseEtShopDansLaFenetre() throws IOException {
+        DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(100, 32));
+        ImageLayer layer = new ImageLayer();
+        LanternaUi ui = new LanternaUi(terminal, true, false, layer);
+        GameState state = GameState.newGame();
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(4), new EventBus());
+        engine.start();
+        java.util.List<cardistry.items.Collectible> options = new java.util.ArrayList<>();
+        for (cardistry.items.Rarity rarity : java.util.List.of(cardistry.items.Rarity.COMMON,
+                cardistry.items.Rarity.RARE, cardistry.items.Rarity.LEGENDARY)) {
+            options.add(cardistry.items.ItemRegistry.trinkets().stream().filter(t -> t.rarity() == rarity)
+                    .findFirst().orElseThrow());
+        }
+        terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('s', false, false));
+        ui.chooseReward(state, options);
+        GridRenderer renderer = new GridRenderer(new CellFonts(2));
+        save(renderer.render(terminal, layer.snapshot(), layer.marks(), false), "89-fenetre-recompense");
+
+        engine.openShop();
+        terminal.addInput(new com.googlecode.lanterna.input.KeyStroke(com.googlecode.lanterna.input.KeyType.Escape));
+        ui.chooseShopAction(state, engine.shop().orElseThrow(), 75);
+        save(renderer.render(terminal, layer.snapshot(), layer.marks(), false), "90-fenetre-shop");
+        ui.close();
+        assertTrue(Files.exists(Path.of("build/screens/90-fenetre-shop.png")));
+    }
+
+    @Test
     void carteDansLaFenetre() throws IOException {
         mapScreenshot(100, 32, "82-fenetre-carte");
         mapScreenshot(80, 24, "83-fenetre-carte-80x24");

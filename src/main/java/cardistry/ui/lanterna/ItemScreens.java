@@ -56,8 +56,7 @@ final class ItemScreens {
         int left = Math.max(2, (p.cols() - total) / 2);
         for (int i = 0; i < options.size(); i++) {
             boolean isSelected = i == selected;
-            CombatScreen.drawCard(p, left + i * (width + 2), isSelected ? 6 : 7, width, i + 1, options.get(i),
-                    isSelected, false);
+            card(p, left + i * (width + 2), isSelected ? 6 : 7, width, i + 1, options.get(i), isSelected);
         }
         p.text(2, 15, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
     }
@@ -73,10 +72,19 @@ final class ItemScreens {
         int left = Math.max(2, (p.cols() - total) / 2);
         for (int i = 0; i < options.size(); i++) {
             boolean isSelected = i == selected;
-            CombatScreen.drawCard(p, left + i * (width + 2), isSelected ? 5 : 6, width, i + 1, options.get(i),
-                    isSelected, false);
+            card(p, left + i * (width + 2), isSelected ? 5 : 6, width, i + 1, options.get(i), isSelected);
         }
         p.text(2, 14, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
+    }
+
+    /** Carte à choisir : illustrée dans la fenêtre (comme en combat), en texte dans le terminal. */
+    private static void card(Painter p, int col, int row, int width, int number, cardistry.model.card.Card card,
+            boolean selected) {
+        if (p.hasImages()) {
+            CombatWindowScreen.card(p, col, row, width, 8, number, card, selected, false);
+        } else {
+            CombatScreen.drawCard(p, col, row, width, number, card, selected, false);
+        }
     }
 
     /** Colonnes de la liste du deck (« Faire le tri »). */
@@ -189,7 +197,7 @@ final class ItemScreens {
         }
         p.text(5, row, prefix, Palette.DIM);
         int col = 5 + prefix.length();
-        col += p.icon(col, row, c.id());
+        col += p.icon(col, row, c);
         p.text(col, row, c.name(), Palette.rarity(c.rarity()), true);
         col += c.name().length();
         String rest = "  " + c.rarity().displayName() + " · " + tags(c) + " — " + c.description() + suffix;
@@ -215,17 +223,26 @@ final class ItemScreens {
     private static void drawCard(Painter p, int col, int row, int width, Collectible c, boolean selected) {
         int inner = width - 2;
         p.box(col, row, width, CARD_HEIGHT, Palette.rarity(c.rarity()), selected);
-        p.icon(col + width - 1 - Painter.ICON_WIDTH, row, c.id()); // dans le bord du haut, à droite
         int last = row + CARD_HEIGHT - 3; // dernière ligne de texte libre (la suivante = tags)
         int r = row + 1;
-        p.text(col + 1, r++, Painter.fit(c.kindName() + " · " + c.rarity().displayName(), inner),
-                Palette.rarity(c.rarity()));
+        int nameEnd = row + 4;
+        if (p.hasImages()) {
+            // Fenêtre : icône encadrée à la couleur de rareté, catégorie et rareté à côté.
+            CombatWindowScreen.slot(p, col + 1, row + 1, c);
+            int side = col + 2 + CombatWindowScreen.SLOT_COLS;
+            p.text(side, r++, Painter.fit(c.kindName(), col + width - 1 - side), Palette.rarity(c.rarity()));
+            p.text(side, r++, Painter.fit(c.rarity().displayName(), col + width - 1 - side), Palette.rarity(c.rarity()));
+            nameEnd = row + 5;
+        } else {
+            p.text(col + 1, r++, Painter.fit(c.kindName() + " · " + c.rarity().displayName(), inner),
+                    Palette.rarity(c.rarity()));
+        }
         for (String line : Format.wrap(c.name(), inner)) {
-            if (r < row + 4) {
+            if (r < nameEnd) {
                 p.text(col + 1, r++, line, Palette.TEXT, true);
             }
         }
-        r = Math.max(r, row + 4);
+        r = Math.max(r, nameEnd);
         for (String line : Format.wrap(c.description(), inner)) {
             if (r <= last) {
                 p.text(col + 1, r++, line, Palette.TEXT);

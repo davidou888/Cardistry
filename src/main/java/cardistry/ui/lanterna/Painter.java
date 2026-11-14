@@ -37,17 +37,13 @@ final class Painter {
     static final int ICON_WIDTH = 2;
 
     /**
-     * Icône de l'objet ou du trinket {@code id} à ({@code col}, {@code row}), si elle existe.
+     * Petite icône (une ligne) de l'objet ou du trinket à ({@code col}, {@code row}) : son image, sinon
+     * le placeholder de sa catégorie. Rien en terminal.
      *
      * @return colonnes occupées (icône + espace), 0 sans icône
      */
-    int icon(int col, int row, String id) {
-        if (images == null) {
-            return 0;
-        }
-        return cardistry.ui.window.Images.item(id)
-                .filter(path -> image(col, row, ICON_WIDTH, 1, path, null, 1f))
-                .map(path -> ICON_WIDTH + 1).orElse(0);
+    int icon(int col, int row, cardistry.items.Collectible content) {
+        return image(col, row, ICON_WIDTH, 1, CombatWindowScreen.icon(content), null, 1f) ? ICON_WIDTH + 1 : 0;
     }
 
     /** {@code true} si ce dessin peut afficher des images (fenêtre, images activées). */

@@ -1237,10 +1237,63 @@ class LanternaUiTest {
         assertEquals("items/mate.png", inventory.get(0).path());
         assertEquals(Painter.ICON_WIDTH, inventory.get(0).cols());
         assertEquals(1, inventory.get(0).rows());
-        List<cardistry.ui.window.ImageLayer.Placement> reward = drawn(p -> ItemScreens.reward(p, state,
-                List.of(mate(), ItemRegistry.trinket("pax")), 0, 1));
-        assertEquals(1, reward.size(), "seul Maté a une icône");
         assertTrue(drawn(p -> ItemScreens.inventory(p, withInventory(List.of(), List.of()))).isEmpty());
+        List<cardistry.ui.window.ImageLayer.Placement> trinkets = drawn(p -> ItemScreens.inventory(p,
+                withInventory(List.of(), List.of(ItemRegistry.trinket("pax")))));
+        assertEquals("ui/trinket.png", trinkets.get(0).path(), "sans image : le placeholder de la catégorie");
+    }
+
+    /** Marques posées par un dessin (cadres de rareté, icônes encadrées). */
+    private static List<cardistry.ui.window.ImageLayer.Mark> marked(java.util.function.Consumer<Painter> draw) {
+        DefaultVirtualTerminal t = new DefaultVirtualTerminal(new TerminalSize(80, 30));
+        cardistry.ui.window.ImageLayer images = new cardistry.ui.window.ImageLayer();
+        images.begin();
+        draw.accept(new Painter(t.newTextGraphics(), new TerminalSize(80, 30), false, images));
+        images.commit();
+        return images.marks();
+    }
+
+    private static boolean framed(List<cardistry.ui.window.ImageLayer.Mark> marks, Rarity rarity) {
+        return marks.stream().anyMatch(m -> m instanceof cardistry.ui.window.ImageLayer.Fill f
+                && f.color().equals(rgb(Palette.rarity(rarity))));
+    }
+
+    @Test
+    void memeCodeCouleurDeRareteDansLesRecompensesEtLeShop() {
+        GameState state = withInventory(List.of(mate()), List.of());
+        Trinket rare = ItemRegistry.trinkets().stream().filter(t -> t.rarity() == Rarity.RARE).findFirst().orElseThrow();
+        List<cardistry.ui.window.ImageLayer.Mark> reward = marked(p -> ItemScreens.reward(p, state,
+                List.of(mate(), rare), 0, 1));
+        assertTrue(framed(reward, mate().rarity()) && framed(reward, Rarity.RARE), "cadres de rareté");
+        assertEquals(List.of("items/mate.png", "ui/trinket.png"), reward.stream()
+                .filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp)
+                .map(m -> ((cardistry.ui.window.ImageLayer.Stamp) m).path()).toList());
+
+        cardistry.core.CombatEngine engine = shopEngine(500, 0);
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        List<Rarity> onSale = shop.offers().stream()
+                .filter(o -> o instanceof cardistry.core.shop.ShopOffer.CollectibleOffer)
+                .map(o -> ((cardistry.core.shop.ShopOffer.CollectibleOffer) o).collectible().rarity()).toList();
+        List<cardistry.ui.window.ImageLayer.Mark> shopMarks = marked(p -> ShopScreen.draw(p, engine.state(), shop, 0,
+                75, 1, null));
+        for (Rarity rarity : onSale) {
+            assertTrue(framed(shopMarks, rarity), "cadre " + rarity + " au shop");
+        }
+        assertEquals(onSale.size(), shopMarks.stream()
+                .filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp).count(), "une icône par article");
+        List<cardistry.ui.window.ImageLayer.Placement> shopImages = drawn(p -> ShopScreen.draw(p, engine.state(),
+                shop, 0, 75, 1, null));
+        assertEquals(2 * cardistry.core.Shop.CARDS, shopImages.size(), "illustration + icône de type par carte");
+        assertTrue(shopImages.stream().anyMatch(i -> i.tint() != null), "illustration à la couleur de l'élément");
+    }
+
+    @Test
+    void cartesIllustreesDansLesChoixDeCartes() {
+        GameState state = withInventory(List.of(), List.of());
+        List<cardistry.ui.window.ImageLayer.Placement> images = drawn(p -> ItemScreens.cardReward(p, state,
+                List.of(new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE)), 0, 1));
+        assertEquals(2, images.stream().filter(i -> i.path().equals("ui/type-heal.png")).count());
+        assertEquals(2, images.stream().filter(i -> i.path().equals("ui/type-terrain.png")).count());
     }
 
     // --- Événements ---

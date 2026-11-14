@@ -50,8 +50,12 @@ final class ShopScreen {
                 p.box(col, CARD_TOP + 1, width, 6, Palette.DIM, false);
                 p.text(col + (width - 5) / 2, CARD_TOP + 3, "vendu", Palette.DIM);
             } else {
-                CombatScreen.drawCard(p, col, isSelected ? CARD_TOP : CARD_TOP + 1, width, i + 1, offer.card(),
-                        isSelected, false);
+                int top = isSelected ? CARD_TOP : CARD_TOP + 1;
+                if (p.hasImages()) {
+                    CombatWindowScreen.card(p, col, top, width, 6, i + 1, offer.card(), isSelected, false);
+                } else {
+                    CombatScreen.drawCard(p, col, top, width, i + 1, offer.card(), isSelected, false);
+                }
             }
             String price = shop.isSold(i) ? "" : offer.price() + " Ch.";
             p.text(col + (width - price.length()) / 2, CARD_TOP + 7, price, priceColor(state, offer), isSelected);
@@ -89,7 +93,12 @@ final class ShopScreen {
                 p.text(col, row, Painter.fit(c.name() + " — vendu", 30), Palette.DIM);
                 continue;
             }
-            int icon = p.icon(col, row, c.id());
+            int icon = 0;
+            if (p.hasImages()) { // fenêtre : icône encadrée à la couleur de rareté, sur 2 lignes
+                CombatWindowScreen.slot(p, col, row, c);
+                icon = CombatWindowScreen.SLOT_COLS + 1;
+                p.text(col + icon, row + 1, Painter.fit(c.rarity().displayName(), 22 - icon), Palette.DIM);
+            }
             String name = Painter.fit(c.name(), 22 - icon);
             p.text(col + icon, row, name, Palette.rarity(c.rarity()), isSelected);
             p.text(col + 24, row, offer.price() + " Ch.", priceColor(state, offer), isSelected);

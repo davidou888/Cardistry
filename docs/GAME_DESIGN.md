@@ -136,13 +136,15 @@ Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
+La couleur de rareté est la même partout : texte en terminal ; dans la fenêtre, cadre de l'icône en combat, dans les récompenses et au shop. La couleur d'élément (feu rouge, eau bleu, plante vert, neutre gris) est réservée aux cadres de cartes.
+
 | Rareté | Couleur | Poids drop (indicatif) | Prix shop (indicatif) |
 |---|---|---|---|
 | Commun | blanc | 60 | 50 |
 | Peu commun | vert | 25 | 80 |
 | Rare | bleu | 12 | 130 |
 | Légendaire | jaune | 3 | 200 |
-| Secret | ??? | seulement une fois débloqué (poids 2), voir `docs/SECRETS.md` | — |
+| Secret | magenta | seulement une fois débloqué (poids 2), voir `docs/SECRETS.md` | — |
 
 ### Synergies
 - Chaque objet/trinket porte des **tags** (élément, archétype : Brûlure, Soin, Terrain, Pioche…).

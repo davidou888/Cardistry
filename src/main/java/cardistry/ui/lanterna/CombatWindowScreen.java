@@ -372,10 +372,10 @@ final class CombatWindowScreen {
 
     /**
      * Emplacement d'icône de {@link #SLOT_COLS} × 2 cellules : fond sombre, cadre d'un pixel à la couleur
-     * de rareté, icône au centre ({@code images/items/<id>.png}, sinon {@code fallback}). {@code null} :
-     * emplacement vide, cadre en tirets.
+     * de rareté, icône au centre ({@link #icon}). {@code null} : emplacement vide, cadre en tirets. Le
+     * même dessin sert en combat, dans les récompenses et au shop.
      */
-    static void slot(Painter p, int col, int row, Collectible content, String fallback) {
+    static void slot(Painter p, int col, int row, Collectible content) {
         int x = col * ImageLayer.UNITS_PER_COL;
         int y = row * ImageLayer.UNITS_PER_ROW;
         int w = SLOT_COLS * ImageLayer.UNITS_PER_COL;
@@ -397,7 +397,12 @@ final class CombatWindowScreen {
         p.fill(x, y + h - 1, w, 1, rarity);
         p.fill(x, y, 1, h, rarity);
         p.fill(x + w - 1, y, 1, h, rarity);
-        p.stamp(x + w / 2, y + h / 2, w - 4, Images.item(content.id()).orElse(fallback), 1f);
+        p.stamp(x + w / 2, y + h / 2, w - 4, icon(content), 1f);
+    }
+
+    /** Icône d'un objet ou trinket : {@code images/items/<id>.png}, sinon le placeholder de sa catégorie. */
+    static String icon(Collectible content) {
+        return Images.item(content.id()).orElse(content instanceof Item ? "ui/item.png" : "ui/trinket.png");
     }
 
     /** Texte à droite du paquet : « 5/20 clopes », la jauge d'un trinket si elle tient, et les touches. */
@@ -424,7 +429,7 @@ final class CombatWindowScreen {
         int col = 2;
         for (int i = 0; i < itemSlots && col + SLOT_COLS + 4 + nameWidth <= packCol - trinketSlots * SLOT_COLS; i++) {
             Item item = i < state.items().size() ? state.items().get(i) : null;
-            slot(p, col, row, item, "ui/item.png");
+            slot(p, col, row, item);
             if (item != null) {
                 p.text(col + SLOT_COLS + 1, row, Painter.fit(item.name(), nameWidth), Palette.rarity(item.rarity()), true);
             } else {
@@ -438,7 +443,7 @@ final class CombatWindowScreen {
         col += 2;
         for (int i = 0; i < trinketSlots && col + SLOT_COLS <= packCol - 1; i++) {
             Trinket trinket = i < state.trinkets().size() ? state.trinkets().get(i) : null;
-            slot(p, col, row, trinket, "ui/trinket.png");
+            slot(p, col, row, trinket);
             col += SLOT_COLS;
         }
         p.text(col, row, "│", Palette.DIM);

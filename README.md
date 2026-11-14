@@ -188,6 +188,8 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
   icône de type (`images/ui/type-*.png`, 8×8 px) et un cadre à la couleur de l'élément ; une barre
   d'icônes pour les objets, les trinkets (cadre à la couleur de rareté) et les clopes. Le journal est
   fermé : une ligne « dernière action », et **J** l'ouvre en panneau (↑/↓ défiler, J ou Échap fermer).
+  Les mêmes cartes illustrées et les mêmes icônes encadrées (couleur de rareté) servent dans les
+  récompenses et au shop ; sans `images/items/<id>.png`, un placeholder par catégorie.
   Un adversaire sans image garde son sprite ASCII ; `--terminal` et `--no-images` gardent l'ancien écran.
 - Carte du monde : `src/main/resources/images/map/<type>.png` (16×16 px ; `combat`, `elite`, `boss`,
   `shop`, `rest`, `event`). Dans la fenêtre, la carte va de gauche à droite : icônes, chemins en
