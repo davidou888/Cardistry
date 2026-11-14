@@ -566,13 +566,13 @@ class LanternaUiTest {
         engine.submit(new Action.UseItem(0));   // Spritz ×2 sans plafond → 160 PV
         engine.startTurn();
         engine.startTurn();                      // Honoré 2/5
-        engine.submit(new Action.Smoke());       // 4 clopes, −5 PV
+        engine.submit(new Action.Smoke());       // 4 clopes, +5 PV ×2 (Ross), sans plafond
         ui.showStatus(state);
         String text = dump("17-clopes");
         assertTrue(text.contains("4/20 clopes"), text);
         assertTrue(text.contains("Honoré [##...]"), text);
         assertTrue(text.contains("F fumer · G rouler"));
-        assertTrue(text.contains("155/100"), text);
+        assertTrue(text.contains("170/100"), text);
         assertTrue(text.contains("┌╥──"), "1 bâton sur 5 pour 4 clopes sur 20");
     }
 

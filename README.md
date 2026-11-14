@@ -202,7 +202,7 @@ paquet de clopes.
 | ←/→ puis Entrée, ou 1-7 | jouer une carte |
 | P | piocher |
 | W / E / R | utiliser un objet |
-| F / G | fumer / rouler une clope |
+| F / G | fumer (gratuit : +5 PV, −1 Ivresse) / rouler une clope (fin du tour) |
 | J | ouvrir ou fermer le **journal** (↑/↓ pour défiler, Échap le ferme aussi) |
 | I | inventaire |
 

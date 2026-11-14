@@ -66,7 +66,7 @@ class EffectContentTest {
         assertEquals("Shot de Jäger : prochain sort ×2", state.effects().get(0).describe());
 
         engine.submit(new Action.PlayCard(0));
-        assertEquals(60, first.hp(), DELTA);
+        assertEquals(100 - 44, first.hp(), DELTA); // 20 × 1.1 (Pompette) × 2
         assertTrue(state.effects().isEmpty());
     }
 
@@ -85,10 +85,10 @@ class EffectContentTest {
     void shotDeJagerEtPtitSat() {
         setUp(List.of(new SpellCard("Sort", FIRE, 20)));
         engine.equip(ItemRegistry.trinket("ptit-sat"));
-        use("shot-de-jager"); // Ivresse 1 → +10 %
+        use("shot-de-jager"); // Ivresse 1 → +10 % (Pompette) +10 % (Ptit Sat ?)
         engine.submit(new Action.PlayCard(0));
-        // 20 × 1.1 (Ptit Sat ?) × 2 (Shot de Jäger)
-        assertEquals(100 - 44, first.hp(), DELTA);
+        // 20 × 1.2 × 2 (Shot de Jäger)
+        assertEquals(100 - 48, first.hp(), DELTA);
     }
 
     // --- Moscow Mule ---

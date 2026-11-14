@@ -62,7 +62,6 @@ public final class GameState {
     private final List<Trinket> trinkets = new ArrayList<>();
     private final List<Item> items = new ArrayList<>();
     private int drunkenness = 0;
-    private boolean hangoverThisCombat = false;
     private final java.util.Map<Curse, Integer> pendingCurses = new java.util.EnumMap<>(Curse.class);
     private final java.util.Map<Curse, Integer> activeCurses = new java.util.EnumMap<>(Curse.class);
     private int cigarettes = STARTING_CIGARETTES;
@@ -411,6 +410,7 @@ public final class GameState {
             }
         }
         refreshSets();
+        refreshDrunkTier(); // le seuil a pu changer (Foie d'ingénieur)
     }
 
     /** Nombre de trinkets équipés portant {@code tag}. */
@@ -468,6 +468,11 @@ public final class GameState {
     /** Ivresse actuelle (remise à 0 à la fin de chaque combat). */
     public int drunkenness() {
         return drunkenness;
+    }
+
+    /** Palier d'Ivresse actuel (bonus de dégâts, voir {@link DrunkTier}). */
+    public DrunkTier drunkTier() {
+        return DrunkTier.of(drunkenness, hangoverThreshold());
     }
 
     /** Ivresse à partir de laquelle on attrape une Gueule de bois (stat {@link StatType#HANGOVER_THRESHOLD}). */
@@ -728,15 +733,22 @@ public final class GameState {
 
     void setDrunkenness(int value) {
         drunkenness = value;
+        refreshDrunkTier();
     }
 
-    boolean hangoverThisCombat() {
-        return hangoverThisCombat;
+    private static final String DRUNK_SOURCE = "ivresse";
+
+    /** Applique le bonus de dégâts du palier d'Ivresse actuel (stats calculées : on retire puis on repose). */
+    private void refreshDrunkTier() {
+        playerStats.removeBySource(DRUNK_SOURCE);
+        double bonus = drunkTier().damageBonus();
+        if (bonus > 0) {
+            for (cardistry.model.Element element : cardistry.model.Element.PLAYABLE) {
+                playerStats.add(StatModifier.percent(StatType.damageMultiplier(element), bonus, DRUNK_SOURCE));
+            }
+        }
     }
 
-    void setHangoverThisCombat(boolean value) {
-        hangoverThisCombat = value;
-    }
 
     /** Ajoute une malédiction à venir (son intensité s'additionne si elle l'est déjà). */
     void addPendingCurse(Curse curse, int intensity) {

@@ -126,7 +126,7 @@ public final class TextRenderer implements Renderer {
                     + enemyName(e.enemy()) + " !");
             case GameEvent.DrunkennessChanged e -> {
                 if (e.drunkenness() > 0) {
-                    console.println("→ Ivresse : " + e.drunkenness() + "/" + e.threshold());
+                    console.println("→ " + cardistry.ui.Format.drunkenness(lastState));
                 }
             }
             case GameEvent.AbilityTriggered e -> console.println(Ansi.MAGENTA + "✦ " + e.message() + Ansi.END_COLOR);
@@ -288,7 +288,7 @@ public final class TextRenderer implements Renderer {
         console.println(describe(state.terrain()));
         console.println();
         if (state.drunkenness() > 0) {
-            console.println("Ivresse : " + state.drunkenness() + "/" + state.hangoverThreshold());
+            console.println(cardistry.ui.Format.drunkenness(state));
         }
         for (cardistry.core.Curse curse : state.activeCurses()) {
             console.println(Ansi.RED + curse.displayName() + Ansi.END_COLOR + " : "
@@ -337,7 +337,7 @@ public final class TextRenderer implements Renderer {
         }
         console.println();
         console.println("[0] Piocher une carte");
-        console.println("[f] Fumer une clope (gratuit)   [g] Rouler une clope");
+        console.println("[f] Fumer une clope (gratuit, +5 PV, −1 Ivresse)   [g] Rouler une clope");
         if (state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
             console.println("[" + ConsoleInput.UNDO + "] Ctrl+Z : annuler ton dernier tour (une fois par combat)");
         }

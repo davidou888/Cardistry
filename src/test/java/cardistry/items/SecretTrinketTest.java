@@ -272,9 +272,11 @@ class SecretTrinketTest {
     void claudeSansGoogzNeTransformeRien() {
         setUp(2, List.of(), seedWhere(r -> r < 0.2, r -> r < 0.2));
         engine.equip(ItemRegistry.trinket(ItemRegistry.CLAUDE_MD));
+        double before = state.player().hp();
+        state.player().takeDamage(20);
         engine.submit(new Action.Smoke());
         assertTrue(events.contains(new GameEvent.CigaretteSmoked(false)));
-        assertEquals(95, state.player().hp(), DELTA);
+        assertEquals(before - 20 + 5, state.player().hp(), DELTA);
     }
 
     // --- CLAUDE.md : rareté des récompenses ---

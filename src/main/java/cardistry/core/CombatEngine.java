@@ -357,25 +357,26 @@ public final class CombatEngine {
             state.setDrunkenness(0);
             bus.publish(new GameEvent.DrunkennessChanged(0, state.hangoverThreshold()));
         }
-        state.setHangoverThisCombat(false);
         for (Curse curse : state.endActiveCurses()) {
             bus.publish(new GameEvent.CurseEnded(curse));
         }
     }
 
     /**
-     * Ajoute de l'Ivresse. Au seuil, une Gueule de bois est programmée pour le combat suivant
-     * (une seule par combat ; aucune pendant le dernier combat).
+     * Ajoute de l'Ivresse (le palier et son bonus de dégâts suivent, voir {@link DrunkTier}). En
+     * atteignant le seuil (la Cuite), une Gueule de bois est programmée pour le combat suivant : une à
+     * chaque fois qu'on franchit le seuil vers le haut ; aucune pendant le dernier combat.
      */
     private void addDrunkenness(int amount) {
-        int updated = Math.max(0, state.drunkenness() + amount);
-        if (updated == state.drunkenness()) {
+        int previous = state.drunkenness();
+        int updated = Math.max(0, previous + amount);
+        if (updated == previous) {
             return;
         }
         state.setDrunkenness(updated);
         bus.publish(new GameEvent.DrunkennessChanged(state.drunkenness(), state.hangoverThreshold()));
-        if (amount > 0 && state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && !state.isFinalCombat()) {
-            state.setHangoverThisCombat(true);
+        int threshold = state.hangoverThreshold();
+        if (previous < threshold && updated >= threshold && !state.isFinalCombat()) {
             state.addPendingCurse(Curse.HANGOVER, 1);
             bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
         }
@@ -1004,9 +1005,14 @@ public final class CombatEngine {
     /** Identifiant de l'objet dont une clope transformée donne l'effet (Googz). */
     static final String PETIT_PETOU = "petit-petou";
 
+    /** PV rendus par une clope (un soin : l'efficacité des soins s'applique). */
+    public static final double CIGARETTE_HEAL = 5;
+
     /**
-     * Fumer : −5 PV bruts (ou, selon la stat {@link StatType#CIGARETTE_TRANSFORM_CHANCE}, l'effet de
-     * l'objet Petit pétou à la place), puis la Gueule de bois perd 1 d'intensité.
+     * Fumer : +{@link #CIGARETTE_HEAL} PV et −1 Ivresse (ou, selon la stat
+     * {@link StatType#CIGARETTE_TRANSFORM_CHANCE}, l'effet de l'objet Petit pétou à la place). La
+     * Gueule de bois en cours perd 1 d'intensité ; celle à venir aussi, mais seulement si l'Ivresse
+     * est repassée sous le seuil (on ne garde pas la Cuite sans la payer).
      */
     private void smoke() {
         state.setCigarettes(state.cigarettes() - 1);
@@ -1017,9 +1023,10 @@ public final class CombatEngine {
         if (transformed) {
             cardistry.items.ItemRegistry.item(PETIT_PETOU).use(effects);
         } else {
-            effects.damagePlayer(5);
+            effects.healPlayer(CIGARETTE_HEAL);
+            addDrunkenness(-1);
         }
-        if (state.player().isAlive()) {
+        if (state.activeIntensity(Curse.HANGOVER) > 0 || state.drunkenness() < state.hangoverThreshold()) {
             reduceCurse(Curse.HANGOVER);
         }
     }

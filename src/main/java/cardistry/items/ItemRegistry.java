@@ -77,7 +77,7 @@ public final class ItemRegistry {
                         .build(),
                 Trinket.builder("googz", "Googz", UNCOMMON)
                         .description("Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou"
-                                + " (son effet à la place des −5 PV)")
+                                + " (+15 PV de soin feu à la place des +5 PV)")
                         .tags(Tag.PARTY)
                         .flat(StatType.CIGARETTE_TRANSFORM_CHANCE, 0.2)
                         .build(),
@@ -165,7 +165,7 @@ public final class ItemRegistry {
                         .percent(StatType.ENEMY_DAMAGE, 0.25)
                         .build(),
                 Trinket.builder("foie-d-ingenieur", "Foie d'ingénieur", RARE)
-                        .description("Gueule de bois à 5 Ivresse au lieu de 3")
+                        .description("Cuite et Gueule de bois à 5 Ivresse au lieu de 3")
                         .tags(Tag.PARTY)
                         .flat(StatType.HANGOVER_THRESHOLD, 2)
                         .build(),
@@ -212,7 +212,7 @@ public final class ItemRegistry {
                         .build(),
                 // Comme CMS (provisoire) : s'applique aux dégâts élémentaires.
                 Trinket.builder("ptit-sat", "Ptit Sat ?", LEGENDARY)
-                        .description("+10 % dégâts par point d'Ivresse")
+                        .description("+10 % dégâts par point d'Ivresse, en plus du bonus d'Ivresse")
                         .tags(Tag.PARTY)
                         .hooks(new GameHooks() {
                             @Override

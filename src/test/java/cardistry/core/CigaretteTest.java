@@ -68,11 +68,12 @@ class CigaretteTest {
     }
 
     @Test
-    void fumerEstGratuitEtCouteCinqPv() {
+    void fumerEstGratuitEtRendCinqPv() {
         setUp();
+        state.player().takeDamage(20);
         assertEquals(ActionResult.FREE_ACTION, engine.submit(new Action.Smoke()));
         assertEquals(4, state.cigarettes());
-        assertEquals(95, state.player().hp(), DELTA);
+        assertEquals(85, state.player().hp(), DELTA);
         assertTrue(events.contains(new GameEvent.CigaretteSmoked(false)));
         assertTrue(events.contains(new GameEvent.CigarettesChanged(4, 20)));
         assertFalse(events.stream().anyMatch(GameEvent.EnemyAttacked.class::isInstance));
@@ -128,24 +129,57 @@ class CigaretteTest {
     // --- Dégâts ---
 
     @Test
-    void fumerIgnoreLePolycopie() {
+    void leSoinDeLaClopeEstPlafonneAuxPvMax() {
         setUp();
-        engine.equip(ItemRegistry.trinket("polycopie-d-analyse-i"));
+        state.player().takeDamage(2);
         smoke();
-        assertEquals(95, state.player().hp(), DELTA);
+        assertEquals(100, state.player().hp(), DELTA);
     }
 
     @Test
-    void uneClopeQuiTue() {
+    void uneClopeNeTuePlus() {
         setUp();
         state.player().takeDamage(97);
-        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.Smoke()));
-        assertTrue(state.isLost());
-        assertTrue(events.contains(new GameEvent.GameLost()));
+        assertEquals(ActionResult.FREE_ACTION, engine.submit(new Action.Smoke()));
+        assertEquals(8, state.player().hp(), DELTA);
+        assertFalse(state.isLost());
     }
 
     @Test
-    void fumerSansGueuleDeBoisNeFaitQuePerdreDesPv() {
+    void fumerRetireUnPointDIvresse() {
+        setUp();
+        drinkTimes(2);
+        smoke();
+        assertEquals(1, state.drunkenness());
+        assertEquals(DrunkTier.TIPSY, state.drunkTier());
+        smoke();
+        smoke(); // jamais sous 0
+        assertEquals(0, state.drunkenness());
+    }
+
+    @Test
+    void encoreEnCuiteApresLaClopeLaGueuleDeBoisAVenirReste() {
+        setUp();
+        drinkTimes(4); // Ivresse 4, seuil 3 : Gueule de bois à venir
+        smoke();       // Ivresse 3 : toujours la Cuite, toujours à payer
+        assertEquals(DrunkTier.WASTED, state.drunkTier());
+        assertEquals(1, state.pendingIntensity(Curse.HANGOVER));
+        smoke();       // Ivresse 2 : sous le seuil, la Gueule de bois est évitée
+        assertEquals(0, state.pendingIntensity(Curse.HANGOVER));
+    }
+
+    @Test
+    void repasserLeSeuilRamèneUneGueuleDeBois() {
+        setUp();
+        drinkTimes(3);
+        smoke();       // évitée
+        assertEquals(0, state.pendingIntensity(Curse.HANGOVER));
+        drinkTimes(1); // de nouveau la Cuite
+        assertEquals(1, state.pendingIntensity(Curse.HANGOVER));
+    }
+
+    @Test
+    void fumerSansGueuleDeBoisNeLaReduitPas() {
         setUp();
         smoke();
         assertFalse(events.stream().anyMatch(GameEvent.CurseReduced.class::isInstance));

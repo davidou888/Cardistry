@@ -76,12 +76,13 @@ class CigaretteTrinketTest {
     }
 
     @Test
-    void googzSinonCinqPvPerdus() {
+    void googzSinonCinqPvRendus() {
         setUp(EPFL, List.of(), seedWhereFirstRoll(false));
         equip("googz");
+        state.player().takeDamage(20);
         engine.submit(new Action.Smoke());
         assertTrue(events.contains(new GameEvent.CigaretteSmoked(false)));
-        assertEquals(95, state.player().hp(), DELTA);
+        assertEquals(85, state.player().hp(), DELTA);
     }
 
     @Test

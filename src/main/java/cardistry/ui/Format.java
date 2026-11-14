@@ -27,6 +27,14 @@ public final class Format {
         return state.hero().map(h -> h.name().toUpperCase(java.util.Locale.ROOT)).orElse("TOI");
     }
 
+    /** « Ivresse 2/3 · Bourré +25 % » (seulement « Ivresse 0/3 » à jeun). */
+    public static String drunkenness(cardistry.core.GameState state) {
+        cardistry.core.DrunkTier tier = state.drunkTier();
+        String text = "Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold();
+        return tier == cardistry.core.DrunkTier.SOBER ? text
+                : text + " · " + tier.displayName() + " +" + num(tier.damageBonus() * 100) + " %";
+    }
+
     public static String capitalize(String text) {
         return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }

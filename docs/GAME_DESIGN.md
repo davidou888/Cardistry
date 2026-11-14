@@ -189,16 +189,22 @@ Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte po
 
 ### Ivresse
 - Chaque **boisson** (objet tagué Boisson) donne **+1 Ivresse**. L'Ivresse retombe à 0 après chaque combat.
-- À **3 Ivresse** → malédiction **« Gueule de bois »** : −1 taille de main au prochain combat.
-- Modifiée par : Foie d'ingénieur (seuil à 5), Ptit Sat ? (+10 % dégâts par point d'Ivresse).
-- Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant (quels que soient les nœuds entre les deux : Sieste, shop…) et dure tout ce combat ; une seule par combat (l'Ivresse continue de monter au-delà du seuil) ; aucune pendant le boss final (il n'y a pas de suivant).
+- **Paliers** (`core.DrunkTier`) : l'Ivresse donne un bonus de dégâts élémentaires (comme CMS, additionné aux autres pourcentages) tant qu'elle dure :
+
+| Ivresse | Palier | Effet |
+|---|---|---|
+| 1 | Pompette | +10 % dégâts |
+| 2 jusqu'au seuil | Bourré | +25 % dégâts |
+| seuil (3) et plus | Cuite | +50 % dégâts, et **Gueule de bois** au combat suivant (−1 taille de main ; −2 pour Louis) |
+- Modifiée par : Foie d'ingénieur (Cuite et Gueule de bois à 5 : Bourré de 2 à 4), Ptit Sat ? (+10 % dégâts par point d'Ivresse, **en plus** du palier), la clope (−1 Ivresse).
+- Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant (quels que soient les nœuds entre les deux : Sieste, shop…) et dure tout ce combat ; une à chaque fois qu'on franchit le seuil vers le haut (l'Ivresse continue de monter au-delà, sans nouvelle Gueule de bois ni bonus supplémentaire) ; aucune pendant le boss final (il n'y a pas de suivant).
 - Avec la carte (environ 18 combats par run), la Gueule de bois, Foie d'ingénieur et Ptit Sat ? deviennent réellement utiles.
 
 ### Clopes
 - Ressource de run : **5 clopes** au début de chaque partie, conservées entre les combats, **20 maximum** (un paquet ; stat `CIGARETTE_MAX`).
-- **Fumer (F)** : action gratuite. −5 PV (ignorent Polycopié d'Analyse I, peuvent tuer), puis réduit la Gueule de bois de 1. On peut fumer sans Gueule de bois.
+- **Fumer (F)** : action gratuite. **+5 PV** (un soin : efficacité des soins, Ross, plafond des PV max) et **−1 Ivresse** (le palier redescend donc : on échange des dégâts contre des PV). On peut fumer à jeun.
 - **Rouler (G)** : remplace l'action du tour (comme piocher) : +1 clope, puis l'adversaire attaque. Impossible si le paquet est plein.
-- La **Gueule de bois a une intensité** (1 par défaut = −1 taille de main). Chaque clope retire 1 d'intensité ; à 0, elle disparaît. Si elle est seulement « à venir », la clope la réduit à l'avance. Si elle est à la fois active et à venir, la clope réduit d'abord celle du combat en cours.
+- La **Gueule de bois a une intensité** (1 par défaut = −1 taille de main). Chaque clope retire 1 d'intensité ; à 0, elle disparaît. Si elle est seulement « à venir », la clope la réduit à l'avance. Si elle est à la fois active et à venir, la clope réduit d'abord celle du combat en cours. Exception : tant que l'Ivresse reste au seuil ou au-dessus après la clope, la Gueule de bois à venir n'est pas réduite (on ne garde pas la Cuite sans la payer) ; repasser le seuil vers le haut en redonne une.
 - Affichage : un petit paquet ASCII en bas de l'écran, avec le nombre de clopes et les touches.
 
 ### Contenu — premier jet
@@ -224,7 +230,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Commun | Polycopié d'Analyse I | −2 dégâts à chaque attaque subie | Défense, EPFL | a |
 | Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère (validé) | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
-| Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des −5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
+| Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des +5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
 | Peu commun | Pax | +1 taille de main | Pioche, Soirée | a |
 | Peu commun | Monde Snack | +10 PV à chaque adversaire vaincu | Soin, Soirée | a |
@@ -232,12 +238,12 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Peu commun | Plan du campus | Jouer un terrain inflige aussi 5 dégâts | Terrain, EPFL | a |
 | Rare | Photocopieuse | Piocher donne 2 cartes | Pioche, EPFL | a |
 | Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Plante | a |
-| Rare | Foie d'ingénieur | Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
+| Rare | Foie d'ingénieur | Cuite et Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
 | Rare | CMS | +50 % dégâts, mais l'adversaire aussi +25 % | EPFL | a |
 | Légendaire | Ross | Tous les soins ×2 (multiplicateur final, après tous les autres bonus de soin) ; les soins ne sont plus plafonnés par les PV max | Soin | b (M9) |
 | Légendaire | Paquet de cartes | Chaque carte piochée pendant un combat devient un choix : 3 cartes tirées du pool, on en garde 1, les 2 autres sont défaussées | Méta | b (M3) |
 | Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé (effet boule de neige **voulu**, voir plus bas) | EPFL | b (M4) |
-| Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse | Soirée | b (M1) |
+| Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse, en plus du bonus d'Ivresse | Soirée | b (M1) |
 | Légendaire | Pétou ancestral | À chaque combat gagné : +8 PV (soin feu : terrain, Grinder, ×2 avec Ross). Au début de chaque combat, l'adversaire saute son premier tour (« [Adversaire] passe son tour : tu as fait tourner le j. ») | Soirée, Feu | b (M2) |
 | Légendaire | George | *« À l'origine de la redistribution des biens communs. »* À chaque carte piochée, une autre carte de ta main (tirée au hasard) est remplacée par une carte aléatoire du pool | Soirée | a |
 | Secret | 3 trinkets | voir `docs/SECRETS.md` (spoilers) | Méta | b (M5, M6, M7) |
@@ -350,6 +356,7 @@ Reste : transitions d'écran ; vrais sons et musiques.
 - **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
 - **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil. Il a un sprite (ébauche : bonnet, barbe, clope au bec) et il fume.
 - **[À DÉCIDER]** Dave : son soin profite-t-il des bonus de soin (efficacité, Ross) ou est-il brut ? *Provisoire : il en profite.*
+- Provisoire : chiffres des paliers d'Ivresse (+10 / +25 / +50 %) et de la clope (+5 PV, sans limite par tour) à ajuster en jouant.
 - **[À DÉCIDER]** Sprites des trois personnages (placeholder commun en attendant) et affichage de l'alien de Sassy.
 - **[À DÉCIDER]** Les vrais événements (les 3 actuels sont des placeholders).
 - Provisoire : rareté des cartes au shop (voir « Shop »).

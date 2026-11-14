@@ -59,6 +59,54 @@ class DrunkennessTest {
         return events.stream().filter(type::isInstance).count();
     }
 
+    // --- Paliers ---
+
+    private double fireDamage() {
+        return state.playerStats().get(StatType.FIRE_DAMAGE);
+    }
+
+    @Test
+    void paliersPompetteBourreCuite() {
+        setUp(2);
+        assertEquals(DrunkTier.SOBER, state.drunkTier());
+        assertEquals(1.0, fireDamage(), 1e-9);
+        drinkTimes(1);
+        assertEquals(DrunkTier.TIPSY, state.drunkTier());
+        assertEquals(1.10, fireDamage(), 1e-9);
+        drinkTimes(1);
+        assertEquals(DrunkTier.DRUNK, state.drunkTier());
+        assertEquals(1.25, fireDamage(), 1e-9);
+        drinkTimes(1);
+        assertEquals(DrunkTier.WASTED, state.drunkTier());
+        assertEquals(1.50, fireDamage(), 1e-9);
+        drinkTimes(2);
+        assertEquals(1.50, fireDamage(), 1e-9, "la Cuite ne monte pas plus haut");
+        assertEquals(1.50, state.playerStats().get(StatType.WATER_DAMAGE), 1e-9);
+        assertEquals(1.50, state.playerStats().get(StatType.NATURE_DAMAGE), 1e-9);
+    }
+
+    @Test
+    void leBonusDIvresseTombeALaFinDuCombat() {
+        setUp(2);
+        drinkTimes(2);
+        engine.startTurn();
+        engine.submit(new Action.PlayCard(0)); // tue : fin du combat
+        assertEquals(DrunkTier.SOBER, state.drunkTier());
+        assertEquals(1.0, fireDamage(), 1e-9);
+    }
+
+    @Test
+    void avecUnSeuilPlusHautLaCuiteArrivePlusTard() {
+        setUp(2);
+        state.playerStats().add(StatModifier.flat(StatType.HANGOVER_THRESHOLD, 2, "test"));
+        drinkTimes(4);
+        assertEquals(DrunkTier.DRUNK, state.drunkTier(), "Bourré de 2 à 4 avec un seuil à 5");
+        assertTrue(state.pendingCurses().isEmpty());
+        drinkTimes(1);
+        assertEquals(DrunkTier.WASTED, state.drunkTier());
+        assertFalse(state.pendingCurses().isEmpty());
+    }
+
     @Test
     void uneBoissonDonneUnPointDIvresse() {
         setUp(2);

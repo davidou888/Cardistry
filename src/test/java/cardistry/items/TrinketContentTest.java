@@ -275,7 +275,7 @@ class TrinketContentTest {
         equip("ptit-sat");
         drink(2);
         engine.submit(new Action.PlayCard(0));
-        assertEquals(20 * 1.2, lastDamageToEnemy(), DELTA);
+        assertEquals(20 * 1.45, lastDamageToEnemy(), DELTA); // +25 % (Bourré) +20 % (Ptit Sat ?)
     }
 
     @Test
@@ -284,7 +284,7 @@ class TrinketContentTest {
         equip("ptit-sat");
         equip("cms");
         drink(3);
-        assertEquals(1 + 0.5 + 0.3, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
+        assertEquals(1 + 0.5 + 0.3 + 0.5, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
 
         engine.submit(new Action.PlayCard(0)); // tue l'adversaire : fin du combat, Ivresse à 0
         assertEquals(1.5, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
@@ -295,11 +295,11 @@ class TrinketContentTest {
         setUp(FIRE, List.of());
         equip("ptit-sat");
         drink(2);
-        assertEquals(1.2, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
+        assertEquals(1.45, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
         Trinket ptitSat = state.trinkets().get(0);
         state.playerStats().removeBySource(ptitSat.modifierSource());
         state.playerStats().removeBySource(ptitSat.dynamicSource());
-        assertEquals(1.0, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
+        assertEquals(1.25, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
     }
 
     @Test

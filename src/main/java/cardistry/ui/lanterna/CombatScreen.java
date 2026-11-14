@@ -203,10 +203,13 @@ final class CombatScreen {
 
     /** Ligne 7, après « TOI » : Ivresse (si non nulle) et malédictions. */
     private static void drawDrunkennessAndCurses(Painter p, GameState state) {
-        int col = 2 + Format.playerLabel(state).length() + 2;
+        int col = 2 + Format.playerLabel(state).length() + 1;
         int limit = p.cols() - SPRITE_WIDTH - 3;
         if (state.drunkenness() > 0) {
-            String text = "Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold();
+            // Ligne étroite : le palier sans son pourcentage (il est dans le journal et les règles).
+            String tier = state.drunkTier().displayName();
+            String text = "Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold()
+                    + (tier.isEmpty() ? "" : " " + tier);
             boolean over = state.drunkenness() >= state.hangoverThreshold();
             p.text(col, 7, text, over ? Palette.DAMAGE : Palette.WARNING, true);
             col += text.length() + 2;

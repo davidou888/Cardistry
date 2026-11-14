@@ -190,7 +190,7 @@ final class CombatWindowScreen {
         List<StatusLine> lines = new ArrayList<>();
         if (state.drunkenness() > 0) {
             boolean over = state.drunkenness() >= state.hangoverThreshold();
-            lines.add(new StatusLine("Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold(),
+            lines.add(new StatusLine(Painter.fit(Format.drunkenness(state), width),
                     over ? Palette.DAMAGE : Palette.WARNING, true));
         }
         for (Curse curse : state.activeCurses()) {

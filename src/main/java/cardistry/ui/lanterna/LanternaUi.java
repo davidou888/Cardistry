@@ -259,7 +259,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     Palette.HEAL);
             case GameEvent.DrunkennessChanged e -> {
                 if (e.drunkenness() > 0) {
-                    view.log("Ivresse " + e.drunkenness() + "/" + e.threshold(), Palette.WARNING);
+                    view.log(state == null ? "Ivresse " + e.drunkenness() + "/" + e.threshold()
+                            : cardistry.ui.Format.drunkenness(state), Palette.WARNING);
                 }
                 render();
             }
