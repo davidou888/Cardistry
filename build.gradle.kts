@@ -153,6 +153,18 @@ val planche by tasks.registering(JavaExec::class) {
     mustRunAfter(exportArt)
 }
 
+// ./gradlew animationCheck : ouvre la vraie fenêtre, joue tout seul et trace les animations affichées.
+val animationCheck by tasks.registering(JavaExec::class) {
+    group = "art"
+    description = "Joue des combats dans la fenêtre et trace les animations réellement affichées."
+    classpath = sourceSets["test"].output.classesDirs + sourceSets["main"].runtimeClasspath
+    mainClass = "cardistry.tools.AnimationCheck"
+    systemProperty("cardistry.audio", "off")
+    if (project.hasProperty("enemies")) {
+        args((project.property("enemies") as String).split(","))
+    }
+}
+
 val art by tasks.registering {
     group = "art"
     description = "Ébauches manquantes, export des PNG et planches, en une commande."

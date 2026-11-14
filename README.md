@@ -222,6 +222,8 @@ tag qui donne le nom du PNG. Pour un adversaire, un tag = une animation (une ou 
   `enemies.lua` (dessin par formes). Pour refaire une ébauche : supprimer son tag (et sa frame).
 - `./gradlew exportArt` : réexporte tous les PNG. Aseprite est cherché dans le `PATH` ou dans la
   variable `ASEPRITE` ; s'il est absent, `generateArt` et `exportArt` sont ignorées.
+- `./gradlew animationCheck` : ouvre la vraie fenêtre, joue tout seul (carte, combats, journal) et
+  écrit la trace des animations réellement affichées ; `-Penemies=came,vafi` pour choisir les adversaires.
 - `./gradlew planche` : `art/planche.png` (toutes les icônes agrandies avec leur nom et leur id, par
   catégorie et rareté ; les manquantes sont marquées « à faire ») et `art/planche-ennemis.png` (toutes
   les frames des adversaires qui ont un sprite).

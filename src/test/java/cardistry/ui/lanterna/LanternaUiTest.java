@@ -1014,6 +1014,29 @@ class LanternaUiTest {
     }
 
     @Test
+    void framesDAnimationEnImages() {
+        // Images de test : idle ×2, attack ×1, pas de hurt ni de death.
+        assertEquals(2, cardistry.ui.window.Images.frames("test-image", "idle"));
+        assertEquals(1, cardistry.ui.window.Images.frames("test-image", "attack"));
+        assertEquals(0, cardistry.ui.window.Images.frames("test-image", "death"));
+        assertEquals("enemies/test-image.attack.1.png",
+                cardistry.ui.window.Images.enemy("test-image", "attack", 0).orElseThrow());
+        assertEquals("enemies/test-image.attack.1.png",
+                cardistry.ui.window.Images.enemy("test-image", "attack", 3).orElseThrow(),
+                "au-delà de la dernière frame : on reste sur la dernière, pas de retour à l'image de base");
+        assertEquals("enemies/test-image.png", cardistry.ui.window.Images.enemy("test-image", "hurt", 0).orElseThrow(),
+                "animation absente : image de base");
+        // Les vrais sprites ont les quatre animations (la mort se joue en images, pas en ASCII).
+        for (String id : List.of("caddie-enerve", "seau-de-fuite", "came", "paresseux", "le-peneu", "t-rex-defonce",
+                "etudiant-post-examen", "vafi")) {
+            assertEquals(2, cardistry.ui.window.Images.frames(id, "idle"), id);
+            assertEquals(2, cardistry.ui.window.Images.frames(id, "attack"), id);
+            assertEquals(1, cardistry.ui.window.Images.frames(id, "hurt"), id);
+            assertEquals(2, cardistry.ui.window.Images.frames(id, "death"), id);
+        }
+    }
+
+    @Test
     void sansImageLeSpriteAscii() throws IOException {
         openWithImages(80, 24);
         ui.showStatus(combat(List.of(), hydra())); // pas d'image pour cet adversaire

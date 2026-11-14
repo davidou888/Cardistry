@@ -1191,7 +1191,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private void animateEnemyHit(Enemy enemy, double amount) {
         double before = enemy.hp() + amount;
         int[] shake = {2, -2, 1, -1, 0, 0};
-        boolean hurtFrames = !currentSprite().frames(cardistry.ui.sprite.Sprite.HURT).isEmpty();
+        boolean hurtFrames = enemyFrames(cardistry.ui.sprite.Sprite.HURT) > 0;
         for (int i = 0; i < shake.length; i++) {
             view.enemyOffsetX = shake[i];
             view.spriteAnimation = cardistry.ui.sprite.Sprite.HURT;
@@ -1255,8 +1255,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     private void animateEnemyDeath() {
-        java.util.List<cardistry.ui.sprite.Sprite.Frame> death = currentSprite().frames(cardistry.ui.sprite.Sprite.DEATH);
-        for (int i = 0; i < death.size() * 3; i++) {
+        int death = enemyFrames(cardistry.ui.sprite.Sprite.DEATH);
+        for (int i = 0; i < death * 3; i++) {
             view.spriteAnimation = cardistry.ui.sprite.Sprite.DEATH;
             view.spriteFrame = i / 3;
             frame();
@@ -1290,6 +1290,20 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         }
         view.resetEffects();
         render();
+    }
+
+    /**
+     * Nombre de frames de l'animation de l'adversaire en cours : celles de ses images dans la fenêtre
+     * (0 s'il a des images mais pas cette animation), sinon celles de son sprite ASCII.
+     */
+    private int enemyFrames(String animation) {
+        if (images != null && state != null && state.hasEnemy()) {
+            String sprite = state.currentEnemy().spriteId();
+            if (cardistry.ui.window.Images.enemy(sprite, cardistry.ui.sprite.Sprite.IDLE, 0).isPresent()) {
+                return cardistry.ui.window.Images.frames(sprite, animation);
+            }
+        }
+        return currentSprite().frames(animation).size();
     }
 
     private cardistry.ui.sprite.Sprite currentSprite() {

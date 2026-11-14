@@ -29,11 +29,19 @@ public final class Images {
     private Images() {
     }
 
-    /** Chemin de l'image d'un adversaire pour une frame : la frame si elle existe, sinon l'image de base. */
+    /**
+     * Chemin de l'image d'un adversaire pour une frame : la frame si elle existe, sinon la dernière
+     * frame de cette animation (une animation plus courte que prévu reste sur sa fin), sinon l'image
+     * de base.
+     */
     public static Optional<String> enemy(String spriteId, String animation, int frame) {
         String framePath = "enemies/" + spriteId + "." + animation + "." + (frame + 1) + ".png";
         if (get(framePath).isPresent()) {
             return Optional.of(framePath);
+        }
+        int count = frames(spriteId, animation);
+        if (count > 0 && frame >= count) {
+            return Optional.of("enemies/" + spriteId + "." + animation + "." + count + ".png");
         }
         String idle = "enemies/" + spriteId + ".idle." + (frame + 1) + ".png";
         if (animation.equals("idle") && get(idle).isPresent()) {
@@ -45,8 +53,13 @@ public final class Images {
 
     /** Nombre de frames idle en images (0 s'il n'y en a pas). */
     public static int idleFrames(String spriteId) {
+        return frames(spriteId, "idle");
+    }
+
+    /** Nombre de frames en images de l'animation (idle, attack, hurt, death) ; 0 s'il n'y en a pas. */
+    public static int frames(String spriteId, String animation) {
         int count = 0;
-        while (get("enemies/" + spriteId + ".idle." + (count + 1) + ".png").isPresent()) {
+        while (get("enemies/" + spriteId + "." + animation + "." + (count + 1) + ".png").isPresent()) {
             count++;
         }
         return count;

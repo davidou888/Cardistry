@@ -80,4 +80,5 @@ src/test/java/...             JUnit 5
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Paquets : `./gradlew jpackageImage` (app autonome), `./gradlew jpackage` (installateurs de l'OS courant ; JDK avec jmods requise). Release : tag `v*` → `.github/workflows/release.yml` (paquets des 3 OS → GitHub Release ; titre = message du tag annoté). Identifiant `io.github.megaray.cardistry`, éditeur « Cardistry ».
 - Tests : `./gradlew test`
+- Vérifier les animations dans la vraie fenêtre (jeu auto-piloté, trace sur la sortie) : `./gradlew animationCheck [-Penemies=id,id]`
 - Art : `./gradlew art` (ébauches manquantes + export PNG + planches) ; détail : `generateArt`, `exportArt`, `planche`
