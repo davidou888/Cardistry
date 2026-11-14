@@ -57,11 +57,16 @@ tasks.test {
 }
 
 // ===================== Art (Aseprite) =====================
-// Sources dans art/*.aseprite (une frame taguée par icône, le tag = l'id) ; les PNG exportés sont
-// commités dans src/main/resources/images/. Sans Aseprite (CI, autre machine), exportArt est ignorée
-// et les PNG commités restent utilisés.
-// ./gradlew exportArt : art/<fichier>.aseprite → images/<dossier>/<tag>.png
-// ./gradlew planche   : art/planche.png, toutes les icônes agrandies avec leur nom et leur id
+// Sources dans art/ : icônes (une frame taguée par icône, le tag = l'id) et sprites d'adversaires
+// (art/enemies/<id>.aseprite, un tag par animation). Les PNG exportés sont commités dans
+// src/main/resources/images/. Sans Aseprite (CI, autre machine), generateArt et exportArt sont
+// ignorées et les PNG commités restent utilisés.
+// ./gradlew art         : tout d'un coup = generateArt, exportArt, planche
+// ./gradlew generateArt : ajoute aux .aseprite les ébauches MANQUANTES (art/tools/generate.lua) ;
+//                         un tag déjà présent n'est jamais redessiné
+// ./gradlew exportArt   : art/<fichier>.aseprite → images/<dossier>/<tag>.png ;
+//                         art/enemies/<id>.aseprite → images/enemies/<id>.<animation>.<n>.png + <id>.png
+// ./gradlew planche     : art/planche.png (icônes) et art/planche-ennemis.png (frames des adversaires)
 
 /** Fichier source (sans extension) → dossier de sortie dans images/. */
 val artExports = mapOf("map" to "map", "items" to "items", "trinkets" to "items", "cards" to "cards")
@@ -69,36 +74,69 @@ val artExports = mapOf("map" to "map", "items" to "items", "trinkets" to "items"
 /** Chemin d'Aseprite : variable ASEPRITE, sinon « aseprite » dans le PATH ; null s'il est absent. */
 fun findAseprite(): String? {
     System.getenv("ASEPRITE")?.takeIf { File(it).canExecute() }?.let { return it }
-    val names = if (os.isWindows) listOf("aseprite.exe", "Aseprite.exe") else listOf("aseprite")
+    val names = if (OperatingSystem.current().isWindows) listOf("aseprite.exe", "Aseprite.exe") else listOf("aseprite")
     return (System.getenv("PATH") ?: "").split(File.pathSeparator)
             .flatMap { dir -> names.map { File(dir, it) } }
             .firstOrNull { it.isFile && it.canExecute() }?.absolutePath
 }
 
+fun runAseprite(vararg args: String) {
+    val process = ProcessBuilder(*args).inheritIO().start()
+    if (process.waitFor() != 0) {
+        throw GradleException("Aseprite en échec : ${args.joinToString(" ")}")
+    }
+}
+
+val asepritePath = findAseprite()
+val artDir = layout.projectDirectory.dir("art").asFile
+val imagesDir = layout.projectDirectory.dir("src/main/resources/images").asFile
+
+fun Task.needsAseprite() {
+    onlyIf {
+        if (asepritePath == null) {
+            logger.lifecycle("Aseprite introuvable : $name ignorée, les PNG commités restent utilisés.")
+        }
+        asepritePath != null
+    }
+}
+
+val generateArt by tasks.registering {
+    group = "art"
+    description = "Ajoute aux sources Aseprite les ébauches manquantes, sans toucher aux dessins existants."
+    needsAseprite()
+    doLast {
+        runAseprite(asepritePath!!, "-b", "--script-param", "root=${layout.projectDirectory.asFile.path}",
+                "--script", File(artDir, "tools/generate.lua").path)
+    }
+}
+
 val exportArt by tasks.registering {
     group = "art"
-    description = "Exporte les icônes des sources Aseprite (art/) vers src/main/resources/images/."
-    val aseprite = findAseprite()
-    val artDir = layout.projectDirectory.dir("art").asFile
-    val imagesDir = layout.projectDirectory.dir("src/main/resources/images").asFile
-    onlyIf {
-        if (aseprite == null) {
-            logger.lifecycle("Aseprite introuvable : export ignoré, les PNG commités restent utilisés.")
-        }
-        aseprite != null
-    }
+    description = "Exporte les sources Aseprite (art/) vers src/main/resources/images/."
+    mustRunAfter(generateArt)
+    needsAseprite()
     doLast {
         for ((source, folder) in artExports) {
             val file = File(artDir, "$source.aseprite")
-            if (!file.isFile) {
-                continue
+            if (file.isFile) {
+                val out = File(imagesDir, folder)
+                out.mkdirs()
+                runAseprite(asepritePath!!, "-b", file.path, "--save-as", File(out, "{tag}.png").path)
             }
-            val out = File(imagesDir, folder)
-            out.mkdirs()
-            val process = ProcessBuilder(aseprite!!, "-b", file.path, "--save-as",
-                    File(out, "{tag}.png").path).inheritIO().start()
-            if (process.waitFor() != 0) {
-                throw GradleException("Export Aseprite en échec : $file")
+        }
+        val enemies = File(imagesDir, "enemies")
+        enemies.mkdirs()
+        for (file in File(artDir, "enemies").listFiles { f -> f.name.endsWith(".aseprite") }.orEmpty().sorted()) {
+            val id = file.nameWithoutExtension
+            // Anciennes frames d'abord : une animation raccourcie ne laisse pas de frame fantôme.
+            enemies.listFiles { f -> f.name.startsWith("$id.") && f.name.endsWith(".png") }.orEmpty()
+                    .forEach { it.delete() }
+            runAseprite(asepritePath!!, "-b", file.path, "--save-as",
+                    File(enemies, "$id.{tag}.{tagframe1}.png").path)
+            // Image de base (animation absente) : la première frame idle.
+            val idle = File(enemies, "$id.idle.1.png")
+            if (idle.isFile) {
+                idle.copyTo(File(enemies, "$id.png"), overwrite = true)
             }
         }
     }
@@ -110,8 +148,15 @@ val planche by tasks.registering(JavaExec::class) {
     // Classes de test (l'outil) + jeu, sans les ressources de test (elles contiennent de fausses images).
     classpath = sourceSets["test"].output.classesDirs + sourceSets["main"].runtimeClasspath
     mainClass = "cardistry.tools.ArtSheet"
-    args("art/planche.png")
+    args("art/planche.png", "art/planche-ennemis.png")
     systemProperty("java.awt.headless", "true")
+    mustRunAfter(exportArt)
+}
+
+val art by tasks.registering {
+    group = "art"
+    description = "Ébauches manquantes, export des PNG et planches, en une commande."
+    dependsOn(generateArt, exportArt, planche)
 }
 
 // ===================== Packaging (jpackage) =====================

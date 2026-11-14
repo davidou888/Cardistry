@@ -109,6 +109,67 @@ public final class ArtSheet {
         ImageIO.write(sheet, "png", out);
         System.out.println(out + " : " + sections.values().stream().mapToInt(List::size).sum() + " icônes, dont "
                 + missing + " à faire");
+        enemies(new File(args.length > 1 ? args[1] : "art/planche-ennemis.png"));
+    }
+
+    private static final List<String> ANIMATIONS = List.of("idle", "attack", "hurt", "death");
+    private static final int ENEMY_SCALE = 3;
+    private static final int ENEMY_CELL = 64 * ENEMY_SCALE + 16;
+
+    /** Planche des adversaires : une ligne par adversaire qui a des images, une case par frame d'animation. */
+    private static void enemies(File out) throws IOException {
+        record Frame(String label, BufferedImage image) {
+        }
+        Map<String, List<Frame>> rows = new LinkedHashMap<>();
+        for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
+            cardistry.model.Enemy enemy = cardistry.model.enemy.EnemyRegistry.create(id, 1);
+            List<Frame> frames = new ArrayList<>();
+            for (String animation : ANIMATIONS) {
+                for (int n = 1; ; n++) {
+                    Optional<BufferedImage> image = Images.get("enemies/" + enemy.spriteId() + "." + animation + "." + n
+                            + ".png");
+                    if (image.isEmpty()) {
+                        break;
+                    }
+                    frames.add(new Frame(animation + " " + n, image.get()));
+                }
+            }
+            if (!frames.isEmpty()) {
+                rows.put(enemy.name() + " (" + enemy.spriteId() + ")", frames);
+            }
+        }
+        int columns = rows.values().stream().mapToInt(List::size).max().orElse(1);
+        int rowHeight = TITLE_H + ENEMY_CELL + 24;
+        BufferedImage sheet = new BufferedImage(MARGIN * 2 + columns * ENEMY_CELL,
+                MARGIN * 2 + Math.max(1, rows.size()) * rowHeight, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setColor(CellPalette.BACKGROUND);
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        CellFonts small = new CellFonts(1);
+        CellFonts big = new CellFonts(2);
+        int y = MARGIN;
+        for (Map.Entry<String, List<Frame>> row : rows.entrySet()) {
+            g.setFont(big.main());
+            g.setColor(color(TextColor.ANSI.YELLOW_BRIGHT));
+            g.drawString(row.getKey(), MARGIN, y + 22);
+            for (int i = 0; i < row.getValue().size(); i++) {
+                Frame frame = row.getValue().get(i);
+                int x = MARGIN + i * ENEMY_CELL;
+                g.setColor(color(TextColor.ANSI.BLACK));
+                g.fillRect(x, y + TITLE_H, ENEMY_CELL - 8, ENEMY_CELL - 8);
+                g.drawImage(frame.image(), x + 4, y + TITLE_H + 4, frame.image().getWidth() * ENEMY_SCALE,
+                        frame.image().getHeight() * ENEMY_SCALE, null);
+                g.setFont(small.main());
+                g.setColor(color(TextColor.ANSI.BLACK_BRIGHT));
+                g.drawString(frame.label(), x + 4, y + TITLE_H + ENEMY_CELL + 6);
+            }
+            y += rowHeight;
+        }
+        g.dispose();
+        ImageIO.write(sheet, "png", out);
+        System.out.println(out + " : " + rows.size() + " adversaire(s) avec images");
     }
 
     private static Map<String, List<Entry>> sections() {
