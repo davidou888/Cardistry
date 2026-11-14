@@ -5,6 +5,7 @@ import cardistry.core.TemporaryEffect;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.items.Tag;
+import cardistry.items.Trinket;
 import cardistry.model.Combatant;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
@@ -144,6 +145,10 @@ public sealed interface GameEvent {
     }
 
     record RewardSkipped() implements GameEvent {
+    }
+
+    /** Un trinket est jeté parce qu'il y en avait plus que d'emplacements. */
+    record TrinketDiscarded(Trinket trinket) implements GameEvent {
     }
 
     /** Un palier de set s'active (ex. set « EPFL « Cursus » », palier 3). */

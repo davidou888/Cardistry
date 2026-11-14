@@ -12,6 +12,7 @@ public final class GameLoop {
 
     public static void run(CombatEngine engine, Renderer renderer, Input input) {
         GameState state = engine.state();
+        engine.setDecisions(input);
         engine.start();
         if (input.wantsIntro()) {
             renderer.showIntro(state);

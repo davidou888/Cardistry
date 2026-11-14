@@ -2,12 +2,19 @@ package cardistry.ui;
 
 import cardistry.core.Action;
 import cardistry.core.GameState;
+import cardistry.core.PlayerDecisions;
 import cardistry.core.RewardChoice;
 import cardistry.items.Collectible;
 import java.util.List;
 
-/** Saisie du joueur. */
-public interface Input {
+/** Saisie du joueur, y compris les décisions demandées par le moteur en cours d'action. */
+public interface Input extends PlayerDecisions {
+
+    /** Pioche au choix : par défaut la première carte (les interfaces la remplacent). */
+    @Override
+    default int chooseDrawnCard(GameState state, List<cardistry.model.card.Card> options) {
+        return 0;
+    }
 
     /** {@code true} si le joueur veut voir l'intro. */
     boolean wantsIntro();

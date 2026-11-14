@@ -45,6 +45,7 @@ public final class CombatEngine {
     private final LootTable loot;
     private final EffectContext effects = new Effects();
     private List<Collectible> pendingReward = List.of();
+    private PlayerDecisions decisions = PlayerDecisions.FIRST;
 
     public CombatEngine(GameState state, CardPool pool, Rng rng, EventBus bus) {
         this(state, pool, rng, bus, new LootTable());
@@ -61,6 +62,11 @@ public final class CombatEngine {
 
     public GameState state() {
         return state;
+    }
+
+    /** Qui répond aux décisions demandées en cours d'action (l'interface, ou un test). */
+    public void setDecisions(PlayerDecisions decisions) {
+        this.decisions = decisions;
     }
 
     /** Lance la partie et son premier combat. */
@@ -372,11 +378,25 @@ public final class CombatEngine {
                 };
                 bus.publish(new GameEvent.RewardTaken(taken, replaced));
                 publishSetChanges();
+                enforceTrinketSlots();
             }
         }
         pendingReward = List.of();
         nextCombat();
         return true;
+    }
+
+    /** S'il y a plus de trinkets que d'emplacements (Diplôme perdu), le joueur en jette au choix. */
+    private void enforceTrinketSlots() {
+        while (state.trinkets().size() > state.trinketSlots()) {
+            int slot = decisions.chooseTrinketToDiscard(state);
+            if (slot < 0 || slot >= state.trinkets().size()) {
+                continue; // réponse invalide : on redemande
+            }
+            Trinket discarded = state.unequipTrinket(slot);
+            bus.publish(new GameEvent.TrinketDiscarded(discarded));
+            publishSetChanges();
+        }
     }
 
     private Optional<Reason> validateReward(RewardChoice.Take take) {

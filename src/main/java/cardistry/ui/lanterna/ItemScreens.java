@@ -40,6 +40,23 @@ final class ItemScreens {
         drawCards(p, List.copyOf(current), selected, 4);
     }
 
+    /** Trop de trinkets pour les emplacements : liste, le joueur en choisit un à jeter. */
+    static void discard(Painter p, GameState state, int selected, long seed) {
+        p.frame("Jeter un trinket", "Seed " + seed, "↑/↓ choisir · Entrée jeter");
+        p.centered(2, "Tu as " + state.trinkets().size() + " trinkets pour " + state.trinketSlots()
+                + " emplacements : choisis-en un à jeter.", Palette.WARNING, true);
+        int row = 4;
+        for (int i = 0; i < state.trinkets().size() && row < p.rows() - 2; i++) {
+            Trinket trinket = state.trinkets().get(i);
+            boolean isSelected = i == selected;
+            p.text(3, row, isSelected ? "▶" : " ", Palette.ACCENT, true);
+            p.text(5, row, trinket.name(), Palette.rarity(trinket.rarity()), isSelected);
+            p.text(6 + trinket.name().length(), row, Painter.fit("— " + trinket.description(),
+                    Math.max(1, p.cols() - 9 - trinket.name().length())), isSelected ? Palette.TEXT : Palette.DIM);
+            row += 2;
+        }
+    }
+
     /** Inventaire détaillé. */
     static void inventory(Painter p, GameState state) {
         p.frame("Inventaire", "", "Appuie sur une touche pour revenir");

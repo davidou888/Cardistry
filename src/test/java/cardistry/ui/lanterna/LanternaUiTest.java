@@ -557,6 +557,25 @@ class LanternaUiTest {
         assertTrue(inventory.contains("Soirée « Before → Afterparty » (1) : aucun palier · prochain 2"), inventory);
     }
 
+    @Test
+    void ecranDeDefausseObligatoire() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of(ItemRegistry.trinket("pax"), ItemRegistry.trinket("ross")));
+        int[] result = {-1};
+        Thread player = new Thread(() -> result[0] = ui.chooseTrinketToDiscard(state));
+        player.setDaemon(true);
+        player.start();
+        waitFor(() -> screen().contains("↑/↓ choisir · Entrée jeter"));
+        String text = dump("20-defausse");
+        press(KeyType.Escape);        // pas d'échappatoire
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter);
+        player.join(TIMEOUT.toMillis());
+        assertTrue(text.contains("choisis-en un à jeter"), text);
+        assertTrue(text.contains("▶ Pax"), text);
+        assertEquals(1, result[0]);
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {

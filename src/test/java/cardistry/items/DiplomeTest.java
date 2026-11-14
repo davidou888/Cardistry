@@ -142,22 +142,77 @@ class DiplomeTest {
         assertEquals(100 - 15, state.player().hp(), DELTA);
     }
 
-    @Test
-    void perdreLeDiplomeToutRedevientNormal() {
+    /** Combat avec un sort fatal, le Diplôme + 5 trinkets, et une récompense trinket. */
+    private Trinket setUpFullWithDiplome(java.util.function.IntSupplier discardChoice, List<Integer> asked) {
         Trinket incoming = tagged(Tag.META);
         setUp(List.of(new SpellCard("Fatal", WATER, 1000)), List.of(incoming));
+        engine.setDecisions(new cardistry.core.PlayerDecisions() {
+            @Override
+            public int chooseDrawnCard(GameState s, List<Card> options) {
+                return 0;
+            }
+
+            @Override
+            public int chooseTrinketToDiscard(GameState s) {
+                asked.add(s.trinkets().size());
+                return discardChoice.getAsInt();
+            }
+        });
         equip("diplome-epfl");
         equip("pichet-de-sat");
         for (int i = 0; i < 4; i++) {
             engine.equip(tagged(Tag.META));
         }
         assertEquals(6, state.trinkets().size());
-
         engine.submit(new Action.PlayCard(0));
+        return incoming;
+    }
+
+    @Test
+    void perdreLeDiplomeAvecSixTrinketsObligeAEnJeterUn() {
+        List<Integer> asked = new ArrayList<>();
+        Trinket incoming = setUpFullWithDiplome(() -> 0, asked); // jette Pichet de Sat (1er après le Diplôme)
+
         engine.resolveReward(new RewardChoice.Take(0, 0)); // le Diplôme est remplacé
 
-        assertEquals(1.25, stat(StatType.WATER_DAMAGE), DELTA); // Pichet de Sat seul, plus de set
+        assertEquals(List.of(6), asked, "une seule question, avec 6 trinkets pour 5 emplacements");
         assertEquals(5, state.trinketSlots());
-        assertEquals(6, state.trinkets().size(), "les trinkets en trop sont gardés");
+        assertEquals(5, state.trinkets().size());
+        assertTrue(state.trinkets().contains(incoming));
+        assertTrue(events.stream().anyMatch(e -> e instanceof GameEvent.TrinketDiscarded d
+                && d.trinket().id().equals("pichet-de-sat")));
+        assertEquals(1.0, stat(StatType.WATER_DAMAGE), DELTA); // plus de Pichet, plus de set
+        // Le combat suivant ne commence qu'après la défausse.
+        int discarded = indexOf(GameEvent.TrinketDiscarded.class);
+        assertTrue(discarded < indexOf(GameEvent.CombatStarted.class));
+    }
+
+    @Test
+    void reponseInvalideRedemandee() {
+        List<Integer> asked = new ArrayList<>();
+        int[] answers = {9, -1, 2};
+        int[] next = {0};
+        setUpFullWithDiplome(() -> answers[next[0]++], asked);
+        engine.resolveReward(new RewardChoice.Take(0, 0));
+        assertEquals(3, asked.size());
+        assertEquals(5, state.trinkets().size());
+    }
+
+    @Test
+    void pasDeDefausseSansDebordement() {
+        List<Integer> asked = new ArrayList<>();
+        setUpFullWithDiplome(() -> 0, asked);
+        engine.resolveReward(new RewardChoice.Take(0, 3)); // remplace un trinket quelconque, pas le Diplôme
+        assertTrue(asked.isEmpty());
+        assertEquals(6, state.trinkets().size());
+    }
+
+    private int indexOf(Class<? extends GameEvent> type) {
+        for (int i = 0; i < events.size(); i++) {
+            if (type.isInstance(events.get(i))) {
+                return i;
+            }
+        }
+        return -1;
     }
 }

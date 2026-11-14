@@ -406,7 +406,8 @@ public final class GameState {
 
     /**
      * Remplace le trinket {@code slot} par {@code trinket}. Toujours possible, même si la perte du
-     * trinket remplacé réduit les emplacements (Diplôme EPFL) : les trinkets en trop sont gardés.
+     * trinket remplacé réduit les emplacements (Diplôme EPFL) : le moteur fait alors jeter les
+     * trinkets en trop.
      */
     Trinket replaceTrinket(int slot, Trinket trinket) {
         Trinket old = unequipTrinket(slot);

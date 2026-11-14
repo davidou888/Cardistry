@@ -79,6 +79,17 @@ public final class ConsoleInput implements Input {
         }
     }
 
+    @Override
+    public int chooseTrinketToDiscard(GameState state) {
+        console.println("Tu as " + state.trinkets().size() + " trinkets pour " + state.trinketSlots()
+                + " emplacements : choisis-en un à jeter.");
+        for (int i = 0; i < state.trinkets().size(); i++) {
+            Trinket trinket = state.trinkets().get(i);
+            console.println("[" + (i + 1) + "] " + trinket.name() + " : " + trinket.description());
+        }
+        return readNumber("Trinket à jeter ? ", 1, state.trinkets().size()) - 1;
+    }
+
     private int readNumber(String prompt, int min, int max) {
         while (true) {
             console.print(prompt);
