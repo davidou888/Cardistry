@@ -1303,6 +1303,14 @@ class LanternaUiTest {
             assertTrue(cardistry.ui.window.Images.mapNode(type).isPresent(), "nœud sans icône : " + type);
         }
         assertEquals(16, cardistry.ui.window.Images.get("items/mate.png").orElseThrow().getWidth());
+        for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
+            String sprite = cardistry.model.enemy.EnemyRegistry.create(id, 1).spriteId();
+            java.awt.image.BufferedImage image = cardistry.ui.window.Images.enemy(sprite, "idle", 0)
+                    .flatMap(cardistry.ui.window.Images::get)
+                    .orElseThrow(() -> new AssertionError("adversaire sans sprite : " + id));
+            assertEquals(64, image.getWidth(), sprite);
+            assertEquals(64, image.getHeight(), sprite);
+        }
     }
 
     /** Marques posées par un dessin (cadres de rareté, icônes encadrées). */

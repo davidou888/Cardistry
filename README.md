@@ -190,7 +190,8 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
   fermé : une ligne « dernière action », et **J** l'ouvre en panneau (↑/↓ défiler, J ou Échap fermer).
   Les mêmes cartes illustrées et les mêmes icônes encadrées (couleur de rareté) servent dans les
   récompenses et au shop ; sans `images/items/<id>.png`, un placeholder par catégorie.
-  Un adversaire sans image garde son sprite ASCII ; `--terminal` et `--no-images` gardent l'ancien écran.
+  Tous les adversaires ont un sprite (Choomah, Clarence et le boss : un placeholder à redessiner) ; un
+  adversaire sans image garderait son sprite ASCII ; `--terminal` et `--no-images` gardent l'ancien écran.
 - Carte du monde : `src/main/resources/images/map/<type>.png` (16×16 px ; `combat`, `elite`, `boss`,
   `shop`, `rest`, `event`). Dans la fenêtre, la carte va de gauche à droite : icônes, chemins en
   pointillés courbes tirés de la seed (même seed, même dessin), nœud actuel cerclé d'or, nœuds

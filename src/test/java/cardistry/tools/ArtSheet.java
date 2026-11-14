@@ -121,6 +121,7 @@ public final class ArtSheet {
         record Frame(String label, BufferedImage image) {
         }
         Map<String, List<Frame>> rows = new LinkedHashMap<>();
+        java.util.Set<String> sprites = new java.util.HashSet<>();
         for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
             cardistry.model.Enemy enemy = cardistry.model.enemy.EnemyRegistry.create(id, 1);
             List<Frame> frames = new ArrayList<>();
@@ -134,7 +135,8 @@ public final class ArtSheet {
                     frames.add(new Frame(animation + " " + n, image.get()));
                 }
             }
-            if (!frames.isEmpty()) {
+            // Un sprite partagé (les Choomah, les trois boss) n'apparaît qu'une fois.
+            if (!frames.isEmpty() && sprites.add(enemy.spriteId())) {
                 rows.put(enemy.name() + " (" + enemy.spriteId() + ")", frames);
             }
         }
