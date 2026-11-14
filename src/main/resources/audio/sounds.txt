@@ -1,0 +1,62 @@
+# Table des sons de Cardistry : nom = fichier[, variante, ...] [; volume=0..1] [; loop=secondes|no]
+# Les fichiers sont relatifs à ce dossier (src/main/resources/audio/). Fichier ou ligne absente : silence.
+# Les sons actuels sont des PLACEHOLDERS générés (tools/generate-sounds.sh) : remplace-les librement.
+# Guide (formats, niveaux, boucles) : README, section « Sons et musiques ».
+
+# --- Musiques (une à la fois, en boucle ; loop = point de boucle en secondes, ou no) ---
+music.title     = music/title.ogg
+music.map       = music/map.ogg
+music.combat    = music/combat.ogg
+music.elite     = music/elite.ogg
+music.boss      = music/boss.ogg
+music.shop      = music/shop.ogg
+music.rest      = music/rest.ogg
+music.event     = music/event.ogg
+music.game-over = music/game-over.ogg ; loop=no
+music.victory   = music/victory.ogg ; loop=no
+
+# --- Interface (fréquents : discrets) ---
+sfx.ui.cursor   = sfx/ui-cursor.wav ; volume=0.35
+sfx.ui.confirm  = sfx/ui-confirm.wav ; volume=0.6
+sfx.ui.back     = sfx/ui-back.wav ; volume=0.6
+sfx.map.node    = sfx/map-node.wav
+
+# --- Cartes ---
+sfx.card.fire    = sfx/card-fire.wav
+sfx.card.water   = sfx/card-water.wav
+sfx.card.plant   = sfx/card-plant.wav
+sfx.card.heal    = sfx/card-heal.wav
+sfx.card.terrain = sfx/card-terrain.wav
+sfx.draw         = sfx/draw.wav ; volume=0.4
+sfx.deck.add     = sfx/deck-add.wav
+
+# --- Combat ---
+sfx.hit.enemy   = sfx/hit-enemy.wav
+sfx.hit.player  = sfx/hit-player.wav
+sfx.heal        = sfx/heal.wav ; volume=0.6
+sfx.dodge       = sfx/dodge.wav
+sfx.enemy.death = sfx/enemy-death.wav
+sfx.null        = sfx/null.wav
+sfx.undo        = sfx/undo.wav
+sfx.rejected    = sfx/rejected.wav ; volume=0.5
+sfx.badoing     = sfx/badoing.wav
+sfx.choomah     = sfx/choomah-1.wav, sfx/choomah-2.wav, sfx/choomah-3.wav ; volume=0.7
+
+# --- Clopes, boissons, objets ---
+sfx.smoke       = sfx/smoke.wav
+sfx.smoke.googz = sfx/smoke-googz.wav
+sfx.roll        = sfx/roll.wav
+sfx.drink       = sfx/drink.wav
+sfx.item        = sfx/item.wav
+sfx.hangover    = sfx/hangover.wav
+
+# --- Run ---
+sfx.choomies     = sfx/choomies.wav ; volume=0.4
+sfx.reward       = sfx/reward.wav
+sfx.level        = sfx/level.wav
+sfx.rest         = sfx/rest.wav
+sfx.shop.buy     = sfx/shop-buy.wav
+sfx.shop.reroll  = sfx/shop-reroll.wav
+sfx.shop.poor    = sfx/shop-poor.wav
+sfx.event.choice = sfx/event-choice.wav
+sfx.secret       = sfx/secret.wav
