@@ -44,7 +44,7 @@ class EngineExtensionsTest {
     private void setUp(List<Card> hand, CardPool pool) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        hydra = new Enemy("Hydre", FIRE, 100, 10);
+        hydra = new Enemy("Mannequin", FIRE, 100, 10);
         state = new GameState(new Player(100), List.of(hydra), new TerrainCard("Forêt", NATURE), hand, new Stats());
         engine = new CombatEngine(state, pool, new Rng(4), bus, new LootTable(List::of));
     }
@@ -64,7 +64,7 @@ class EngineExtensionsTest {
     void reductionDeDegatsParAttaque() {
         setUp(List.of());
         state.playerStats().add(flat(StatType.DAMAGE_REDUCTION, 2, "test"));
-        assertEquals(8, state.enemyAttackDamage(), DELTA); // Forêt : Hydre ×1, 10 − 2
+        assertEquals(8, state.enemyAttackDamage(), DELTA); // Forêt : Mannequin ×1, 10 − 2
 
         engine.submit(new Action.DrawCard());
 

@@ -94,11 +94,18 @@ public final class GameState {
         return new GameState(player, List.of(), true, terrain, List.of(), playerStats);
     }
 
-    /** Nouvelle partie : adversaires par défaut, terrain de départ, main vide (distribuée au début du combat). */
+    /**
+     * Nouvelle partie : terrain de départ, main vide (distribuée au début du combat). En attendant la
+     * carte de la run : un commun, une élite et le boss du niveau 1, dans l'ordre.
+     */
     public static GameState newGame() {
         Stats stats = new Stats();
-        return new GameState(new Player(stats.get(StatType.MAX_HP)), cardistry.model.EnemyRoster.createDefault(),
-                CardPool.startingTerrain(), List.of(), stats);
+        List<Enemy> enemies = List.of(
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1),
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.VAFI, 1),
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.bossId(1), 1));
+        return new GameState(new Player(stats.get(StatType.MAX_HP)), enemies, CardPool.startingTerrain(), List.of(),
+                stats);
     }
 
     public Player player() {

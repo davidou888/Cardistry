@@ -145,7 +145,7 @@ final class CombatScreen {
             return;
         }
         Enemy enemy = state.currentEnemy();
-        List<String> sprite = Resources.enemySprite(enemy.name());
+        List<String> sprite = Resources.enemySprite(enemy.spriteId());
         int width = sprite.stream().mapToInt(String::length).max().orElse(0);
         int areaLeft = p.cols() - SPRITE_WIDTH - 2;
         int col = areaLeft + Math.max(0, (SPRITE_WIDTH - width) / 2) + view.enemyOffsetX;

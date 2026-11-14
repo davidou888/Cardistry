@@ -24,7 +24,7 @@ class GlyphsTest {
 
     @Test
     void accentsRetires() {
-        assertEquals("Sirene, Caipirinha, Shot de Jager, A chaque tour", Glyphs.toAscii("Sirène, Caïpirinha, Shot de Jäger, À chaque tour"));
+        assertEquals("Bouee, Caipirinha, Shot de Jager, A chaque tour", Glyphs.toAscii("Bouée, Caïpirinha, Shot de Jäger, À chaque tour"));
     }
 
     @Test

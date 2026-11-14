@@ -41,8 +41,8 @@ class TemporaryEffectTest {
     private void setUp(List<Card> hand) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        first = new Enemy("Hydre", FIRE, 100, 10);
-        state = new GameState(new Player(100), List.of(first, new Enemy("Sirène", WATER, 100, 10)),
+        first = new Enemy("Mannequin", FIRE, 100, 10);
+        state = new GameState(new Player(100), List.of(first, new Enemy("Bouée", WATER, 100, 10)),
                 new TerrainCard("Forêt", NATURE), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
@@ -152,7 +152,7 @@ class TemporaryEffectTest {
                 .skipsNextEnemyTurn("{adversaire} passe son tour").build());
 
         engine.submit(new Action.DrawCard());
-        assertEquals(new GameEvent.EnemyTurnSkipped(first, "Pause", "Hydre passe son tour"),
+        assertEquals(new GameEvent.EnemyTurnSkipped(first, "Pause", "Mannequin passe son tour"),
                 events.stream().filter(GameEvent.EnemyTurnSkipped.class::isInstance).findFirst().orElseThrow());
         assertFalse(events.stream().anyMatch(GameEvent.EnemyAttacked.class::isInstance));
         assertEquals(List.of("mule"), state.effects().stream().map(TemporaryEffect::id).toList(), "le Mule reste");

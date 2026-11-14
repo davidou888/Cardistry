@@ -38,7 +38,7 @@ class HookDispatcherTest {
 
     @Test
     void chaqueEvenementAppelleLeBonHook() {
-        Enemy enemy = new Enemy("Hydre", Element.FIRE, 20, 5);
+        Enemy enemy = new Enemy("Mannequin", Element.FIRE, 20, 5);
         Player player = new Player(100);
         SpellCard card = new SpellCard("Boule de feu", Element.FIRE, 10);
         TerrainCard terrain = new TerrainCard("EPFL", Element.FIRE);

@@ -48,11 +48,11 @@ class CombatEngineTest {
     }
 
     private static Enemy hydra() {
-        return new Enemy("Hydre", FIRE, 20, 5);
+        return new Enemy("Mannequin", FIRE, 20, 5);
     }
 
     private static Enemy siren() {
-        return new Enemy("Sirène", WATER, 30, 10);
+        return new Enemy("Bouée", WATER, 30, 10);
     }
 
     private static TerrainCard neutralTerrainFor(Enemy enemy) {
@@ -103,8 +103,7 @@ class CombatEngineTest {
         assertEquals(100, a.player().hp(), DELTA);
         assertEquals(100, a.maxHp(), DELTA);
         assertEquals(a.hand().stream().map(Card::name).toList(), b.hand().stream().map(Card::name).toList());
-        assertEquals("Hydre", a.currentEnemy().name());
-        assertEquals(1.25, a.enemyAttackMultiplier(), DELTA); // EPFL (feu) contre Hydre (feu)
+        assertEquals(a.currentEnemy().name(), b.currentEnemy().name());
     }
 
     private static GameState startedGame(long seed) {
@@ -156,7 +155,7 @@ class CombatEngineTest {
         engine.submit(new Action.PlayCard(0));
 
         assertTrue(events.contains(new GameEvent.Healed(state.player(), 15, 1.5)));
-        // 50 + 15 de soin - 5 × 1.25 d'attaque (Hydre sur terrain feu)
+        // 50 + 15 de soin - 5 × 1.25 d'attaque (Mannequin sur terrain feu)
         assertEquals(50 + 15 - 6.25, state.player().hp(), DELTA);
     }
 
@@ -319,10 +318,11 @@ class CombatEngineTest {
 
     @Test
     void combatCompletContreLesTroisAdversaires() {
-        // Pool à une seule carte : Boule de feu 40 → Hydre ×1 (40), Sirène ×0.5 (20), Goblin ×1.5 (60).
+        // Pool à une seule carte : Boule de feu 40 → Mannequin ×1 (40), Bouée ×0.5 (20), Pantin ×1.5 (60).
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = GameState.newGame();
+        state = new GameState(new Player(100), List.of(hydra(), siren(), new Enemy("Pantin", NATURE, 40, 15)),
+                new TerrainCard("EPFL", FIRE), List.of(), new cardistry.core.stats.Stats());
         engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40))), new Rng(1), bus, NO_LOOT);
 
         engine.start();
@@ -334,9 +334,9 @@ class CombatEngineTest {
         }
 
         assertTrue(state.isWon());
-        assertEquals(1 + 2 + 1, turns); // Hydre 20 → 1 sort, Sirène 30 → 2, Goblin 40 → 1
+        assertEquals(1 + 2 + 1, turns); // Mannequin 20 → 1 sort, Bouée 30 → 2, Pantin 40 → 1
         assertEquals(3, events.stream().filter(GameEvent.CombatStarted.class::isInstance).count());
-        // Seule attaque : Sirène au tour où elle survit (×1 sur EPFL contre eau).
+        // Seule attaque : Bouée au tour où elle survit (×1 sur EPFL contre eau).
         assertEquals(100 - 10, state.player().hp(), DELTA);
     }
 

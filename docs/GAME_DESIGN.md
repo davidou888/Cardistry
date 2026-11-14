@@ -3,37 +3,71 @@
 > Document vivant. Les éléments marqués **[À DÉCIDER]** sont ouverts : c'est Louis qui les tranche, pas Claude Code.
 
 ## Boucle de jeu (existant)
-- Une partie = une suite de **combats** ; **un combat = un adversaire** (Hydre/feu, Sirène/eau, Goblin/nature).
+- Une partie = une suite de **combats** ; **un combat = un adversaire** (voir « Adversaires »).
 - Chaque combat commence avec une **nouvelle main de 5 cartes** (la main précédente est défaussée). Taille max : 7.
 - À chaque tour : jouer une carte **ou** piocher, puis l'adversaire attaque. Utiliser un objet est une **action gratuite** (pas de fin de tour, pas d'attaque adverse), possible avant de jouer ou piocher.
 - Quand un adversaire meurt : choix d'**1 récompense parmi 3** (objet ou trinket), puis le combat suivant commence. Le nouvel adversaire **n'attaque pas** ce tour-là.
 - Cartes : **Sortilège** (dégâts), **Heal** (soin, boosté dans le terrain du même type), **Terrain** (change le terrain, modifie l'attaque adverse).
-- Éléments : **Feu > Nature > Eau > Feu**.
+- Éléments : **Feu > Plante > Eau > Feu**. « Plante » est le nom affiché de l'élément nature (l'enum du code reste `NATURE`).
+- **Neutre** (adversaires seulement) : ×1 contre tout sort, et les terrains n'ont aucun effet sur son attaque.
 
 ### Multiplicateurs d'éléments (décidés)
 Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
 
 **Sortilège → dégâts infligés**
 
-| Sort \ Adversaire | Feu | Eau | Nature |
+| Sort \ Adversaire | Feu | Eau | Plante |
 |---|---|---|---|
 | Feu | ×1 | ×0.5 | ×1.5 |
 | Eau | ×1.5 | ×1 | ×0.5 |
-| Nature | ×0.5 | ×1.5 | ×1 |
+| Plante | ×0.5 | ×1.5 | ×1 |
 
 ×1.5 si le sort bat l'adversaire, ×0.5 si l'adversaire bat le sort, ×1 si même élément.
 
 **Terrain → attaque de l'adversaire** (le terrain modifie ce que l'adversaire *inflige*, pas ce qu'il reçoit)
 
-| Terrain \ Adversaire | Feu | Eau | Nature |
+| Terrain \ Adversaire | Feu | Eau | Plante |
 |---|---|---|---|
 | Feu | ×1.25 | ×1 | ×0.75 |
 | Eau | ×0.75 | ×1.25 | ×1 |
-| Nature | ×1 | ×0.75 | ×1.25 |
+| Plante | ×1 | ×0.75 | ×1.25 |
 
 ×1.25 sur un terrain de son élément, ×0.75 si le terrain bat son élément, ×1 sinon.
 
 **Soin → PV rendus selon le terrain** : ×1.5 sur un terrain du même élément, ×0.75 si le terrain bat l'élément du soin, ×1 sinon.
+
+## Adversaires
+Registre : `cardistry.model.enemy.EnemyRegistry` (testé). Chaque adversaire a une liste d'attaques et
+**annonce la prochaine** (intent, affiché avec les dégâts réels : niveau, terrain, réduction). Ses tirages
+(Gamble, coup raté) ne sont **pas** doublés par CLAUDE.md.
+
+**Scaling par niveau** : PV ×1 / ×1.4 / ×1.9, dégâts ×1 / ×1.25 / ×1.5 (les boss ont des PV fixés, leurs
+dégâts suivent le niveau). Valeurs ci-dessous au niveau 1.
+
+| Rang | Nom | Élément | PV | Attaques |
+|---|---|---|---|---|
+| Commun | Caddie énervé | Neutre | 28 | Roue voilée 6 ; tous les 3 tours, Charge de parking 12 (×2, annoncée) |
+| Commun | Choomah | Plante | 22 | coup 4 ; tous les 3 tours, Vol à la tire : 5 Choomies, sinon 1 clope, sinon un coup. Attaques, descriptions et journal **criés** (« ooOOOaAAAOaAOOA ») ; les chiffres restent lisibles |
+| Commun | Choomah pressé | Plante | 18 | coup 3 ; vole un tour sur deux |
+| Commun | Choomah costaud | Plante | 30 | coup 6 ; vole tous les 3 tours |
+| Commun | Camé | Feu | 25 | coup 5 ; un tour sur deux, Taxe : te prend 1 clope, ou deux coups de 5 si tu n'en as pas |
+| Commun | Paresseux | Plante | 24 | accroché à sa branche, peu de dégâts : Griffe molle 3 ; un tour sur deux, « Badoing, badoing ! » : 50 % d'esquiver ton prochain sort, sinon 2 × 2 |
+| Commun | Clarence | Neutre | 1 | « Clarence te regarde. » N'attaque jamais. 3 % des combats communs ; 75 Choomies |
+| Commun | Seau de fuite | Eau | 26 | Ça goutte 2, 3, 4, 5 (le seau se remplit) ; au 5e tour Débordement 14, puis retour à zéro |
+| Élite | Vafi | Feu | 55 | Correction 8 ; tous les 3 tours, Série d'algèbre : une carte de ta main devient « Exercice 3b » (injouable pour ce combat) ; sous 50 % PV, Pause pétou (+12 PV, n'attaque pas), 2 fois max |
+| Élite | Le Peneu | Neutre | 90 | Rebond (passif) : renvoie 20 % des dégâts reçus, brut, sans jamais tuer ; Crevaison 6, +2 à chaque utilisation |
+| Élite | T-Rex défoncé | Plante | 65 | Morsure 13 ; bras trop courts : 30 % de rater, et il se soigne de 8 quand il rate (fringale) |
+| Élite | Étudiant post-examen | Eau | 60 | Larmes : 6, +3 par carte de moins que 5 dans ta main ; sous 50 % PV, Crise de nerfs : deux attaques par tour |
+| Boss | Boss du niveau 1 / 2 / 3 (**noms à venir**) | Feu / Eau / Plante | 130 / 200 / 280 | Coup 10 ; toutes les 4 attaques, Grosse attaque 22 |
+
+Règles communes :
+- L'intent est choisi au début du combat et après chaque attaque. Un tour sauté (Pétou ancestral) garde
+  l'intent et n'avance pas les compteurs (Seau, Crevaison).
+- **Moscow Mule** annule toute l'attaque (tous ses coups), mais pas les vols ni la Taxe (qui ne sont pas
+  des attaques ; la Taxe sans clope, elle, frappe et s'annule).
+- Esquive : seul le prochain **sort** est esquivé (un Shot de Jäger actif est consommé quand même).
+- Cartes mortes (« NO CARDS », « Exercice 3b ») : injouables jusqu'à la fin du combat, jamais remplacées.
+- Choomah : variante tirée au hasard ; deux Choomah ne se suivent pas, ni deux fois le même commun.
 
 ## Structure d'une run (cible)
 - Carte à **embranchements** façon Slay the Spire, générée par seed.
@@ -67,7 +101,7 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 - Chaque objet/trinket porte des **tags** (élément, archétype : Brûlure, Soin, Terrain, Pioche…).
 - Synergies de set : 2/3/4 trinkets du même tag → bonus croissant.
 - Synergies directes : un trinket qui modifie l'effet d'un autre (ex. « tes trinkets Feu affectent aussi les Heals »).
-- Tags utilisés par le premier jet : **EPFL**, **Soirée**, **Boisson**, **Méta**, éléments (Feu, Eau, Nature), archétypes (Soin, Pioche, Terrain, Défense).
+- Tags utilisés par le premier jet : **EPFL**, **Soirée**, **Boisson**, **Méta**, éléments (Feu, Eau, Plante), archétypes (Soin, Pioche, Terrain, Défense).
 
 #### Bonus de set (décidés, étape 6)
 Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte pour **chacun de ses tags**. Les paliers se **cumulent** (à 4, on a aussi ceux de 2 et 3). Recalculés à chaque changement d'inventaire ; notification quand un palier s'active ; détail dans l'inventaire (I). Noms provisoires.
@@ -116,7 +150,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 |---|---|---|---|---|
 | Commun | Redistribution des briquets | +25 % dégâts feu | Feu, Soirée | a |
 | Commun | Pichet de Sat | +25 % dégâts eau | Eau, EPFL | a |
-| Commun | Plante du Rolex | +25 % dégâts nature | Nature, EPFL | a |
+| Commun | Plante du Rolex | +25 % dégâts plante | Plante, EPFL | a |
 | Commun | Polycopié d'Analyse I | −2 dégâts à chaque attaque subie | Défense, EPFL | a |
 | Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère (validé) | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
@@ -127,7 +161,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Peu commun | Grinder | Soins de type feu +50 % ; Petit pétou deux fois plus fréquent dans la pioche | Soin, Soirée | a |
 | Peu commun | Plan du campus | Jouer un terrain inflige aussi 5 dégâts | Terrain, EPFL | a |
 | Rare | Photocopieuse | Piocher donne 2 cartes | Pioche, EPFL | a |
-| Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Nature | a |
+| Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Plante | a |
 | Rare | Foie d'ingénieur | Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
 | Rare | CMS | +50 % dégâts, mais l'adversaire aussi +25 % | EPFL | a |
 | Légendaire | Ross | Tous les soins ×2 (multiplicateur final, après tous les autres bonus de soin) ; les soins ne sont plus plafonnés par les PV max | Soin | b (M9) |
@@ -167,7 +201,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
   - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
 - **M3 — Pioche au choix** (Paquet de cartes, étape 7) : chaque carte piochée pendant un combat (action piocher, Photocopieuse, Cafffeeeeinnnn, Latte macchiato vanille…) devient un choix de 3 ; pioche multiple = un choix par carte, l'un après l'autre ; la main de départ n'est pas concernée ; George se déclenche après le choix (la carte choisie est protégée) ; Grinder s'applique aux propositions. Écran : 3 cartes côte à côte, touches 1/2/3, phrase méta au premier déclenchement (« Un jeu de cartes dans ton jeu de cartes. »).
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
-- **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable jusqu'à la fin du combat, adversaire tué sur le coup (jamais le boss = dernier adversaire). Fait.
+- **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable jusqu'à la fin du combat, adversaire tué sur le coup (jamais un boss). Fait.
 - **M6 — Annulation de tour** : revenir à l'état du début du tour précédent, en rejouant la seed et les actions depuis le début. Fait (`run.Run`).
 - **M7 — Tirage avantageux** : seuls les tirages de chance en faveur du joueur sont faits deux fois (Googz, NullPointerException, rareté des récompenses) ; on garde le favorable. Fait (`core.Luck`).
 - **M10 — Déblocages durables** : conditions remplies pendant une partie → secret dans le pool à partir de la partie suivante, sauvegardé dans le dossier de sauvegarde. Fait (détails et spoilers : `docs/SECRETS.md`).

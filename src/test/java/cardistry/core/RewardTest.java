@@ -45,12 +45,12 @@ class RewardTest {
         return new Item(id, id, "x", "", Rarity.COMMON, Set.of(Tag.META), ctx -> { });
     }
 
-    /** Hydre tuée en un sort ; la table propose les candidats donnés. */
+    /** Mannequin tuée en un sort ; la table propose les candidats donnés. */
     private void killHydraWith(List<Collectible> candidates) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        hydra = new Enemy("Hydre", FIRE, 20, 5);
-        siren = new Enemy("Sirène", WATER, 30, 10);
+        hydra = new Enemy("Mannequin", FIRE, 20, 5);
+        siren = new Enemy("Bouée", WATER, 30, 10);
         state = new GameState(new Player(100), List.of(hydra, siren), new TerrainCard("EPFL", FIRE),
                 List.of(new SpellCard("Tsunami", WATER, 15)), new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(3), bus, new LootTable(() -> candidates));
@@ -152,7 +152,7 @@ class RewardTest {
     @Test
     void pasDeRecompenseApresLeDernierAdversaire() {
         EventBus bus = new EventBus();
-        Enemy last = new Enemy("Hydre", FIRE, 20, 5);
+        Enemy last = new Enemy("Mannequin", FIRE, 20, 5);
         GameState solo = new GameState(new Player(100), List.of(last), new TerrainCard("EPFL", FIRE),
                 List.of(new SpellCard("Tsunami", WATER, 15)), new Stats());
         CombatEngine e = new CombatEngine(solo, new CardPool(), new Rng(3), bus, new LootTable(() -> List.of(item("a"))));

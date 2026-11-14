@@ -46,7 +46,7 @@ class InventoryTest {
     }
 
     private static Enemy hydra() {
-        return new Enemy("Hydre", FIRE, 20, 5);
+        return new Enemy("Mannequin", FIRE, 20, 5);
     }
 
     private static Item item(String id, java.util.function.Consumer<EffectContext> effect) {
@@ -103,7 +103,7 @@ class InventoryTest {
         // Le soin du trinket est livré après l'événement CardPlayed qui l'a déclenché.
         assertEquals(new GameEvent.CardPlayed(spell), events.get(0));
         assertTrue(events.indexOf(new GameEvent.Healed(state.player(), 3, 1.0)) > 0);
-        assertEquals(50 + 3 - 5, state.player().hp(), DELTA); // Forêt (nature) : attaque de l'Hydre ×1
+        assertEquals(50 + 3 - 5, state.player().hp(), DELTA); // Forêt (nature) : attaque de le Mannequin ×1
     }
 
     // --- Objets ---
@@ -146,7 +146,7 @@ class InventoryTest {
     @Test
     void unObjetQuiTueLAdversaireTermineLeTour() {
         Enemy hydra = hydra();
-        setUp(List.of(), hydra, new Enemy("Sirène", WATER, 30, 10));
+        setUp(List.of(), hydra, new Enemy("Bouée", WATER, 30, 10));
         engine.give(item("bombe", ctx -> ctx.damageEnemy(100)));
 
         assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.UseItem(0)));

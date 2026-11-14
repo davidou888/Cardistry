@@ -20,7 +20,6 @@ import cardistry.items.ItemRegistry;
 import cardistry.items.Trinket;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
-import cardistry.model.EnemyRoster;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
 import cardistry.model.card.CardPool;
@@ -147,12 +146,13 @@ class LanternaUiTest {
                 new SpellCard("Pluie de flammes", Element.FIRE, 15),
                 new HealCard("Caïpirinha", Element.WATER, 10),
                 new TerrainCard("Marécage", Element.WATER)),
-                EnemyRoster.createDefault().toArray(Enemy[]::new));
+                new Enemy("Mannequin", Element.FIRE, 20, 5), new Enemy("Bouée", Element.WATER, 30, 10),
+                new Enemy("Pantin", Element.NATURE, 40, 15));
         ui.onEvent(new GameEvent.GameStarted(42));
         ui.showStatus(state);
 
         String text = dump("03-combat");
-        assertTrue(text.contains("HYDRE"));
+        assertTrue(text.contains("MANNEQUIN"));
         assertTrue(text.contains("Combat 1/3"));
         assertTrue(text.contains("Prochain : Attaque : 6.25 (×1.25)"));
         assertTrue(text.contains("EPFL (feu)"));
@@ -162,7 +162,7 @@ class LanternaUiTest {
         assertTrue(text.contains("Caïpiri-"));
         assertTrue(text.contains("vide"));
         // Détail de la carte sélectionnée (la première) avec son multiplicateur réel.
-        assertTrue(text.contains("10 ×1.5 = 15 dégâts à Hydre"));
+        assertTrue(text.contains("10 ×1.5 = 15 dégâts à Mannequin"));
         assertTrue(text.contains("P piocher"));
     }
 
@@ -421,8 +421,8 @@ class LanternaUiTest {
     void ivresseEtGueuleDeBoisAffichees() throws IOException {
         open(80, 24);
         Enemy first = hydra();
-        GameState state = new GameState(new Player(100), List.of(first, new Enemy("Sirène", Element.WATER, 30, 10),
-                new Enemy("Goblin", Element.NATURE, 40, 15)), new TerrainCard("EPFL", Element.FIRE),
+        GameState state = new GameState(new Player(100), List.of(first, new Enemy("Bouée", Element.WATER, 30, 10),
+                new Enemy("Pantin", Element.NATURE, 40, 15)), new TerrainCard("EPFL", Element.FIRE),
                 List.of(new SpellCard("Tsunami", Element.WATER, 100)), new Stats());
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
                 new cardistry.items.LootTable(List::of));
@@ -435,7 +435,7 @@ class LanternaUiTest {
         assertTrue(during.contains("Ivresse 3/3"));
         assertTrue(during.contains("Gueule de bois à venir"));
 
-        engine.submit(new Action.PlayCard(0)); // tue l'Hydre → combat suivant avec Gueule de bois
+        engine.submit(new Action.PlayCard(0)); // tue le Mannequin → combat suivant avec Gueule de bois
         ui.showStatus(state);
         String after = dump("14-gueule-de-bois");
         assertTrue(after.contains("Gueule de bois (−1 taille de main)"));
@@ -591,7 +591,7 @@ class LanternaUiTest {
         assertEquals(2, first[0]);
         assertTrue(text.contains("Choisis la carte à garder"), text);
         assertTrue(text.contains("Un jeu de cartes dans ton jeu de cartes."), text);
-        assertTrue(text.contains("10 ×1.5 = 15 dégâts à Hydre"), "effet réel de la sélectionnée");
+        assertTrue(text.contains("10 ×1.5 = 15 dégâts à Mannequin"), "effet réel de la sélectionnée");
 
         // Deuxième fois : plus de phrase méta ; flèches + Entrée.
         int[] second = {-1};
@@ -741,6 +741,6 @@ class LanternaUiTest {
     }
 
     private static Enemy hydra() {
-        return new Enemy("Hydre", Element.FIRE, 20, 5);
+        return new Enemy("Mannequin", Element.FIRE, 20, 5);
     }
 }

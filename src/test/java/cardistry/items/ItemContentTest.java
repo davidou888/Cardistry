@@ -36,7 +36,7 @@ class ItemContentTest {
     private void setUp(List<Card> hand, long seed) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        hydra = new Enemy("Hydre", FIRE, 100, 10);
+        hydra = new Enemy("Mannequin", FIRE, 100, 10);
         state = new GameState(new Player(100), List.of(hydra), new TerrainCard("EPFL", FIRE), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(seed), bus, new LootTable(List::of));
     }
@@ -166,7 +166,7 @@ class ItemContentTest {
             setUp(List.of(), seed);
             use("gaz-du-bat-inf");
             GameEvent.DamageDealt damage = (GameEvent.DamageDealt) events.get(1);
-            // Contre l'Hydre (feu) : eau ×1.5 = 30, feu ×1 = 20, nature ×0.5 = 10.
+            // Contre le Mannequin (feu) : eau ×1.5 = 30, feu ×1 = 20, nature ×0.5 = 10.
             assertTrue(Set.of(10.0, 20.0, 30.0).contains(damage.amount()), "dégâts : " + damage.amount());
             assertEquals(GameEvent.DamageDealt.Source.EFFECT, damage.source());
             seen.add(damage.amount());
