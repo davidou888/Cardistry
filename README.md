@@ -27,6 +27,7 @@ Mode texte simple, partout : `./play --no-ui` (Linux, macOS) ou `play.bat --no-u
 | Option | Effet |
 |---|---|
 | `--seed N` | rejoue la partie de seed N |
+| `--reset-unlocks` | efface les secrets débloqués, puis lance le jeu |
 | `--fast` | sans pauses ni animations |
 | `--no-ui` | mode texte simple (lignes, saisie au clavier + Entrée) |
 | `--window` | jeu dans une fenêtre (par défaut sous Windows) |
@@ -40,7 +41,7 @@ Exemples : `./play --seed 42 --fast`, `play.bat --no-ui --no-color`.
 ### Linux et macOS
 - Plein écran directement dans le terminal.
 - L'**ASCII pur** s'active tout seul si le terminal n'est pas en UTF-8 (ex. `LANG=C`).
-- Ctrl+Z suspend le jeu comme n'importe quel programme (le shell reprend la main ; `fg` pour revenir).
+- En plein écran, Ctrl+Z est une touche du jeu : il ne suspend pas le programme.
 
 ### Windows
 - **Lanterna 3.1 n'a pas de mode plein écran dans la console Windows** (cmd, PowerShell, Windows
@@ -57,13 +58,15 @@ Exemples : `./play --seed 42 --fast`, `play.bat --no-ui --no-color`.
 
 ## Sauvegarde
 
-Le jeu range ses données (déblocages à venir) dans :
+Le jeu range ses données (secrets débloqués, dans `unlocks.txt`, un fichier texte lisible) dans :
 
 | OS | Dossier |
 |---|---|
 | Linux | `$XDG_DATA_HOME/cardistry`, sinon `~/.local/share/cardistry` |
 | macOS | `~/Library/Application Support/Cardistry` |
 | Windows | `%APPDATA%\Cardistry` |
+
+Fichier absent ou abîmé : le jeu repart de zéro sans planter. `--reset-unlocks` remet tout à zéro.
 
 ## Développement
 

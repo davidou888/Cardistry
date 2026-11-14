@@ -61,7 +61,7 @@ Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'ad
 | Peu commun | vert | 25 | 80 |
 | Rare | bleu | 12 | 130 |
 | Légendaire | jaune | 3 | 200 |
-| Secret | ??? | n'apparaît pas en drop normal | — |
+| Secret | ??? | seulement une fois débloqué (poids 2), voir `docs/SECRETS.md` | — |
 
 ### Synergies
 - Chaque objet/trinket porte des **tags** (élément, archétype : Brûlure, Soin, Terrain, Pioche…).
@@ -167,9 +167,10 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
   - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
 - **M3 — Pioche au choix** (Paquet de cartes, étape 7) : chaque carte piochée pendant un combat (action piocher, Photocopieuse, Cafffeeeeinnnn, Latte macchiato vanille…) devient un choix de 3 ; pioche multiple = un choix par carte, l'un après l'autre ; la main de départ n'est pas concernée ; George se déclenche après le choix (la carte choisie est protégée) ; Grinder s'applique aux propositions. Écran : 3 cartes côte à côte, touches 1/2/3, phrase méta au premier déclenchement (« Un jeu de cartes dans ton jeu de cartes. »).
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
-- **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.
-- **M6 — Annulation de tour** : revenir à l'état du début du tour précédent (faisable en rejouant la seed et les actions depuis le début).
-- **M7 — Tirage avantageux** : tirer deux fois et garder le meilleur.
+- **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable jusqu'à la fin du combat, adversaire tué sur le coup (jamais le boss = dernier adversaire). Fait.
+- **M6 — Annulation de tour** : revenir à l'état du début du tour précédent, en rejouant la seed et les actions depuis le début. Fait (`run.Run`).
+- **M7 — Tirage avantageux** : seuls les tirages de chance en faveur du joueur sont faits deux fois (Googz, NullPointerException, rareté des récompenses) ; on garde le favorable. Fait (`core.Luck`).
+- **M10 — Déblocages durables** : conditions remplies pendant une partie → secret dans le pool à partir de la partie suivante, sauvegardé dans le dossier de sauvegarde. Fait (détails et spoilers : `docs/SECRETS.md`).
 - **M9 — Clopes** : ressource de run, actions Fumer / Rouler, intensité de malédiction, multiplicateur final de stat (Ross), soins non plafonnés.
 - **M8 — Combats et malédictions** : la partie est découpée en combats (un par adversaire) ; malédictions qui durent jusqu'au combat suivant (Gueule de bois).
 
@@ -179,7 +180,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - Reroll payant, coût croissant.
 
 ## Secrets / easter eggs
-- Trinkets « Secret » débloqués par conditions cachées (seed spéciale, combo de cartes, code clavier…).
+- Trinkets « Secret » débloqués durablement par des conditions remplies pendant une partie (façon *Isaac*) ; des codes (seed spéciale, code clavier) les donnent pour une seule partie.
 - Garder la liste des secrets dans `docs/SECRETS.md` (spoilers !).
 - Existant : terrain « EPFL » de type feu, heal « Petit pétou ».
 
@@ -197,6 +198,7 @@ Reste : carte de la run, shop, transitions d'écran.
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
+- **[À DÉCIDER]** Secrets : cinq choix provisoires (Ctrl+Z après la mort, Ctrl+Z au premier tour d'un combat, CLAUDE.md et un déblocage de la même partie, `--seed null`, codes en mode texte) : voir `docs/SECRETS.md` (spoilers).
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
@@ -213,4 +215,5 @@ Reste : carte de la run, shop, transitions d'écran.
 - ~~Ptit Sat ?~~ → dégâts élémentaires, comme CMS.
 - ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
 - ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
+- ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés (détails : `docs/SECRETS.md`).
 - ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
