@@ -282,7 +282,7 @@ final class CombatScreen {
         }
     }
 
-    private static void drawCard(Painter p, int col, int row, int width, int number, Card card,
+    static void drawCard(Painter p, int col, int row, int width, int number, Card card,
             boolean selected, boolean highlight) {
         TextColor color = highlight ? Palette.ACCENT : Palette.element(card.element());
         p.box(col, row, width, CARD_HEIGHT, color, selected);

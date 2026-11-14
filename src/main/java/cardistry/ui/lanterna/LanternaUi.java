@@ -29,7 +29,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, GAME_OVER }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -45,6 +45,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private int rewardSelected = 0;
     private int replaceSelected = 0;
     private int discardSelected = 0;
+    private List<cardistry.model.card.Card> cardOptions = List.of();
+    private int cardSelected = 0;
+    private boolean metaPhraseShown = false;
+    private boolean showMetaPhrase = false;
 
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast) throws IOException {
@@ -377,6 +381,41 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     @Override
+    public int chooseDrawnCard(GameState state, List<cardistry.model.card.Card> options) {
+        this.state = state;
+        Page previous = page;
+        cardOptions = options;
+        cardSelected = 0;
+        showMetaPhrase = !metaPhraseShown;
+        metaPhraseShown = true;
+        page = Page.CARD_CHOICE;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            Integer chosen = null;
+            switch (key.getKeyType()) {
+                case ArrowLeft -> cardSelected = Math.floorMod(cardSelected - 1, options.size());
+                case ArrowRight -> cardSelected = Math.floorMod(cardSelected + 1, options.size());
+                case Enter -> chosen = cardSelected;
+                case Character -> {
+                    char c = key.getCharacter();
+                    if (c >= '1' && c < '1' + options.size()) {
+                        chosen = c - '1';
+                    }
+                }
+                default -> {
+                }
+            }
+            if (chosen != null) {
+                page = previous;
+                render();
+                return chosen;
+            }
+            render();
+        }
+    }
+
+    @Override
     public int chooseTrinketToDiscard(GameState state) {
         this.state = state;
         Page previous = page;
@@ -583,6 +622,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case REPLACE -> ItemScreens.replace(painter, state, rewardOptions.get(rewardSelected),
                             replaceSelected, seed);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
+                    case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
+                            showMetaPhrase, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed);
                 }
                 if (view.confirmingQuit) {

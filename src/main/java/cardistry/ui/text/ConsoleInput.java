@@ -79,6 +79,22 @@ public final class ConsoleInput implements Input {
         }
     }
 
+    private boolean metaPhraseShown = false;
+
+    @Override
+    public int chooseDrawnCard(GameState state, List<cardistry.model.card.Card> options) {
+        console.println();
+        console.println("Pioche : choisis la carte à garder (les autres sont défaussées).");
+        if (!metaPhraseShown) {
+            console.println("« Un jeu de cartes dans ton jeu de cartes. »");
+            metaPhraseShown = true;
+        }
+        for (int i = 0; i < options.size(); i++) {
+            console.println("[" + (i + 1) + "] " + TextRenderer.describe(options.get(i)));
+        }
+        return readNumber("Carte à garder ? ", 1, options.size()) - 1;
+    }
+
     @Override
     public int chooseTrinketToDiscard(GameState state) {
         console.println("Tu as " + state.trinkets().size() + " trinkets pour " + state.trinketSlots()

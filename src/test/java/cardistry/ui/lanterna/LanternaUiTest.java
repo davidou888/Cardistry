@@ -576,6 +576,40 @@ class LanternaUiTest {
         assertEquals(1, result[0]);
     }
 
+    @Test
+    void ecranDePiocheAuChoix() throws Exception {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of());
+        List<cardistry.model.card.Card> options = List.of(new SpellCard("Jet d'eau", Element.WATER, 10),
+                new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15), new TerrainCard("Forêt", Element.NATURE));
+        int[] first = {-1};
+        Thread player = new Thread(() -> first[0] = ui.chooseDrawnCard(state, options));
+        player.setDaemon(true);
+        player.start();
+        waitFor(() -> screen().contains("les autres sont défaussées"));
+        String text = dump("21-pioche-au-choix");
+        type("3");
+        player.join(TIMEOUT.toMillis());
+
+        assertEquals(2, first[0]);
+        assertTrue(text.contains("Choisis la carte à garder"), text);
+        assertTrue(text.contains("Un jeu de cartes dans ton jeu de cartes."), text);
+        assertTrue(text.contains("10 ×1.5 = 15 dégâts à Hydre"), "effet réel de la sélectionnée");
+
+        // Deuxième fois : plus de phrase méta ; flèches + Entrée.
+        int[] second = {-1};
+        Thread again = new Thread(() -> second[0] = ui.chooseDrawnCard(state, options));
+        again.setDaemon(true);
+        again.start();
+        waitFor(() -> screen().contains("les autres sont défaussées"));
+        String secondScreen = screen();
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        again.join(TIMEOUT.toMillis());
+        assertEquals(1, second[0]);
+        assertTrue(!secondScreen.contains("Un jeu de cartes dans ton jeu de cartes."), "phrase méta seulement la 1re fois");
+    }
+
     private void waitFor(java.util.function.BooleanSupplier condition) {
         long end = System.currentTimeMillis() + 5000;
         while (!condition.getAsBoolean()) {

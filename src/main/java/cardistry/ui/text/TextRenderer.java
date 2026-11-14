@@ -308,7 +308,7 @@ public final class TextRenderer implements Renderer {
         return c.kindName() + " " + Ansi.yellow(c.name()) + " (" + c.rarity().displayName() + ") : " + c.description();
     }
 
-    private static String describe(Card card) {
+    static String describe(Card card) {
         String type = Ansi.element(card.element());
         return switch (card) {
             case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : " + num(s.damage()) + " dégâts";

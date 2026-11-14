@@ -40,6 +40,28 @@ final class ItemScreens {
         drawCards(p, List.copyOf(current), selected, 4);
     }
 
+    static final String META_PHRASE = "Un jeu de cartes dans ton jeu de cartes.";
+
+    /** Pioche au choix (Paquet de cartes) : les propositions côte à côte et l'effet de la sélectionnée. */
+    static void cardChoice(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
+            boolean showMeta, long seed) {
+        p.frame("Pioche", "Ta main " + state.hand().size() + "/" + state.handSize(),
+                "1-" + options.size() + " ou ←/→ + Entrée garder · les autres sont défaussées");
+        p.centered(2, "Choisis la carte à garder", Palette.ACCENT, true);
+        if (showMeta) {
+            p.centered(3, "« " + META_PHRASE + " »", Palette.DIM, false);
+        }
+        int width = Math.min(18, (p.cols() - 4 - 2 * (options.size() - 1)) / options.size());
+        int total = options.size() * width + 2 * (options.size() - 1);
+        int left = Math.max(2, (p.cols() - total) / 2);
+        for (int i = 0; i < options.size(); i++) {
+            boolean isSelected = i == selected;
+            CombatScreen.drawCard(p, left + i * (width + 2), isSelected ? 6 : 7, width, i + 1, options.get(i),
+                    isSelected, false);
+        }
+        p.text(2, 15, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
+    }
+
     /** Trop de trinkets pour les emplacements : liste, le joueur en choisit un à jeter. */
     static void discard(Painter p, GameState state, int selected, long seed) {
         p.frame("Jeter un trinket", "Seed " + seed, "↑/↓ choisir · Entrée jeter");
