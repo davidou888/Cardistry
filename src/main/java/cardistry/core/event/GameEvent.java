@@ -37,6 +37,22 @@ public sealed interface GameEvent {
     record ItemUsed(Item item) implements GameEvent {
     }
 
+    /** Pioche au choix : cartes proposées (une seule sera gardée). */
+    record CardChoiceOffered(List<Card> options) implements GameEvent {
+
+        public CardChoiceOffered {
+            options = List.copyOf(options);
+        }
+    }
+
+    /** Pioche au choix : carte gardée et cartes défaussées (suivi d'un {@link CardDrawn}). */
+    record CardChosen(Card kept, List<Card> discarded) implements GameEvent {
+
+        public CardChosen {
+            discarded = List.copyOf(discarded);
+        }
+    }
+
     /** Une carte de la main a été remplacée par une autre (effet). */
     record CardReplaced(Card removed, Card replacement) implements GameEvent {
     }

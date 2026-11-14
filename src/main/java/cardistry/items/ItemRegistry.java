@@ -152,6 +152,13 @@ public final class ItemRegistry {
                         .build(),
 
                 // --- Légendaires ---
+                Trinket.builder("paquet-de-cartes", "Paquet de cartes", LEGENDARY)
+                        .description("Chaque carte piochée en combat devient un choix : 3 cartes du pool, tu en"
+                                + " gardes 1")
+                        .flavor("Un jeu de cartes dans ton jeu de cartes.")
+                        .tags(Tag.META)
+                        .flat(StatType.DRAW_CHOICES, 2)
+                        .build(),
                 Trinket.builder("diplome-epfl", "Diplôme EPFL", LEGENDARY)
                         .description("+1 emplacement de trinket ; effet des trinkets EPFL ×2 et bonus de set EPFL ×2")
                         .tags(Tag.EPFL)

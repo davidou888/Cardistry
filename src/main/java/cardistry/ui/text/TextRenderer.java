@@ -48,6 +48,11 @@ public final class TextRenderer implements Renderer {
                 }
             }
             case GameEvent.CardPlayed e -> console.println("Tu joues la carte " + cardName(e.card()));
+            case GameEvent.CardChoiceOffered e -> {
+                // Le choix est affiché par la saisie.
+            }
+            case GameEvent.CardChosen e -> console.println("Tu gardes " + cardName(e.kept()) + " (défaussées : "
+                    + String.join(", ", e.discarded().stream().map(Card::name).toList()) + ")");
             case GameEvent.ItemUsed e -> console.println("Tu utilises l'objet " + Ansi.yellow(e.item().name()));
             case GameEvent.CardReplaced e -> console.println("→ " + cardName(e.removed()) + " est remplacée par "
                     + cardName(e.replacement()));

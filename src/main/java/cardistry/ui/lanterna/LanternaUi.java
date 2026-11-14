@@ -85,6 +85,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 view.log(e.removed().name() + " remplacée par " + e.replacement().name(), Palette.INFO);
                 render();
             }
+            case GameEvent.CardChoiceOffered e -> {
+                // Le choix est affiché par l'écran de choix.
+            }
+            case GameEvent.CardChosen e -> view.log("Tu gardes " + e.kept().name() + ", tu défausses "
+                    + String.join(", ", e.discarded().stream().map(cardistry.model.card.Card::name).toList()), Palette.INFO);
             case GameEvent.ItemUsed e -> {
                 view.log("Tu utilises l'objet " + e.item().name(), Palette.INFO);
                 render();

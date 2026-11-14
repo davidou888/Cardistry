@@ -418,10 +418,30 @@ public final class CombatEngine {
         return pool.draw(rng, state::cardWeight);
     }
 
+    /**
+     * Pioche une carte. Si la stat {@link StatType#DRAW_CHOICES} vaut N &gt; 1 (Paquet de cartes), N
+     * cartes sont tirées et le joueur en garde une ; les autres sont défaussées.
+     */
     private void drawCard() {
-        Card card = drawFromPool();
+        int choices = state.playerStats().getInt(StatType.DRAW_CHOICES);
+        Card card = choices <= 1 ? drawFromPool() : chooseAmong(choices);
         state.addToHand(card);
         bus.publish(new GameEvent.CardDrawn(card));
+    }
+
+    private Card chooseAmong(int count) {
+        List<Card> options = new java.util.ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            options.add(drawFromPool());
+        }
+        bus.publish(new GameEvent.CardChoiceOffered(options));
+        int index;
+        do {
+            index = decisions.chooseDrawnCard(state, List.copyOf(options));
+        } while (index < 0 || index >= options.size());
+        Card kept = options.remove(index);
+        bus.publish(new GameEvent.CardChosen(kept, options));
+        return kept;
     }
 
     private void playCard(int slot) {

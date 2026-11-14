@@ -18,6 +18,12 @@ public final class HookDispatcher {
             case GameEvent.CardPlayed e -> hook.onCardPlayed(e, ctx);
             case GameEvent.CardDrawn e -> hook.onCardDrawn(e, ctx);
             case GameEvent.ItemUsed e -> hook.onItemUsed(e, ctx);
+            case GameEvent.CardChoiceOffered e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CardChosen e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.CardReplaced e -> hook.onCardReplaced(e, ctx);
             case GameEvent.DamageDealt e -> hook.onDamageDealt(e, ctx);
             case GameEvent.Healed e -> hook.onHeal(e, ctx);
