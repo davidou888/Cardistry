@@ -7,7 +7,9 @@ Version personnelle de Louis, développée en parallèle de celle de David (dép
 
 Prototype jouable en plein écran Lanterna : 3 combats (un par adversaire), nouvelle main de 5 cartes par combat, récompense (objet ou trinket, 1 parmi 3) après chaque adversaire vaincu. Lancement : `./play` (voir « Commandes »).
 
-- `cardistry.Main` — assemble tout ; options `--seed N`, `--fast`, `--no-ui`
+- `cardistry.Main` — assemble tout, choisit l'affichage selon l'OS et les options (voir README.md)
+- `platform/` — `Os` (détection), `SaveDirectory` (dossier de sauvegarde par OS)
+- `ui/Glyphs` — repli ASCII pur (appliqué par `Painter` et `Console`)
 - `core/` — `GameState` (dont l'inventaire, l'Ivresse et les malédictions), `Curse` (malédiction d'un combat, avec intensité : Gueule de bois), `TemporaryEffect` (effets temporaires génériques : délai, durée en tours / charges, report entre combats, prochain sort ×N, annuler une attaque, sauter le prochain tour du joueur ou de l'adversaire), `CombatEngine` (règles, récompenses, aucun affichage), `Action` (jouer, piocher, utiliser un objet, fumer, rouler), `ActionResult`, `RewardChoice`, `PlayerDecisions` (décisions demandées en cours d'action : carte à garder, trinket à jeter ; implémentées par `ui.Input`), `EffectContext` (ce que les effets peuvent faire : dégâts bruts ou élémentaires, dégâts au joueur, soins bruts ou élémentaires, pioche, remplacement de carte, Ivresse, effets temporaires), `Rng`
 - `core/event/` — `GameEvent` (records scellés), `EventBus` (en file : un événement publié en réaction est livré après l'événement en cours), `GameHooks` (reçoivent un `EffectContext`) + `HookDispatcher`. Le moteur transmet chaque événement aux hooks des trinkets équipés.
 - `core/stats/` — `Stats`, `StatModifier` (plats + pourcentages qui s'additionnent + multiplicateurs finaux), `StatType`. Toutes branchées sauf l'or (dont le seuil de Gueule de bois) : PV max (PV de départ + plafond des soins), taille de main, cartes par pioche, emplacements de trinkets (5) et d'objets (3), dégâts par élément, efficacité des soins (+ soins par élément), réduction de dégâts, dégâts de l'adversaire. Les autres stats sont déclarées mais pas encore lues par le moteur.
@@ -64,6 +66,7 @@ src/test/java/...             JUnit 5
 
 ## Commandes
 - Build : `./gradlew build`
-- Lancer en plein écran : `./play` (options : `./play --seed 42 --fast`). `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
+- Lancer : `./play` (Linux/macOS, plein écran terminal), `play.bat` (Windows, fenêtre Lanterna). Options : `--seed N`, `--fast`, `--no-ui`, `--window`, `--ascii`, `--no-color` (voir README.md). `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
 - Mode texte : `./play --no-ui`
+- CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Tests : `./gradlew test`
