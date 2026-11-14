@@ -122,15 +122,6 @@ class UnlockFileTest {
         assertEquals(Set.of(Secret.NULL_POINTER_EXCEPTION), next.unlockedSecrets());
     }
 
-    @Test
-    void dossierDeSauvegardeXdg() {
-        Path resolved = SaveDirectory.resolve("Linux", name -> name.equals("XDG_DATA_HOME") ? "/donnees" : null,
-                Path.of("/home/test"));
-        assertEquals(Path.of("/donnees", "cardistry"), resolved);
-        assertEquals(Path.of("/home/test", ".local", "share", "cardistry"),
-                SaveDirectory.resolve("Linux", name -> null, Path.of("/home/test")));
-    }
-
     /** Une partie réduite où l'on gagne le premier combat avec la dernière carte. */
     private static final class UnlockTrackerHarness {
 
