@@ -3,7 +3,48 @@
 Jeu de cartes roguelite au tour par tour, en Java, joué dans le terminal (interface plein écran
 [Lanterna](https://github.com/mabe02/lanterna)). Tourne sous **Linux, macOS et Windows**.
 
-## Prérequis
+## Installer l'app
+
+Chaque version est publiée dans les **[Releases GitHub](https://github.com/megaray/Cardistry/releases)** :
+une app autonome, **Java inclus** (rien d'autre à installer). Les paquets ne sont **pas signés** : au
+premier lancement, macOS et Windows affichent un avertissement, à passer une seule fois (voir plus bas).
+
+### macOS (Apple Silicon)
+
+1. Télécharger `Cardistry-<version>-macos-arm64.dmg`, l'ouvrir, glisser **Cardistry** dans
+   **Applications**.
+2. Premier lancement : macOS (Gatekeeper) refuse d'ouvrir une app d'un « développeur non identifié ».
+   - Ouvrir Cardistry une fois (le message s'affiche), puis **Réglages Système → Confidentialité et
+     sécurité**, descendre jusqu'au message sur Cardistry et cliquer **« Ouvrir quand même »**, confirmer.
+   - Sur les versions plus anciennes de macOS, **clic droit (ou Ctrl+clic) sur l'app → Ouvrir → Ouvrir**
+     suffit.
+   - Ou, dans le Terminal : `xattr -dr com.apple.quarantine /Applications/Cardistry.app`
+3. Ensuite, Cardistry s'ouvre normalement. Désinstaller : glisser l'app à la corbeille.
+
+Pas de version pour les Mac Intel pour l'instant.
+
+### Windows
+
+1. Télécharger `Cardistry-<version>-windows-x64.msi` et le lancer. L'installation se fait pour
+   l'utilisateur courant (pas besoin d'être administrateur) ; un raccourci est créé dans le menu
+   Démarrer et sur le bureau.
+2. Premier lancement : Windows (SmartScreen) affiche « Windows a protégé votre ordinateur ». Cliquer sur
+   **« Informations complémentaires »**, puis **« Exécuter quand même »**.
+3. Sans installation : le `.zip` portable ; le décompresser et lancer `Cardistry\Cardistry.exe`.
+4. Désinstaller : **Paramètres → Applications → Cardistry → Désinstaller**.
+
+### Linux
+
+- Debian, Ubuntu : `sudo apt install ./cardistry_<version>_amd64.deb`
+- Fedora, openSUSE : `sudo dnf install ./cardistry-<version>.x86_64.rpm`
+
+Cardistry apparaît dans le menu des applications (catégorie Jeux) ; en ligne de commande :
+`/opt/cardistry/bin/Cardistry` (options comprises, ex. `--terminal`). Désinstaller :
+`sudo apt remove cardistry` ou `sudo dnf remove cardistry`.
+
+Les déblocages et réglages ne sont pas effacés à la désinstallation (voir « Sauvegarde »).
+
+## Prérequis (pour lancer depuis les sources)
 
 - **JDK 21 ou plus récent** (`java -version` pour vérifier). Gradle n'a pas besoin d'être installé :
   le wrapper (`gradlew`, `gradlew.bat`) le télécharge.
@@ -189,6 +230,20 @@ simplement en silence. Les tests ne jouent jamais de son.
 
 Polices et bibliothèques OGG (JOrbis, VorbisSPI, Tritonus-share, sous LGPL, livrées comme jars
 séparés) : voir [`licenses/THIRD-PARTY.md`](licenses/THIRD-PARTY.md).
+
+## Construire l'app (jpackage)
+
+- `./gradlew jpackageImage` : l'app autonome dans `build/jpackage/out/Cardistry` (pour tester).
+- `./gradlew jpackage` : les installateurs de l'OS courant dans `build/jpackage/out` (macOS `.dmg`,
+  Windows `.msi` + `.zip` portable, Linux `.deb` + `.rpm`). Un OS à la fois : pas de compilation croisée.
+  `-PinstallerTypes=rpm` pour un seul type ; `-PappVersion=1.2.3` pour la version (1.0.0 par défaut).
+- Il faut une JDK **avec ses `jmods`** (ex. Temurin 21) : certaines JDK de distribution Linux ne
+  permettent pas de produire le Java embarqué. Windows : WiX Toolset 3 pour le `.msi`. Linux : `rpmbuild`
+  pour le `.rpm`, `dpkg-deb` pour le `.deb`.
+- **Publier une version** : `git tag -a v1.2.3 -m "Titre de la release"` puis `git push origin v1.2.3`. La
+  CI (`.github/workflows/release.yml`) teste, construit les paquets sur les trois OS et crée la GitHub
+  Release (pré-version si le titre contient Alpha, Beta ou RC).
+- Icône (provisoire) : `src/main/resources/icon/` ; `.ico` et `.icns` sont générés au build.
 
 ## Développement
 

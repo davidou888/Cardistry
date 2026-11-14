@@ -76,4 +76,5 @@ src/test/java/...             JUnit 5
 - Lancer : `./play` (Linux/macOS), `play.bat` (Windows) : fenêtre du jeu par défaut. Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--terminal`, `--no-ui`, `--crt`, `--no-images`, `--mute`, `--no-music`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
 - Mode texte : `./play --no-ui`
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
+- Paquets : `./gradlew jpackageImage` (app autonome), `./gradlew jpackage` (installateurs de l'OS courant ; JDK avec jmods requise). Release : tag `v*` → `.github/workflows/release.yml` (paquets des 3 OS → GitHub Release ; titre = message du tag annoté). Identifiant `io.github.megaray.cardistry`, éditeur « Cardistry ».
 - Tests : `./gradlew test`
