@@ -80,8 +80,8 @@ Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte po
 | Pioche | +1 carte dans la main de départ | — | — |
 
 **Diplôme EPFL** (Légendaire, EPFL) : +1 emplacement de trinket, effet des trinkets EPFL ×2, bonus de set EPFL ×2 ; il compte lui-même dans le set EPFL. Effet boule de neige **voulu**.
-- Si le Diplôme est remplacé alors que 6 trinkets sont équipés, les 6 sont gardés (au-dessus de la limite) ; il faudra en remplacer un pour en ajouter un autre.
-- Choix provisoires : « effet ×2 » s'applique à tout l'effet, contrepartie comprise (CMS : +100 % / adversaire +50 % ; Photocopieuse : 3 cartes ; Latte macchiato vanille : +2 cartes ; M1 et Plan du campus : 10) ; le Diplôme ne se double pas lui-même (+1 emplacement).
+- **Tout l'effet des trinkets EPFL est doublé, malus compris** (CMS : +100 % / adversaire +50 % ; Photocopieuse : 3 cartes ; Latte macchiato vanille : +2 cartes ; M1 et Plan du campus : 10). Le Diplôme ne se double pas lui-même (+1 emplacement seulement).
+- Si on perd le Diplôme avec 6 trinkets équipés, le joueur doit **immédiatement choisir un trinket à jeter** (écran de choix, pas de tirage au hasard) — sinon c'est exploitable.
 
 ### Ivresse
 - Chaque **boisson** (objet tagué Boisson) donne **+1 Ivresse**. L'Ivresse retombe à 0 après chaque combat.
@@ -131,7 +131,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Rare | Foie d'ingénieur | Gueule de bois à 5 Ivresse au lieu de 3 | Soirée | b (M1) |
 | Rare | CMS | +50 % dégâts, mais l'adversaire aussi +25 % | EPFL | a |
 | Légendaire | Ross | Tous les soins ×2 (multiplicateur final, après tous les autres bonus de soin) ; les soins ne sont plus plafonnés par les PV max | Soin | b (M9) |
-| Légendaire | Paquet de cartes | Pioche non aléatoire : tu vois 3 cartes et en choisis une | Méta | b (M3) |
+| Légendaire | Paquet de cartes | Chaque carte piochée pendant un combat devient un choix : 3 cartes tirées du pool, on en garde 1, les 2 autres sont défaussées | Méta | b (M3) |
 | Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé (effet boule de neige **voulu**, voir plus bas) | EPFL | b (M4) |
 | Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse | Soirée | b (M1) |
 | Légendaire | Pétou ancestral | À chaque combat gagné : +8 PV (soin feu : terrain, Grinder, ×2 avec Ross). Au début de chaque combat, l'adversaire saute son premier tour (« [Adversaire] passe son tour : tu as fait tourner le j. ») | Soirée, Feu | b (M2) |
@@ -165,7 +165,7 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - **M2 — Effets temporaires** : système générique (comme les malédictions) : délai avant déclenchement, durée en tours et/ou en déclenchements (charges), perdu ou gardé à la fin du combat, modificateurs de stats pendant l'effet, effets possibles : multiplier le prochain sort, annuler la prochaine attaque, faire sauter un tour. Affichés à l'écran avec leur durée restante.
   - Tour sauté de l'adversaire (Pétou ancestral) : vérifié avant les annulations d'attaque, donc un Moscow Mule reste pour l'attaque suivante. L'effet est posé au début du combat : équiper Pétou ancestral en cours de combat ne fait effet qu'au combat suivant.
   - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
-- **M3 — Pioche au choix** : le jeu propose N cartes, le joueur en choisit une.
+- **M3 — Pioche au choix** (Paquet de cartes, étape 7) : chaque carte piochée pendant un combat (action piocher, Photocopieuse, Cafffeeeeinnnn, Latte macchiato vanille…) devient un choix de 3 ; pioche multiple = un choix par carte, l'un après l'autre ; la main de départ n'est pas concernée ; George se déclenche après le choix (la carte choisie est protégée) ; Grinder s'applique aux propositions. Écran : 3 cartes côte à côte, touches 1/2/3, phrase méta au premier déclenchement (« Un jeu de cartes dans ton jeu de cartes. »).
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
 - **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.
 - **M6 — Annulation de tour** : revenir à l'état du début du tour précédent (faisable en rejouant la seed et les actions depuis le début).
@@ -197,7 +197,6 @@ Reste : carte de la run, shop, transitions d'écran.
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Diplôme EPFL : contreparties doublées (CMS +100 % / adversaire +50 %), Photocopieuse 3 cartes, le Diplôme ne se double pas lui-même — ok ? Perdre le Diplôme avec 6 trinkets : on les garde tous — ok ?
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
@@ -209,6 +208,7 @@ Reste : carte de la run, shop, transitions d'écran.
 - ~~Slots~~ → 3 objets, 5 trinkets.
 - ~~Utiliser un objet~~ → action gratuite.
 - ~~Qu'est-ce qu'un combat~~ → un adversaire. Chaque combat commence avec une nouvelle main de 5 cartes.
+- ~~Diplôme EPFL : portée du doublement, perte avec 6 trinkets~~ → tout l'effet doublé malus compris ; +1 emplacement seulement ; perdre le Diplôme avec 6 trinkets oblige à en jeter un (au choix).
 - ~~Gueule de bois : combien, quand~~ → une seule par combat, aucune pendant le dernier combat.
 - ~~Ptit Sat ?~~ → dégâts élémentaires, comme CMS.
 - ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
