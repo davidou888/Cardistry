@@ -61,7 +61,7 @@ public final class ItemRegistry {
                             @Override
                             public void onTurnStart(GameEvent.TurnStarted event, EffectContext ctx) {
                                 if (ctx.state().combatTurn() == 1) {
-                                    ctx.drawCards(1);
+                                    ctx.drawCards((int) Math.round(ctx.potency("latte-macchiato-vanille")));
                                 }
                             }
                         })
@@ -85,7 +85,7 @@ public final class ItemRegistry {
                         .hooks(new GameHooks() {
                             @Override
                             public void onTerrainChanged(GameEvent.TerrainChanged event, EffectContext ctx) {
-                                ctx.healPlayer(5);
+                                ctx.healPlayer(5 * ctx.potency("m1"));
                             }
                         })
                         .build(),
@@ -106,7 +106,7 @@ public final class ItemRegistry {
                             @Override
                             public void onCardPlayed(GameEvent.CardPlayed event, EffectContext ctx) {
                                 if (event.card() instanceof TerrainCard) {
-                                    ctx.damageEnemy(5);
+                                    ctx.damageEnemy(5 * ctx.potency("plan-du-campus"));
                                 }
                             }
                         })
@@ -152,6 +152,12 @@ public final class ItemRegistry {
                         .build(),
 
                 // --- Légendaires ---
+                Trinket.builder("diplome-epfl", "Diplôme EPFL", LEGENDARY)
+                        .description("+1 emplacement de trinket ; effet des trinkets EPFL ×2 et bonus de set EPFL ×2")
+                        .tags(Tag.EPFL)
+                        .flat(StatType.TRINKET_SLOTS, 1)
+                        .boostsTag(Tag.EPFL, 2)
+                        .build(),
                 Trinket.builder("ross", "Ross", LEGENDARY)
                         .description("Tous les soins ×2 (après les autres bonus) et ne sont plus plafonnés par les PV max")
                         .tags(Tag.HEAL)
@@ -175,7 +181,7 @@ public final class ItemRegistry {
                         .hooks(new GameHooks() {
                             @Override
                             public void onDrunkennessChanged(GameEvent.DrunkennessChanged event, EffectContext ctx) {
-                                String source = Trinket.sourceOf("ptit-sat");
+                                String source = Trinket.dynamicSourceOf("ptit-sat");
                                 ctx.state().playerStats().removeBySource(source);
                                 double bonus = 0.1 * event.drunkenness();
                                 if (bonus > 0) {

@@ -143,6 +143,49 @@ public final class GameState {
 
     // --- Sets ---
 
+    /**
+     * Puissance d'un trinket : produit des amplifications de ses tags par les <b>autres</b>
+     * trinkets équipés (Diplôme EPFL : ×2 sur les trinkets EPFL). 1 par défaut.
+     */
+    public double potency(Trinket trinket) {
+        double potency = 1.0;
+        for (Trinket other : trinkets) {
+            if (other != trinket) {
+                for (Tag tag : trinket.tags()) {
+                    potency *= other.boostFor(tag);
+                }
+            }
+        }
+        return potency;
+    }
+
+    /** Amplification du bonus de set d'un tag (produit des {@code boostFor} des trinkets équipés). */
+    public double setPotency(Tag tag) {
+        double potency = 1.0;
+        for (Trinket trinket : trinkets) {
+            potency *= trinket.boostFor(tag);
+        }
+        return potency;
+    }
+
+    /** Modificateur amplifié : plats et pourcentages ×p ; multiplicateur final f → 1 + (f − 1) × p. */
+    private static StatModifier scaled(StatModifier m, double potency, String source) {
+        double value = m.kind() == StatModifier.Kind.FINAL ? 1 + (m.value() - 1) * potency : m.value() * potency;
+        return new StatModifier(m.stat(), m.kind(), value, source);
+    }
+
+    /** Réapplique les modificateurs de tous les trinkets avec leur puissance actuelle, puis les sets. */
+    private void refreshInventoryModifiers() {
+        for (Trinket trinket : trinkets) {
+            playerStats.removeBySource(trinket.modifierSource());
+            double potency = potency(trinket);
+            for (StatModifier m : trinket.modifiers()) {
+                playerStats.add(scaled(m, potency, trinket.modifierSource()));
+            }
+        }
+        refreshSets();
+    }
+
     /** Nombre de trinkets équipés portant {@code tag}. */
     public int tagCount(Tag tag) {
         return (int) trinkets.stream().filter(t -> t.tags().contains(tag)).count();
@@ -165,10 +208,11 @@ public final class GameState {
         }
         List<ActiveSetTier> now = new ArrayList<>();
         for (SetBonus set : setBonuses) {
+            double potency = setPotency(set.tag());
             for (SetBonus.Tier tier : set.reached(tagCount(set.tag()))) {
                 now.add(new ActiveSetTier(set, tier));
                 for (StatModifier m : tier.modifiers()) {
-                    playerStats.add(new StatModifier(m.stat(), m.kind(), m.value(), set.source(tier)));
+                    playerStats.add(scaled(m, potency, set.source(tier)));
                 }
             }
         }
@@ -357,27 +401,41 @@ public final class GameState {
         if (trinkets.size() >= trinketSlots()) {
             throw new IllegalStateException("Plus d'emplacement de trinket");
         }
+        addTrinket(trinket);
+    }
+
+    /**
+     * Remplace le trinket {@code slot} par {@code trinket}. Toujours possible, même si la perte du
+     * trinket remplacé réduit les emplacements (Diplôme EPFL) : les trinkets en trop sont gardés.
+     */
+    Trinket replaceTrinket(int slot, Trinket trinket) {
+        Trinket old = unequipTrinket(slot);
+        addTrinket(trinket);
+        return old;
+    }
+
+    private void addTrinket(Trinket trinket) {
         trinkets.add(trinket);
-        trinket.modifiers().forEach(playerStats::add);
         for (TemporaryEffect effect : trinket.createEffects()) {
             effect.assignOwner(trinket.modifierSource());
             effect.activate();
             effects.add(effect);
             effect.modifiers().forEach(playerStats::add);
         }
-        refreshSets();
+        refreshInventoryModifiers();
     }
 
     /** Retire un trinket et ses modificateurs. */
     Trinket unequipTrinket(int slot) {
         Trinket trinket = trinkets.remove(slot);
         playerStats.removeBySource(trinket.modifierSource());
+        playerStats.removeBySource(trinket.dynamicSource());
         for (TemporaryEffect effect : List.copyOf(effects)) {
             if (effect.owner().equals(trinket.modifierSource())) {
                 removeEffect(effect);
             }
         }
-        refreshSets();
+        refreshInventoryModifiers();
         return trinket;
     }
 

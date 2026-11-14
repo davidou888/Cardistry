@@ -34,7 +34,7 @@ class ItemRegistryTest {
                 "Latte macchiato vanille", "M1", "Monde Snack", "Plan du campus", "Compréhension algébrique", "George",
                 "Cafffeeeeinnnn", "Gaz du bat Inf", "Spritz", "Pichet vide", "Foie d'ingénieur", "Ptit Sat ?",
                 "Caïpirinha", "Petit pétou", "Shot de Jäger", "Moscow Mule", "Raclette", "Space cake",
-                "Pétou ancestral", "Googz", "Honoré", "Ross")) {
+                "Pétou ancestral", "Googz", "Honoré", "Ross", "Diplôme EPFL")) {
             assertTrue(names.contains(expected), expected);
         }
     }

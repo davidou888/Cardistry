@@ -28,6 +28,7 @@ public final class Trinket implements Collectible {
     private final java.util.Map<String, Double> cardWeights;
     private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects;
     private final Gauge gauge;
+    private final java.util.Map<Tag, Double> tagBoosts;
 
     private Trinket(Builder builder) {
         this.id = builder.id;
@@ -41,6 +42,7 @@ public final class Trinket implements Collectible {
         this.cardWeights = java.util.Map.copyOf(builder.cardWeights);
         this.effects = List.copyOf(builder.effects);
         this.gauge = builder.gauge;
+        this.tagBoosts = java.util.Map.copyOf(builder.tagBoosts);
     }
 
     /** Jauge affichée par l'interface, s'il y en a une. */
@@ -67,6 +69,20 @@ public final class Trinket implements Collectible {
 
     static String sourceOf(String id) {
         return "trinket:" + id;
+    }
+
+    /** Source des modificateurs posés dynamiquement par les hooks (gardés lors des recalculs). */
+    public String dynamicSource() {
+        return dynamicSourceOf(id);
+    }
+
+    static String dynamicSourceOf(String id) {
+        return sourceOf(id) + ":dynamique";
+    }
+
+    /** Facteur appliqué aux trinkets portant {@code tag} (1 si ce trinket n'en amplifie pas). */
+    public double boostFor(Tag tag) {
+        return tagBoosts.getOrDefault(tag, 1.0);
     }
 
     public List<StatModifier> modifiers() {
@@ -108,6 +124,7 @@ public final class Trinket implements Collectible {
         private final java.util.Map<String, Double> cardWeights = new java.util.HashMap<>();
         private final List<java.util.function.Supplier<cardistry.core.TemporaryEffect>> effects = new ArrayList<>();
         private Gauge gauge;
+        private final java.util.Map<Tag, Double> tagBoosts = new java.util.EnumMap<>(Tag.class);
 
         private Builder(String id, String name, Rarity rarity) {
             this.id = id;
@@ -145,6 +162,15 @@ public final class Trinket implements Collectible {
         /** Multiplicateur final : {@code multiply(HEAL_EFFICIENCY, 2)} = ×2 après tous les autres bonus. */
         public Builder multiply(StatType stat, double factor) {
             modifiers.add(StatModifier.multiply(stat, factor, sourceOf(id)));
+            return this;
+        }
+
+        /**
+         * Amplifie les autres trinkets portant {@code tag} (×{@code factor} sur leurs effets) et le
+         * bonus de set de ce tag. Ne s'applique pas à ce trinket lui-même.
+         */
+        public Builder boostsTag(Tag tag, double factor) {
+            tagBoosts.put(tag, factor);
             return this;
         }
 

@@ -39,6 +39,9 @@ public interface EffectContext {
     /** Ajoute {@code amount} points d'Ivresse (négatif pour en retirer, jamais sous 0) ; peut déclencher une Gueule de bois. */
     void addDrunkenness(int amount);
 
+    /** Puissance du trinket équipé {@code trinketId} (×2 avec Diplôme EPFL pour un trinket EPFL), 1 sinon. */
+    double potency(String trinketId);
+
     /** Ajoute jusqu'à {@code count} clopes sans dépasser le paquet ; renvoie le nombre ajouté. */
     int addCigarettes(int count);
 

@@ -295,7 +295,9 @@ class TrinketContentTest {
         equip("ptit-sat");
         drink(2);
         assertEquals(1.2, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
-        state.playerStats().removeBySource(state.trinkets().get(0).modifierSource());
+        Trinket ptitSat = state.trinkets().get(0);
+        state.playerStats().removeBySource(ptitSat.modifierSource());
+        state.playerStats().removeBySource(ptitSat.dynamicSource());
         assertEquals(1.0, state.playerStats().get(cardistry.core.stats.StatType.WATER_DAMAGE), DELTA);
     }
 

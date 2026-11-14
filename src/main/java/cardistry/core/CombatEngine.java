@@ -373,9 +373,11 @@ public final class CombatEngine {
                 Collectible taken = pendingReward.get(take.option());
                 Collectible replaced = switch (taken) {
                     case Trinket trinket -> {
-                        Trinket old = take.replaceSlot() >= 0 ? state.unequipTrinket(take.replaceSlot()) : null;
+                        if (take.replaceSlot() >= 0) {
+                            yield state.replaceTrinket(take.replaceSlot(), trinket);
+                        }
                         state.equipTrinket(trinket);
-                        yield old;
+                        yield null;
                     }
                     case Item item -> {
                         Item old = take.replaceSlot() >= 0 ? state.removeItem(take.replaceSlot()) : null;
@@ -585,6 +587,12 @@ public final class CombatEngine {
             if (wasAlive && !player.isAlive()) {
                 bus.publish(new GameEvent.GameLost());
             }
+        }
+
+        @Override
+        public double potency(String trinketId) {
+            return state.trinkets().stream().filter(t -> t.id().equals(trinketId)).findFirst()
+                    .map(state::potency).orElse(1.0);
         }
 
         @Override
