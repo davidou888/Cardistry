@@ -9,8 +9,8 @@
 -- (idle, attack, hurt, death) déjà taguée n'est pas touchée. Un fichier sans rien à ajouter n'est
 -- même pas réenregistré.
 --
--- Sources des ébauches : items.txt et trinkets.txt (grilles de lettres), cards.lua et enemies.lua
--- (dessin par formes).
+-- Sources des ébauches : items.txt et trinkets.txt (grilles de lettres), cards.lua, enemies.lua et
+-- npcs.lua (dessin par formes).
 
 local root = app.params["root"] or "."
 local art = root .. "/art/"
@@ -263,16 +263,22 @@ for _, card in ipairs(dofile(tools .. "cards.lua")) do
 end
 build(art .. "cards.aseprite", 24, cards, 0.1)
 
--- Adversaires : enemies.lua renvoie une liste de { id, animations = { { name, frames = { f(lib) → image } } } }.
-for _, enemy in ipairs(dofile(tools .. "enemies.lua")) do
-  local entries = {}
-  for _, animation in ipairs(enemy.animations) do
-    local frames = animation.frames
-    entries[#entries + 1] = { id = animation.name, images = function()
-      local images = {}
-      for i, frame in ipairs(frames) do images[i] = frame(lib) end
-      return images
-    end }
+-- Sprites animés : le fichier renvoie une liste de { id, animations = { { name, frames = { f(lib) → image } } } },
+-- un .aseprite par id dans art/<folder>/.
+local function buildAnimated(source, folder, duration)
+  for _, sprite in ipairs(dofile(tools .. source)) do
+    local entries = {}
+    for _, animation in ipairs(sprite.animations) do
+      local frames = animation.frames
+      entries[#entries + 1] = { id = animation.name, images = function()
+        local images = {}
+        for i, frame in ipairs(frames) do images[i] = frame(lib) end
+        return images
+      end }
+    end
+    build(art .. folder .. "/" .. sprite.id .. ".aseprite", 64, entries, duration)
   end
-  build(art .. "enemies/" .. enemy.id .. ".aseprite", 64, entries, 0.25)
 end
+
+buildAnimated("enemies.lua", "enemies", 0.25) -- adversaires
+buildAnimated("npcs.lua", "npc", 0.5)         -- personnages non joueurs (marchand du shop)

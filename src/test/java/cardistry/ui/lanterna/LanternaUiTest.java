@@ -913,6 +913,47 @@ class LanternaUiTest {
 
     // --- Shop ---
 
+    @Test
+    void marchandEtFumeeDansUneGrandeFenetre() throws IOException {
+        openWithImages(100, 32);
+        cardistry.core.CombatEngine engine = shopEngine(15, 0);
+        type("p");
+        assertTimeoutPreemptively(TIMEOUT,
+                () -> ui.chooseShopAction(engine.state(), engine.shop().orElseThrow(), 75));
+        cardistry.ui.window.ImageLayer.Placement merchant = placed("npc/marchand.idle.1.png");
+        assertEquals(ShopScreen.MERCHANT_COLS, merchant.cols());
+        assertEquals(ShopScreen.MERCHANT_ROWS, merchant.rows());
+        long puffs = layer.marks().stream().filter(cardistry.ui.window.ImageLayer.Fill.class::isInstance).count();
+        assertTrue(puffs > 0, "la fumée est dessinée");
+    }
+
+    @Test
+    void petiteFenetreSansSpriteDeMarchandMaisAvecLeFumeurEnTexte() throws IOException {
+        openWithImages(80, 24);
+        cardistry.core.CombatEngine engine = shopEngine(15, 0);
+        type("p");
+        assertTimeoutPreemptively(TIMEOUT,
+                () -> ui.chooseShopAction(engine.state(), engine.shop().orElseThrow(), 75));
+        assertTrue(layer.snapshot().stream().noneMatch(i -> i.path().startsWith("npc/")));
+        assertTrue(screen().contains("(-_-)y-"), screen());
+    }
+
+    @Test
+    void laFumeeMonteSEffaceEtChangeAChaquePas() {
+        for (int tick = 0; tick < 200; tick++) {
+            List<ShopScreen.Puff> puffs = ShopScreen.smoke(tick);
+            assertEquals(ShopScreen.SMOKE_PUFFS, puffs.size());
+            for (ShopScreen.Puff puff : puffs) {
+                assertTrue(puff.dy() <= 0, "au-dessus de la clope");
+                assertTrue(puff.dy() >= -ShopScreen.SMOKE_LIFE * 2.5 - 1, "ne monte pas sans fin");
+                assertTrue(puff.alpha() > 0 && puff.alpha() <= 0.75f);
+                assertTrue(puff.size() >= 2);
+            }
+            assertFalse(puffs.equals(ShopScreen.smoke(tick + 1)), "animée");
+        }
+        assertEquals(ShopScreen.smoke(5), ShopScreen.smoke(5), "sans hasard");
+    }
+
     /** Partie avec un shop ouvert et {@code choomies} Choomies ; {@code items} objets en inventaire. */
     private static cardistry.core.CombatEngine shopEngine(int choomies, int items) {
         GameState state = GameState.newGame();

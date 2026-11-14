@@ -58,7 +58,7 @@ tasks.test {
 
 // ===================== Art (Aseprite) =====================
 // Sources dans art/ : icônes (une frame taguée par icône, le tag = l'id) et sprites d'adversaires
-// (art/enemies/<id>.aseprite, un tag par animation). Les PNG exportés sont commités dans
+// (art/enemies/<id>.aseprite et art/npc/<id>.aseprite, un tag par animation). Les PNG exportés sont commités dans
 // src/main/resources/images/. Sans Aseprite (CI, autre machine), generateArt et exportArt sont
 // ignorées et les PNG commités restent utilisés.
 // ./gradlew art         : tout d'un coup = generateArt, exportArt, planche
@@ -124,19 +124,22 @@ val exportArt by tasks.registering {
                 runAseprite(asepritePath!!, "-b", file.path, "--save-as", File(out, "{tag}.png").path)
             }
         }
-        val enemies = File(imagesDir, "enemies")
-        enemies.mkdirs()
-        for (file in File(artDir, "enemies").listFiles { f -> f.name.endsWith(".aseprite") }.orEmpty().sorted()) {
-            val id = file.nameWithoutExtension
-            // Anciennes frames d'abord : une animation raccourcie ne laisse pas de frame fantôme.
-            enemies.listFiles { f -> f.name.startsWith("$id.") && f.name.endsWith(".png") }.orEmpty()
-                    .forEach { it.delete() }
-            runAseprite(asepritePath!!, "-b", file.path, "--save-as",
-                    File(enemies, "$id.{tag}.{tagframe1}.png").path)
-            // Image de base (animation absente) : la première frame idle.
-            val idle = File(enemies, "$id.idle.1.png")
-            if (idle.isFile) {
-                idle.copyTo(File(enemies, "$id.png"), overwrite = true)
+        // Sprites animés : adversaires et personnages non joueurs (marchand), un .aseprite par id.
+        for (folder in listOf("enemies", "npc")) {
+            val out = File(imagesDir, folder)
+            out.mkdirs()
+            for (file in File(artDir, folder).listFiles { f -> f.name.endsWith(".aseprite") }.orEmpty().sorted()) {
+                val id = file.nameWithoutExtension
+                // Anciennes frames d'abord : une animation raccourcie ne laisse pas de frame fantôme.
+                out.listFiles { f -> f.name.startsWith("$id.") && f.name.endsWith(".png") }.orEmpty()
+                        .forEach { it.delete() }
+                runAseprite(asepritePath!!, "-b", file.path, "--save-as",
+                        File(out, "$id.{tag}.{tagframe1}.png").path)
+                // Image de base (animation absente) : la première frame idle.
+                val idle = File(out, "$id.idle.1.png")
+                if (idle.isFile) {
+                    idle.copyTo(File(out, "$id.png"), overwrite = true)
+                }
             }
         }
     }

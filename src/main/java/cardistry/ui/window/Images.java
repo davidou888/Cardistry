@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
  *   <li>{@code images/cards/<id>.png} : l'illustration d'une carte ;</li>
  *   <li>{@code images/ui/} : icônes de type de carte, d'intent, placeholders ; {@code images/player/} :
  *       le joueur ;</li>
+ *   <li>{@code images/npc/<id>.idle.<n>.png} : un personnage non joueur (le marchand du shop) ;</li>
  *   <li>{@code images/map/<type>.png} : l'icône d'un nœud de la carte (combat, elite, boss, shop,
  *       rest, event).</li>
  * </ul>
@@ -63,6 +64,22 @@ public final class Images {
             count++;
         }
         return count;
+    }
+
+    /**
+     * Chemin de l'image d'un personnage non joueur ({@code npc/<id>.idle.<n>.png}, la frame bouclant
+     * sur ses frames idle ; sinon {@code npc/<id>.png}), si elle existe.
+     */
+    public static Optional<String> npc(String id, int frame) {
+        int count = 0;
+        while (get("npc/" + id + ".idle." + (count + 1) + ".png").isPresent()) {
+            count++;
+        }
+        if (count > 0) {
+            return Optional.of("npc/" + id + ".idle." + (Math.floorMod(frame, count) + 1) + ".png");
+        }
+        String base = "npc/" + id + ".png";
+        return get(base).isPresent() ? Optional.of(base) : Optional.empty();
     }
 
     /** Chemin de l'icône d'un objet ou trinket, si elle existe. */

@@ -1433,7 +1433,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case STORY_RESULT -> StoryScreen.result(painter, state, storyResult, seed);
                     case PAUSE -> MenuScreens.pause(painter, menuSelected, seed);
                     case OPTIONS -> MenuScreens.options(painter, options.settings(), optionsSelected, seed);
-                    case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast);
+                    case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast,
+                            shopTick);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
@@ -1460,9 +1461,14 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         }
     }
 
+    /** Durée d'un pas de la fumée du marchand. */
+    static final int SMOKE_MS = 110;
+    private int shopTick = 0;
+
     /** Attend une touche ; redessine si le terminal change de taille. */
     private KeyStroke readKey() {
         long nextIdle = System.currentTimeMillis() + IDLE_MS;
+        long nextSmoke = System.currentTimeMillis() + SMOKE_MS;
         try {
             while (true) {
                 KeyStroke key = screen.pollInput();
@@ -1479,6 +1485,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 if (!fast && idleAnimated() && System.currentTimeMillis() >= nextIdle) {
                     view.idleFrame++;
                     nextIdle = System.currentTimeMillis() + IDLE_MS;
+                    render();
+                }
+                if (!fast && page == Page.SHOP && System.currentTimeMillis() >= nextSmoke) {
+                    shopTick++; // le marchand fume
+                    nextSmoke = System.currentTimeMillis() + SMOKE_MS;
                     render();
                 }
                 sleep(POLL_MS);

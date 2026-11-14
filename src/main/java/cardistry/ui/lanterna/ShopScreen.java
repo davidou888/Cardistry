@@ -10,6 +10,11 @@ import com.googlecode.lanterna.TextColor;
 /**
  * Shop : 5 cartes en haut, puis 2 objets et 2 trinkets, puis les services (reroll, retrait). Les
  * prix trop chers sont grisés.
+ *
+ * <p>Le marchand fume. Dans une fenêtre d'au moins {@link #MERCHANT_MIN_COLS}×{@link #MERCHANT_MIN_ROWS},
+ * son sprite est à gauche des cartes et la fumée monte de sa clope (dessin au pixel près, voir
+ * {@link #smoke(int)}) ; ailleurs (terminal, petite fenêtre), un petit fumeur en texte précède sa
+ * réplique.
  */
 final class ShopScreen {
 
@@ -18,6 +23,78 @@ final class ShopScreen {
     static final String HELP = "←/→ ↑/↓ · Entrée acheter · R reroll · T retirer · P partir · Échap pause";
     static final String LEAVE = "[P] Partir";
     private static final int CARD_TOP = 4;
+
+    // --- Marchand ---
+    static final String MERCHANT = "marchand";
+    static final int MERCHANT_MIN_COLS = 100;
+    static final int MERCHANT_MIN_ROWS = 30;
+    /** Rectangle du sprite : 64 px agrandis ×2 (133×140 unités pour 128). */
+    static final int MERCHANT_COLS = 19;
+    static final int MERCHANT_ROWS = 10;
+    private static final int MERCHANT_COL = 2;
+    private static final int MERCHANT_TOP = 2;
+    private static final int MERCHANT_SCALE = 2;
+    /** Point de départ de la fumée dans le sprite : juste au-dessus du bout de la clope (art/tools/npcs.lua). */
+    static final int CIGARETTE_X = 51;
+    static final int CIGARETTE_Y = 26;
+    /** Le marchand tire sur sa clope (frame 2 : œil fermé, braise vive) pendant 3 pas sur 18. */
+    private static final int DRAG_PERIOD = 18;
+
+    // --- Fumée ---
+    static final int SMOKE_PUFFS = 14;
+    /** Durée de vie d'une volute, en pas d'animation. */
+    static final int SMOKE_LIFE = 27;
+    private static final String[] WISPS = {"~  ", "~~ ", " ~~", "  ~", "   "};
+
+    /** Une volute : décalage par rapport au bout de la clope (unités du calque), côté et opacité. */
+    record Puff(int dx, int dy, int size, float alpha) {
+    }
+
+    /**
+     * Volutes au pas {@code tick} : chacune monte, ondule, grossit et s'efface en {@link #SMOKE_LIFE}
+     * pas, puis repart de la clope avec une autre trajectoire. Pure (aucun hasard) : testable.
+     */
+    static java.util.List<Puff> smoke(int tick) {
+        java.util.List<Puff> puffs = new java.util.ArrayList<>();
+        for (int i = 0; i < SMOKE_PUFFS; i++) {
+            int time = tick + i * SMOKE_LIFE / SMOKE_PUFFS;
+            int age = Math.floorMod(time, SMOKE_LIFE);
+            int cycle = Math.floorDiv(time, SMOKE_LIFE);
+            int seed = Math.floorMod((i * 31 + cycle * 17) * 0x9E3779B1, 1000);
+            double phase = seed / 1000.0 * Math.PI * 2;
+            double drift = 0.15 + (seed % 7) / 12.0; // vers la droite, plus ou moins
+            double dx = Math.sin(age * 0.32 + phase) * (1 + age / 7.0) + age * drift;
+            double dy = -age * 2.5;
+            float alpha = 0.75f * (1 - age / (float) SMOKE_LIFE);
+            puffs.add(new Puff((int) Math.round(dx), (int) Math.round(dy), 2 + age / 5, alpha));
+        }
+        return puffs;
+    }
+
+    /** {@code true} si le sprite du marchand est affiché (fenêtre assez grande, image présente). */
+    static boolean showsMerchant(Painter p) {
+        return p.hasImages() && p.cols() >= MERCHANT_MIN_COLS && p.rows() >= MERCHANT_MIN_ROWS
+                && cardistry.ui.window.Images.npc(MERCHANT, 0).isPresent();
+    }
+
+    private static void drawMerchant(Painter p, int tick) {
+        int frame = Math.floorMod(tick, DRAG_PERIOD) >= DRAG_PERIOD - 3 ? 1 : 0;
+        p.image(MERCHANT_COL, MERCHANT_TOP, MERCHANT_COLS, MERCHANT_ROWS,
+                cardistry.ui.window.Images.npc(MERCHANT, frame).orElseThrow(), null, 1f);
+        // Le sprite (64 px × 2) est centré dans son rectangle de cellules.
+        int unitsPerCol = cardistry.ui.window.ImageLayer.UNITS_PER_COL;
+        int unitsPerRow = cardistry.ui.window.ImageLayer.UNITS_PER_ROW;
+        int originX = MERCHANT_COL * unitsPerCol + (MERCHANT_COLS * unitsPerCol - 64 * MERCHANT_SCALE) / 2;
+        int originY = MERCHANT_TOP * unitsPerRow + (MERCHANT_ROWS * unitsPerRow - 64 * MERCHANT_SCALE) / 2;
+        int x = originX + CIGARETTE_X * MERCHANT_SCALE;
+        int y = originY + CIGARETTE_Y * MERCHANT_SCALE;
+        for (Puff puff : smoke(tick)) {
+            int top = y + puff.dy() - puff.size();
+            if (top > unitsPerRow) { // jamais sur le cadre
+                p.fill(x + puff.dx(), top, puff.size(), puff.size(), Palette.TEXT, puff.alpha());
+            }
+        }
+    }
 
     private ShopScreen() {
     }
@@ -36,12 +113,31 @@ final class ShopScreen {
     }
 
     static void draw(Painter p, GameState state, Shop shop, int selected, int removalPrice, long seed, String toast) {
+        draw(p, state, shop, selected, removalPrice, seed, toast, 0);
+    }
+
+    /** @param tick pas d'animation de la fumée (0 = image fixe) */
+    static void draw(Painter p, GameState state, Shop shop, int selected, int removalPrice, long seed, String toast,
+            int tick) {
         p.frame("Shop", state.choomies() + " Choomies · Seed " + seed, HELP);
-        p.centered(2, GREETING, Palette.DIM, false);
         java.util.List<java.util.List<Integer>> rows = rows(shop);
-        int width = Math.min(14, (p.cols() - 4 - 2 * (Shop.CARDS - 1)) / Shop.CARDS);
+        boolean merchant = showsMerchant(p);
+        // Avec le marchand, les cartes se serrent à sa droite.
+        int start = merchant ? MERCHANT_COL + MERCHANT_COLS + 2 : 2;
+        int room = p.cols() - 2 - start;
+        int width = Math.min(14, (room - 2 * (Shop.CARDS - 1)) / Shop.CARDS);
         int total = Shop.CARDS * width + 2 * (Shop.CARDS - 1);
-        int left = Math.max(2, (p.cols() - total) / 2);
+        int left = start + Math.max(0, (room - total) / 2);
+        if (merchant) {
+            drawMerchant(p, tick);
+            p.text(left, 2, Painter.fit(GREETING, p.cols() - 2 - left), Palette.DIM);
+        } else {
+            // Pas de sprite : un petit fumeur en texte, dont la fumée s'éloigne.
+            String smoker = "(-_-)y-" + WISPS[Math.floorMod(tick / 3, WISPS.length)] + " ";
+            int col = Math.max(1, (p.cols() - smoker.length() - GREETING.length()) / 2);
+            p.text(col, 2, smoker, Palette.TEXT);
+            p.text(col + smoker.length(), 2, GREETING, Palette.DIM);
+        }
         for (int k = 0; k < rows.get(0).size(); k++) {
             int i = rows.get(0).get(k);
             ShopOffer.CardOffer offer = (ShopOffer.CardOffer) shop.offers().get(i);

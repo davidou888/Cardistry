@@ -83,6 +83,15 @@ final class Painter {
         }
     }
 
+    /** Rectangle plein translucide ({@code alpha} de 0 à 1), en unités du calque (fenêtre seulement). */
+    void fill(int x, int y, int width, int height, TextColor color, float alpha) {
+        if (images != null) {
+            java.awt.Color c = cardistry.ui.window.CellPalette.foreground(color);
+            images.add(new cardistry.ui.window.ImageLayer.Fill(x, y, width, height, new java.awt.Color(
+                    c.getRed(), c.getGreen(), c.getBlue(), Math.round(255 * Math.max(0, Math.min(1, alpha))))));
+        }
+    }
+
     /**
      * Image centrée sur ({@code x}, {@code y}) en unités du calque, dans un carré de {@code size} unités.
      *
