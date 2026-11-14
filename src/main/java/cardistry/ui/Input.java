@@ -61,6 +61,17 @@ public interface Input extends PlayerDecisions {
         return 0;
     }
 
+    /**
+     * Shop : la prochaine action. Un achat d'objet ou de trinket avec l'inventaire plein doit dire
+     * quoi remplacer ({@code Buy.replaceSlot}). Par défaut : partir.
+     *
+     * @param removalPrice prix du prochain retrait de carte
+     */
+    default cardistry.core.shop.ShopAction chooseShopAction(GameState state, cardistry.core.Shop shop,
+            int removalPrice) {
+        return new cardistry.core.shop.ShopAction.Leave();
+    }
+
     /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
     default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         return options.get(0);

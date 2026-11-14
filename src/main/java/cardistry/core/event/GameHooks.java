@@ -10,7 +10,6 @@ import cardistry.core.EffectContext;
  * livrés après l'événement en cours (voir {@link EventBus}). Pour modifier une valeur comme
  * « +25 % de dégâts feu », passer plutôt par un {@link cardistry.core.stats.StatModifier}.
  *
- * <p>À ajouter avec les fonctionnalités correspondantes : {@code onShopEnter}, {@code onItemBought}…
  */
 public interface GameHooks {
 
@@ -82,6 +81,12 @@ public interface GameHooks {
     }
 
     default void onRewardTaken(GameEvent.RewardTaken event, EffectContext ctx) {
+    }
+
+    default void onShopEnter(GameEvent.ShopEntered event, EffectContext ctx) {
+    }
+
+    default void onItemBought(GameEvent.ItemBought event, EffectContext ctx) {
     }
 
     default void onGameWon(GameEvent.GameWon event, EffectContext ctx) {

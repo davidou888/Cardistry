@@ -57,6 +57,7 @@ class RunMapTest {
                 }
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
+                case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -78,6 +79,7 @@ class RunMapTest {
                 }
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
+                case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -319,5 +321,88 @@ class RunMapTest {
         assertNotNull(run.map().orElseThrow());
         assertTrue(run.state().player().hp() >= hp);
         assertSame(run.choices().size(), run.map().orElseThrow().choicesAfter(position).size());
+    }
+
+    // --- Shop ---
+
+    /** Va au premier shop atteignable en le préférant partout (Ctrl+Z équipé si {@code undo}). */
+    private Run runToShop(long seed, boolean undo) {
+        EventBus bus = new EventBus();
+        bus.subscribe(events::add);
+        Run run = new Run(seed, Set.of(), bus,
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        if (undo) {
+            run.addCode(Secret.CTRL_Z);
+        }
+        run.start();
+        int guard = 0;
+        while (run.phase() != Run.Phase.SHOP && guard++ < 10_000) {
+            switch (run.phase()) {
+                case MAP -> {
+                    List<MapNode> choices = run.choices();
+                    int shop = -1;
+                    for (int i = 0; i < choices.size(); i++) {
+                        if (choices.get(i).type() == NodeType.SHOP) {
+                            shop = i;
+                        }
+                    }
+                    run.chooseNode(Math.max(0, shop));
+                }
+                case COMBAT -> {
+                    if (run.startTurn()) {
+                        run.submit(new Action.PlayCard(0));
+                    }
+                }
+                case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case CARD_REWARD -> run.resolveCardReward(-1);
+                case REST -> run.rest(RestOption.HEAL);
+                case SHOP, OVER -> {
+                }
+            }
+        }
+        return run;
+    }
+
+    @Test
+    void noeudShopOuvreLeShop() {
+        Run run = runToShop(4, false);
+        assertEquals(Run.Phase.SHOP, run.phase());
+        assertEquals(NodeType.SHOP, run.position().type());
+        // Pool d'une seule carte : une seule carte proposée, puis 2 objets et 2 trinkets.
+        assertEquals(1 + 2 + 2, run.shop().orElseThrow().offers().size());
+        assertEquals(75, run.cardRemovalPrice());
+        int choomies = run.state().choomies();
+        assertTrue(run.shop(new cardistry.core.shop.ShopAction.Reroll()) == (choomies >= 20));
+        run.shop(new cardistry.core.shop.ShopAction.Leave());
+        assertEquals(Run.Phase.MAP, run.phase());
+    }
+
+    @Test
+    void ctrlZRejoueLesAchats() {
+        Run run = runToShop(4, true);
+        run.state(); // shop ouvert
+        int choomies = run.state().choomies();
+        boolean bought = run.shop(cardistry.core.shop.ShopAction.Buy.of(0)); // une carte
+        int deck = run.state().deck().size();
+        run.shop(new cardistry.core.shop.ShopAction.Leave());
+        // Combat suivant, deux tours, puis annulation : l'achat est rejoué à l'identique.
+        while (run.phase() != Run.Phase.COMBAT) {
+            switch (run.phase()) {
+                case MAP -> run.chooseNode(0);
+                case REST -> run.rest(RestOption.HEAL);
+                case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
+                default -> throw new AssertionError(run.phase());
+            }
+        }
+        run.state().currentEnemy().heal(100_000); // survit au premier sort
+        run.startTurn();
+        run.submit(new Action.RollCigarette());
+        run.startTurn();
+        assertEquals(ActionResult.FREE_ACTION, run.submit(new Action.Undo()));
+        assertEquals(deck, run.state().deck().size());
+        if (bought) {
+            assertTrue(run.state().choomies() < choomies + 200);
+        }
     }
 }

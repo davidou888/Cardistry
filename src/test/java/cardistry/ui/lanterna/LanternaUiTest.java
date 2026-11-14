@@ -245,6 +245,8 @@ class LanternaUiTest {
         press(KeyType.Enter); // titre
         for (int i = 0; i < 3000; i++) {
             type("1ps"); // 1er nœud de la carte, jouer la 1re carte, piocher, refuser les récompenses
+            press(KeyType.Escape); // quitter le shop (ailleurs : demande de confirmation…
+            type("n"); // … refusée)
         }
 
         // Capture l'écran de combat au tour 3.
@@ -876,5 +878,103 @@ class LanternaUiTest {
         List<Card> deck = List.of(new SpellCard("Tsunami", Element.WATER, 15), new HealCard("Potion", Element.NATURE, 10),
                 new SpellCard("Tsunami", Element.WATER, 15));
         assertEquals("Tsunami ×2, Potion", ItemScreens.deckSummary(deck));
+    }
+
+    // --- Shop ---
+
+    /** Partie avec un shop ouvert et {@code choomies} Choomies ; {@code items} objets en inventaire. */
+    private static cardistry.core.CombatEngine shopEngine(int choomies, int items) {
+        GameState state = GameState.newGame();
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(state, new cardistry.model.card.CardPool(),
+                new cardistry.core.Rng(3), new EventBus());
+        engine.start();
+        engine.gainChoomies(choomies - state.choomies());
+        for (int i = 0; i < items; i++) {
+            engine.give(mate());
+        }
+        engine.openShop();
+        return engine;
+    }
+
+    @Test
+    void shopAffichePrixEtServices() throws IOException {
+        open(80, 24);
+        cardistry.core.CombatEngine engine = shopEngine(15, 0);
+        GameState state = engine.state();
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        press(KeyType.ArrowDown); // vers les objets
+        press(KeyType.Enter);
+        cardistry.core.shop.ShopAction action = assertTimeoutPreemptively(TIMEOUT,
+                () -> ui.chooseShopAction(state, shop, 75));
+        assertEquals(cardistry.core.shop.ShopAction.Buy.of(cardistry.core.Shop.CARDS), action);
+        String text = dump("70-shop");
+        assertTrue(text.contains("Shop"), text);
+        assertTrue(text.contains("15 Choomies"));
+        assertTrue(text.contains("Entre, entre"));
+        assertTrue(text.contains("Objets") && text.contains("Trinkets"));
+        assertTrue(text.contains("[R] Reroll : 20"));
+        assertTrue(text.contains("[T] Retirer une carte : 75"));
+        // 15 Choomies : tout est trop cher, prix grisés.
+        String[] lines = text.split("\n");
+        int prices = 0;
+        for (int row = 0; row < lines.length; row++) {
+            int col = lines[row].indexOf(" Ch.");
+            while (col > 0) {
+                assertEquals(Palette.DIM, terminal.getCharacter(col - 1, row).getForegroundColor(), lines[row]);
+                prices++;
+                col = lines[row].indexOf(" Ch.", col + 1);
+            }
+        }
+        assertEquals(9, prices);
+    }
+
+    @Test
+    void shopPrixAbordablesEnCouleur() throws IOException {
+        open(80, 24);
+        cardistry.core.CombatEngine engine = shopEngine(1000, 0);
+        press(KeyType.Escape); // l'écran du shop reste affiché après le départ
+        assertEquals(new cardistry.core.shop.ShopAction.Leave(), assertTimeoutPreemptively(TIMEOUT,
+                () -> ui.chooseShopAction(engine.state(), engine.shop().orElseThrow(), 75)));
+        String text = screen();
+        int row = 0;
+        for (String line : text.split("\n")) {
+            int col = line.indexOf(" Ch.");
+            if (col > 0) {
+                assertEquals(Palette.ACCENT, terminal.getCharacter(col - 1, row).getForegroundColor(), line);
+            }
+            row++;
+        }
+    }
+
+    @Test
+    void shopRerollEtRetrait() throws IOException {
+        open(80, 24);
+        cardistry.core.CombatEngine engine = shopEngine(500, 0);
+        GameState state = engine.state();
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        type("r");
+        assertEquals(new cardistry.core.shop.ShopAction.Reroll(),
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseShopAction(state, shop, 75)));
+        type("t");
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        assertEquals(new cardistry.core.shop.ShopAction.RemoveCard(1),
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseShopAction(state, shop, 75)));
+    }
+
+    @Test
+    void shopInventairePleinEcranDeRemplacement() throws IOException {
+        open(80, 24);
+        cardistry.core.CombatEngine engine = shopEngine(1000, 3);
+        GameState state = engine.state();
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        press(KeyType.ArrowDown); // premier objet
+        press(KeyType.Enter); // inventaire plein : écran de remplacement
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        assertEquals(new cardistry.core.shop.ShopAction.Buy(cardistry.core.Shop.CARDS, 1),
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseShopAction(state, shop, 75)));
+        String text = dump("71-shop-remplacer");
+        assertTrue(text.contains("Que remplace"), text);
     }
 }

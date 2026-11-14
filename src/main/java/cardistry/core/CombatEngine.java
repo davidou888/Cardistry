@@ -610,20 +610,7 @@ public final class CombatEngine {
                     return false;
                 }
                 Collectible taken = pendingReward.get(take.option());
-                Collectible replaced = switch (taken) {
-                    case Trinket trinket -> {
-                        if (take.replaceSlot() >= 0) {
-                            yield state.replaceTrinket(take.replaceSlot(), trinket);
-                        }
-                        state.equipTrinket(trinket);
-                        yield null;
-                    }
-                    case Item item -> {
-                        Item old = take.replaceSlot() >= 0 ? state.removeItem(take.replaceSlot()) : null;
-                        state.addItem(item);
-                        yield old;
-                    }
-                };
+                Collectible replaced = putInInventory(taken, take.replaceSlot());
                 bus.publish(new GameEvent.RewardTaken(taken, replaced));
                 publishSetChanges();
                 enforceTrinketSlots();
@@ -635,6 +622,166 @@ public final class CombatEngine {
             nextCombat();
         }
         return true;
+    }
+
+    /** Met {@code taken} dans l'inventaire (à la place de {@code replaceSlot} si ≥ 0) ; renvoie l'ancien. */
+    private Collectible putInInventory(Collectible taken, int replaceSlot) {
+        return switch (taken) {
+            case Trinket trinket -> {
+                if (replaceSlot >= 0) {
+                    yield state.replaceTrinket(replaceSlot, trinket);
+                }
+                state.equipTrinket(trinket);
+                yield null;
+            }
+            case Item item -> {
+                Item old = replaceSlot >= 0 ? state.removeItem(replaceSlot) : null;
+                state.addItem(item);
+                yield old;
+            }
+        };
+    }
+
+    /** {@code null} si {@code taken} peut aller dans l'inventaire (en remplaçant {@code replaceSlot}). */
+    private Reason inventoryProblem(Collectible taken, int replaceSlot) {
+        int used = taken instanceof Trinket ? state.trinkets().size() : state.items().size();
+        int slots = taken instanceof Trinket ? state.trinketSlots() : state.itemSlots();
+        if (replaceSlot < 0) {
+            return used < slots ? null : Reason.INVENTORY_FULL;
+        }
+        return replaceSlot < used ? null : Reason.INVALID_REWARD;
+    }
+
+    // --- Shop ---
+
+    private Shop shop;
+
+    /** Shop ouvert (nœud Shop de la carte), s'il y en a un. */
+    public Optional<Shop> shop() {
+        return Optional.ofNullable(shop);
+    }
+
+    /** Ouvre un shop : articles tirés, rerolls à zéro. */
+    public void openShop() {
+        if (inCombat() || hasPendingReward() || hasPendingCardReward() || isOver()) {
+            throw new IllegalStateException("Pas de shop maintenant");
+        }
+        shop = new Shop();
+        shop.restock(stock());
+        bus.publish(new GameEvent.ShopEntered(shop));
+    }
+
+    /** {@link Shop#CARDS} cartes de noms différents, {@link Shop#ITEMS} objets, {@link Shop#TRINKETS} trinkets (sans secret). */
+    private List<cardistry.core.shop.ShopOffer> stock() {
+        List<cardistry.core.shop.ShopOffer> stock = new java.util.ArrayList<>();
+        List<String> names = new java.util.ArrayList<>();
+        int guard = 0;
+        while (names.size() < Shop.CARDS && guard++ < 500) {
+            Card card = drawFromPool();
+            if (!names.contains(card.name())) {
+                names.add(card.name());
+                stock.add(new cardistry.core.shop.ShopOffer.CardOffer(card, cardistry.core.shop.ShopPrices.price(card)));
+            }
+        }
+        LootTable items = new LootTable(() -> List.copyOf(cardistry.items.ItemRegistry.items()));
+        LootTable trinkets = new LootTable(() -> List.copyOf(cardistry.items.ItemRegistry.trinkets()));
+        for (Collectible c : items.offer(state, rng, Shop.ITEMS, cardistry.items.Rarity.COMMON, false)) {
+            stock.add(new cardistry.core.shop.ShopOffer.CollectibleOffer(c, cardistry.core.shop.ShopPrices.price(c)));
+        }
+        for (Collectible c : trinkets.offer(state, rng, Shop.TRINKETS, cardistry.items.Rarity.COMMON, false)) {
+            stock.add(new cardistry.core.shop.ShopOffer.CollectibleOffer(c, cardistry.core.shop.ShopPrices.price(c)));
+        }
+        return stock;
+    }
+
+    /** Prix du prochain retrait de carte au shop. */
+    public int cardRemovalPrice() {
+        return cardistry.core.shop.ShopPrices.removal(state.cardRemovals());
+    }
+
+    /**
+     * Applique une action au shop.
+     *
+     * @return {@code false} si elle est refusée (un {@link GameEvent.ActionRejected} est publié)
+     */
+    public boolean shopAction(cardistry.core.shop.ShopAction action) {
+        if (shop == null) {
+            throw new IllegalStateException("Aucun shop ouvert");
+        }
+        Optional<Reason> rejection = switch (action) {
+            case cardistry.core.shop.ShopAction.Buy buy -> buy(buy);
+            case cardistry.core.shop.ShopAction.RemoveCard remove -> removeInShop(remove.deckIndex());
+            case cardistry.core.shop.ShopAction.Reroll reroll -> rerollShop();
+            case cardistry.core.shop.ShopAction.Leave leave -> {
+                shop = null;
+                bus.publish(new GameEvent.ShopLeft());
+                yield Optional.empty();
+            }
+        };
+        rejection.ifPresent(r -> bus.publish(new GameEvent.ActionRejected(r)));
+        return rejection.isEmpty();
+    }
+
+    private Optional<Reason> buy(cardistry.core.shop.ShopAction.Buy buy) {
+        if (buy.offer() < 0 || buy.offer() >= shop.offers().size() || shop.isSold(buy.offer())) {
+            return Optional.of(Reason.SOLD_OUT);
+        }
+        cardistry.core.shop.ShopOffer offer = shop.offers().get(buy.offer());
+        if (state.choomies() < offer.price()) {
+            return Optional.of(Reason.NOT_ENOUGH_CHOOMIES);
+        }
+        Collectible replaced = null;
+        if (offer instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c) {
+            Reason problem = inventoryProblem(c.collectible(), buy.replaceSlot());
+            if (problem != null) {
+                return Optional.of(problem);
+            }
+        }
+        changeChoomies(-offer.price());
+        shop.markSold(buy.offer());
+        switch (offer) {
+            case cardistry.core.shop.ShopOffer.CardOffer card -> {
+                bus.publish(new GameEvent.ItemBought(offer, null));
+                addCardToDeck(card.card());
+            }
+            case cardistry.core.shop.ShopOffer.CollectibleOffer c -> {
+                replaced = putInInventory(c.collectible(), buy.replaceSlot());
+                bus.publish(new GameEvent.ItemBought(offer, replaced));
+                publishSetChanges();
+                enforceTrinketSlots();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<Reason> removeInShop(int deckIndex) {
+        if (!canRemoveCard()) {
+            return Optional.of(Reason.DECK_TOO_SMALL);
+        }
+        if (deckIndex < 0 || deckIndex >= state.deck().size()) {
+            return Optional.of(Reason.INVALID_CHOICE);
+        }
+        int price = cardRemovalPrice();
+        if (state.choomies() < price) {
+            return Optional.of(Reason.NOT_ENOUGH_CHOOMIES);
+        }
+        changeChoomies(-price);
+        state.countCardRemoval();
+        bus.publish(new GameEvent.CardRemovalBought(price));
+        removeCardFromDeck(deckIndex);
+        return Optional.empty();
+    }
+
+    private Optional<Reason> rerollShop() {
+        int price = shop.rerollPrice();
+        if (state.choomies() < price) {
+            return Optional.of(Reason.NOT_ENOUGH_CHOOMIES);
+        }
+        changeChoomies(-price);
+        shop.countReroll();
+        shop.restock(stock());
+        bus.publish(new GameEvent.ShopRestocked(price));
+        return Optional.empty();
     }
 
     /** S'il y a plus de trinkets que d'emplacements (Diplôme perdu), le joueur en jette au choix. */
@@ -654,13 +801,7 @@ public final class CombatEngine {
         if (take.option() < 0 || take.option() >= pendingReward.size()) {
             return Optional.of(Reason.INVALID_REWARD);
         }
-        Collectible taken = pendingReward.get(take.option());
-        int used = taken instanceof Trinket ? state.trinkets().size() : state.items().size();
-        int slots = taken instanceof Trinket ? state.trinketSlots() : state.itemSlots();
-        if (take.replaceSlot() < 0) {
-            return used < slots ? Optional.empty() : Optional.of(Reason.INVENTORY_FULL);
-        }
-        return take.replaceSlot() < used ? Optional.empty() : Optional.of(Reason.INVALID_REWARD);
+        return Optional.ofNullable(inventoryProblem(pendingReward.get(take.option()), take.replaceSlot()));
     }
 
     // --- Actions du joueur ---
@@ -934,6 +1075,11 @@ public final class CombatEngine {
         state.setCigarettes(state.cigarettes() - taken);
         bus.publish(new GameEvent.CigarettesStolen(enemy, taken));
         bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+    }
+
+    /** Donne (ou retire, si négatif) des Choomies hors combat (événements, tests), jamais sous 0. */
+    public void gainChoomies(int amount) {
+        changeChoomies(amount);
     }
 
     /** Ajoute (ou retire) des Choomies, jamais sous 0. */

@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -178,7 +178,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 view.selected = 0;
             }
             case GameEvent.ActionRejected e -> {
-                view.log(switch (e.reason()) {
+                String message = switch (e.reason()) {
                     case INVALID_CHOICE -> "Pas de carte à ce numéro.";
                     case HAND_FULL -> "Ta main est pleine : joue une carte.";
                     case EMPTY_SLOT -> "Cet emplacement est vide.";
@@ -190,7 +190,14 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case UNPLAYABLE_CARD -> "NO CARDS : carte injouable.";
                     case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant.";
                     case DECK_EMPTY -> "Plus aucune carte à piocher.";
-                }, Palette.WARNING);
+                    case NOT_ENOUGH_CHOOMIES -> "Pas assez de Choomies.";
+                    case SOLD_OUT -> "Déjà vendu.";
+                    case DECK_TOO_SMALL -> "Ton deck est au minimum (" + cardistry.core.CombatEngine.MIN_DECK_SIZE + " cartes).";
+                };
+                view.log(message, Palette.WARNING);
+                if (page != Page.COMBAT) {
+                    view.toast = message; // hors combat (shop), pas de journal à l'écran
+                }
                 render();
             }
             case GameEvent.EffectAdded e -> view.log(e.effect().describe(), Palette.INFO);
@@ -277,13 +284,25 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.CardRewardOffered e -> {
             }
             case GameEvent.CardRewardSkipped e -> view.log("Carte refusée", Palette.DIM);
+            case GameEvent.ShopEntered e -> {
+                view.log("Shop", Palette.ACCENT);
+                view.toast = null;
+            }
+            case GameEvent.ItemBought e -> {
+                view.log("Acheté : " + e.offer().name() + " (" + e.offer().price() + " Choomies)"
+                        + (e.replaced() != null ? ", à la place de " + e.replaced().name() : ""), Palette.ACCENT);
+                view.toast = "Acheté : " + e.offer().name();
+            }
+            case GameEvent.ShopRestocked e -> view.toast = "Nouveaux articles (" + e.price() + " Choomies)";
+            case GameEvent.CardRemovalBought e -> view.toast = "Carte retirée (" + e.price() + " Choomies)";
+            case GameEvent.ShopLeft e -> view.toast = null;
             case GameEvent.LevelStarted e -> {
                 view.log("— Niveau " + e.level() + " —", Palette.ACCENT);
                 view.toast = "Niveau " + e.level() + "/3";
             }
             case GameEvent.NodeEntered e -> {
                 view.log("Étage " + e.floor() + " : " + e.kind(), Palette.INFO);
-                if (e.kind().equals("Shop") || e.kind().equals("Événement")) {
+                if (e.kind().equals("Événement")) {
                     view.toast = e.kind() + " : bientôt disponible";
                 }
             }
@@ -407,6 +426,112 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     private int deckSelected = 0;
+    private cardistry.core.Shop shop;
+    private int shopSelected = 0;
+    private int removalPrice = 0;
+    /** Objet ou trinket qui demande un remplacement (récompense ou achat). */
+    private Collectible replaceTarget;
+
+    @Override
+    public cardistry.core.shop.ShopAction chooseShopAction(GameState state, cardistry.core.Shop shop, int removalPrice) {
+        this.state = state;
+        this.shop = shop;
+        this.removalPrice = removalPrice;
+        int count = shop.offers().size();
+        shopSelected = Math.min(shopSelected, Math.max(0, count - 1));
+        page = Page.SHOP;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft -> shopSelected = Math.floorMod(shopSelected - 1, count);
+                case ArrowRight -> shopSelected = Math.floorMod(shopSelected + 1, count);
+                case ArrowUp -> shopSelected = shopRow(-1);
+                case ArrowDown -> shopSelected = shopRow(1);
+                case Escape -> {
+                    return leaveShop();
+                }
+                case Enter -> {
+                    cardistry.core.shop.ShopAction buy = buyChoice(state, shop);
+                    if (buy != null) {
+                        page = Page.SHOP;
+                        return buy;
+                    }
+                    page = Page.SHOP;
+                }
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 'r') {
+                        return new cardistry.core.shop.ShopAction.Reroll();
+                    } else if (c == 't') {
+                        int index = chooseCardToRemove(state);
+                        page = Page.SHOP;
+                        if (index >= 0) {
+                            return new cardistry.core.shop.ShopAction.RemoveCard(index);
+                        }
+                    } else if (c == 'q') {
+                        confirmQuit();
+                    } else if (c >= '1' && c <= '9' && c - '1' < count) {
+                        shopSelected = c - '1';
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    private cardistry.core.shop.ShopAction leaveShop() {
+        shopSelected = 0;
+        page = Page.MAP;
+        return new cardistry.core.shop.ShopAction.Leave();
+    }
+
+    /** Ligne au-dessus / au-dessous (cartes, objets, trinkets), même position si possible. */
+    private int shopRow(int delta) {
+        List<List<Integer>> rows = ShopScreen.rows(shop).stream().filter(r -> !r.isEmpty()).toList();
+        int row = 0;
+        for (int r = 0; r < rows.size(); r++) {
+            if (rows.get(r).contains(shopSelected)) {
+                row = r;
+            }
+        }
+        int offset = Math.max(0, rows.get(row).indexOf(shopSelected));
+        List<Integer> target = rows.get(Math.floorMod(row + delta, rows.size()));
+        return target.get(Math.min(offset, target.size() - 1));
+    }
+
+    /** Achat de l'article sélectionné ; inventaire plein : écran de remplacement ({@code null} = annulé). */
+    private cardistry.core.shop.ShopAction buyChoice(GameState state, cardistry.core.Shop shop) {
+        cardistry.core.shop.ShopOffer offer = shop.offers().get(shopSelected);
+        if (shop.isSold(shopSelected) || state.choomies() < offer.price()
+                || !(offer instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c)
+                || !ItemScreens.isFull(state, c.collectible())) {
+            return cardistry.core.shop.ShopAction.Buy.of(shopSelected); // le moteur refuse si besoin
+        }
+        replaceTarget = c.collectible();
+        replaceSelected = 0;
+        page = Page.REPLACE;
+        render();
+        int owned = c.collectible() instanceof cardistry.items.Trinket ? state.trinkets().size() : state.items().size();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft -> replaceSelected = Math.floorMod(replaceSelected - 1, owned);
+                case ArrowRight -> replaceSelected = Math.floorMod(replaceSelected + 1, owned);
+                case Enter -> {
+                    return new cardistry.core.shop.ShopAction.Buy(shopSelected, replaceSelected);
+                }
+                case Escape -> {
+                    return null;
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
 
     @Override
     public int chooseCardToRemove(GameState state) {
@@ -605,6 +730,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                             return leaveReward(RewardChoice.Take.into(rewardSelected));
                         }
                         replaceSelected = 0;
+                        replaceTarget = options.get(rewardSelected);
                         page = Page.REPLACE;
                     }
                     case Character -> {
@@ -965,8 +1091,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     }
                     case INVENTORY -> ItemScreens.inventory(painter, state);
                     case REWARD -> ItemScreens.reward(painter, state, rewardOptions, rewardSelected, seed);
-                    case REPLACE -> ItemScreens.replace(painter, state, rewardOptions.get(rewardSelected),
-                            replaceSelected, seed);
+                    case REPLACE -> ItemScreens.replace(painter, state, replaceTarget, replaceSelected, seed);
+                    case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);

@@ -100,6 +100,9 @@ public final class TextRenderer implements Renderer {
                 case UNPLAYABLE_CARD -> "NO CARDS : cette carte est injouable";
                 case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant";
                 case DECK_EMPTY -> "Plus aucune carte à piocher";
+                case NOT_ENOUGH_CHOOMIES -> "Pas assez de Choomies";
+                case SOLD_OUT -> "Déjà vendu";
+                case DECK_TOO_SMALL -> "Ton deck ne peut pas descendre sous " + cardistry.core.CombatEngine.MIN_DECK_SIZE + " cartes";
             });
             case GameEvent.EnemyNulled e -> console.println(Ansi.MAGENTA + "NullPointerException : "
                     + e.enemy().name() + " devient null !" + Ansi.END_COLOR);
@@ -169,6 +172,15 @@ public final class TextRenderer implements Renderer {
             case GameEvent.CardAddedToDeck e -> console.println("→ " + cardName(e.card()) + " ajoutée à ton deck.");
             case GameEvent.CardRemovedFromDeck e -> console.println("→ " + cardName(e.card()) + " retirée de ton deck.");
             case GameEvent.CardRewardSkipped e -> console.println("Tu passes la carte.");
+            case GameEvent.ShopEntered e -> {
+                // Les articles sont affichés par la saisie.
+            }
+            case GameEvent.ItemBought e -> console.println("→ Tu achètes " + Ansi.yellow(e.offer().name()) + " pour "
+                    + e.offer().price() + " Choomies" + (e.replaced() != null ? " (à la place de " + e.replaced().name()
+                    + ")" : "") + ".");
+            case GameEvent.ShopRestocked e -> console.println("→ Nouveaux articles (" + e.price() + " Choomies).");
+            case GameEvent.CardRemovalBought e -> console.println("→ Retrait payé : " + e.price() + " Choomies.");
+            case GameEvent.ShopLeft e -> console.println("Tu quittes le shop.");
             case GameEvent.CardRewardOffered e -> {
                 console.println();
                 console.println(Ansi.yellow("Nouvelle carte !") + " Ajoute-en une à ton deck :");
@@ -182,7 +194,7 @@ public final class TextRenderer implements Renderer {
                 console.println(Ansi.yellow("=== Niveau " + e.level() + " ==="));
             }
             case GameEvent.NodeEntered e -> {
-                if (e.kind().equals("Shop") || e.kind().equals("Événement")) {
+                if (e.kind().equals("Événement")) {
                     console.println("→ " + e.kind() + " : bientôt disponible, tu continues ta route.");
                 }
             }

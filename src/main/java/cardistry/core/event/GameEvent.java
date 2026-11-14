@@ -139,6 +139,28 @@ public sealed interface GameEvent {
     record NodeEntered(int level, int floor, String kind) implements GameEvent {
     }
 
+    /** Entrée dans un shop (articles : {@code shop.offers()}). */
+    record ShopEntered(cardistry.core.Shop shop) implements GameEvent {
+    }
+
+    /** Articles renouvelés (reroll payé {@code price}). */
+    record ShopRestocked(int price) implements GameEvent {
+    }
+
+    /**
+     * Article acheté ; {@code replaced} est l'objet ou le trinket retiré pour lui faire de la place,
+     * ou null.
+     */
+    record ItemBought(cardistry.core.shop.ShopOffer offer, Collectible replaced) implements GameEvent {
+    }
+
+    /** Carte retirée du deck au shop, pour {@code price} Choomies (suivi d'un {@link CardRemovedFromDeck}). */
+    record CardRemovalBought(int price) implements GameEvent {
+    }
+
+    record ShopLeft() implements GameEvent {
+    }
+
     /** La défausse est remélangée dans la pioche ({@code size} cartes). */
     record DeckShuffled(int size) implements GameEvent {
     }
@@ -298,7 +320,13 @@ public sealed interface GameEvent {
             /** Annulation impossible (pas de Ctrl+Z, déjà utilisé ce combat, ou pas de tour à annuler). */
             UNDO_UNAVAILABLE,
             /** Plus aucune carte à piocher (pioche et défausse vides). */
-            DECK_EMPTY
+            DECK_EMPTY,
+            /** Shop : pas assez de Choomies. */
+            NOT_ENOUGH_CHOOMIES,
+            /** Shop : article déjà vendu (ou inexistant). */
+            SOLD_OUT,
+            /** Retrait impossible : le deck est au minimum. */
+            DECK_TOO_SMALL
         }
     }
 

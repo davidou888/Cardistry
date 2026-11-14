@@ -184,6 +184,7 @@ class UnlockTrackerTest {
                 }
                 case REWARD -> run.resolveReward(new cardistry.core.RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
+                case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> throw new AssertionError("partie finie trop tôt");
             }

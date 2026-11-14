@@ -91,7 +91,7 @@ Règles communes :
   Shop par carte ; au moins un chemin sans élite.
 - Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
   I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
-- En attendant les lots Shop et Événements, ces nœuds ne font rien (« bientôt disponible »).
+- En attendant le lot Événements, les nœuds `?` ne font rien (« bientôt disponible »).
 - **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max ; c'est un
   **soin** : efficacité des soins et Ross s'appliquent, sans plafond avec Ross), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une
   carte du deck, avec le deck construit). Elle n'efface **pas** la Gueule de bois (les clopes sont là pour ça).
@@ -112,7 +112,7 @@ Règles communes :
 - **Récompense de carte** après chaque combat (sauf le boss final), **après** la récompense d'objet :
   3 cartes de noms différents tirées du registre (poids des trinkets compris), on en ajoute 1 au deck ou
   on passe (en plus du 1 parmi 3 d'objets).
-- **Retirer une carte** : Sieste « Faire le tri » (le shop viendra) ; jamais sous **5 cartes**.
+- **Retirer une carte** : Sieste « Faire le tri » (gratuit) ou shop (payant) ; jamais sous **5 cartes**.
 - Grinder : +1 Petit pétou dans le deck à l'obtention, Petit pétou ×2 dans les récompenses de cartes (et
   pour George). Paquet de cartes : 3 cartes de la pioche, les 2 autres à la défausse. George : carte du
   registre (elle ne reste pas dans le deck).
@@ -257,10 +257,27 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - Les Choomah en volent (5 par vol). Jamais sous 0.
 - Affichage : en haut de l'écran de combat (« 15 Choomies »), dans l'état en mode texte.
 
-## Shop
-- Monnaie : Choomies.
-- Vend : cartes, objets, trinkets. Services : retirer une carte, soin. **[À DÉCIDER]**
-- Reroll payant, coût croissant.
+## Shop (lot 2)
+Code : `CombatEngine.openShop` / `shopAction`, `core.Shop`, `core.shop` (`ShopPrices`, `ShopOffer`, `ShopAction`).
+- Nœud `$` de la carte. **5 cartes** (noms différents, tirées du registre avec les poids des trinkets),
+  **2 objets**, **2 trinkets** (jamais un trinket déjà équipé, jamais un secret). La rareté des articles
+  n'est **pas** doublée par CLAUDE.md (au shop, plus rare = plus cher, ce n'est pas un avantage).
+- **Prix** (Choomies) : objets et trinkets selon la rareté, 50 / 80 / 130 / 200. Cartes : **60 %** du prix
+  d'un objet de même rareté, arrondi à 5 → **30 / 50 / 80 / 120**. Rareté d'une carte *(provisoire)* :
+  sort de 15+ ou soin de 15 = Peu commun, soin de 20+ = Rare, le reste (sorts et soins de base,
+  terrains) = Commun.
+- **Retrait d'une carte** : 75, +25 à chaque retrait de la **partie** (75, 100, 125…) ; jamais sous 5 cartes ;
+  autant de fois qu'on veut tant qu'on peut payer.
+- **Reroll** : 20, +10 à chaque reroll dans **ce** shop (le prix repart à 20 au shop suivant) ; renouvelle les
+  9 articles (vendus compris).
+- Inventaire plein à l'achat : même écran de remplacement que pour les récompenses (ou retour au shop).
+- Écran : cartes en haut, objets et trinkets en dessous, prix grisés si pas assez de Choomies, « vendu »
+  après achat, détail de l'article sélectionné ; R reroll, T retirer une carte, Échap partir. Mode texte :
+  liste numérotée, `r`, `t`, `0`.
+- Accueil **provisoire** : « Entre, entre ! Tout est à vendre... enfin, presque. » (nom du vendeur et
+  réplique à venir).
+- Hooks : `onShopEnter`, `onItemBought` (Grinder acheté ajoute aussi son Petit pétou).
+- Ctrl+Z : les achats sont rejoués à l'identique (mêmes articles, mêmes rerolls).
 
 ## Secrets / easter eggs
 - Trinkets « Secret » débloqués durablement par des conditions remplies pendant une partie (façon *Isaac*) ; des codes (seed spéciale, code clavier) les donnent pour une seule partie.
@@ -271,7 +288,8 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
 Fait aussi : écran de pioche au choix (Paquet de cartes : 3 cartes, touches 1/2/3, effet réel de la sélectionnée, phrase méta au premier déclenchement) ; écran « jeter un trinket » obligatoire (Diplôme perdu) ; sets dans l'inventaire (palier atteint, prochain palier, ×2 si amplifié) et bandeau « ★ Set … activé » ; trinkets amplifiés marqués « (effet ×2) » ; paquet de clopes (petit sprite ASCII en bas à droite, n/20, touches F fumer / G rouler, jauge Honoré) ; PV au-dessus du max en doré (Ross) ; transformation Googz affichée (journal + texte flottant) ; effets temporaires affichés avec leur durée restante (ligne au-dessus du terrain, liste complète dans l'inventaire) ; objets et cartes homonymes (Caïpirinha, Petit pétou) distingués à l'écran (« la carte … » / « l'objet … » dans le journal, couleur d'élément pour les cartes, de rareté pour les objets) ; écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
 Fait aussi : carte de la run (écran Lanterna + mode texte), intents des adversaires, sprites animés et visionneuse `--sprites`.
-Reste : shop, événements, transitions d'écran.
+Fait aussi : shop (plein écran + mode texte).
+Reste : événements, transitions d'écran.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
@@ -282,6 +300,8 @@ Reste : shop, événements, transitions d'écran.
 ## Questions ouvertes
 - **[À DÉCIDER]** Noms et attaques des 3 boss (placeholders « Boss du niveau 1/2/3 »).
 - **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
+- **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil.
+- Provisoire : rareté des cartes au shop (voir « Shop »).
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).

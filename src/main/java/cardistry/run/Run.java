@@ -58,6 +58,8 @@ public final class Run {
         CARD_REWARD,
         /** Sieste : choisir quoi faire ({@link RestOption}). */
         REST,
+        /** Shop : acheter, retirer une carte, reroll, ou partir. */
+        SHOP,
         /** Partie terminée. */
         OVER
     }
@@ -85,6 +87,9 @@ public final class Run {
     }
 
     private record CardReward(int index) implements Step {
+    }
+
+    private record ShopStep(cardistry.core.shop.ShopAction action) implements Step {
     }
 
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
@@ -239,6 +244,28 @@ public final class Run {
         session.rest(option, cardIndex);
     }
 
+    /** Shop ouvert (phase {@link Phase#SHOP}). */
+    public Optional<cardistry.core.Shop> shop() {
+        return session.engine.shop();
+    }
+
+    /** Prix du prochain retrait de carte au shop. */
+    public int cardRemovalPrice() {
+        return session.engine.cardRemovalPrice();
+    }
+
+    /**
+     * Action au shop ; {@code false} si elle est refusée (pas assez de Choomies, vendu…). Partir
+     * ramène à la carte.
+     */
+    public boolean shop(cardistry.core.shop.ShopAction action) {
+        if (phase() != Phase.SHOP) {
+            throw new IllegalStateException("Pas de shop maintenant");
+        }
+        history.add(new ShopStep(action));
+        return session.engine.shopAction(action);
+    }
+
     public boolean hasPendingCardReward() {
         return session.engine.hasPendingCardReward();
     }
@@ -363,6 +390,7 @@ public final class Run {
                 }
                 case ChooseNode c -> replayed.chooseNode(c.index());
                 case Rest r -> replayed.rest(r.option(), r.cardIndex());
+                case ShopStep s -> replayed.engine.shopAction(s.action());
                 case CardReward c -> {
                     replayed.engine.resolveCardReward(c.index());
                     replayed.settle();
@@ -417,6 +445,9 @@ public final class Run {
             if (engine.combatActive() || !mapped) {
                 return Phase.COMBAT;
             }
+            if (engine.shop().isPresent()) {
+                return Phase.SHOP;
+            }
             return resting ? Phase.REST : Phase.MAP;
         }
 
@@ -450,8 +481,9 @@ public final class Run {
                     engine.startCombat(boss, level == EnemyRegistry.LEVELS);
                 }
                 case REST -> resting = true;
-                case SHOP, EVENT -> {
-                    // Shop et événements : à venir (lots suivants). On passe.
+                case SHOP -> engine.openShop();
+                case EVENT -> {
+                    // Événements : à venir (lot 3). On passe.
                 }
             }
             settle();

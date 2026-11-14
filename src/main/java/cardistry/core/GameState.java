@@ -53,6 +53,7 @@ public final class GameState {
     private final List<Card> deck;
     private final List<Card> drawPile = new ArrayList<>();
     private final List<Card> discardPile = new ArrayList<>();
+    private int cardRemovals = 0;
     private TerrainCard terrain;
     private final List<Card> hand;
     private final Stats playerStats;
@@ -142,6 +143,15 @@ public final class GameState {
     /** Défausse du combat en cours. */
     public List<Card> discardPile() {
         return Collections.unmodifiableList(discardPile);
+    }
+
+    /** Cartes retirées au shop pendant la partie (le prix du retrait monte à chaque fois). */
+    public int cardRemovals() {
+        return cardRemovals;
+    }
+
+    void countCardRemoval() {
+        cardRemovals++;
     }
 
     void addToDeck(Card card) {

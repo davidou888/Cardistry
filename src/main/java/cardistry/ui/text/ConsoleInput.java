@@ -131,6 +131,89 @@ public final class ConsoleInput implements Input {
         return readNumber("Carte à retirer (0 pour revenir) ? ", 0, state.deck().size()) - 1;
     }
 
+    /**
+     * Shop : affiche les articles, puis lit un numéro (acheter), r (reroll), t (retirer une carte)
+     * ou 0 (partir). Inventaire plein : demande quoi remplacer.
+     */
+    @Override
+    public cardistry.core.shop.ShopAction chooseShopAction(GameState state, cardistry.core.Shop shop, int removalPrice) {
+        while (true) {
+            printShop(state, shop, removalPrice);
+            console.print("Ton choix ? ");
+            String line = console.readLine().trim().toLowerCase(java.util.Locale.ROOT);
+            if (line.equals("0")) {
+                return new cardistry.core.shop.ShopAction.Leave();
+            }
+            if (line.equals("r")) {
+                return new cardistry.core.shop.ShopAction.Reroll();
+            }
+            if (line.equals("t")) {
+                int index = chooseCardToRemove(state);
+                if (index >= 0) {
+                    return new cardistry.core.shop.ShopAction.RemoveCard(index);
+                }
+                continue;
+            }
+            try {
+                int choice = Integer.parseInt(line) - 1;
+                if (choice >= 0 && choice < shop.offers().size()) {
+                    cardistry.core.shop.ShopAction buy = buy(state, shop, choice);
+                    if (buy != null) {
+                        return buy;
+                    }
+                    continue;
+                }
+            } catch (NumberFormatException e) {
+                // redemande
+            }
+            console.println("Entre un numéro d'article, r, t ou 0");
+        }
+    }
+
+    private cardistry.core.shop.ShopAction buy(GameState state, cardistry.core.Shop shop, int index) {
+        if (shop.offers().get(index) instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c && !shop.isSold(index)
+                && state.choomies() >= c.price()) {
+            List<? extends Collectible> owned = c.collectible() instanceof Trinket ? state.trinkets() : state.items();
+            int slots = c.collectible() instanceof Trinket ? state.trinketSlots() : state.itemSlots();
+            if (owned.size() >= slots) {
+                console.println("Inventaire plein. Que remplace " + c.collectible().name() + " ?");
+                for (int i = 0; i < owned.size(); i++) {
+                    console.println("[" + (i + 1) + "] " + owned.get(i).name() + " : " + owned.get(i).description());
+                }
+                int replaced = readNumber("Numéro (0 pour revenir) ? ", 0, owned.size());
+                return replaced == 0 ? null : new cardistry.core.shop.ShopAction.Buy(index, replaced - 1);
+            }
+        }
+        return cardistry.core.shop.ShopAction.Buy.of(index);
+    }
+
+    private void printShop(GameState state, cardistry.core.Shop shop, int removalPrice) {
+        console.println();
+        console.println(Ansi.yellow("SHOP") + " · " + state.choomies() + " Choomies");
+        console.println("« Entre, entre ! Tout est à vendre... enfin, presque. »");
+        String previous = "";
+        for (int i = 0; i < shop.offers().size(); i++) {
+            cardistry.core.shop.ShopOffer offer = shop.offers().get(i);
+            String title = offer instanceof cardistry.core.shop.ShopOffer.CardOffer ? "Cartes :"
+                    : ((cardistry.core.shop.ShopOffer.CollectibleOffer) offer).collectible() instanceof Trinket
+                    ? "Trinkets :" : "Objets :";
+            if (!title.equals(previous)) {
+                console.println(title);
+                previous = title;
+            }
+            String text = switch (offer) {
+                case cardistry.core.shop.ShopOffer.CardOffer card -> TextRenderer.describe(card.card());
+                case cardistry.core.shop.ShopOffer.CollectibleOffer c -> c.collectible().name() + " ("
+                        + c.collectible().rarity().displayName() + ") : " + c.collectible().description();
+            };
+            String price = shop.isSold(i) ? "vendu"
+                    : offer.price() + " Choomies" + (state.choomies() < offer.price() ? " (trop cher)" : "");
+            console.println("  [" + (i + 1) + "] " + text + " — " + price);
+        }
+        console.println("  r) Reroll : " + shop.rerollPrice() + "   t) Retirer une carte : " + removalPrice
+                + " (deck " + state.deck().size() + ")   0) Partir");
+    }
+
     @Override
     public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         console.println();

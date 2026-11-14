@@ -126,6 +126,14 @@ public final class ItemRegistry {
                                     ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15));
                                 }
                             }
+
+                            @Override
+                            public void onItemBought(GameEvent.ItemBought event, EffectContext ctx) {
+                                if (event.offer() instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c
+                                        && c.collectible().id().equals("grinder")) {
+                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15));
+                                }
+                            }
                         })
                         .build(),
 

@@ -64,6 +64,14 @@ public final class LootTable {
      * (élite : Peu commun, boss : Rare ; les secrets débloqués restent possibles).
      */
     public List<Collectible> offer(GameState state, Rng rng, int count, Rarity minimum) {
+        return offer(state, rng, count, minimum, true);
+    }
+
+    /**
+     * Comme {@link #offer(GameState, Rng, int, Rarity)} ; {@code lucky = false} : la rareté n'est
+     * jamais tirée deux fois (shop : une rareté plus haute n'y est pas un avantage, c'est plus cher).
+     */
+    public List<Collectible> offer(GameState state, Rng rng, int count, Rarity minimum, boolean lucky) {
         List<Collectible> candidates = new ArrayList<>();
         for (Collectible c : source.get()) {
             if (c.rarity().compareTo(minimum) < 0) {
@@ -78,7 +86,8 @@ public final class LootTable {
         Comparator<Integer> rarer = Comparator.comparing(i -> candidates.get(i).rarity());
         List<Collectible> picked = new ArrayList<>();
         while (picked.size() < count && !candidates.isEmpty()) {
-            int index = Luck.favorable(state, () -> pickIndex(candidates, rng), rarer);
+            int index = lucky ? Luck.favorable(state, () -> pickIndex(candidates, rng), rarer)
+                    : pickIndex(candidates, rng);
             picked.add(candidates.remove(index));
         }
         return picked;

@@ -40,6 +40,8 @@ public final class GameLoop {
                     run.resolveCardReward(index < run.pendingCardReward().size() ? index : -1);
                 }
                 case REST -> rest(run, input);
+                case SHOP -> run.shop(input.chooseShopAction(run.state(), run.shop().orElseThrow(),
+                        run.cardRemovalPrice()));
                 case OVER -> {
                 }
             }

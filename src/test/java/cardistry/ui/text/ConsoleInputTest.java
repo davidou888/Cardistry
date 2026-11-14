@@ -73,4 +73,40 @@ class ConsoleInputTest {
         assertTrue(text.contains("B"));
         assertTrue(text.contains("Entre un nombre entre 1 et"), "9 est refusé");
     }
+
+    @Test
+    void shopEnModeTexte() {
+        GameState state = GameState.newGame();
+        CombatEngine engine = new CombatEngine(state, new cardistry.model.card.CardPool(), new Rng(3), new EventBus());
+        engine.start();
+        for (int i = 0; i < 3; i++) {
+            engine.give(ItemRegistry.item("mate"));
+        }
+        engine.gainChoomies(985); // 1000
+        engine.openShop();
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        // « 6 » : premier objet, inventaire plein → remplacer le 2e ; puis r, t + carte 3, 0.
+        ConsoleInput input = input("x\n6\n2\nr\nt\n3\n0\n");
+        assertEquals(new cardistry.core.shop.ShopAction.Buy(5, 1), input.chooseShopAction(state, shop, 75));
+        assertEquals(new cardistry.core.shop.ShopAction.Reroll(), input.chooseShopAction(state, shop, 75));
+        assertEquals(new cardistry.core.shop.ShopAction.RemoveCard(2), input.chooseShopAction(state, shop, 75));
+        assertEquals(new cardistry.core.shop.ShopAction.Leave(), input.chooseShopAction(state, shop, 75));
+        String text = out.toString(StandardCharsets.UTF_8);
+        assertTrue(text.contains("SHOP · 1000 Choomies"), text);
+        assertTrue(text.contains("Cartes :") && text.contains("Objets :") && text.contains("Trinkets :"));
+        assertTrue(text.contains("r) Reroll : 20"));
+        assertTrue(text.contains("t) Retirer une carte : 75"));
+        assertTrue(text.contains("Inventaire plein"));
+        assertTrue(text.contains("Entre un numéro d'article"), "« x » est refusé");
+    }
+
+    @Test
+    void shopTropCherEnModeTexte() {
+        GameState state = GameState.newGame();
+        CombatEngine engine = new CombatEngine(state, new cardistry.model.card.CardPool(), new Rng(3), new EventBus());
+        engine.start();
+        engine.openShop();
+        input("0\n").chooseShopAction(state, engine.shop().orElseThrow(), 75);
+        assertTrue(out.toString(StandardCharsets.UTF_8).contains("(trop cher)"));
+    }
 }
