@@ -263,6 +263,23 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.SecretUnlocked e -> view.log("Secret débloqué : " + e.name(), Palette.SECRET);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
+            case GameEvent.IntentChosen e -> render();
+            case GameEvent.EnemyMoveUsed e -> view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
+            case GameEvent.EnemyDodged e -> {
+                view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
+                view.floating.clear();
+                view.floating.add(new ViewState.Floating("esquive", Palette.WARNING, true, 0));
+                frame();
+                view.resetEffects();
+                render();
+            }
+            default -> {
+                String line = cardistry.ui.IntentText.journal(event);
+                if (line != null) {
+                    view.log(line, event instanceof GameEvent.ChoomiesChanged ? Palette.ACCENT : Palette.WARNING);
+                    render();
+                }
+            }
         }
     }
 

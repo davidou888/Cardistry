@@ -55,13 +55,8 @@ final class MenuScreens {
     static void rules(Painter p, GameState state) {
         p.frame("Règles", "", "Entrée commencer · Q quitter");
         int row = 2;
-        p.text(3, row++, "Adversaires, dans l'ordre :", Palette.TEXT, true);
-        for (Enemy enemy : state.enemies()) {
-            p.text(5, row, "• ", Palette.TEXT);
-            p.text(7, row, enemy.name(), Palette.element(enemy.element()), true);
-            p.text(7 + enemy.name().length(), row++, " — " + enemy.element().displayName() + ", "
-                    + num(enemy.maxHp()) + " PV, attaque " + num(enemy.attack()), Palette.TEXT);
-        }
+        row = paragraph(p, 3, row, "Trois niveaux de 8 étages : choisis ton chemin sur la carte, un boss attend"
+                + " au bout de chaque niveau. L'adversaire annonce son prochain coup.", true);
         row++;
         row = paragraph(p, 3, row, "À chaque tour, joue une carte ou pioche. Puis l'adversaire attaque.", true);
         row = paragraph(p, 5, row, "• Sortilège : inflige des dégâts à l'adversaire.", false);

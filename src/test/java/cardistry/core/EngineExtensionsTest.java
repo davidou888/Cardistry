@@ -85,7 +85,7 @@ class EngineExtensionsTest {
         state.playerStats().add(percent(StatType.ENEMY_DAMAGE, 0.25, "test"));
         engine.submit(new Action.DrawCard());
         assertEquals(new GameEvent.DamageDealt(state.player(), 12.5, 1.25, Source.ENEMY_ATTACK),
-                events.get(events.size() - 1));
+                events.get(events.size() - 2));
     }
 
     // --- Soins ---

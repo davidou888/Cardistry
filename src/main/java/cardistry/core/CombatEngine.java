@@ -20,6 +20,8 @@ import cardistry.model.card.DeadCard;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
+import cardistry.model.enemy.EnemyMove;
+import cardistry.model.enemy.MoveEffect;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,10 +72,33 @@ public final class CombatEngine {
         this.decisions = decisions;
     }
 
-    /** Lance la partie et son premier combat. */
+    /** Lance la partie ; avec des adversaires fixés, lance aussi le premier combat. */
     public void start() {
         bus.publish(new GameEvent.GameStarted(rng.seed()));
+        if (!state.isOpenEnded()) {
+            beginCombat();
+        }
+    }
+
+    /**
+     * Partie ouverte : lance un combat contre {@code enemy} (nœud de la carte).
+     *
+     * @param isFinal dernier combat de la partie : le gagner gagne la partie
+     */
+    public void startCombat(Enemy enemy, boolean isFinal) {
+        if (!state.isOpenEnded()) {
+            throw new IllegalStateException("Les adversaires de cette partie sont fixés");
+        }
+        if (inCombat() || hasPendingReward() || isOver()) {
+            throw new IllegalStateException("Un combat est déjà en cours");
+        }
+        state.addEncounter(enemy, isFinal);
         beginCombat();
+    }
+
+    /** {@code true} pendant un combat (adversaire vivant, partie pas finie). */
+    public boolean inCombat() {
+        return state.hasEnemy() && state.currentEnemy().isAlive() && !isOver();
     }
 
     /**
@@ -83,6 +108,9 @@ public final class CombatEngine {
      * @return {@code true} si le joueur doit choisir une action ce tour-ci
      */
     public boolean startTurn() {
+        if (!state.hasEnemy() || state.currentEnemy() == lastKilled || isOver()) {
+            throw new IllegalStateException("Aucun combat en cours");
+        }
         state.nextTurn();
         bus.publish(new GameEvent.TurnStarted(state.turn()));
         tickEffects();
@@ -95,7 +123,7 @@ public final class CombatEngine {
             return !isOver();
         }
         bus.publish(new GameEvent.PlayerTurnSkipped(skipCauses));
-        enemyAttack();
+        enemyTurn();
         return false;
     }
 
@@ -217,7 +245,11 @@ public final class CombatEngine {
         if (!endsTurn) {
             return ActionResult.FREE_ACTION;
         }
-        enemyAttack();
+        enemyTurn();
+        if (state.isLost()) {
+            return ActionResult.TURN_ENDED;
+        }
+        resolveEnemyDeath(); // fringale ratée… ou mort par un effet pendant son tour
         return ActionResult.TURN_ENDED;
     }
 
@@ -268,6 +300,14 @@ public final class CombatEngine {
             state.addToHand(drawFromPool());
         }
         bus.publish(new GameEvent.HandDealt(state.hand()));
+        if (state.currentEnemy().isAlive()) {
+            announceIntent();
+        }
+    }
+
+    private void announceIntent() {
+        Enemy enemy = state.currentEnemy();
+        bus.publish(new GameEvent.IntentChosen(enemy, enemy.chooseIntent()));
     }
 
     /** Fin du combat : l'Ivresse retombe, les malédictions du combat s'arrêtent. */
@@ -298,7 +338,7 @@ public final class CombatEngine {
         }
         state.setDrunkenness(updated);
         bus.publish(new GameEvent.DrunkennessChanged(state.drunkenness(), state.hangoverThreshold()));
-        if (amount > 0 && state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && state.hasNextEnemy()) {
+        if (amount > 0 && state.drunkenness() >= state.hangoverThreshold() && !state.hangoverThisCombat() && !state.isFinalCombat()) {
             state.setHangoverThisCombat(true);
             state.addPendingCurse(Curse.HANGOVER, 1);
             bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
@@ -316,21 +356,31 @@ public final class CombatEngine {
         if (enemy.isAlive()) {
             return false;
         }
+        if (enemy == lastKilled) {
+            return true; // déjà traité
+        }
+        lastKilled = enemy;
         bus.publish(new GameEvent.EnemyKilled(enemy));
         endCombat();
-        if (!state.hasNextEnemy()) {
+        if (state.isFinalCombat()) {
+            state.setWon();
             bus.publish(new GameEvent.GameWon());
             return true;
         }
         List<Collectible> offer = loot.offer(state, rng, REWARD_OPTIONS);
         if (offer.isEmpty()) {
-            nextCombat();
+            if (!state.isOpenEnded()) {
+                nextCombat();
+            }
         } else {
             pendingReward = offer;
             bus.publish(new GameEvent.RewardOffered(offer));
         }
         return true;
     }
+
+    /** Dernier adversaire dont la mort a été traitée (une seule fois par adversaire). */
+    private Enemy lastKilled;
 
     private void nextCombat() {
         state.advanceEnemy();
@@ -390,7 +440,9 @@ public final class CombatEngine {
             }
         }
         pendingReward = List.of();
-        nextCombat();
+        if (!state.isOpenEnded()) {
+            nextCombat();
+        }
         return true;
     }
 
@@ -526,11 +578,12 @@ public final class CombatEngine {
         }
     }
 
-    private void enemyAttack() {
+    /**
+     * Tour de l'adversaire : il exécute l'attaque annoncée, puis annonce la suivante. Un tour sauté
+     * (Pétou ancestral) garde l'intent et n'avance pas ses compteurs.
+     */
+    private void enemyTurn() {
         Enemy enemy = state.currentEnemy();
-        Player player = state.player();
-        double mult = state.enemyAttackMultiplier();
-        double amount = state.enemyAttackDamage();
         Optional<TemporaryEffect> skip = state.effects().stream()
                 .filter(e -> e.isActive() && e.skipsEnemyTurn()).findFirst();
         if (skip.isPresent()) {
@@ -538,14 +591,110 @@ public final class CombatEngine {
             consume(skip.get());
             return;
         }
-        bus.publish(new GameEvent.EnemyAttacked(enemy));
-        Optional<TemporaryEffect> shield = state.effects().stream()
-                .filter(e -> e.isActive() && e.cancelsEnemyAttack()).findFirst();
-        if (shield.isPresent()) {
-            bus.publish(new GameEvent.AttackCancelled(enemy, shield.get().name()));
-            consume(shield.get());
+        EnemyMove move = enemy.intent() != null ? enemy.intent() : enemy.chooseIntent();
+        bus.publish(new GameEvent.EnemyMoveUsed(enemy, move));
+        MoveRun run = new MoveRun(enemy);
+        for (MoveEffect effect : move.effects()) {
+            if (!state.player().isAlive() || !enemy.isAlive()) {
+                break;
+            }
+            execute(effect, run);
+        }
+        enemy.recordAction(move);
+        if (state.player().isAlive() && enemy.isAlive()) {
+            announceIntent();
+        }
+    }
+
+    /** État d'une attaque en cours : une annulation (Moscow Mule) vaut pour tous ses coups. */
+    private static final class MoveRun {
+
+        final Enemy enemy;
+        boolean shieldChecked;
+        boolean cancelled;
+
+        MoveRun(Enemy enemy) {
+            this.enemy = enemy;
+        }
+    }
+
+    private void execute(MoveEffect effect, MoveRun run) {
+        Enemy enemy = run.enemy;
+        switch (effect) {
+            case MoveEffect.Hit hit -> {
+                for (int i = 0; i < hit.hits() && state.player().isAlive(); i++) {
+                    strike(hit, run);
+                }
+            }
+            case MoveEffect.Pickpocket steal -> {
+                if (steal.choomies() > 0 && state.choomies() >= steal.choomies()) {
+                    changeChoomies(-steal.choomies());
+                    bus.publish(new GameEvent.ChoomiesStolen(enemy, steal.choomies()));
+                } else if (steal.cigarettes() > 0 && state.cigarettes() > 0) {
+                    takeCigarettes(enemy, steal.cigarettes());
+                } else if (steal.fallbackDamage() > 0) {
+                    strike(MoveEffect.Hit.of(steal.fallbackDamage()), run);
+                }
+            }
+            case MoveEffect.Tax tax -> {
+                if (state.cigarettes() > 0) {
+                    takeCigarettes(enemy, tax.cigarettes());
+                } else {
+                    execute(MoveEffect.Hit.of(tax.damage(), tax.fallbackHits()), run);
+                }
+            }
+            case MoveEffect.Gamble gamble -> execute(
+                    rng.nextDouble() < gamble.chance() ? gamble.onSuccess() : gamble.onFailure(), run);
+            case MoveEffect.Dodge dodge -> {
+                enemy.setDodgeReady(true);
+                bus.publish(new GameEvent.DodgeReady(enemy));
+            }
+            case MoveEffect.CurseCard curse -> {
+                List<Integer> slots = new java.util.ArrayList<>();
+                for (int i = 0; i < state.hand().size(); i++) {
+                    if (!(state.hand().get(i) instanceof DeadCard)) {
+                        slots.add(i);
+                    }
+                }
+                if (!slots.isEmpty()) {
+                    int slot = rng.pick(slots);
+                    Card dead = new DeadCard(curse.cardName());
+                    Card removed = state.replaceInHand(slot, dead);
+                    bus.publish(new GameEvent.CardCursed(enemy, removed, dead));
+                }
+            }
+            case MoveEffect.HealSelf heal -> {
+                double healed = enemy.healSelf(heal.amount() * enemy.damageScale());
+                bus.publish(new GameEvent.EnemyHealed(enemy, healed));
+            }
+        }
+    }
+
+    /** Un coup : annulé (Moscow Mule, une fois pour toute l'attaque), raté, ou subi. */
+    private void strike(MoveEffect.Hit hit, MoveRun run) {
+        Enemy enemy = run.enemy;
+        if (!run.shieldChecked) {
+            run.shieldChecked = true;
+            Optional<TemporaryEffect> shield = state.effects().stream()
+                    .filter(e -> e.isActive() && e.cancelsEnemyAttack()).findFirst();
+            if (shield.isPresent()) {
+                bus.publish(new GameEvent.AttackCancelled(enemy, shield.get().name()));
+                consume(shield.get());
+                run.cancelled = true;
+            }
+        }
+        if (run.cancelled) {
             return;
         }
+        if (hit.missChance() > 0 && rng.nextDouble() < hit.missChance()) {
+            double healed = hit.healOnMiss() > 0 ? enemy.healSelf(hit.healOnMiss() * enemy.damageScale()) : 0;
+            bus.publish(new GameEvent.EnemyMissed(enemy, healed));
+            return;
+        }
+        Player player = state.player();
+        double mult = state.enemyAttackMultiplier();
+        double amount = state.hitDamage(hit);
+        bus.publish(new GameEvent.EnemyAttacked(enemy));
         player.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
         if (!player.isAlive()) {
@@ -553,12 +702,50 @@ public final class CombatEngine {
         }
     }
 
+    private void takeCigarettes(Enemy enemy, int count) {
+        int taken = Math.min(count, state.cigarettes());
+        if (taken <= 0) {
+            return;
+        }
+        state.setCigarettes(state.cigarettes() - taken);
+        bus.publish(new GameEvent.CigarettesStolen(enemy, taken));
+        bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+    }
+
+    /** Ajoute (ou retire) des Choomies, jamais sous 0. */
+    private void changeChoomies(int delta) {
+        int updated = Math.max(0, state.choomies() + delta);
+        int real = updated - state.choomies();
+        if (real != 0) {
+            state.setChoomies(updated);
+            bus.publish(new GameEvent.ChoomiesChanged(updated, real));
+        }
+    }
+
     // --- Primitives partagées par les cartes et les effets ---
 
+    /**
+     * Dégâts à l'adversaire. Un sort contre un adversaire prêt à esquiver ne fait rien. Rebond :
+     * une part des dégâts est renvoyée au joueur, sans jamais le tuer.
+     */
     private void damageEnemy(double amount, double mult, GameEvent.DamageDealt.Source source) {
         Enemy enemy = state.currentEnemy();
+        if (source == GameEvent.DamageDealt.Source.SPELL && enemy.dodgeReady()) {
+            enemy.setDodgeReady(false);
+            bus.publish(new GameEvent.EnemyDodged(enemy));
+            return;
+        }
         enemy.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(enemy, amount, mult, source));
+        if (enemy.reflectRatio() > 0 && amount > 0) {
+            Player player = state.player();
+            double reflected = Math.min(amount * enemy.reflectRatio(), Math.max(0, player.hp() - 1));
+            if (reflected > 0) {
+                player.takeDamage(reflected);
+                bus.publish(new GameEvent.DamageDealt(player, reflected, enemy.reflectRatio(),
+                        GameEvent.DamageDealt.Source.REFLECTED));
+            }
+        }
     }
 
     /**

@@ -89,6 +89,36 @@ public final class HookDispatcher {
             case GameEvent.SecretUnlocked e -> {
                 // Publié par run.UnlockTracker, hors moteur.
             }
+            case GameEvent.IntentChosen e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.EnemyMoveUsed e -> {
+                // Pas de hook pour l'instant (les coups passent par EnemyAttacked).
+            }
+            case GameEvent.EnemyMissed e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.DodgeReady e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.EnemyDodged e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.EnemyHealed e -> {
+                // Pas de hook pour l'instant (onHeal ne concerne que le joueur).
+            }
+            case GameEvent.CardCursed e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.ChoomiesStolen e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CigarettesStolen e -> {
+                // Pas de hook pour l'instant (le paquet change : CigarettesChanged).
+            }
+            case GameEvent.ChoomiesChanged e -> {
+                // Pas de hook pour l'instant.
+            }
         }
     }
 }

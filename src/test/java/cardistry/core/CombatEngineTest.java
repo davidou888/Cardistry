@@ -77,7 +77,8 @@ class CombatEngineTest {
         assertEquals(new GameEvent.GameStarted(42), events.get(0));
         assertEquals(new GameEvent.CombatStarted(hydra, 1, 2), events.get(1));
         assertEquals(new GameEvent.HandDealt(state.hand()), events.get(2));
-        assertEquals(3, events.size());
+        assertEquals(new GameEvent.IntentChosen(hydra, hydra.intent()), events.get(3));
+        assertEquals(4, events.size());
         assertEquals(GameState.STARTING_HAND, state.hand().size());
         assertFalse(state.hand().stream().anyMatch(c -> c.name().equals("Ancienne")));
         assertEquals(1, state.combatNumber());
@@ -192,7 +193,7 @@ class CombatEngineTest {
 
         assertSame(swamp, state.terrain());
         assertEquals(new GameEvent.TerrainChanged(epfl, swamp), events.get(1));
-        assertEquals(new GameEvent.DamageDealt(state.player(), 3.75, 0.75, GameEvent.DamageDealt.Source.ENEMY_ATTACK), events.get(3));
+        assertEquals(new GameEvent.DamageDealt(state.player(), 3.75, 0.75, GameEvent.DamageDealt.Source.ENEMY_ATTACK), events.get(4));
         assertEquals(100 - 3.75, state.player().hp(), DELTA);
     }
 
@@ -218,7 +219,8 @@ class CombatEngineTest {
 
         assertEquals(1, state.hand().size());
         assertEquals(new GameEvent.CardDrawn(state.hand().get(0)), events.get(0));
-        assertInstanceOf(GameEvent.EnemyAttacked.class, events.get(1));
+        assertInstanceOf(GameEvent.EnemyMoveUsed.class, events.get(1));
+        assertInstanceOf(GameEvent.EnemyAttacked.class, events.get(2));
         assertEquals(100 - 6.25, state.player().hp(), DELTA);
     }
 
@@ -279,7 +281,8 @@ class CombatEngineTest {
                 new GameEvent.DamageDealt(hydra, 22.5, 1.5, GameEvent.DamageDealt.Source.SPELL),
                 new GameEvent.EnemyKilled(hydra),
                 new GameEvent.CombatStarted(siren, 2, 2),
-                new GameEvent.HandDealt(state.hand())), events);
+                new GameEvent.HandDealt(state.hand()),
+                new GameEvent.IntentChosen(siren, siren.intent())), events);
         assertSame(siren, state.currentEnemy());
         assertEquals(2, state.combatNumber());
         assertEquals(0, state.combatTurn());

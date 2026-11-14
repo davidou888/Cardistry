@@ -162,6 +162,15 @@ public final class TextRenderer implements Renderer {
                 console.println();
                 console.println(Ansi.RED + "DÉFAITE..." + Ansi.END_COLOR + " Tu n'as plus de points de vie.");
             }
+            case GameEvent.IntentChosen e -> {
+                // Affiché dans l'état (« Prochain tour »).
+            }
+            default -> {
+                String line = cardistry.ui.IntentText.journal(event);
+                if (line != null) {
+                    console.println("→ " + line);
+                }
+            }
         }
     }
 
@@ -187,9 +196,8 @@ public final class TextRenderer implements Renderer {
         console.println("ADVERSAIRE :");
         console.println(enemyName(enemy) + ", de type " + Ansi.element(enemy.element())
                 + ", il lui reste " + num(enemy.hp()) + " points de vie");
-        double reduction = state.playerStats().get(cardistry.core.stats.StatType.DAMAGE_REDUCTION);
-        console.println("Attaque : " + num(enemy.attack()) + mult(state.enemyAttackMultiplier())
-                + (reduction > 0 ? " − " + num(reduction) : "") + " = " + num(state.enemyAttackDamage()));
+        console.println("Prochain tour : " + cardistry.ui.IntentText.intent(state, enemy)
+                + mult(state.enemyAttackMultiplier()));
         console.pause(0.7);
         console.println();
         console.println("TERRAIN ACTUEL :");

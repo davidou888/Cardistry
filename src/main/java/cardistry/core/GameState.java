@@ -10,7 +10,6 @@ import cardistry.items.Tag;
 import cardistry.items.Trinket;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
-import cardistry.model.EnemyRoster;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
 import cardistry.model.card.CardPool;
@@ -38,9 +37,16 @@ public final class GameState {
     /** Clopes au début de chaque partie. */
     public static final int STARTING_CIGARETTES = 5;
 
+    /** Choomies au début de chaque partie. */
+    public static final int STARTING_CHOOMIES = 15;
+
     private final Player player;
     private final List<Enemy> enemies;
+    private final boolean openEnded;
     private int currentEnemyIndex = 0;
+    private boolean finalCombat = false;
+    private boolean won = false;
+    private int choomies = STARTING_CHOOMIES;
     private TerrainCard terrain;
     private final List<Card> hand;
     private final Stats playerStats;
@@ -59,21 +65,39 @@ public final class GameState {
     private final List<TemporaryEffect> effects = new ArrayList<>();
     private boolean undoUsedThisCombat = false;
 
+    /**
+     * Partie à adversaires fixés : ils sont affrontés dans l'ordre, une récompense entre chacun, et
+     * la partie est gagnée quand le dernier meurt (tests, scénarios).
+     */
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
+        this(player, enemies, false, terrain, hand, playerStats);
         if (enemies.isEmpty()) {
             throw new IllegalArgumentException("Il faut au moins un adversaire");
         }
+    }
+
+    private GameState(Player player, List<Enemy> enemies, boolean openEnded, TerrainCard terrain, List<Card> hand,
+            Stats playerStats) {
         this.player = player;
-        this.enemies = List.copyOf(enemies);
+        this.enemies = new ArrayList<>(enemies);
+        this.openEnded = openEnded;
         this.terrain = terrain;
         this.hand = new ArrayList<>(hand);
         this.playerStats = playerStats;
     }
 
+    /**
+     * Partie ouverte : aucun adversaire au départ, chaque combat est lancé de l'extérieur
+     * ({@code CombatEngine.startCombat}, par la carte de la run).
+     */
+    public static GameState openRun(Player player, TerrainCard terrain, Stats playerStats) {
+        return new GameState(player, List.of(), true, terrain, List.of(), playerStats);
+    }
+
     /** Nouvelle partie : adversaires par défaut, terrain de départ, main vide (distribuée au début du combat). */
     public static GameState newGame() {
         Stats stats = new Stats();
-        return new GameState(new Player(stats.get(StatType.MAX_HP)), EnemyRoster.createDefault(),
+        return new GameState(new Player(stats.get(StatType.MAX_HP)), cardistry.model.EnemyRoster.createDefault(),
                 CardPool.startingTerrain(), List.of(), stats);
     }
 
@@ -81,12 +105,28 @@ public final class GameState {
         return player;
     }
 
+    /** Adversaires affrontés ou à affronter (partie fixe), ou déjà rencontrés (partie ouverte). */
     public List<Enemy> enemies() {
-        return enemies;
+        return Collections.unmodifiableList(enemies);
+    }
+
+    /** {@code true} si les combats sont lancés de l'extérieur (carte de la run). */
+    public boolean isOpenEnded() {
+        return openEnded;
+    }
+
+    /** {@code true} si un adversaire est en jeu (un combat a commencé). */
+    public boolean hasEnemy() {
+        return currentEnemyIndex < enemies.size();
     }
 
     public Enemy currentEnemy() {
         return enemies.get(currentEnemyIndex);
+    }
+
+    /** Choomies (monnaie de la run). */
+    public int choomies() {
+        return choomies;
     }
 
     public TerrainCard terrain() {
@@ -127,9 +167,17 @@ public final class GameState {
         undoUsedThisCombat = value;
     }
 
-    /** {@code true} pendant le combat contre le dernier adversaire (le boss). */
-    public boolean isLastCombat() {
-        return !hasNextEnemy();
+    /**
+     * {@code true} pendant le dernier combat de la partie : le boss final (carte de la run), ou le
+     * dernier adversaire d'une partie fixe.
+     */
+    public boolean isFinalCombat() {
+        return openEnded ? finalCombat : !hasNextEnemy();
+    }
+
+    /** {@code true} si l'adversaire actuel est immunisé contre la mort instantanée (boss, dernier combat). */
+    public boolean isBossFight() {
+        return hasEnemy() && (currentEnemy().rank() == cardistry.model.enemy.EnemyRank.BOSS || isFinalCombat());
     }
 
     /** Stats du joueur : c'est ici que trinkets et objets ajouteront leurs modificateurs. */
@@ -312,7 +360,7 @@ public final class GameState {
 
     /** Numéro du combat actuel, à partir de 1. */
     public int combatNumber() {
-        return currentEnemyIndex + 1;
+        return Math.min(currentEnemyIndex, enemies.size() - 1) + 1;
     }
 
     /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
@@ -350,10 +398,28 @@ public final class GameState {
                 * playerStats.get(StatType.ENEMY_DAMAGE);
     }
 
-    /** Dégâts que l'adversaire infligera à sa prochaine attaque (multiplicateur, puis réduction). */
-    public double enemyAttackDamage() {
-        return Math.max(0, currentEnemy().attack() * enemyAttackMultiplier()
+    /**
+     * Dégâts d'un coup de l'adversaire actuel : dégâts déclarés (plus ceux liés à ta main) × niveau ×
+     * multiplicateur, moins la réduction de dégâts, jamais sous 0.
+     */
+    public double hitDamage(cardistry.model.enemy.MoveEffect.Hit hit) {
+        return hitDamage(hit.damage() + hit.perMissingCard()
+                * Math.max(0, cardistry.model.enemy.MoveEffect.Hit.FULL_HAND - hand.size()));
+    }
+
+    /** Dégâts d'un coup de {@code declared} dégâts (avant niveau, terrain et réduction). */
+    public double hitDamage(double declared) {
+        return Math.max(0, declared * currentEnemy().damageScale() * enemyAttackMultiplier()
                 - playerStats.get(StatType.DAMAGE_REDUCTION));
+    }
+
+    /** Dégâts d'un coup de la prochaine attaque annoncée (0 si elle n'attaque pas). */
+    public double enemyAttackDamage() {
+        cardistry.model.enemy.EnemyMove intent = currentEnemy().peekIntent();
+        return intent.effects().stream()
+                .filter(e -> e instanceof cardistry.model.enemy.MoveEffect.Hit)
+                .map(e -> (cardistry.model.enemy.MoveEffect.Hit) e)
+                .findFirst().map(this::hitDamage).orElse(0.0);
     }
 
     /**
@@ -368,9 +434,9 @@ public final class GameState {
         return weight;
     }
 
-    /** Tous les adversaires sont morts, et le joueur est vivant. */
+    /** Le dernier combat est gagné, et le joueur est vivant. */
     public boolean isWon() {
-        return player.isAlive() && enemies.stream().noneMatch(Enemy::isAlive);
+        return won && player.isAlive();
     }
 
     public boolean isLost() {
@@ -385,6 +451,21 @@ public final class GameState {
 
     void advanceEnemy() {
         currentEnemyIndex++;
+    }
+
+    /** Partie ouverte : nouvel adversaire, qui devient l'adversaire actuel. */
+    void addEncounter(Enemy enemy, boolean isFinal) {
+        enemies.add(enemy);
+        currentEnemyIndex = enemies.size() - 1;
+        finalCombat = isFinal;
+    }
+
+    void setWon() {
+        won = true;
+    }
+
+    void setChoomies(int value) {
+        choomies = value;
     }
 
     void setTerrain(TerrainCard terrain) {

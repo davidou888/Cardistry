@@ -77,22 +77,13 @@ final class CombatScreen {
         hpLine(p, 3, hp, enemy.maxHp(), Palette.DAMAGE, null);
 
         double mult = state.enemyAttackMultiplier();
-        double reduction = state.playerStats().get(cardistry.core.stats.StatType.DAMAGE_REDUCTION);
-        String attack = "Attaque " + num(enemy.attack());
-        if (mult != 1.0) {
-            attack += " ×" + num(mult);
-        }
-        if (reduction > 0) {
-            attack += " −" + num(reduction);
-        }
-        if (mult != 1.0 || reduction > 0) {
-            attack += " = " + num(state.enemyAttackDamage());
-        }
-        p.text(2, 4, attack, Palette.TEXT);
-        if (mult > 1.0) {
-            p.text(3 + attack.length(), 4, "(renforcé par le terrain)", Palette.DAMAGE);
-        } else if (mult < 1.0) {
-            p.text(3 + attack.length(), 4, "(affaibli par le terrain)", Palette.HEAL);
+        int width = p.cols() - SPRITE_WIDTH - 3 - 2;
+        String intent = "Prochain : " + cardistry.ui.IntentText.intent(state, enemy);
+        String note = mult != 1.0 ? " (×" + num(mult) + ")" : "";
+        String fitted = Painter.fit(intent, Math.max(1, width - note.length()));
+        p.text(2, 4, fitted, Palette.TEXT);
+        if (!note.isEmpty()) {
+            p.text(2 + fitted.length(), 4, note, mult > 1.0 ? Palette.DAMAGE : Palette.HEAL);
         }
     }
 

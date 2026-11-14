@@ -267,7 +267,7 @@ public final class ItemRegistry {
                 .hooks(new GameHooks() {
                     @Override
                     public void onHandDealt(GameEvent.HandDealt event, EffectContext ctx) {
-                        boolean boss = ctx.state().isLastCombat();
+                        boolean boss = ctx.state().isBossFight();
                         NullPointerRoll roll = ctx.favorable(
                                 () -> NullPointerRoll.of(ctx.rng().nextDouble(), boss), NullPointerRoll::compareFavor);
                         switch (roll) {

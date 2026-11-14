@@ -126,9 +126,8 @@ class LanternaUiTest {
         assertTimeoutPreemptively(TIMEOUT, () -> ui.showIntro(state));
 
         String text = dump("02-regles");
-        assertTrue(text.contains("Hydre"));
-        assertTrue(text.contains("Sirène"));
-        assertTrue(text.contains("Goblin"));
+        assertTrue(text.contains("8 étages"));
+        assertTrue(text.contains("prochain coup"));
     }
 
     @Test
@@ -155,7 +154,7 @@ class LanternaUiTest {
         String text = dump("03-combat");
         assertTrue(text.contains("HYDRE"));
         assertTrue(text.contains("Combat 1/3"));
-        assertTrue(text.contains("Attaque 5 ×1.25 = 6.25"));
+        assertTrue(text.contains("Prochain : Attaque : 6.25 (×1.25)"));
         assertTrue(text.contains("EPFL (feu)"));
         assertTrue(text.contains("100/100"));
         assertTrue(text.contains("Ta main 4/7"));

@@ -54,7 +54,7 @@ public final class UnlockTracker implements Consumer<GameEvent> {
                 }
             }
             case GameEvent.GameLost e -> {
-                if (s.isLastCombat() && s.currentEnemy().hp() <= CTRL_Z_ENEMY_HP) {
+                if (s.isFinalCombat() && s.currentEnemy().hp() <= CTRL_Z_ENEMY_HP) {
                     unlock(Secret.CTRL_Z);
                 }
             }

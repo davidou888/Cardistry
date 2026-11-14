@@ -10,6 +10,7 @@ import cardistry.model.Combatant;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
 import cardistry.model.card.TerrainCard;
+import cardistry.model.enemy.EnemyMove;
 import java.util.List;
 
 /**
@@ -70,7 +71,9 @@ public sealed interface GameEvent {
             /** Effet d'objet ou de trinket. */
             EFFECT,
             /** Attaque de l'adversaire. */
-            ENEMY_ATTACK
+            ENEMY_ATTACK,
+            /** Dégâts renvoyés par l'adversaire (Rebond du Peneu). */
+            REFLECTED
         }
     }
 
@@ -86,6 +89,46 @@ public sealed interface GameEvent {
     }
 
     record EnemyKilled(Enemy enemy) implements GameEvent {
+    }
+
+    /** Prochaine attaque de l'adversaire, annoncée à l'avance (intent). */
+    record IntentChosen(Enemy enemy, EnemyMove move) implements GameEvent {
+    }
+
+    /** L'adversaire exécute son attaque annoncée ; ses effets suivent (dégâts, vol…). */
+    record EnemyMoveUsed(Enemy enemy, EnemyMove move) implements GameEvent {
+    }
+
+    /** Un coup de l'adversaire rate ; {@code healed} = PV qu'il se rend en ratant (fringale). */
+    record EnemyMissed(Enemy enemy, double healed) implements GameEvent {
+    }
+
+    /** L'adversaire esquivera ton prochain sort. */
+    record DodgeReady(Enemy enemy) implements GameEvent {
+    }
+
+    /** L'adversaire esquive ton sort : aucun dégât. */
+    record EnemyDodged(Enemy enemy) implements GameEvent {
+    }
+
+    /** L'adversaire se soigne (PV réellement rendus). */
+    record EnemyHealed(Enemy enemy, double amount) implements GameEvent {
+    }
+
+    /** Une carte de ta main devient une carte morte (Série d'algèbre de Vafi). */
+    record CardCursed(Enemy enemy, Card removed, Card dead) implements GameEvent {
+    }
+
+    /** L'adversaire te vole des Choomies. */
+    record ChoomiesStolen(Enemy enemy, int amount) implements GameEvent {
+    }
+
+    /** L'adversaire te prend des clopes (vol ou Taxe). */
+    record CigarettesStolen(Enemy enemy, int amount) implements GameEvent {
+    }
+
+    /** Les Choomies changent ; {@code delta} = gain (positif) ou perte. */
+    record ChoomiesChanged(int choomies, int delta) implements GameEvent {
     }
 
     /** L'Ivresse change ; {@code threshold} = seuil de Gueule de bois actuel. */
