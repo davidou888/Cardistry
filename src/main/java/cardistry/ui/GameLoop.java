@@ -34,7 +34,13 @@ public final class GameLoop {
         if (audio != null) {
             audio.title();
         }
-        TitleChoice title = input.title(run.seed());
+        TitleChoice title;
+        java.util.Optional<cardistry.hero.Hero> hero;
+        do { // retour depuis le choix du personnage : on revient au titre
+            title = input.title(run.seed());
+            hero = input.chooseHero(cardistry.hero.HeroRegistry.all());
+        } while (hero.isEmpty());
+        run.setHero(hero.get());
         title.codes().forEach(run::addCode);
         run.setDecisions(input);
         run.start();

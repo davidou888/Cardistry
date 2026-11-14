@@ -26,6 +26,10 @@ public final class HookDispatcher {
             }
             case GameEvent.CardReplaced e -> hook.onCardReplaced(e, ctx);
             case GameEvent.DamageDealt e -> hook.onDamageDealt(e, ctx);
+            case GameEvent.SpellHit e -> hook.onSpellHit(e, ctx);
+            case GameEvent.AbilityTriggered e -> {
+                // Concerne seulement l'UI.
+            }
             case GameEvent.Healed e -> hook.onHeal(e, ctx);
             case GameEvent.TerrainChanged e -> hook.onTerrainChanged(e, ctx);
             case GameEvent.EnemyAttacked e -> hook.onEnemyAttack(e, ctx);

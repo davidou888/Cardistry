@@ -132,6 +132,14 @@ final class ItemScreens {
     static void inventory(Painter p, GameState state) {
         p.frame("Inventaire", "", "Appuie sur une touche pour revenir");
         int row = 2;
+        if (state.hero().isPresent()) {
+            cardistry.hero.Hero hero = state.hero().get();
+            p.text(3, row, hero.name() + " · " + hero.abilityName(), Palette.SECRET, true);
+            for (String text : cardistry.ui.Format.wrap(hero.description(), p.cols() - 8)) {
+                p.text(5, ++row, text, Palette.TEXT);
+            }
+            row += 2;
+        }
         p.text(3, row++, "Objets " + state.items().size() + "/" + state.itemSlots()
                 + "  (action gratuite : " + ItemKeys.label(state.itemSlots()) + " en combat)", Palette.TEXT, true);
         for (int i = 0; i < state.items().size(); i++) {

@@ -50,6 +50,19 @@ public final class ConsoleInput implements Input {
         }
     }
 
+    @Override
+    public java.util.Optional<cardistry.hero.Hero> chooseHero(List<cardistry.hero.Hero> heroes) {
+        console.println();
+        console.println(Ansi.yellow("Choisis ton personnage"));
+        for (int i = 0; i < heroes.size(); i++) {
+            cardistry.hero.Hero hero = heroes.get(i);
+            console.println("[" + (i + 1) + "] " + hero.name() + " · "
+                    + cardistry.ui.Format.num(GameState.newGame(hero).maxHp()) + " PV · " + hero.abilityName()
+                    + " : " + hero.description());
+        }
+        return java.util.Optional.of(heroes.get(readNumber("Ton choix ? ", 1, heroes.size()) - 1));
+    }
+
     /** Commande de l'écran titre qui ouvre les réglages. */
     static final String OPTIONS_COMMAND = "options";
 

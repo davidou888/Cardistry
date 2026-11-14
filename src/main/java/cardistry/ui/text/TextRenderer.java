@@ -129,12 +129,13 @@ public final class TextRenderer implements Renderer {
                     console.println("→ Ivresse : " + e.drunkenness() + "/" + e.threshold());
                 }
             }
+            case GameEvent.AbilityTriggered e -> console.println(Ansi.MAGENTA + "✦ " + e.message() + Ansi.END_COLOR);
             case GameEvent.CurseGained e -> console.println(Ansi.RED + "Gueule de bois en vue !" + Ansi.END_COLOR
-                    + " " + e.curse().displayName() + " (" + e.curse().description(1) + ") au prochain combat.");
+                    + " " + e.curse().displayName() + " (" + lastState.describeCurse(e.curse(), 1) + ") au prochain combat.");
             case GameEvent.CurseStarted e -> console.println(Ansi.RED + e.curse().displayName() + Ansi.END_COLOR
-                    + " : " + e.curse().description(lastState.activeIntensity(e.curse())) + " pendant ce combat.");
+                    + " : " + lastState.describeCurse(e.curse(), lastState.activeIntensity(e.curse())) + " pendant ce combat.");
             case GameEvent.CurseReduced e -> console.println("→ " + e.curse().displayName()
-                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + e.curse().description(e.intensity()) + ")")
+                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + lastState.describeCurse(e.curse(), e.intensity()) + ")")
                     + (e.pending() && e.intensity() > 0 ? " au prochain combat" : ""));
             case GameEvent.CigarettesChanged e -> {
                 // Affiché dans l'état.
@@ -291,7 +292,7 @@ public final class TextRenderer implements Renderer {
         }
         for (cardistry.core.Curse curse : state.activeCurses()) {
             console.println(Ansi.RED + curse.displayName() + Ansi.END_COLOR + " : "
-                    + curse.description(state.activeIntensity(curse)));
+                    + state.describeCurse(curse, state.activeIntensity(curse)));
         }
         for (cardistry.core.Curse curse : state.pendingCurses()) {
             console.println(curse.displayName() + " au prochain combat");

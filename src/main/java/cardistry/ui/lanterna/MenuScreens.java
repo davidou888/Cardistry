@@ -57,6 +57,48 @@ final class MenuScreens {
         }
     }
 
+    /** Image d'un personnage ({@code player/<id>.png}), sinon le placeholder commun. */
+    static String heroImage(cardistry.hero.Hero hero) {
+        String path = "player/" + hero.id() + ".png";
+        return cardistry.ui.window.Images.get(path).isPresent() ? path : CombatWindowScreen.PLAYER_IMAGE;
+    }
+
+    /** Choix du personnage : une colonne par personnage (image dans la fenêtre), capacité dessous. */
+    static void heroes(Painter p, List<cardistry.hero.Hero> heroes, int selected, long seed) {
+        p.frame("Choisis ton personnage", "Seed " + seed, "←/→ choisir · 1-" + heroes.size()
+                + " · Entrée valider · Échap retour");
+        int width = Math.min(30, (p.cols() - 4 - 2 * (heroes.size() - 1)) / heroes.size());
+        int left = (p.cols() - (heroes.size() * width + 2 * (heroes.size() - 1))) / 2;
+        // Fenêtre : portrait carré au-dessus du nom, aussi grand que la hauteur le permet.
+        int portraitRows = p.hasImages() ? Math.max(0, Math.min(p.rows() - 20, (width - 4) / 2)) : 0;
+        int top = Math.max(2, (p.rows() - (portraitRows + 14)) / 2);
+        for (int i = 0; i < heroes.size(); i++) {
+            cardistry.hero.Hero hero = heroes.get(i);
+            boolean isSelected = i == selected;
+            int col = left + i * (width + 2);
+            int height = Math.min(p.rows() - top - 2, portraitRows + 14);
+            p.box(col, top, width, height, isSelected ? Palette.ACCENT : Palette.FRAME, isSelected);
+            int row = top + 1;
+            if (portraitRows >= 3) {
+                p.image(col + (width - portraitRows * 2) / 2, row, portraitRows * 2, portraitRows, heroImage(hero),
+                        null, isSelected ? 1f : 0.45f);
+                row += portraitRows;
+            }
+            String name = (isSelected ? "▶ " : "") + "[" + (i + 1) + "] " + hero.name();
+            p.text(col + Math.max(1, (width - name.length()) / 2), row, name,
+                    isSelected ? Palette.ACCENT : Palette.TEXT, true);
+            double hp = cardistry.core.GameState.newGame(hero).maxHp();
+            String stats = num(hp) + " PV";
+            p.text(col + (width - stats.length()) / 2, row + 1, stats, Palette.HEAL);
+            String ability = Painter.fit(hero.abilityName(), width - 2);
+            p.text(col + (width - ability.length()) / 2, row + 3, ability, Palette.SECRET, true);
+            List<String> lines = Format.wrap(hero.description(), width - 4);
+            for (int k = 0; k < lines.size() && row + 5 + k < top + height - 1; k++) {
+                p.text(col + 2, row + 5 + k, lines.get(k), isSelected ? Palette.TEXT : Palette.DIM);
+            }
+        }
+    }
+
     private static String elementsLine() {
         StringBuilder line = new StringBuilder();
         for (Element winner : Element.PLAYABLE) {

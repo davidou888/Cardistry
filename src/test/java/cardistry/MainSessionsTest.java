@@ -49,10 +49,12 @@ class MainSessionsTest {
             started.add(game);
             return game;
         };
-        terminal.addInput(new KeyStroke(KeyType.Enter));        // titre : Jouer → carte de la 1re partie
+        terminal.addInput(new KeyStroke(KeyType.Enter));        // titre : Jouer
+        terminal.addInput(new KeyStroke(KeyType.Enter));        // personnage → carte de la 1re partie
         terminal.addInput(new KeyStroke('q', false, false));    // quitter la partie…
         terminal.addInput(new KeyStroke('o', false, false));    // … confirmé : retour au titre
-        terminal.addInput(new KeyStroke(KeyType.Enter));        // titre : Jouer → 2e partie
+        terminal.addInput(new KeyStroke(KeyType.Enter));        // titre : Jouer
+        terminal.addInput(new KeyStroke(KeyType.Enter));        // personnage → 2e partie
         terminal.addInput(new KeyStroke(KeyType.Escape));       // pause
         terminal.addInput(new KeyStroke(KeyType.ArrowDown));
         terminal.addInput(new KeyStroke(KeyType.ArrowDown));

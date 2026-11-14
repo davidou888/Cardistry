@@ -282,6 +282,7 @@ class CombatEngineTest {
         assertEquals(List.of(
                 new GameEvent.CardPlayed(tsunami),
                 new GameEvent.DamageDealt(hydra, 22.5, 1.5, GameEvent.DamageDealt.Source.SPELL),
+                new GameEvent.SpellHit(tsunami, hydra, 20), // les 20 PV qu'il lui restait
                 new GameEvent.EnemyKilled(hydra),
                 new GameEvent.ChoomiesChanged(state.choomies(), state.choomies() - GameState.STARTING_CHOOMIES),
                 new GameEvent.CombatStarted(siren, 2, 2),

@@ -237,6 +237,32 @@ class LanternaUiTest {
         assertTrue(text.contains("— Tour 15 —"));
     }
 
+    // --- Choix du personnage ---
+
+    @Test
+    void choixDuPersonnageAvecLesFlechesEtEntree() throws IOException {
+        open(80, 24);
+        press(KeyType.ArrowRight);
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        java.util.Optional<cardistry.hero.Hero> hero = assertTimeoutPreemptively(TIMEOUT,
+                () -> ui.chooseHero(cardistry.hero.HeroRegistry.all()));
+        assertEquals(cardistry.hero.HeroRegistry.SASSY, hero.orElseThrow());
+        String text = dump("92-personnages");
+        for (cardistry.hero.Hero h : cardistry.hero.HeroRegistry.all()) {
+            assertTrue(text.contains(h.name()) && text.contains(h.abilityName()), text);
+        }
+        assertTrue(text.contains("130 PV") && text.contains("100 PV"), text);
+    }
+
+    @Test
+    void choixDuPersonnageEchapRevientAuTitre() throws IOException {
+        open(80, 24);
+        press(KeyType.Escape);
+        assertTrue(assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseHero(cardistry.hero.HeroRegistry.all()))
+                .isEmpty());
+    }
+
     // --- Partie complète ---
 
     @Test
@@ -247,6 +273,7 @@ class LanternaUiTest {
         bus.subscribe(ui::onEvent);
 
         press(KeyType.Enter); // titre
+        press(KeyType.Enter); // personnage : Louis
         for (int i = 0; i < 3000; i++) {
             type("12ps"); // 1er nœud, 1re carte (ou 2e choix d'un événement), piocher, refuser les récompenses
             press(KeyType.Escape); // quitter le shop (ailleurs : demande de confirmation…

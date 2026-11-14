@@ -149,8 +149,9 @@ final class CombatWindowScreen {
     }
 
     private static void drawPlayer(Painter p, GameState state, ViewState view, Layout l) {
-        if (!p.image(l.playerCol(), l.spriteTop(), l.spriteCols(), l.spriteRows(), PLAYER_IMAGE, view.playerFlash,
-                1f)) {
+        String image = state.hero().map(MenuScreens::heroImage).orElse(PLAYER_IMAGE);
+        String name = Format.playerLabel(state);
+        if (!p.image(l.playerCol(), l.spriteTop(), l.spriteCols(), l.spriteRows(), image, view.playerFlash, 1f)) {
             p.text(l.playerCol() + Math.max(0, (l.spriteCols() - 5) / 2), l.spriteTop() + l.spriteRows() / 2, "(toi)",
                     Palette.DIM);
         }
@@ -160,10 +161,10 @@ final class CombatWindowScreen {
         TextColor barColor = view.playerFlash != null ? view.playerFlash
                 : overMax ? Palette.ACCENT : Palette.health(hp / state.maxHp());
         String value = num(Math.max(0, hp)) + "/" + num(state.maxHp());
-        int barWidth = hpBarWidth(l, PLAYER_NAME.length(), value.length());
+        int barWidth = hpBarWidth(l, name.length(), value.length());
         int col = l.playerCol();
-        p.text(col, l.hpRow(), PLAYER_NAME, Palette.TEXT, true);
-        col += PLAYER_NAME.length() + 1;
+        p.text(col, l.hpRow(), name, Palette.TEXT, true);
+        col += name.length() + 1;
         p.text(col, l.hpRow(), Painter.bar(hp, state.maxHp(), barWidth), barColor, view.playerFlash != null || overMax);
         p.text(col + barWidth + 1, l.hpRow(), value, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
 
@@ -194,7 +195,7 @@ final class CombatWindowScreen {
         }
         for (Curse curse : state.activeCurses()) {
             lines.add(new StatusLine(Painter.fit(curse.displayName() + " ("
-                    + curse.description(state.activeIntensity(curse)) + ")", width), Palette.DAMAGE, false));
+                    + state.describeCurse(curse, state.activeIntensity(curse)) + ")", width), Palette.DAMAGE, false));
         }
         for (Curse curse : state.pendingCurses()) {
             lines.add(new StatusLine(Painter.fit(curse.displayName() + " à venir", width), Palette.DIM, false));

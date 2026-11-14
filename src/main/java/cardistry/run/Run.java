@@ -110,11 +110,13 @@ public final class Run {
     private final List<Step> history = new ArrayList<>();
     private final List<TurnMark> marks = new ArrayList<>();
     private PlayerDecisions decisions = PlayerDecisions.FIRST;
+    /** Personnage joué ; {@code null} = aucun. */
+    private cardistry.hero.Hero hero;
     private Session session;
 
     /** Partie standard. */
     public Run(long seed, Set<Secret> unlocked, EventBus front) {
-        this(seed, unlocked, front, GameState::newGame, CardPool::new);
+        this(seed, unlocked, front, null, CardPool::new);
     }
 
     /** Partie sur un état et un pool donnés (tests) ; {@code newState} doit créer un état neuf à chaque appel. */
@@ -138,6 +140,14 @@ public final class Run {
         if (!codes.contains(secret)) {
             codes.add(secret);
         }
+    }
+
+    /** Personnage joué (avant le début) ; sans effet sur une partie à état fourni (tests). */
+    public void setHero(cardistry.hero.Hero hero) {
+        if (session != null) {
+            throw new IllegalStateException("La partie a déjà commencé");
+        }
+        this.hero = hero;
     }
 
     public List<Secret> codes() {
@@ -442,7 +452,7 @@ public final class Run {
         boolean resting;
 
         Session(EventBus bus) {
-            GameState state = newState.get();
+            GameState state = newState != null ? newState.get() : GameState.newGame(hero);
             engine = new CombatEngine(state, newPool.get(), new Rng(seed), bus, new LootTable(unlockedIds));
             for (Secret code : codes) {
                 engine.equip(ItemRegistry.trinket(code.trinketId()));

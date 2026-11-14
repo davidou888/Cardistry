@@ -73,6 +73,10 @@ public interface EffectContext {
         return Luck.favorable(state(), roll, better);
     }
 
+    /** Affiche une ligne dans le journal (capacité d'un personnage qui se déclenche). */
+    default void announce(String message) {
+    }
+
     /** Ajoute une carte au deck de la run (sans deck : rien). */
     default void addCardToDeck(cardistry.model.card.Card card) {
     }

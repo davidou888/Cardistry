@@ -44,6 +44,10 @@ public interface GameHooks {
     default void onDamageDealt(GameEvent.DamageDealt event, EffectContext ctx) {
     }
 
+    /** Un sortilège de la main a touché l'adversaire (après {@link #onDamageDealt}). */
+    default void onSpellHit(GameEvent.SpellHit event, EffectContext ctx) {
+    }
+
     default void onHeal(GameEvent.Healed event, EffectContext ctx) {
     }
 

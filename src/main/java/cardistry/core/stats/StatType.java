@@ -8,7 +8,7 @@ import cardistry.model.Element;
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
  * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
- * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
+ * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #HANGOVER_SEVERITY}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
  */
 public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
@@ -41,6 +41,8 @@ public enum StatType {
     ENEMY_DAMAGE(1.0),
     /** Ivresse à partir de laquelle on attrape une Gueule de bois. */
     HANGOVER_THRESHOLD(3),
+    /** Multiplicateur du malus de Gueule de bois (×2 pour Louis). */
+    HANGOVER_SEVERITY(1.0),
     /** Si &gt; 0 : les soins ne sont plus plafonnés par les PV max. */
     UNCAPPED_HEALING(0),
     /** Taille du paquet de clopes. */

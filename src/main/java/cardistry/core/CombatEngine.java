@@ -980,8 +980,12 @@ public final class CombatEngine {
             case SpellCard spell -> {
                 Optional<TemporaryEffect> boost = state.nextSpellBoost();
                 double mult = state.spellMultiplier(spell);
-                damageEnemy(spell.damage() * mult, mult, GameEvent.DamageDealt.Source.SPELL);
+                Enemy target = state.currentEnemy();
+                double hpLost = damageEnemy(spell.damage() * mult, mult, GameEvent.DamageDealt.Source.SPELL);
                 boost.ifPresent(this::consume);
+                if (hpLost > 0) {
+                    bus.publish(new GameEvent.SpellHit(spell, target, hpLost));
+                }
             }
             case HealCard heal -> {
                 double mult = state.healMultiplier(heal);
@@ -1203,14 +1207,17 @@ public final class CombatEngine {
     /**
      * Dégâts à l'adversaire. Un sort contre un adversaire prêt à esquiver ne fait rien. Rebond :
      * une part des dégâts est renvoyée au joueur, sans jamais le tuer.
+     *
+     * @return PV réellement enlevés à l'adversaire (0 s'il esquive)
      */
-    private void damageEnemy(double amount, double mult, GameEvent.DamageDealt.Source source) {
+    private double damageEnemy(double amount, double mult, GameEvent.DamageDealt.Source source) {
         Enemy enemy = state.currentEnemy();
         if (source == GameEvent.DamageDealt.Source.SPELL && enemy.dodgeReady()) {
             enemy.setDodgeReady(false);
             bus.publish(new GameEvent.EnemyDodged(enemy));
-            return;
+            return 0;
         }
+        double hpLost = Math.max(0, Math.min(amount, enemy.hp()));
         enemy.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(enemy, amount, mult, source));
         if (enemy.reflectRatio() > 0 && amount > 0) {
@@ -1222,6 +1229,7 @@ public final class CombatEngine {
                         GameEvent.DamageDealt.Source.REFLECTED));
             }
         }
+        return hpLost;
     }
 
     /**
@@ -1237,6 +1245,7 @@ public final class CombatEngine {
     }
 
     private void dispatchToTrinkets(GameEvent event) {
+        state.hero().ifPresent(hero -> HookDispatcher.dispatch(hero.hooks(), event, effects));
         List<Trinket> equipped = List.copyOf(state.trinkets());
         for (Trinket trinket : equipped) {
             HookDispatcher.dispatch(trinket.hooks(), event, effects);
@@ -1291,6 +1300,11 @@ public final class CombatEngine {
             if (wasAlive && !player.isAlive()) {
                 bus.publish(new GameEvent.GameLost());
             }
+        }
+
+        @Override
+        public void announce(String message) {
+            bus.publish(new GameEvent.AbilityTriggered(message));
         }
 
         @Override

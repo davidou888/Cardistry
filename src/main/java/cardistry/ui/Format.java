@@ -22,6 +22,11 @@ public final class Format {
         return multiplier == 1.0 ? "" : " (×" + num(multiplier) + ")";
     }
 
+    /** Étiquette du joueur en combat : le nom de son personnage en capitales, « TOI » sans personnage. */
+    public static String playerLabel(cardistry.core.GameState state) {
+        return state.hero().map(h -> h.name().toUpperCase(java.util.Locale.ROOT)).orElse("TOI");
+    }
+
     public static String capitalize(String text) {
         return text.isEmpty() ? text : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }

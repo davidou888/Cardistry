@@ -11,14 +11,16 @@ import java.util.List;
  */
 public enum Curse {
     /** Obtenue en atteignant le seuil d'Ivresse : −1 taille de main par point d'intensité. */
-    HANGOVER("Gueule de bois", StatType.HAND_SIZE, -1, "taille de main");
+    HANGOVER("Gueule de bois", StatType.HAND_SIZE, -1, "taille de main", StatType.HANGOVER_SEVERITY);
 
     private final String displayName;
     private final StatType stat;
     private final double perIntensity;
     private final String statLabel;
+    private final StatType severity;
 
-    Curse(String displayName, StatType stat, double perIntensity, String statLabel) {
+    Curse(String displayName, StatType stat, double perIntensity, String statLabel, StatType severity) {
+        this.severity = severity;
         this.displayName = displayName;
         this.stat = stat;
         this.perIntensity = perIntensity;
@@ -29,9 +31,19 @@ public enum Curse {
         return displayName;
     }
 
-    /** Effet à cette intensité : « −2 taille de main ». */
+    /** Stat du joueur qui multiplie le malus de cette malédiction (1 par défaut). */
+    public StatType severityStat() {
+        return severity;
+    }
+
+    /** Effet à cette intensité, sans multiplicateur de malus : « −2 taille de main ». */
     public String description(int intensity) {
-        double value = perIntensity * intensity;
+        return description(intensity, 1);
+    }
+
+    /** Effet à cette intensité, malus multiplié par {@code severity}. */
+    public String description(int intensity, double severity) {
+        double value = perIntensity * intensity * severity;
         String sign = value < 0 ? "−" : "+";
         double abs = Math.abs(value);
         String number = abs == Math.rint(abs) ? Long.toString((long) abs) : Double.toString(abs);
@@ -44,6 +56,11 @@ public enum Curse {
     }
 
     public List<StatModifier> modifiers(int intensity) {
-        return List.of(StatModifier.flat(stat, perIntensity * intensity, modifierSource()));
+        return modifiers(intensity, 1);
+    }
+
+    /** Modificateurs à cette intensité, malus multiplié par {@code severity}. */
+    public List<StatModifier> modifiers(int intensity, double severity) {
+        return List.of(StatModifier.flat(stat, perIntensity * intensity * severity, modifierSource()));
     }
 }

@@ -33,7 +33,7 @@ import java.util.List;
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS }
+        PAUSE, OPTIONS, HERO }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -141,6 +141,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         cardSelected = 0;
         restSelected = 0;
         shopSelected = 0;
+        heroSelected = 0;
         unlockedSecrets = List.of();
         state = null;
         page = Page.TITLE;
@@ -263,12 +264,13 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 render();
             }
             case GameEvent.CurseGained e -> view.log(e.curse().displayName() + " au prochain combat ("
-                    + e.curse().description(1) + ")", Palette.DAMAGE);
+                    + curseText(e.curse(), 1) + ")", Palette.DAMAGE);
             case GameEvent.CurseStarted e -> view.log(e.curse().displayName() + " : "
-                    + e.curse().description(state == null ? 1 : state.activeIntensity(e.curse())), Palette.DAMAGE);
+                    + curseText(e.curse(), state == null ? 1 : state.activeIntensity(e.curse())), Palette.DAMAGE);
             case GameEvent.CurseReduced e -> view.log(e.curse().displayName()
-                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + e.curse().description(e.intensity()) + ")"),
+                    + (e.intensity() == 0 ? " évitée !" : " réduite (" + curseText(e.curse(), e.intensity()) + ")"),
                     Palette.HEAL);
+            case GameEvent.AbilityTriggered e -> view.log(e.message(), Palette.SECRET);
             case GameEvent.CigarettesChanged e -> render();
             case GameEvent.CigaretteSmoked e -> {
                 if (e.transformedIntoPetitPetou()) {
@@ -699,6 +701,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         render();
     }
 
+    /** Effet d'une malédiction pour le joueur actuel (malus doublé pour Louis). */
+    private String curseText(cardistry.core.Curse curse, int intensity) {
+        return state == null ? curse.description(intensity) : state.describeCurse(curse, intensity);
+    }
+
     private void enterCombat(GameState state) {
         this.state = state;
         page = Page.COMBAT;
@@ -767,6 +774,40 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     private int titleSelected = 0;
+    private List<cardistry.hero.Hero> heroes = List.of();
+    private int heroSelected = 0;
+
+    @Override
+    public java.util.Optional<cardistry.hero.Hero> chooseHero(List<cardistry.hero.Hero> heroes) {
+        this.heroes = heroes;
+        heroSelected = Math.min(heroSelected, heroes.size() - 1);
+        page = Page.HERO;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft, ArrowUp -> heroSelected = Math.floorMod(heroSelected - 1, heroes.size());
+                case ArrowRight, ArrowDown -> heroSelected = Math.floorMod(heroSelected + 1, heroes.size());
+                case Enter -> {
+                    return java.util.Optional.of(heroes.get(heroSelected));
+                }
+                case Escape -> {
+                    return java.util.Optional.empty();
+                }
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c >= '1' && c - '1' < heroes.size()) {
+                        heroSelected = c - '1';
+                    } else if (c == 'q') {
+                        return java.util.Optional.empty();
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
 
     private void addTitleCode(Secret secret) {
         if (!titleCodes.contains(secret)) {
@@ -1376,6 +1417,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             } else {
                 switch (page) {
                     case TITLE -> MenuScreens.title(painter, seed, titleCodes, titleSelected);
+                    case HERO -> MenuScreens.heroes(painter, heroes, heroSelected, seed);
                     case RULES -> MenuScreens.rules(painter, state);
                     case COMBAT -> {
                         if (state != null && images != null) {

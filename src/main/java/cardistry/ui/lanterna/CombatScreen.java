@@ -193,7 +193,7 @@ final class CombatScreen {
         TextColor terrainColor = view.terrainFlash != null ? view.terrainFlash : Palette.element(terrain.element());
         p.text(11, 6, terrain.name() + " (" + terrain.element().displayName() + ")", terrainColor, true);
 
-        p.text(2, 7, "TOI", Palette.TEXT, true);
+        p.text(2, 7, Format.playerLabel(state), Palette.TEXT, true);
         drawDrunkennessAndCurses(p, state);
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
         hpLine(p, 8, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
@@ -203,7 +203,7 @@ final class CombatScreen {
 
     /** Ligne 7, après « TOI » : Ivresse (si non nulle) et malédictions. */
     private static void drawDrunkennessAndCurses(Painter p, GameState state) {
-        int col = 7;
+        int col = 2 + Format.playerLabel(state).length() + 2;
         int limit = p.cols() - SPRITE_WIDTH - 3;
         if (state.drunkenness() > 0) {
             String text = "Ivresse " + state.drunkenness() + "/" + state.hangoverThreshold();
@@ -212,7 +212,7 @@ final class CombatScreen {
             col += text.length() + 2;
         }
         for (Curse curse : state.activeCurses()) {
-            String text = Painter.fit(curse.displayName() + " (" + curse.description(state.activeIntensity(curse)) + ")",
+            String text = Painter.fit(curse.displayName() + " (" + state.describeCurse(curse, state.activeIntensity(curse)) + ")",
                     Math.max(1, limit - col));
             p.text(col, 7, text, Palette.DAMAGE);
             col += text.length() + 2;

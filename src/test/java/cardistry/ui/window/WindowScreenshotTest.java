@@ -98,6 +98,24 @@ class WindowScreenshotTest {
     }
 
     @Test
+    void choixDuPersonnageDansLaFenetre() throws IOException {
+        for (int[] size : new int[][] {{100, 32}, {80, 24}}) {
+            DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(size[0], size[1]));
+            ImageLayer layer = new ImageLayer();
+            LanternaUi ui = new LanternaUi(terminal, true, false, layer);
+            terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('2', false, false));
+            terminal.addInput(new com.googlecode.lanterna.input.KeyStroke(
+                    com.googlecode.lanterna.input.KeyType.Enter));
+            assertTrue(ui.chooseHero(cardistry.hero.HeroRegistry.all()).isPresent());
+            ImageLayer.Frame frame = layer.frame();
+            save(new GridRenderer(new CellFonts(2)).render(terminal, frame.images(), frame.marks(), false),
+                    "91-fenetre-personnages-" + size[0] + "x" + size[1]);
+            ui.close();
+        }
+        assertTrue(Files.exists(Path.of("build/screens/91-fenetre-personnages-100x32.png")));
+    }
+
+    @Test
     void recompenseEtShopDansLaFenetre() throws IOException {
         DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(100, 32));
         ImageLayer layer = new ImageLayer();

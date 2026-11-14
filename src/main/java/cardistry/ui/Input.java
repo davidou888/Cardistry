@@ -23,6 +23,16 @@ public interface Input extends PlayerDecisions {
      */
     TitleChoice title(long seed);
 
+    /**
+     * Choix du personnage, après l'écran titre. Par défaut le premier.
+     *
+     * @return le personnage choisi, ou vide pour revenir à l'écran titre
+     * @throws cardistry.ui.QuitGameException si le joueur quitte
+     */
+    default java.util.Optional<cardistry.hero.Hero> chooseHero(List<cardistry.hero.Hero> heroes) {
+        return java.util.Optional.of(heroes.get(0));
+    }
+
     /** Attend que le joueur veuille continuer. */
     void waitForContinue();
 

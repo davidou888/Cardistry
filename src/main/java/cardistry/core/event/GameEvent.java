@@ -77,6 +77,18 @@ public sealed interface GameEvent {
         }
     }
 
+    /**
+     * Un sortilège joué depuis la main a touché l'adversaire (pas publié s'il est esquivé).
+     *
+     * @param hpLost PV réellement enlevés à l'adversaire (sans les dégâts en trop s'il meurt)
+     */
+    record SpellHit(cardistry.model.card.SpellCard spell, Enemy enemy, double hpLost) implements GameEvent {
+    }
+
+    /** Une capacité (personnage) se manifeste : {@code message} est la ligne à afficher. */
+    record AbilityTriggered(String message) implements GameEvent {
+    }
+
     /** {@code amount} = PV réellement rendus (multiplicateur appliqué, plafonné aux PV max). */
     record Healed(Combatant target, double amount, double multiplier) implements GameEvent {
     }

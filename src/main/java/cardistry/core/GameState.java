@@ -71,6 +71,8 @@ public final class GameState {
     private final List<SetChange> pendingSetChanges = new ArrayList<>();
     private final List<TemporaryEffect> effects = new ArrayList<>();
     private boolean undoUsedThisCombat = false;
+    /** Personnage joué ; {@code null} = aucun (tests, scénarios sans capacité). */
+    private cardistry.hero.Hero hero;
 
     /**
      * Partie à adversaires fixés : ils sont affrontés dans l'ordre, une récompense entre chacun, et
@@ -119,8 +121,46 @@ public final class GameState {
 
     /** Nouvelle partie avec le deck {@code deck} (tests). */
     public static GameState newGame(List<Card> deck) {
+        return newGame(null, deck);
+    }
+
+    /** Nouvelle partie avec le personnage {@code hero} ({@code null} : aucun, pas de capacité). */
+    public static GameState newGame(cardistry.hero.Hero hero) {
+        return newGame(hero, CardPool.startingDeck());
+    }
+
+    /** Nouvelle partie avec {@code hero} (ses stats de départ sont appliquées avant les PV) et {@code deck}. */
+    public static GameState newGame(cardistry.hero.Hero hero, List<Card> deck) {
         Stats stats = new Stats();
-        return openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats, deck);
+        if (hero != null) {
+            hero.modifiers().forEach(stats::add);
+        }
+        GameState state = openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats, deck);
+        state.hero = hero;
+        return state;
+    }
+
+    /**
+     * Joue {@code hero} sur un état déjà construit (tests, scénarios à adversaires fixés) : ses
+     * modificateurs sont ajoutés, les PV actuels ne changent pas.
+     */
+    public GameState withHero(cardistry.hero.Hero hero) {
+        if (this.hero != null) {
+            throw new IllegalStateException("Le personnage est déjà choisi");
+        }
+        hero.modifiers().forEach(playerStats::add);
+        this.hero = hero;
+        return this;
+    }
+
+    /** Personnage joué, s'il y en a un. */
+    public java.util.Optional<cardistry.hero.Hero> hero() {
+        return java.util.Optional.ofNullable(hero);
+    }
+
+    /** Nom affiché du joueur : celui de son personnage, « Toi » sans personnage. */
+    public String playerName() {
+        return hero == null ? "Toi" : hero.name();
     }
 
     // --- Deck ---
@@ -462,6 +502,16 @@ public final class GameState {
         return playerStats.getInt(StatType.CIGARETTE_MAX);
     }
 
+    /** Multiplicateur du malus de {@code curse} (stat {@link Curse#severityStat()}). */
+    public double curseSeverity(Curse curse) {
+        return playerStats.get(curse.severityStat());
+    }
+
+    /** Effet réel de {@code curse} à cette intensité pour ce joueur : « −2 taille de main ». */
+    public String describeCurse(Curse curse, int intensity) {
+        return curse.description(intensity, curseSeverity(curse));
+    }
+
     /** Malédictions qui s'activeront au prochain combat. */
     public java.util.Set<Curse> pendingCurses() {
         return java.util.Collections.unmodifiableSet(pendingCurses.keySet());
@@ -709,7 +759,8 @@ public final class GameState {
             activeCurses.remove(curse);
         } else {
             activeCurses.put(curse, intensity);
-            curse.modifiers(intensity).forEach(playerStats::add);
+            double severity = curseSeverity(curse); // lue avant d'ajouter le malus
+            curse.modifiers(intensity, severity).forEach(playerStats::add);
         }
     }
 
