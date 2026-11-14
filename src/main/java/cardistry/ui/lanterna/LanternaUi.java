@@ -440,6 +440,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         cardSelected = 0;
         page = Page.CARD_REWARD;
         render();
+        flushInput();
         while (true) {
             KeyStroke key = readKey();
             switch (key.getKeyType()) {
@@ -612,23 +613,22 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             return cardistry.core.shop.ShopAction.Buy.of(shopSelected); // le moteur refuse si besoin
         }
         replaceTarget = c.collectible();
-        replaceSelected = 0;
+        replaceSelected = NO_REPLACEMENT;
         page = Page.REPLACE;
         render();
         int owned = c.collectible() instanceof cardistry.items.Trinket ? state.trinkets().size() : state.items().size();
         while (true) {
             KeyStroke key = readKey();
             switch (key.getKeyType()) {
-                case ArrowLeft -> replaceSelected = Math.floorMod(replaceSelected - 1, owned);
-                case ArrowRight -> replaceSelected = Math.floorMod(replaceSelected + 1, owned);
                 case Enter -> {
-                    return new cardistry.core.shop.ShopAction.Buy(shopSelected, replaceSelected);
+                    if (replaceSelected != NO_REPLACEMENT) {
+                        return new cardistry.core.shop.ShopAction.Buy(shopSelected, replaceSelected);
+                    }
                 }
                 case Escape -> {
                     return null;
                 }
-                default -> {
-                }
+                default -> replaceSelected = moveReplacement(key, owned);
             }
             render();
         }
@@ -917,6 +917,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         rewardSelected = Math.min(rewardSelected, options.size() - 1);
         page = Page.REWARD;
         render();
+        flushInput();
         while (true) {
             KeyStroke key = readKey();
             if (page == Page.REWARD) {
@@ -928,7 +929,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         if (!ItemScreens.isFull(state, options.get(rewardSelected))) {
                             return leaveReward(RewardChoice.Take.into(rewardSelected));
                         }
-                        replaceSelected = 0;
+                        replaceSelected = NO_REPLACEMENT;
                         replaceTarget = options.get(rewardSelected);
                         page = Page.REPLACE;
                     }
@@ -947,14 +948,13 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 int owned = options.get(rewardSelected) instanceof cardistry.items.Trinket
                         ? state.trinkets().size() : state.items().size();
                 switch (key.getKeyType()) {
-                    case ArrowLeft -> replaceSelected = Math.floorMod(replaceSelected - 1, owned);
-                    case ArrowRight -> replaceSelected = Math.floorMod(replaceSelected + 1, owned);
                     case Enter -> {
-                        return leaveReward(new RewardChoice.Take(rewardSelected, replaceSelected));
+                        if (replaceSelected != NO_REPLACEMENT) {
+                            return leaveReward(new RewardChoice.Take(rewardSelected, replaceSelected));
+                        }
                     }
                     case Escape -> page = Page.REWARD;
-                    default -> {
-                    }
+                    default -> replaceSelected = moveReplacement(key, owned);
                 }
             }
             render();
@@ -1019,6 +1019,49 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }
             }
             render();
+        }
+    }
+
+    /** Écran de remplacement : rien n'est présélectionné, Entrée seule ne remplace donc jamais rien. */
+    static final int NO_REPLACEMENT = -1;
+
+    /** Sélection de l'écran de remplacement après {@code key} : ←/→ ou le numéro de l'emplacement. */
+    private int moveReplacement(KeyStroke key, int owned) {
+        switch (key.getKeyType()) {
+            case ArrowLeft -> {
+                return replaceSelected == NO_REPLACEMENT ? owned - 1 : Math.floorMod(replaceSelected - 1, owned);
+            }
+            case ArrowRight -> {
+                return replaceSelected == NO_REPLACEMENT ? 0 : Math.floorMod(replaceSelected + 1, owned);
+            }
+            case Character -> {
+                char c = key.getCharacter();
+                return c >= '1' && c - '1' < owned ? c - '1' : replaceSelected;
+            }
+            default -> {
+                return replaceSelected;
+            }
+        }
+    }
+
+    /**
+     * Oublie les touches tapées pendant les animations : un écran de choix (récompense, carte) ne doit
+     * pas être validé par un appui antérieur à son affichage. Sans animations ({@code fast}), rien à
+     * oublier : les touches en attente sont voulues (tests, saisie scriptée).
+     */
+    private void flushInput() {
+        if (fast) {
+            return;
+        }
+        try {
+            KeyStroke key;
+            while ((key = screen.pollInput()) != null) {
+                if (key.getKeyType() == KeyType.EOF) {
+                    throw new QuitGameException();
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

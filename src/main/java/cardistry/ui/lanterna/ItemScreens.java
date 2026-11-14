@@ -34,10 +34,14 @@ final class ItemScreens {
 
     /** Choix de l'item à remplacer quand l'inventaire est plein. */
     static void replace(Painter p, GameState state, Collectible incoming, int selected, long seed) {
-        p.frame("Remplacer", "Seed " + seed, "←/→ choisir · Entrée remplacer · Échap revenir");
-        p.centered(2, "Que remplace " + incoming.name() + " ?", Palette.ACCENT, true);
         List<? extends Collectible> current = incoming instanceof Trinket ? state.trinkets() : state.items();
+        p.frame("Remplacer", "Seed " + seed, "←/→ ou 1-" + current.size() + " choisir · Entrée remplacer · Échap revenir");
+        p.centered(2, "Que remplace " + incoming.name() + " ?", Palette.ACCENT, true);
         drawCards(p, List.copyOf(current), selected, 4);
+        String hint = selected < 0 || selected >= current.size()
+                ? "Choisis d'abord ce que tu abandonnes (←/→ ou son numéro). Échap : tu gardes tout."
+                : "Entrée : " + incoming.name() + " prend la place de " + current.get(selected).name() + ".";
+        p.centered(5 + CARD_HEIGHT, Painter.fit(hint, p.cols() - 4), Palette.WARNING, false);
     }
 
     static final String META_PHRASE = "Un jeu de cartes dans ton jeu de cartes.";

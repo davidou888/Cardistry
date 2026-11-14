@@ -410,10 +410,37 @@ class LanternaUiTest {
         GameState state = withInventory(List.of(mate(), mate(), mate()), List.of());
         List<Collectible> options = List.of(mate());
         press(KeyType.Enter);          // prendre → inventaire plein → écran de remplacement
+        press(KeyType.ArrowRight);     // 1er objet
         press(KeyType.ArrowRight);     // 2e objet
         press(KeyType.Enter);
 
         assertEquals(new RewardChoice.Take(0, 1), assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options)));
+    }
+
+    @Test
+    void trinketsPleinsEntreeRepeteeNeRemplaceRien() throws IOException {
+        open(100, 32);
+        List<Trinket> owned = ItemRegistry.trinkets().subList(0, 5);
+        GameState state = withInventory(List.of(), owned);
+        List<Collectible> options = List.of(ItemRegistry.trinkets().get(6));
+        press(KeyType.Enter);          // prendre → écran de remplacement
+        press(KeyType.Enter);          // Entrée répétée : rien n'est sélectionné, rien ne se passe
+        press(KeyType.Enter);
+        type("3");                     // choix explicite du 3e trinket
+        press(KeyType.Enter);
+
+        assertEquals(new RewardChoice.Take(0, 2), assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options)));
+    }
+
+    @Test
+    void ecranDeRemplacementSansPreselection() throws IOException {
+        open(100, 32);
+        GameState state = withInventory(List.of(), ItemRegistry.trinkets().subList(0, 5));
+        List<Collectible> options = List.of(ItemRegistry.trinkets().get(6));
+        press(KeyType.Enter);          // écran de remplacement
+        press(KeyType.Escape);         // retour aux récompenses
+        type("s");
+        assertEquals(new RewardChoice.Skip(), assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseReward(state, options)));
     }
 
     @Test
@@ -1041,8 +1068,9 @@ class LanternaUiTest {
         GameState state = engine.state();
         cardistry.core.Shop shop = engine.shop().orElseThrow();
         press(KeyType.ArrowDown); // premier objet
-        press(KeyType.Enter); // inventaire plein : écran de remplacement
-        press(KeyType.ArrowRight);
+        press(KeyType.Enter); // inventaire plein : écran de remplacement (rien de présélectionné)
+        press(KeyType.Enter); // sans choix : rien
+        type("2");
         press(KeyType.Enter);
         assertEquals(new cardistry.core.shop.ShopAction.Buy(cardistry.core.Shop.CARDS, 1),
                 assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseShopAction(state, shop, 75)));
