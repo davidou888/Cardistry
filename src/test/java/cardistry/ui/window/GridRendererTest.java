@@ -185,4 +185,25 @@ class GridRendererTest {
         layer.begin();
         assertEquals(1, layer.snapshot().size(), "l'ancien écran reste affiché pendant le dessin");
     }
+
+    @Test
+    void marquesAuPixelPres() {
+        DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(10, 5));
+        GridRenderer renderer = new GridRenderer(new CellFonts(2));
+        // 7 unités par colonne, 14 par ligne : à l'échelle 2, une unité = 2 px.
+        BufferedImage image = renderer.render(terminal, List.of(), List.of(
+                new ImageLayer.Fill(3, 5, 2, 2, Color.RED),
+                new ImageLayer.Stamp(35, 35, 16, "enemies/test-image.png", Color.WHITE, 1f)), false);
+        assertEquals(Color.RED.getRGB(), image.getRGB(6, 10));
+        assertEquals(Color.RED.getRGB(), image.getRGB(9, 13));
+        assertEquals(CellPalette.BACKGROUND.getRGB(), image.getRGB(10, 14), "2×2 unités = 4×4 px");
+        assertEquals(CellPalette.BACKGROUND.getRGB(), image.getRGB(5, 9));
+        assertEquals(Color.WHITE.getRGB(), image.getRGB(70, 70), "image centrée sur (35, 35) unités");
+        ImageLayer layer = new ImageLayer();
+        layer.begin();
+        layer.add(new ImageLayer.Fill(0, 0, 1, 1, Color.RED));
+        assertTrue(layer.marks().isEmpty(), "rien avant commit");
+        layer.commit();
+        assertEquals(1, layer.frame().marks().size());
+    }
 }

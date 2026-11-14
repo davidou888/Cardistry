@@ -13,7 +13,9 @@ import javax.imageio.ImageIO;
  * <ul>
  *   <li>{@code images/enemies/<sprite>.png} : un adversaire ; {@code <sprite>.<animation>.<n>.png} :
  *       la frame n (à partir de 1) d'une animation (idle, attack, hurt, death) ;</li>
- *   <li>{@code images/items/<id>.png} : l'icône d'un objet ou d'un trinket.</li>
+ *   <li>{@code images/items/<id>.png} : l'icône d'un objet ou d'un trinket ;</li>
+ *   <li>{@code images/map/<type>.png} : l'icône d'un nœud de la carte (combat, elite, boss, shop,
+ *       rest, event).</li>
  * </ul>
  * Image absente ou illisible : rien (l'interface garde le sprite ASCII).
  */
@@ -50,6 +52,12 @@ public final class Images {
     /** Chemin de l'icône d'un objet ou trinket, si elle existe. */
     public static Optional<String> item(String id) {
         String path = "items/" + id + ".png";
+        return get(path).isPresent() ? Optional.of(path) : Optional.empty();
+    }
+
+    /** Chemin de l'icône d'un type de nœud de la carte ({@code map/combat.png}…), si elle existe. */
+    public static Optional<String> mapNode(cardistry.run.map.NodeType type) {
+        String path = "map/" + type.name().toLowerCase(java.util.Locale.ROOT) + ".png";
         return get(path).isPresent() ? Optional.of(path) : Optional.empty();
     }
 

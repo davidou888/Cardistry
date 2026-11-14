@@ -1024,6 +1024,45 @@ class LanternaUiTest {
         assertTrue(screen().contains("? ?"));
     }
 
+    @Test
+    void carteEnPixelsDansLaFenetre() throws IOException {
+        openWithImages(80, 24);
+        cardistry.run.map.MapView view = mapView();
+        ui.showMap(view);
+        String text = screen();
+        assertTrue(text.contains("Carte · Niveau 1/3"), text);
+        assertTrue(text.contains("15 Choomies"));
+        assertTrue(text.contains("→ Étage 1 : Combat — Un adversaire commun."), text);
+        assertFalse(text.contains("Légende"), "plus de panneau latéral");
+        assertTrue(text.contains("Sieste") && text.contains("Boss"), "légende sur une ligne");
+        List<cardistry.ui.window.ImageLayer.Mark> marks = layer.marks();
+        long icons = marks.stream().filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp).count();
+        assertEquals(view.map().nodes().size(), icons, "une icône par nœud");
+        assertTrue(marks.stream().anyMatch(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp s
+                && s.path().equals("map/boss.png")));
+        assertTrue(marks.stream().filter(m -> m instanceof cardistry.ui.window.ImageLayer.Fill).count() > 100,
+                "chemins en pointillés");
+        assertEquals(cardistry.run.map.NodeType.values().length, layer.snapshot().size(), "icônes de la légende");
+    }
+
+    @Test
+    void carteEnPixelsEstompeCeQuiNEstPlusAtteignable() throws IOException {
+        openWithImages(100, 32);
+        Run run = new Run(4, java.util.Set.of(), new EventBus());
+        run.start();
+        cardistry.run.map.RunMap map = run.map().orElseThrow();
+        cardistry.run.map.MapNode start = map.floor(1).get(0);
+        cardistry.run.map.MapView view = new cardistry.run.map.MapView(run.state(), map, List.of(start), start,
+                map.choicesAfter(start));
+        ui.showMap(view);
+        java.util.Set<cardistry.run.map.MapNode> reachable = MapScreen.reachable(view);
+        assertTrue(reachable.contains(map.boss()));
+        long faded = layer.marks().stream().filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp s
+                && s.alpha() < 0.3f).count();
+        assertEquals(map.nodes().size() - reachable.size(), faded);
+        assertTrue(faded > 0, "les autres départs ne sont plus atteignables");
+    }
+
     /** Dessine avec un Painter muni d'un calque, et renvoie les images posées. */
     private static List<cardistry.ui.window.ImageLayer.Placement> drawn(java.util.function.Consumer<Painter> draw) {
         DefaultVirtualTerminal t = new DefaultVirtualTerminal(new TerminalSize(80, 30));

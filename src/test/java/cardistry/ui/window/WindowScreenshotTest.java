@@ -46,4 +46,25 @@ class WindowScreenshotTest {
         ui.close();
         assertTrue(Files.exists(Path.of("build/screens/80-fenetre-combat.png")));
     }
+
+    private static void mapScreenshot(int cols, int rows, String name) throws IOException {
+        DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(cols, rows));
+        ImageLayer layer = new ImageLayer();
+        LanternaUi ui = new LanternaUi(terminal, true, false, layer);
+        cardistry.run.Run run = new cardistry.run.Run(42, java.util.Set.of(), new EventBus());
+        run.start();
+        ui.onEvent(new GameEvent.GameStarted(42));
+        ui.showMap(new cardistry.run.map.MapView(run.state(), run.map().orElseThrow(), run.visited(),
+                run.position(), run.choices()));
+        ImageLayer.Frame frame = layer.frame();
+        save(new GridRenderer(new CellFonts(2)).render(terminal, frame.images(), frame.marks(), false), name);
+        ui.close();
+    }
+
+    @Test
+    void carteDansLaFenetre() throws IOException {
+        mapScreenshot(100, 32, "82-fenetre-carte");
+        mapScreenshot(80, 24, "83-fenetre-carte-80x24");
+        assertTrue(Files.exists(Path.of("build/screens/82-fenetre-carte.png")));
+    }
 }

@@ -149,7 +149,8 @@ public final class CellWindow implements AutoCloseable {
 
     /** Appelé à chaque flush du terminal (fil du jeu) : nouvelle image hors écran, puis affichage. */
     private void redraw() {
-        front = renderer.render(terminal, images.snapshot(), crt);
+        ImageLayer.Frame layer = images.frame();
+        front = renderer.render(terminal, layer.images(), layer.marks(), crt);
         canvas.repaint();
     }
 

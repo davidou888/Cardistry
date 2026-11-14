@@ -182,6 +182,10 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
   Les dégâts la font clignoter en blanc ; la mort l'estompe.
 - Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône de 2×1 cellules, ex. 14×14 px),
   affichée dans l'inventaire, les récompenses et le shop.
+- Carte du monde : `src/main/resources/images/map/<type>.png` (16×16 px ; `combat`, `elite`, `boss`,
+  `shop`, `rest`, `event`). Dans la fenêtre, la carte va de gauche à droite : icônes, chemins en
+  pointillés courbes tirés de la seed (même seed, même dessin), nœud actuel cerclé d'or, nœuds
+  accessibles qui pulsent. En `--terminal` ou `--no-images`, elle reste en lettres.
 - `./play --sprites` montre l'image et son repli ASCII côte à côte.
 
 ## Sons et musiques

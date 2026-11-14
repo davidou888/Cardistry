@@ -1319,7 +1319,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case CARD_REWARD -> ItemScreens.cardReward(painter, state, cardOptions, cardSelected, seed);
                     case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
-                    case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast);
+                    case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
                                     : spriteFrame, spriteFlash, spriteHidden);
@@ -1368,8 +1368,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     /** Idle animé : écran de combat, adversaire vivant avec plusieurs frames idle. */
     private boolean idleAnimated() {
-        if (page == Page.SPRITES) {
-            return true;
+        if (page == Page.SPRITES || page == Page.MAP && images != null) {
+            return true; // carte en pixels : les nœuds accessibles pulsent
         }
         return page == Page.COMBAT && state != null && state.hasEnemy() && state.currentEnemy().isAlive()
                 && (currentSprite().idle().size() > 1

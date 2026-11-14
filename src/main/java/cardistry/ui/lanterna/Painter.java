@@ -70,6 +70,36 @@ final class Painter {
         return true;
     }
 
+    /** Largeur de l'écran en unités du calque (voir {@link cardistry.ui.window.ImageLayer}). */
+    int unitWidth() {
+        return cols() * cardistry.ui.window.ImageLayer.UNITS_PER_COL;
+    }
+
+    int unitHeight() {
+        return rows() * cardistry.ui.window.ImageLayer.UNITS_PER_ROW;
+    }
+
+    /** Rectangle plein au pixel près, en unités du calque (fenêtre seulement, sinon rien). */
+    void fill(int x, int y, int width, int height, TextColor color) {
+        if (images != null) {
+            images.add(new cardistry.ui.window.ImageLayer.Fill(x, y, width, height,
+                    cardistry.ui.window.CellPalette.foreground(color)));
+        }
+    }
+
+    /**
+     * Image centrée sur ({@code x}, {@code y}) en unités du calque, dans un carré de {@code size} unités.
+     *
+     * @return {@code true} si l'image sera dessinée
+     */
+    boolean stamp(int x, int y, int size, String path, float alpha) {
+        if (images == null || cardistry.ui.window.Images.get(path).isEmpty()) {
+            return false;
+        }
+        images.add(new cardistry.ui.window.ImageLayer.Stamp(x, y, size, path, null, alpha));
+        return true;
+    }
+
     int cols() {
         return size.getColumns();
     }

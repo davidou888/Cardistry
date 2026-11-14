@@ -89,8 +89,12 @@ Règles communes :
 
 - Contraintes : jamais deux Shop, deux Élites ou deux Siestes à la suite sur un chemin ; au moins un
   Shop par carte ; au moins un chemin sans élite.
-- Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
-  I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
+- Écran de carte (fenêtre) : étage 1 à gauche, boss à droite ; icônes pixel art, chemins en
+  pointillés courbes et nœuds décalés tirés du sous-flux `Rng.fork("carte-dessin-<niveau>")` (le
+  dessin ne consomme aucun tirage de la carte) ; chemin parcouru en or, nœuds devenus inatteignables
+  estompés. ←/→ ↑/↓ (ou 1-n) pour choisir, Entrée pour y aller, I inventaire.
+- Terminal (`--terminal`, `--no-images`) : carte en lettres, boss en haut, étage 1 en bas. Mode
+  texte : la carte en ASCII, les choix numérotés.
 - Nœud `?` : un **événement** (voir « Événements »).
 - **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max ; c'est un
   **soin** : efficacité des soins et Ross s'appliquent, sans plafond avec Ross), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une

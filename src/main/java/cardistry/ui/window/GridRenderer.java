@@ -49,6 +49,12 @@ public final class GridRenderer {
 
     /** Image de la grille entière (taille du terminal × taille d'une cellule). */
     public BufferedImage render(VirtualTerminal terminal, List<ImageLayer.Placement> images, boolean crt) {
+        return render(terminal, images, List.of(), crt);
+    }
+
+    /** Image de la grille, puis les images, puis les marques au pixel près, puis le filtre CRT. */
+    public BufferedImage render(VirtualTerminal terminal, List<ImageLayer.Placement> images,
+            List<ImageLayer.Mark> marks, boolean crt) {
         TerminalSize size = terminal.getTerminalSize();
         BufferedImage image = new BufferedImage(size.getColumns() * cellWidth, size.getRows() * cellHeight,
                 BufferedImage.TYPE_INT_RGB);
@@ -62,6 +68,9 @@ public final class GridRenderer {
         }
         for (ImageLayer.Placement placement : images) {
             drawImage(g, placement);
+        }
+        for (ImageLayer.Mark mark : marks) {
+            drawMark(g, mark);
         }
         if (crt) {
             crt(g, image.getWidth(), image.getHeight());
@@ -122,6 +131,45 @@ public final class GridRenderer {
             g.drawImage(img, x, y, w, h, null);
             g.setComposite(old);
         });
+    }
+
+    /** Pixels d'écran par unité du calque, en largeur et en hauteur (égaux avec la police embarquée). */
+    private double unitX() {
+        return cellWidth / (double) ImageLayer.UNITS_PER_COL;
+    }
+
+    private double unitY() {
+        return cellHeight / (double) ImageLayer.UNITS_PER_ROW;
+    }
+
+    private void drawMark(Graphics2D g, ImageLayer.Mark mark) {
+        switch (mark) {
+            case ImageLayer.Fill fill -> {
+                int x = (int) Math.round(fill.x() * unitX());
+                int y = (int) Math.round(fill.y() * unitY());
+                int right = (int) Math.round((fill.x() + fill.width()) * unitX());
+                int bottom = (int) Math.round((fill.y() + fill.height()) * unitY());
+                g.setColor(fill.color());
+                g.fillRect(x, y, Math.max(1, right - x), Math.max(1, bottom - y));
+            }
+            case ImageLayer.Stamp stamp -> Images.get(stamp.path()).ifPresent(source -> {
+                BufferedImage img = stamp.tint() != null ? tinted(source, stamp.tint()) : source;
+                double box = stamp.size() * Math.min(unitX(), unitY());
+                double fit = box / Math.max(img.getWidth(), img.getHeight());
+                double scale = fit >= 1 ? Math.floor(fit) : fit;
+                int w = (int) Math.round(img.getWidth() * scale);
+                int h = (int) Math.round(img.getHeight() * scale);
+                int x = (int) Math.round(stamp.x() * unitX()) - w / 2;
+                int y = (int) Math.round(stamp.y() * unitY()) - h / 2;
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+                java.awt.Composite old = g.getComposite();
+                g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
+                        Math.max(0, Math.min(1, stamp.alpha()))));
+                g.drawImage(img, x, y, w, h, null);
+                g.setComposite(old);
+            });
+        }
     }
 
     /** Silhouette de l'image dans la couleur {@code tint} (transparence gardée). */
