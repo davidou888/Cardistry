@@ -14,25 +14,16 @@ import java.util.function.Consumer;
  * <ol>
  *   <li><b>en attente</b> pendant {@code delayTurns} débuts de tour (0 = actif tout de suite) ;</li>
  *   <li><b>actif</b> : ses modificateurs de stats s'appliquent, {@code onActivate} est appelé une
- *       fois, {@code onTurnStart} à chaque début de tour ;</li>
+ *       fois ;</li>
  *   <li><b>terminé</b> quand ses tours ({@code activeTurns}) ou ses charges sont épuisés, ou à la
  *       fin du combat s'il n'est pas {@code keepAcrossCombats}.</li>
  * </ol>
- * Les comportements spéciaux (multiplier le prochain sort, annuler la prochaine attaque, sauter
- * des tours) consomment une charge à chaque fois qu'ils servent.
+ * Les comportements spéciaux (multiplier le prochain sort, annuler la prochaine attaque, sauter le
+ * prochain tour du joueur ou de l'adversaire) consomment une charge à chaque fois qu'ils servent.
  *
  * <p>Chaque instance est unique (ses modificateurs ont leur propre source).
  */
 public final class TemporaryEffect {
-
-    /** Quand le joueur saute son tour à cause de cet effet. */
-    public enum SkipRule {
-        NONE,
-        /** Le prochain tour (consomme une charge). */
-        NEXT_TURN,
-        /** Les tours pairs de chaque combat (2, 4…) ; ne consomme rien. */
-        EVEN_COMBAT_TURNS
-    }
 
     private static final AtomicLong SERIAL = new AtomicLong();
 
@@ -45,10 +36,9 @@ public final class TemporaryEffect {
     private final double spellMultiplier;
     private final boolean cancelsEnemyAttack;
     private final String enemySkipMessage;
-    private final SkipRule skipRule;
+    private final boolean skipsNextTurn;
     private final List<Mod> mods;
     private final Consumer<EffectContext> onActivate;
-    private final Consumer<EffectContext> onTurnStart;
     private final String modifierSource;
 
     // --- État ---
@@ -56,7 +46,6 @@ public final class TemporaryEffect {
     private int delayLeft;
     private Integer turnsLeft;
     private Integer chargesLeft;
-    private String owner = "";
 
     private record Mod(StatType stat, StatModifier.Kind kind, double value) {
     }
@@ -71,10 +60,9 @@ public final class TemporaryEffect {
         this.spellMultiplier = b.spellMultiplier;
         this.cancelsEnemyAttack = b.cancelsEnemyAttack;
         this.enemySkipMessage = b.enemySkipMessage;
-        this.skipRule = b.skipRule;
+        this.skipsNextTurn = b.skipsNextTurn;
         this.mods = List.copyOf(b.mods);
         this.onActivate = b.onActivate;
-        this.onTurnStart = b.onTurnStart;
         this.modifierSource = "effet:" + id + "#" + SERIAL.incrementAndGet();
         this.delayLeft = b.delayTurns;
         this.chargesLeft = b.charges;
@@ -142,13 +130,9 @@ public final class TemporaryEffect {
         return enemySkipMessage == null ? "" : enemySkipMessage.replace("{adversaire}", enemyName);
     }
 
-    public SkipRule skipRule() {
-        return skipRule;
-    }
-
-    /** Ce qui a posé l'effet (« trinket:… ») quand il doit être retiré avec ; vide sinon. */
-    public String owner() {
-        return owner;
+    /** {@code true} si l'effet fait sauter le prochain tour du joueur (consomme une charge). */
+    public boolean skipsNextTurn() {
+        return skipsNextTurn;
     }
 
     /**
@@ -173,10 +157,6 @@ public final class TemporaryEffect {
 
     String modifierSource() {
         return modifierSource;
-    }
-
-    void assignOwner(String owner) {
-        this.owner = owner;
     }
 
     List<StatModifier> modifiers() {
@@ -226,10 +206,6 @@ public final class TemporaryEffect {
         onActivate.accept(ctx);
     }
 
-    void runOnTurnStart(EffectContext ctx) {
-        onTurnStart.accept(ctx);
-    }
-
     @Override
     public String toString() {
         return "TemporaryEffect[" + id + "]";
@@ -246,10 +222,9 @@ public final class TemporaryEffect {
         private double spellMultiplier = 1.0;
         private boolean cancelsEnemyAttack = false;
         private String enemySkipMessage = null;
-        private SkipRule skipRule = SkipRule.NONE;
+        private boolean skipsNextTurn = false;
         private final List<Mod> mods = new ArrayList<>();
         private Consumer<EffectContext> onActivate = ctx -> { };
-        private Consumer<EffectContext> onTurnStart = ctx -> { };
 
         private Builder(String id, String name) {
             this.id = id;
@@ -306,8 +281,9 @@ public final class TemporaryEffect {
             return this;
         }
 
-        public Builder skips(SkipRule rule) {
-            this.skipRule = rule;
+        /** Le joueur saute son prochain tour (l'adversaire attaque normalement). */
+        public Builder skipsNextTurn() {
+            this.skipsNextTurn = true;
             return this;
         }
 
@@ -326,12 +302,6 @@ public final class TemporaryEffect {
         /** Action au déclenchement. */
         public Builder onActivate(Consumer<EffectContext> action) {
             this.onActivate = action;
-            return this;
-        }
-
-        /** Action à chaque début de tour où l'effet est actif. */
-        public Builder onTurnStart(Consumer<EffectContext> action) {
-            this.onTurnStart = action;
             return this;
         }
 

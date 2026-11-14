@@ -297,7 +297,7 @@ public final class ItemRegistry {
                             ctx.addEffect(TemporaryEffect.builder("raclette", "Raclette")
                                     .summary("tu sautes ton prochain tour")
                                     .charges(1)
-                                    .skips(TemporaryEffect.SkipRule.NEXT_TURN)
+                                    .skipsNextTurn()
                                     .build());
                         }),
                 // +50 % dégâts : même portée que CMS (dégâts élémentaires).

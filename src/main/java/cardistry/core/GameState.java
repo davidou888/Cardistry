@@ -416,12 +416,6 @@ public final class GameState {
 
     private void addTrinket(Trinket trinket) {
         trinkets.add(trinket);
-        for (TemporaryEffect effect : trinket.createEffects()) {
-            effect.assignOwner(trinket.modifierSource());
-            effect.activate();
-            effects.add(effect);
-            effect.modifiers().forEach(playerStats::add);
-        }
         refreshInventoryModifiers();
     }
 
@@ -430,11 +424,6 @@ public final class GameState {
         Trinket trinket = trinkets.remove(slot);
         playerStats.removeBySource(trinket.modifierSource());
         playerStats.removeBySource(trinket.dynamicSource());
-        for (TemporaryEffect effect : List.copyOf(effects)) {
-            if (effect.owner().equals(trinket.modifierSource())) {
-                removeEffect(effect);
-            }
-        }
         refreshInventoryModifiers();
         return trinket;
     }

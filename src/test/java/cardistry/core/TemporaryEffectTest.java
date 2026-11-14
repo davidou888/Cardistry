@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import cardistry.core.TemporaryEffect.SkipRule;
 import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.stats.StatType;
@@ -16,7 +15,6 @@ import cardistry.items.Item;
 import cardistry.items.LootTable;
 import cardistry.items.Rarity;
 import cardistry.items.Tag;
-import cardistry.items.Trinket;
 import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
@@ -98,16 +96,6 @@ class TemporaryEffectTest {
         assertEquals(1.0, state.playerStats().get(StatType.FIRE_DAMAGE), DELTA);
     }
 
-    @Test
-    void actionDeDebutDeTour() {
-        setUp(List.of());
-        state.player().takeDamage(50);
-        addEffect(() -> TemporaryEffect.builder("regen", "Regen").onTurnStart(ctx -> ctx.healPlayer(5)).build());
-        engine.startTurn();
-        engine.startTurn();
-        assertEquals(60, state.player().hp(), DELTA);
-    }
-
     // --- Prochain sort ---
 
     @Test
@@ -180,7 +168,7 @@ class TemporaryEffectTest {
     @Test
     void sauterLeProchainTour() {
         setUp(List.of());
-        addEffect(() -> TemporaryEffect.builder("raclette", "Raclette").charges(1).skips(SkipRule.NEXT_TURN).build());
+        addEffect(() -> TemporaryEffect.builder("raclette", "Raclette").charges(1).skipsNextTurn().build());
 
         assertFalse(engine.startTurn());
         assertEquals(new GameEvent.PlayerTurnSkipped(List.of("Raclette")),
@@ -189,26 +177,6 @@ class TemporaryEffectTest {
         assertTrue(state.effects().isEmpty());
 
         assertTrue(engine.startTurn());
-    }
-
-    @Test
-    void effetPermanentDUnTrinketToursPairs() {
-        setUp(List.of());
-        Trinket trinket = Trinket.builder("t", "T", Rarity.COMMON)
-                .effect(() -> TemporaryEffect.builder("alt", "Alterné").keepAcrossCombats()
-                        .skips(SkipRule.EVEN_COMBAT_TURNS).build())
-                .build();
-        engine.equip(trinket);
-
-        assertTrue(engine.startTurn());   // 1
-        assertFalse(engine.startTurn());  // 2
-        assertTrue(engine.startTurn());   // 3
-        assertFalse(engine.startTurn());  // 4
-
-        state.unequipTrinket(0);
-        assertTrue(state.effects().isEmpty());
-        assertTrue(engine.startTurn());   // 5
-        assertTrue(engine.startTurn());   // 6 : plus de saut
     }
 
     // --- Fin de combat ---

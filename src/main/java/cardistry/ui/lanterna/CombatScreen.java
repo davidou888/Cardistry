@@ -92,15 +92,14 @@ final class CombatScreen {
     }
 
     /**
-     * Ligne 5 : effets en cours avec leur durée (ceux des objets d'abord, ceux portés par un
-     * trinket ensuite). Format long si tout tient, sinon court ; au-delà, « +N ».
+     * Ligne 5 : effets en cours avec leur durée, dans l'ordre d'arrivée. Format long si tout tient,
+     * sinon court ; au-delà, « +N ».
      */
     private static void drawEffects(Painter p, GameState state) {
-        List<TemporaryEffect> effects = new java.util.ArrayList<>(state.effects());
+        List<TemporaryEffect> effects = state.effects();
         if (effects.isEmpty()) {
             return;
         }
-        effects.sort(java.util.Comparator.comparing(e -> !e.owner().isEmpty()));
         int width = p.cols() - SPRITE_WIDTH - 3 - 2;
         List<String> labels = effects.stream().map(TemporaryEffect::describe).toList();
         if (String.join(" · ", labels).length() > width) {

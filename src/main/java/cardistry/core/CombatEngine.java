@@ -117,7 +117,7 @@ public final class CombatEngine {
         }
     }
 
-    /** Début de tour : compte à rebours, déclenchements, durées, actions de début de tour. */
+    /** Début de tour : compte à rebours, déclenchements, durées. */
     private void tickEffects() {
         for (TemporaryEffect effect : List.copyOf(state.effects())) {
             if (!effect.isActive()) {
@@ -126,10 +126,6 @@ public final class CombatEngine {
                 }
             } else if (effect.tickDuration()) {
                 endEffect(effect);
-                continue;
-            }
-            if (effect.isActive() && state.effects().contains(effect)) {
-                effect.runOnTurnStart(effects);
             }
         }
     }
@@ -141,20 +137,9 @@ public final class CombatEngine {
             if (!effect.isActive()) {
                 continue;
             }
-            switch (effect.skipRule()) {
-                case NEXT_TURN -> {
-                    causes.add(effect.name());
-                    if (effect.consumeCharge()) {
-                        endEffect(effect);
-                    }
-                }
-                case EVEN_COMBAT_TURNS -> {
-                    if (state.combatTurn() % 2 == 0) {
-                        causes.add(effect.name());
-                    }
-                }
-                case NONE -> {
-                }
+            if (effect.skipsNextTurn()) {
+                causes.add(effect.name());
+                consume(effect);
             }
         }
         return causes;
