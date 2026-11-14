@@ -81,4 +81,29 @@ class LootTableTest {
         assertEquals(1, offer.size());
         assertTrue(offer.get(0) instanceof Item);
     }
+
+    @Test
+    void rareteMinimum() {
+        List<Collectible> candidates = List.of(item("c1", Rarity.COMMON), item("c2", Rarity.COMMON),
+                item("u", Rarity.UNCOMMON), item("r", Rarity.RARE), trinket("l", Rarity.LEGENDARY),
+                trinket("secret", Rarity.SECRET));
+        LootTable table = new LootTable(() -> candidates, Set.of("secret"));
+        for (long seed = 0; seed < 50; seed++) {
+            List<Collectible> elite = table.offer(GameState.newGame(), new Rng(seed), 3, Rarity.UNCOMMON);
+            assertTrue(elite.stream().allMatch(c -> c.rarity().compareTo(Rarity.UNCOMMON) >= 0));
+            List<Collectible> boss = table.offer(GameState.newGame(), new Rng(seed), 3, Rarity.RARE);
+            assertTrue(boss.stream().allMatch(c -> c.rarity().compareTo(Rarity.RARE) >= 0));
+            assertEquals(3, boss.size()); // rare, légendaire et le secret débloqué
+        }
+    }
+
+    @Test
+    void rareteGarantieSelonLeRang() {
+        assertEquals(Rarity.COMMON, cardistry.core.CombatEngine.minimumRarity(
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1)));
+        assertEquals(Rarity.UNCOMMON, cardistry.core.CombatEngine.minimumRarity(
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.VAFI, 1)));
+        assertEquals(Rarity.RARE, cardistry.core.CombatEngine.minimumRarity(
+                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.bossId(1), 1)));
+    }
 }

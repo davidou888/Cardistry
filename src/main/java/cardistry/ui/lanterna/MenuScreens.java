@@ -109,6 +109,32 @@ final class MenuScreens {
         p.centered(unlockedSecrets.isEmpty() ? row : row + 1, "Rejouer cette partie : --seed " + seed, Palette.DIM, false);
     }
 
+    /** Sieste : une pause avant le boss, un choix parmi les options. */
+    static void rest(Painter p, GameState state, List<cardistry.run.RestOption> options, int selected, long seed) {
+        p.frame("Sieste", "Niveau " + state.level() + " · Seed " + seed, "↑/↓ choisir · Entrée valider · Q quitter");
+        int top = Math.max(2, p.rows() / 2 - 8);
+        String[] bed = {
+            "        z Z z",
+            "   _____________",
+            "  |\\  (-_-)    \\",
+            "  | \\___________\\",
+            "  |  |___________|",
+        };
+        for (int i = 0; i < bed.length; i++) {
+            p.centered(top + i, bed[i], Palette.HEAL, false);
+        }
+        int row = top + bed.length + 2;
+        p.centered(row, "Une pause avant le boss. PV " + num(state.player().hp()) + "/" + num(state.maxHp())
+                + " · Clopes " + state.cigarettes() + "/" + state.cigaretteMax(), Palette.TEXT, false);
+        row += 2;
+        for (int i = 0; i < options.size(); i++) {
+            cardistry.run.RestOption option = options.get(i);
+            String line = (i == selected ? "> " : "  ") + "[" + (i + 1) + "] " + option.displayName() + " : "
+                    + option.description();
+            p.centered(row + i * 2, line, i == selected ? Palette.ACCENT : Palette.TEXT, i == selected);
+        }
+    }
+
     static void tooSmall(Painter p) {
         p.text(0, 0, "Terminal trop petit : " + p.cols() + "×" + p.rows(), Palette.WARNING, true);
         p.text(0, 1, "Agrandis-le à " + MIN_COLS + "×" + MIN_ROWS + " minimum.", Palette.TEXT);

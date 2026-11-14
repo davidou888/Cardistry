@@ -261,7 +261,7 @@ public final class ItemRegistry {
     private static Trinket nullPointerException() {
         return Trinket.builder(NULL_POINTER_EXCEPTION, "NullPointerException", SECRET)
                 .description("Au début de chaque combat, un tirage : 5 % que l'adversaire devienne null (mort sur"
-                        + " le coup, jamais le boss), 10 % qu'une de tes cartes devienne « NO CARDS » (injouable"
+                        + " le coup, jamais un boss), 10 % qu'une de tes cartes devienne « NO CARDS » (injouable"
                         + " jusqu'à la fin du combat)")
                 .tags(Tag.META)
                 .hooks(new GameHooks() {

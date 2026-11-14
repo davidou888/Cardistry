@@ -54,6 +54,8 @@ public final class Run {
         COMBAT,
         /** Choisir une récompense. */
         REWARD,
+        /** Sieste : choisir quoi faire ({@link RestOption}). */
+        REST,
         /** Partie terminée. */
         OVER
     }
@@ -75,6 +77,9 @@ public final class Run {
     }
 
     private record ChooseNode(int index) implements Step {
+    }
+
+    private record Rest(RestOption option) implements Step {
     }
 
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
@@ -201,6 +206,23 @@ public final class Run {
         session.chooseNode(index);
     }
 
+    /** Choix de la Sieste possibles maintenant (retirer une carte : seulement avec un deck). */
+    public List<RestOption> restOptions() {
+        return session.restOptions();
+    }
+
+    /** Sieste : applique {@code option} puis revient à la carte. */
+    public void rest(RestOption option) {
+        if (phase() != Phase.REST) {
+            throw new IllegalStateException("Pas de sieste maintenant");
+        }
+        if (!restOptions().contains(option)) {
+            throw new IllegalArgumentException("Choix indisponible : " + option);
+        }
+        history.add(new Rest(option));
+        session.rest(option);
+    }
+
     /** Voir {@link CombatEngine#startTurn()}. */
     public boolean startTurn() {
         history.add(new StartTurn());
@@ -303,6 +325,7 @@ public final class Run {
                     replayed.settle();
                 }
                 case ChooseNode c -> replayed.chooseNode(c.index());
+                case Rest r -> replayed.rest(r.option());
                 case Decision d -> throw new IllegalStateException("Décision hors d'une action");
             }
         }
@@ -322,6 +345,7 @@ public final class Run {
         Rng encounters;
         String previousCommon;
         String previousElite;
+        boolean resting;
 
         Session(EventBus bus) {
             GameState state = newState.get();
@@ -349,7 +373,7 @@ public final class Run {
             if (engine.combatActive() || !mapped) {
                 return Phase.COMBAT;
             }
-            return Phase.MAP;
+            return resting ? Phase.REST : Phase.MAP;
         }
 
         void startLevel(int level) {
@@ -381,18 +405,36 @@ public final class Run {
                     Enemy boss = EnemyRegistry.create(EnemyRegistry.bossId(level), level);
                     engine.startCombat(boss, level == EnemyRegistry.LEVELS);
                 }
-                case REST, SHOP, EVENT -> {
-                    // Sieste, shop et événements : à venir (lots suivants). On passe.
+                case REST -> resting = true;
+                case SHOP, EVENT -> {
+                    // Shop et événements : à venir (lots suivants). On passe.
                 }
             }
             settle();
         }
 
-        /** Après chaque étape : le boss d'un niveau battu (récompense prise) ouvre le niveau suivant. */
+        List<RestOption> restOptions() {
+            return List.of(RestOption.HEAL, RestOption.CIGARETTES);
+        }
+
+        void rest(RestOption option) {
+            switch (option) {
+                case HEAL -> engine.restHeal(option.displayName());
+                case CIGARETTES -> engine.restCigarettes(option.displayName());
+                case REMOVE_CARD -> throw new IllegalArgumentException("Pas encore de deck");
+            }
+            resting = false;
+        }
+
+        /**
+         * Après chaque étape : le boss d'un niveau battu (récompense prise) rend la moitié des PV
+         * manquants et ouvre le niveau suivant.
+         */
         void settle() {
             if (!mapped || phase() != Phase.MAP || position == null || position.type() != NodeType.BOSS) {
                 return;
             }
+            engine.recoverAfterBoss();
             startLevel(map.level() + 1);
         }
     }

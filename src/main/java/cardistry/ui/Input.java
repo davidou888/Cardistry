@@ -51,6 +51,11 @@ public interface Input extends PlayerDecisions {
         return 0;
     }
 
+    /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
+    default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
+        return options.get(0);
+    }
+
     /** Attend avant de fermer le jeu, une fois l'écran de fin affiché. */
     default void waitForExit() {
     }

@@ -35,6 +35,7 @@ public final class GameLoop {
                 case MAP -> chooseNode(run, renderer, input);
                 case COMBAT -> playTurn(run, renderer, input);
                 case REWARD -> resolveRewards(run, input);
+                case REST -> run.rest(input.chooseRest(run.state(), run.restOptions()));
                 case OVER -> {
                 }
             }

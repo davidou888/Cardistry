@@ -391,7 +391,7 @@ public final class CombatEngine {
             bus.publish(new GameEvent.GameWon());
             return true;
         }
-        List<Collectible> offer = loot.offer(state, rng, REWARD_OPTIONS);
+        List<Collectible> offer = loot.offer(state, rng, REWARD_OPTIONS, minimumRarity(enemy));
         if (offer.isEmpty()) {
             if (!state.isOpenEnded()) {
                 nextCombat();
@@ -436,6 +436,44 @@ public final class CombatEngine {
 
     /** Nombre de propositions après chaque adversaire vaincu. */
     public static final int REWARD_OPTIONS = 3;
+
+    /** Rareté garantie des récompenses : commun = aucune, élite = Peu commun, boss = Rare. */
+    public static cardistry.items.Rarity minimumRarity(Enemy enemy) {
+        return switch (enemy.rank()) {
+            case COMMON -> cardistry.items.Rarity.COMMON;
+            case ELITE -> cardistry.items.Rarity.UNCOMMON;
+            case BOSS -> cardistry.items.Rarity.RARE;
+        };
+    }
+
+    // --- Sieste et fin de niveau ---
+
+    /** Part des PV max rendue par la Sieste. */
+    public static final double REST_HEAL = 0.30;
+    /** Clopes gagnées à la Sieste (« Rouler tranquille »), sans dépasser le paquet. */
+    public static final int REST_CIGARETTES = 3;
+    /** Part des PV manquants rendue après chaque boss (sauf le dernier). */
+    public static final double BOSS_RECOVERY = 0.5;
+
+    /** Sieste : soin de {@link #REST_HEAL} des PV max (brut, plafonné aux PV max). */
+    public void restHeal(String choice) {
+        bus.publish(new GameEvent.RestTaken(choice));
+        healPlayer(state.maxHp() * REST_HEAL, 1.0);
+    }
+
+    /** Sieste : +{@link #REST_CIGARETTES} clopes (sans dépasser le paquet) ; renvoie le nombre ajouté. */
+    public int restCigarettes(String choice) {
+        bus.publish(new GameEvent.RestTaken(choice));
+        return effects.addCigarettes(REST_CIGARETTES);
+    }
+
+    /** Après un boss : la moitié des PV manquants (brut). */
+    public void recoverAfterBoss() {
+        double missing = Math.max(0, state.maxHp() - state.player().hp());
+        if (missing > 0) {
+            healPlayer(missing * BOSS_RECOVERY, 1.0);
+        }
+    }
 
     public boolean hasPendingReward() {
         return !pendingReward.isEmpty();

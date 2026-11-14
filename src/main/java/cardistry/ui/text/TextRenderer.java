@@ -163,12 +163,13 @@ public final class TextRenderer implements Renderer {
                 console.println();
                 console.println(Ansi.RED + "DÉFAITE..." + Ansi.END_COLOR + " Tu n'as plus de points de vie.");
             }
+            case GameEvent.RestTaken e -> console.println("Sieste : " + e.choice() + ".");
             case GameEvent.LevelStarted e -> {
                 console.println();
                 console.println(Ansi.yellow("=== Niveau " + e.level() + " ==="));
             }
             case GameEvent.NodeEntered e -> {
-                if (!e.kind().equals("Combat") && !e.kind().equals("Élite") && !e.kind().equals("Boss")) {
+                if (e.kind().equals("Shop") || e.kind().equals("Événement")) {
                     console.println("→ " + e.kind() + " : bientôt disponible, tu continues ta route.");
                 }
             }

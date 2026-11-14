@@ -12,8 +12,8 @@ Absents du pool tant qu'ils ne sont pas débloqués. Tous trois tag Méta.
 
 | Nom | Effet | Déblocage | Code (cette partie seulement) | Méca. |
 |---|---|---|---|---|
-| NullPointerException | Au début de chaque combat, un tirage unique : 5 % que l'adversaire devienne null (mort sur le coup, jamais le boss), 10 % qu'une de tes cartes devienne « NO CARDS » | Gagner un combat avec 0 carte en main | `--seed null` | M5 |
-| Ctrl+Z | Une fois par combat, annule ton dernier tour | Perdre une partie contre le dernier adversaire alors qu'il lui reste ≤ 5 PV | Ctrl+Z sur l'écran titre | M6 |
+| NullPointerException | Au début de chaque combat, un tirage unique : 5 % que l'adversaire devienne null (mort sur le coup, jamais un boss), 10 % qu'une de tes cartes devienne « NO CARDS » | Gagner un combat avec 0 carte en main | `--seed null` | M5 |
+| Ctrl+Z | Une fois par combat, annule ton dernier tour | Perdre une partie contre le boss final (niveau 3) alors qu'il lui reste ≤ 5 PV | Ctrl+Z sur l'écran titre | M6 |
 | CLAUDE.md | Chaque tirage de chance en ta faveur est fait deux fois, tu gardes le meilleur | Gagner une partie en ayant déjà débloqué les deux autres secrets | taper « claude » sur l'écran titre | M7 |
 
 ### Déblocage durable (façon Isaac)
@@ -37,27 +37,31 @@ Absents du pool tant qu'ils ne sont pas débloqués. Tous trois tag Méta.
 
 ### Règles détaillées
 **NullPointerException**
-- Le tirage a lieu quand la main du combat est distribuée. Le dernier adversaire compte comme boss :
-  pour lui, les 5 % « null » ne donnent rien.
+- Le tirage a lieu quand la main du combat est distribuée. Les **3 boss** (un par niveau) sont
+  immunisés : pour eux, les 5 % « null » ne donnent rien. Les élites peuvent devenir null.
 - « NO CARDS » : carte sans élément, **injouable jusqu'à la fin du combat** (jouer = refusé), elle occupe
   un emplacement de la main. La carte remplacée est tirée au hasard dans la main.
 - Condition de déblocage : le combat gagné doit l'être avec la main vide au moment de la mort de
-  l'adversaire (le dernier combat compte aussi).
+  l'adversaire (n'importe quel combat, boss compris).
 
 **Ctrl+Z**
 - Touche Ctrl+Z pendant ton tour (mode texte : `z`). Retour au **début du tour précédent** du même combat :
   tes actions gratuites de ce tour et du tour en cours sont annulées aussi.
 - **Une fois par combat** : de nouveau disponible au combat suivant. L'écran de combat affiche
   « Ctrl+Z : disponible » ou « Ctrl+Z : utilisé » (à droite de « Ta main » ; en mode texte, dans l'état).
-- Implémenté en rejouant la partie depuis la seed avec tous tes choix : rejouer la même action redonne
-  exactement le même résultat (même pioche, mêmes tirages).
+- Implémenté en rejouant la partie depuis la seed avec tous tes choix (nœuds de la carte, siestes,
+  récompenses compris) : rejouer la même action redonne exactement le même résultat (même pioche,
+  mêmes tirages).
+- Condition de déblocage : perdre contre le **boss du niveau 3** (le dernier adversaire de la partie)
+  alors qu'il lui reste ≤ 5 PV. Perdre contre le boss du niveau 1 ou 2 ne compte pas.
 
 **CLAUDE.md** — « le meilleur »
 - Seuls les tirages de **chance en faveur du joueur** sont faits deux fois, on garde le favorable :
   - Googz : la clope se transforme si l'un des deux tirages réussit (20 % → 36 %) ;
   - NullPointerException : le plus favorable des deux résultats (null > rien > NO CARDS) ;
   - rareté des récompenses : pour chaque proposition, on garde la plus rare des deux.
-- Pas concernés : la pioche de cartes, le choix des 3 récompenses (seule leur rareté l'est).
+- Pas concernés : la pioche de cartes, le choix des 3 récompenses (seule leur rareté l'est), les tirages
+  des adversaires (esquive du Paresseux, coups ratés du T-Rex…), la génération de la carte.
 
 ### Choix tranchés
 - Ctrl+Z après la mort : impossible, la défaite est définitive (l'annulation ne se fait que pendant ton tour).

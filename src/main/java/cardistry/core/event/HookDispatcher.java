@@ -116,6 +116,9 @@ public final class HookDispatcher {
             case GameEvent.CigarettesStolen e -> {
                 // Pas de hook pour l'instant (le paquet change : CigarettesChanged).
             }
+            case GameEvent.RestTaken e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.LevelStarted e -> {
                 // Pas de hook pour l'instant.
             }

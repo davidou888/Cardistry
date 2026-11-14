@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -56,6 +56,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private final List<Secret> titleCodes = new java.util.ArrayList<>();
     private List<String> unlockedSecrets = List.of();
     private cardistry.run.map.MapView mapView;
+    private List<cardistry.run.RestOption> restOptions = List.of();
+    private int restSelected = 0;
     private int mapSelected = 0;
 
     /** Ouvre le terminal courant en plein écran. */
@@ -267,13 +269,14 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
             case GameEvent.IntentChosen e -> render();
+            case GameEvent.RestTaken e -> view.log("Sieste : " + e.choice(), Palette.HEAL);
             case GameEvent.LevelStarted e -> {
                 view.log("— Niveau " + e.level() + " —", Palette.ACCENT);
                 view.toast = "Niveau " + e.level() + "/3";
             }
             case GameEvent.NodeEntered e -> {
                 view.log("Étage " + e.floor() + " : " + e.kind(), Palette.INFO);
-                if (!e.kind().equals("Combat") && !e.kind().equals("Élite") && !e.kind().equals("Boss")) {
+                if (e.kind().equals("Shop") || e.kind().equals("Événement")) {
                     view.toast = e.kind() + " : bientôt disponible";
                 }
             }
@@ -355,6 +358,37 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     } else if (c >= '1' && c < '1' + count) {
                         mapSelected = 0;
                         return c - '1';
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    @Override
+    public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
+        this.state = state;
+        restOptions = options;
+        restSelected = 0;
+        page = Page.REST;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft, ArrowUp -> restSelected = Math.floorMod(restSelected - 1, options.size());
+                case ArrowRight, ArrowDown -> restSelected = Math.floorMod(restSelected + 1, options.size());
+                case Enter -> {
+                    return options.get(restSelected);
+                }
+                case Escape -> confirmQuit();
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 'q') {
+                        confirmQuit();
+                    } else if (c >= '1' && c < '1' + options.size()) {
+                        return options.get(c - '1');
                     }
                 }
                 default -> {
@@ -869,6 +903,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
+                    case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame

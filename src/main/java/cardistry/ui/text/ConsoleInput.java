@@ -116,6 +116,16 @@ public final class ConsoleInput implements Input {
         return readNumber("Où vas-tu ? ", 1, view.choices().size()) - 1;
     }
 
+    @Override
+    public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
+        console.println();
+        console.println(Ansi.yellow("Sieste") + " : une pause avant le boss. Choisis :");
+        for (int i = 0; i < options.size(); i++) {
+            console.println("[" + (i + 1) + "] " + options.get(i).displayName() + " : " + options.get(i).description());
+        }
+        return options.get(readNumber("Ton choix ? ", 1, options.size()) - 1);
+    }
+
     private boolean metaPhraseShown = false;
 
     @Override

@@ -139,6 +139,10 @@ public sealed interface GameEvent {
     record NodeEntered(int level, int floor, String kind) implements GameEvent {
     }
 
+    /** Sieste : le joueur a choisi {@code choice} (nom affiché). */
+    record RestTaken(String choice) implements GameEvent {
+    }
+
     /** Les Choomies changent ; {@code delta} = gain (positif) ou perte. */
     record ChoomiesChanged(int choomies, int delta) implements GameEvent {
     }

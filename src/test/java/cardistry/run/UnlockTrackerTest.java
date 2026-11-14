@@ -161,4 +161,64 @@ class UnlockTrackerTest {
         assertTrue(tracker.unlockedThisRun().isEmpty());
         assertTrue(events.stream().noneMatch(e -> e instanceof GameEvent.SecretUnlocked));
     }
+
+    // --- Sur la carte : le « dernier adversaire » est le boss du niveau 3 ---
+
+    /** Partie sur la carte, sort surpuissant ; joue jusqu'au combat contre le boss du niveau {@code level}. */
+    private cardistry.run.Run runToBoss(int level) {
+        EventBus bus = new EventBus();
+        cardistry.run.Run run = new cardistry.run.Run(2, Set.of(), bus, GameState::newGame,
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        tracker = new UnlockTracker(run::state, store, bus);
+        bus.subscribe(tracker);
+        run.start();
+        int guard = 0;
+        while (!(run.phase() == cardistry.run.Run.Phase.COMBAT && run.state().isBossFight()
+                && run.state().level() == level) && guard++ < 10_000) {
+            switch (run.phase()) {
+                case MAP -> run.chooseNode(0);
+                case COMBAT -> {
+                    if (run.startTurn()) {
+                        run.submit(new Action.PlayCard(0));
+                    }
+                }
+                case REWARD -> run.resolveReward(new cardistry.core.RewardChoice.Skip());
+                case REST -> run.rest(RestOption.HEAL);
+                case OVER -> throw new AssertionError("partie finie trop tôt");
+            }
+        }
+        return run;
+    }
+
+    /** Le boss garde 3 PV, le joueur 1 : il pioche et meurt sous l'attaque du boss. */
+    private static void loseAgainstWeakBoss(cardistry.run.Run run) {
+        run.state().currentEnemy().takeDamage(run.state().currentEnemy().hp() - 3);
+        run.state().player().takeDamage(run.state().player().hp() - 1);
+        run.startTurn();
+        run.submit(new Action.DrawCard());
+        assertTrue(run.state().isLost());
+    }
+
+    @Test
+    void ctrlZSeulementContreLeBossDuNiveau3() {
+        cardistry.run.Run first = runToBoss(1);
+        assertTrue(!first.state().isFinalCombat());
+        loseAgainstWeakBoss(first);
+        assertTrue(store.load().isEmpty(), "le boss du niveau 1 n'est pas le dernier adversaire");
+
+        cardistry.run.Run last = runToBoss(3);
+        assertTrue(last.state().isFinalCombat());
+        loseAgainstWeakBoss(last);
+        assertEquals(EnumSet.of(Secret.CTRL_Z), store.load());
+    }
+
+    @Test
+    void bossDeChaqueNiveauImmuniseElitesNon() {
+        cardistry.run.Run run = runToBoss(1);
+        assertTrue(run.state().isBossFight(), "boss du niveau 1 : pas de null");
+        assertTrue(!run.state().isFinalCombat());
+        setUp(5, cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.VAFI, 1),
+                new Enemy("Fin", FIRE, 10, 1));
+        assertTrue(!state.isBossFight(), "une élite peut devenir null");
+    }
 }

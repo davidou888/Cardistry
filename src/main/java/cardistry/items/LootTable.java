@@ -56,8 +56,19 @@ public final class LootTable {
 
     /** Jusqu'à {@code count} propositions distinctes (moins si les candidats manquent). */
     public List<Collectible> offer(GameState state, Rng rng, int count) {
+        return offer(state, rng, count, Rarity.COMMON);
+    }
+
+    /**
+     * Jusqu'à {@code count} propositions distinctes, toutes au moins de rareté {@code minimum}
+     * (élite : Peu commun, boss : Rare ; les secrets débloqués restent possibles).
+     */
+    public List<Collectible> offer(GameState state, Rng rng, int count, Rarity minimum) {
         List<Collectible> candidates = new ArrayList<>();
         for (Collectible c : source.get()) {
+            if (c.rarity().compareTo(minimum) < 0) {
+                continue;
+            }
             boolean owned = c instanceof Trinket && state.hasTrinket(c.id());
             boolean duplicate = candidates.stream().anyMatch(o -> o.id().equals(c.id()));
             if (weight(c) > 0 && !owned && !duplicate) {

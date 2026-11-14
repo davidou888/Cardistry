@@ -56,11 +56,100 @@ class RunMapTest {
                     }
                 }
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
             }
         }
         return path;
+    }
+
+    /** Joue (premier choix partout) jusqu'à ce que {@code stop} soit vrai. */
+    private static void playUntil(Run run, java.util.function.Predicate<Run> stop) {
+        int guard = 0;
+        while (!stop.test(run) && !run.isOver() && guard++ < 10_000) {
+            switch (run.phase()) {
+                case MAP -> run.chooseNode(0);
+                case COMBAT -> {
+                    if (run.startTurn()) {
+                        run.submit(new Action.PlayCard(0));
+                    }
+                }
+                case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case REST -> run.rest(RestOption.HEAL);
+                case OVER -> {
+                }
+            }
+        }
+    }
+
+    // --- Sieste ---
+
+    @Test
+    void siesteAvantLeBoss() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        assertEquals(RunMap.REST_FLOOR, run.state().floor());
+        assertEquals(List.of(RestOption.HEAL, RestOption.CIGARETTES), run.restOptions());
+        assertThrows(IllegalStateException.class, () -> run.chooseNode(0));
+        run.state().player().takeDamage(50);
+        run.rest(RestOption.HEAL);
+        assertEquals(80, run.state().player().hp(), 1e-9); // 50 + 30 % de 100
+        assertEquals(Run.Phase.MAP, run.phase());
+        assertEquals(NodeType.BOSS, run.choices().get(0).type());
+        assertTrue(events.contains(new GameEvent.RestTaken("Dormir")));
+    }
+
+    @Test
+    void siesteSoinPlafonne() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        run.state().player().takeDamage(10);
+        run.rest(RestOption.HEAL);
+        assertEquals(100, run.state().player().hp(), 1e-9);
+    }
+
+    @Test
+    void siesteClopes() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        int before = run.state().cigarettes();
+        run.rest(RestOption.CIGARETTES);
+        assertEquals(before + 3, run.state().cigarettes());
+    }
+
+    @Test
+    void retirerUneCarteIndisponibleSansDeck() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        assertThrows(IllegalArgumentException.class, () -> run.rest(RestOption.REMOVE_CARD));
+    }
+
+    // --- Après un boss ---
+
+    @Test
+    void apresUnBossLaMoitieDesPvManquants() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.COMBAT && r.state().isBossFight());
+        run.state().player().takeDamage(60); // 40/100
+        assertTrue(run.startTurn());
+        run.submit(new Action.PlayCard(0));
+        if (run.phase() == Run.Phase.REWARD) {
+            run.resolveReward(new RewardChoice.Skip());
+        }
+        assertEquals(2, run.state().level());
+        assertEquals(70, run.state().player().hp(), 1e-9); // 40 + 60 / 2
+    }
+
+    @Test
+    void recompensesDeBossAuMoinsRares() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.COMBAT && r.state().isBossFight());
+        run.startTurn();
+        run.submit(new Action.PlayCard(0));
+        assertEquals(Run.Phase.REWARD, run.phase());
+        assertTrue(run.pendingReward().stream()
+                .allMatch(c -> c.rarity().compareTo(cardistry.items.Rarity.RARE) >= 0), run.pendingReward().toString());
     }
 
     @Test

@@ -6,7 +6,7 @@
 - Une partie = une suite de **combats** ; **un combat = un adversaire** (voir « Adversaires »).
 - Chaque combat commence avec une **nouvelle main de 5 cartes** (la main précédente est défaussée). Taille max : 7.
 - À chaque tour : jouer une carte **ou** piocher, puis l'adversaire attaque. Utiliser un objet est une **action gratuite** (pas de fin de tour, pas d'attaque adverse), possible avant de jouer ou piocher.
-- Quand un adversaire meurt : choix d'**1 récompense parmi 3** (objet ou trinket), puis le combat suivant commence. Le nouvel adversaire **n'attaque pas** ce tour-là.
+- Quand un adversaire meurt : Choomies, puis choix d'**1 récompense parmi 3** (objet ou trinket), puis retour à la carte. Chaque combat commence par ton tour.
 - Cartes : **Sortilège** (dégâts), **Heal** (soin, boosté dans le terrain du même type), **Terrain** (change le terrain, modifie l'attaque adverse).
 - Éléments : **Feu > Plante > Eau > Feu**. « Plante » est le nom affiché de l'élément nature (l'enum du code reste `NATURE`).
 - **Neutre** (adversaires seulement) : ×1 contre tout sort, et les terrains n'ont aucun effet sur son attaque.
@@ -92,6 +92,13 @@ Règles communes :
 - Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
   I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
 - En attendant les lots Shop et Événements, ces nœuds ne font rien (« bientôt disponible »).
+- **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max, brut,
+  plafonné), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une
+  carte du deck, avec le deck construit). Elle n'efface **pas** la Gueule de bois (les clopes sont là pour ça).
+- **Récompenses** : 1 parmi 3 après chaque combat ; élite : toutes au moins Peu commun ; boss : toutes au
+  moins Rare (les secrets débloqués restent possibles).
+- **Après chaque boss** (sauf le dernier) : la moitié des PV manquants est rendue (brut), puis le niveau
+  suivant commence.
 - Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
 - **[À DÉCIDER]** passer à un vrai deck (pioche / défausse / deck construit au fil de la run) au lieu de la pioche infinie aléatoire. Recommandé pour un roguelite.
 
@@ -141,8 +148,8 @@ Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte po
 - Chaque **boisson** (objet tagué Boisson) donne **+1 Ivresse**. L'Ivresse retombe à 0 après chaque combat.
 - À **3 Ivresse** → malédiction **« Gueule de bois »** : −1 taille de main au prochain combat.
 - Modifiée par : Foie d'ingénieur (seuil à 5), Ptit Sat ? (+10 % dégâts par point d'Ivresse).
-- Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant et dure tout ce combat ; une seule par combat (l'Ivresse continue de monter au-delà du seuil) ; aucune pendant le dernier combat (il n'y a pas de suivant).
-- ⚠️ Équilibrage : avec 3 adversaires et 1 récompense par combat, on ne peut pas avoir 3 boissons avant le dernier combat. La Gueule de bois (et donc Foie d'ingénieur) n'a aucun effet tant que les runs ne sont pas plus longues ou que le shop n'existe pas ; Ptit Sat ? plafonne à +20 % en pratique.
+- Implémentation (étape 3) : la Gueule de bois s'active au début du combat suivant (quels que soient les nœuds entre les deux : Sieste, shop…) et dure tout ce combat ; une seule par combat (l'Ivresse continue de monter au-delà du seuil) ; aucune pendant le boss final (il n'y a pas de suivant).
+- Avec la carte (environ 18 combats par run), la Gueule de bois, Foie d'ingénieur et Ptit Sat ? deviennent réellement utiles.
 
 ### Clopes
 - Ressource de run : **5 clopes** au début de chaque partie, conservées entre les combats, **20 maximum** (un paquet ; stat `CIGARETTE_MAX`).
@@ -257,6 +264,10 @@ Reste : shop, événements, transitions d'écran.
 - Couleur de rareté et d'élément partout.
 
 ## Questions ouvertes
+- **[À DÉCIDER]** Noms et attaques des 3 boss (placeholders « Boss du niveau 1/2/3 »).
+- **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
+- Provisoire : la Sieste et le soin après boss sont **bruts** (ni efficacité des soins, ni Ross) ; l'esquive
+  du Paresseux consomme un Shot de Jäger actif ; les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
@@ -276,4 +287,6 @@ Reste : shop, événements, transitions d'écran.
 - ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
 - ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
 - ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés ; un secret débloqué pendant la partie gagnante compte. Ctrl+Z : une fois par combat, ni après la mort ni au premier tour d'un combat. `--seed null` : seed aléatoire affichée. Mode texte : seul le code « claude » (détails : `docs/SECRETS.md`).
-- ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
+- ~~Pioche infinie~~ → remplacée par un deck construit (lot 1 bis de la run complète).
+- ~~Run complète (lot 1)~~ → 3 niveaux de 8 étages boss compris (7 = Sieste, 8 = Boss) ; valeurs d'adversaires, de boss et de scaling validées pour démarrer ; Rebond du Peneu ne tue pas ; Sieste : soin 30 %, +3 clopes ou retirer une carte, n'efface pas la Gueule de bois ; après chaque boss, la moitié des PV manquants ; NullPointerException peut annuler une élite (seuls les 3 boss sont immunisés) ; Moscow Mule annule toute une attaque mais pas les vols ni la Taxe ; tirages des adversaires hors CLAUDE.md ; carte tirée d'un sous-flux nommé de la seed ; « Plante » affiché pour l'élément nature.
+- ~~Koala~~ → c'est un **Paresseux** accroché à sa branche (« Badoing, badoing ! »), peu de dégâts, pas de saut. ~~Contrôle surprise~~ → **Série d'algèbre** (Vafi). Les Choomah parlent en cris (« ooOOOaAAAOaAOOA »).
