@@ -12,25 +12,31 @@ public final class Console {
     private final PrintStream out;
     private final boolean fast;
     private final boolean ascii;
+    private final boolean color;
 
     /** @param fast si {@code true}, les pauses sont ignorées */
     public Console(InputStream in, PrintStream out, boolean fast) {
-        this(in, out, fast, false);
+        this(in, out, fast, false, true);
     }
 
     /**
      * @param fast si {@code true}, les pauses sont ignorées
      * @param ascii si {@code true}, tout texte est converti en ASCII pur
+     * @param color si {@code false}, les codes couleur ANSI sont retirés (vieille console Windows)
      */
-    public Console(InputStream in, PrintStream out, boolean fast, boolean ascii) {
+    public Console(InputStream in, PrintStream out, boolean fast, boolean ascii, boolean color) {
         this.scanner = new Scanner(in);
         this.out = out;
         this.fast = fast;
         this.ascii = ascii;
+        this.color = color;
     }
 
+    private static final java.util.regex.Pattern ANSI = java.util.regex.Pattern.compile("\u001B\\[[0-9;]*m");
+
     private String encode(String text) {
-        return ascii ? cardistry.ui.Glyphs.toAscii(text) : text;
+        String result = color ? text : ANSI.matcher(text).replaceAll("");
+        return ascii ? cardistry.ui.Glyphs.toAscii(result) : result;
     }
 
     public void println(String line) {

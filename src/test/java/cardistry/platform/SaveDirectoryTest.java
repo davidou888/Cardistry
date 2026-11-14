@@ -23,11 +23,11 @@ class SaveDirectoryTest {
 
     @Test
     void detectionDeLOs() {
-        assertEquals(SaveDirectory.Os.WINDOWS, SaveDirectory.detect("Windows 11"));
-        assertEquals(SaveDirectory.Os.MAC, SaveDirectory.detect("Mac OS X"));
-        assertEquals(SaveDirectory.Os.LINUX, SaveDirectory.detect("Linux"));
-        assertEquals(SaveDirectory.Os.LINUX, SaveDirectory.detect("FreeBSD"));
-        assertEquals(SaveDirectory.Os.LINUX, SaveDirectory.detect(""));
+        assertEquals(Os.WINDOWS, Os.detect("Windows 11"));
+        assertEquals(Os.MAC, Os.detect("Mac OS X"));
+        assertEquals(Os.LINUX, Os.detect("Linux"));
+        assertEquals(Os.LINUX, Os.detect("FreeBSD"));
+        assertEquals(Os.LINUX, Os.detect(""));
     }
 
     @Test

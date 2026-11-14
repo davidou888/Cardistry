@@ -21,6 +21,7 @@ import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
+import com.googlecode.lanterna.terminal.swing.TerminalEmulatorAutoCloseTrigger;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -57,6 +58,26 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 .setForceTextTerminal(true)
                 .createTerminal();
         return new LanternaUi(terminal, fast, ascii);
+    }
+
+    /**
+     * Ouvre le jeu dans la fenêtre de l'émulateur de terminal de Lanterna (Swing) : utilisé sous
+     * Windows, où Lanterna 3.1 n'a pas de console native. Fermer la fenêtre quitte le jeu.
+     */
+    public static LanternaUi openWindow(boolean fast, boolean ascii) {
+        Terminal terminal = new DefaultTerminalFactory()
+                .setInitialTerminalSize(new TerminalSize(100, 32))
+                .setTerminalEmulatorTitle("Cardistry")
+                .setTerminalEmulatorFrameAutoCloseTrigger(TerminalEmulatorAutoCloseTrigger.CloseOnExitPrivateMode)
+                .createTerminalEmulator();
+        if (terminal instanceof javax.swing.JFrame frame) {
+            frame.setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        }
+        try {
+            return new LanternaUi(terminal, fast, ascii);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** @param fast si {@code true}, les animations ne font aucune pause */

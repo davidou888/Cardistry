@@ -2,7 +2,6 @@ package cardistry.platform;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.function.Function;
 
 /**
@@ -16,9 +15,6 @@ import java.util.function.Function;
  */
 public final class SaveDirectory {
 
-    /** Systèmes distingués pour la sauvegarde. */
-    public enum Os { LINUX, MAC, WINDOWS }
-
     private SaveDirectory() {
     }
 
@@ -29,7 +25,7 @@ public final class SaveDirectory {
 
     /** Version testable : nom d'OS, variables d'environnement et dossier personnel injectés. */
     static Path resolve(String osName, Function<String, String> env, Path home) {
-        return switch (detect(osName)) {
+        return switch (Os.detect(osName)) {
             case WINDOWS -> absolute(env.apply("APPDATA"))
                     .orElse(home.resolve("AppData").resolve("Roaming"))
                     .resolve("Cardistry");
@@ -38,18 +34,6 @@ public final class SaveDirectory {
                     .orElse(home.resolve(".local").resolve("share"))
                     .resolve("cardistry");
         };
-    }
-
-    /** Linux par défaut (BSD et autres Unix suivent la même convention XDG). */
-    public static Os detect(String osName) {
-        String name = osName.toLowerCase(Locale.ROOT);
-        if (name.startsWith("windows")) {
-            return Os.WINDOWS;
-        }
-        if (name.startsWith("mac") || name.startsWith("darwin")) {
-            return Os.MAC;
-        }
-        return Os.LINUX;
     }
 
     /** Chemin absolu lu dans une variable d'environnement ; vide si absente, vide ou relative. */
