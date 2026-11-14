@@ -134,7 +134,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Légendaire | Paquet de cartes | Pioche non aléatoire : tu vois 3 cartes et en choisis une | Méta | b (M3) |
 | Légendaire | Diplôme EPFL | +1 emplacement de trinket ; effet des trinkets EPFL doublé (effet boule de neige **voulu**, voir plus bas) | EPFL | b (M4) |
 | Légendaire | Ptit Sat ? | +10 % dégâts par point d'Ivresse | Soirée | b (M1) |
-| Légendaire | Pétou ancestral | +10 PV par tour, mais tu ne joues qu'un tour sur deux (l'adversaire attaque normalement) | Soirée, Feu | b (M2) |
+| Légendaire | Pétou ancestral | À chaque combat gagné : +8 PV (soin feu : terrain, Grinder, ×2 avec Ross). Au début de chaque combat, l'adversaire saute son premier tour (« [Adversaire] passe son tour : tu as fait tourner le j. ») | Soirée, Feu | b (M2) |
 | Légendaire | George | *« À l'origine de la redistribution des biens communs. »* À chaque carte piochée, une autre carte de ta main (tirée au hasard) est remplacée par une carte aléatoire du pool | Soirée | a |
 | Secret | 3 trinkets | voir `docs/SECRETS.md` (spoilers) | Méta | b (M5, M6, M7) |
 
@@ -158,14 +158,13 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 #### Choix assumés
 - **Diplôme EPFL** fait boule de neige avec les trinkets EPFL et double aussi le bonus de set EPFL : c'est voulu (synergies façon *The Binding of Isaac*).
 - Les soins restent plafonnés aux PV max, même si ça gaspille une partie des gros soins — **sauf avec Ross**.
-- **Ross + Pétou ancestral** : +20 PV par tour sans plafond, presque invincible. Voulu (synergie façon Isaac), comme Diplôme EPFL.
 - Ross : ×2 appliqué **après** tous les autres bonus de soin (multiplicateur final, pas +100 % additif). Les PV peuvent dépasser le max (affichés en doré) ; les PV max ne bougent pas. Si on perd Ross, les PV en trop sont gardés mais les soins suivants sont de nouveau plafonnés.
 
 #### Nouvelles mécaniques nécessaires
 - **M1 — Ivresse** : compteur du joueur, remis à 0 à chaque fin de combat, seuil de Gueule de bois modifiable.
 - **M2 — Effets temporaires** : système générique (comme les malédictions) : délai avant déclenchement, durée en tours et/ou en déclenchements (charges), perdu ou gardé à la fin du combat, modificateurs de stats pendant l'effet, effets possibles : multiplier le prochain sort, annuler la prochaine attaque, faire sauter un tour. Affichés à l'écran avec leur durée restante.
-  - Raclette + Pétou ancestral : Raclette fait sauter *le* tour suivant ; si Pétou ancestral le faisait déjà sauter, les deux se chevauchent (pas de tour perdu en plus).
-  - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Pétou ancestral fait jouer les tours impairs de chaque combat et sauter les pairs, +10 PV au début de chaque tour (joué ou sauté) ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
+  - Tour sauté de l'adversaire (Pétou ancestral) : vérifié avant les annulations d'attaque, donc un Moscow Mule reste pour l'attaque suivante. L'effet est posé au début du combat : équiper Pétou ancestral en cours de combat ne fait effet qu'au combat suivant.
+  - Choix provisoires : deux Shot de Jäger ne se cumulent pas sur le même sort (un par sort) ; Raclette est perdue si le combat se termine avant le tour sauté ; Space cake utilisé au tour T se déclenche au début du tour T+3, et ses +50 % (dégâts élémentaires, comme CMS) valent pour les tours T+3 et T+4 ; un tour sauté compte comme un tour ; Petit pétou (objet) se comporte comme une carte de soin feu (terrain, efficacité des soins, Grinder).
 - **M3 — Pioche au choix** : le jeu propose N cartes, le joueur en choisit une.
 - **M4 — Puissance des trinkets** : un multiplicateur d'effet par trinket (Diplôme EPFL).
 - **M5 — Carte morte / mort instantanée** : carte « NO CARDS » injouable, adversaire tué sur le coup.

@@ -240,14 +240,13 @@ class CigaretteTrinketTest {
     }
 
     @Test
-    void rossEtPetouAncestral() {
+    void rossEtPetouAncestralSoinDeFinDeCombatDoubleSansPlafond() {
         setUp();
         equip("ross");
         equip("petou-ancestral");
-        for (int i = 0; i < 10; i++) {
-            engine.startTurn();
-        }
-        // 10 tours × 20 PV, moins 5 attaques des tours sautés (10) et aucune action jouée
-        assertEquals(100 + 10 * 20 - 5 * 10, state.player().hp(), DELTA);
+        state.currentEnemy().takeDamage(1000);
+        engine.submit(new Action.DrawCard());
+        // 8 × 1 (soin feu sur Forêt) × 2 (Ross), au-dessus du max
+        assertEquals(116, state.player().hp(), DELTA);
     }
 }

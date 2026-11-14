@@ -165,14 +165,24 @@ public final class ItemRegistry {
                         .flat(StatType.UNCAPPED_HEALING, 1)
                         .build(),
                 Trinket.builder("petou-ancestral", "Pétou ancestral", LEGENDARY)
-                        .description("+10 PV par tour, mais tu ne joues qu'un tour sur deux (l'adversaire attaque normalement)")
+                        .description("+8 PV (soin feu) à chaque combat gagné ; l'adversaire saute son premier tour"
+                                + " de chaque combat")
                         .tags(Tag.PARTY, Tag.FIRE)
-                        .effect(() -> TemporaryEffect.builder("petou-ancestral", "Pétou ancestral")
-                                .summary("un tour sur deux, +10 PV par tour")
-                                .keepAcrossCombats()
-                                .skips(TemporaryEffect.SkipRule.EVEN_COMBAT_TURNS)
-                                .onTurnStart(ctx -> ctx.healPlayer(10))
-                                .build())
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onEnemyKilled(GameEvent.EnemyKilled event, EffectContext ctx) {
+                                ctx.elementalHeal(8, Element.FIRE);
+                            }
+
+                            @Override
+                            public void onCombatStart(GameEvent.CombatStarted event, EffectContext ctx) {
+                                ctx.addEffect(TemporaryEffect.builder("petou-ancestral", "Pétou ancestral")
+                                        .summary("l'adversaire saute son premier tour")
+                                        .charges(1)
+                                        .skipsNextEnemyTurn("{adversaire} passe son tour : tu as fait tourner le j.")
+                                        .build());
+                            }
+                        })
                         .build(),
                 // Comme CMS (provisoire) : s'applique aux dégâts élémentaires.
                 Trinket.builder("ptit-sat", "Ptit Sat ?", LEGENDARY)

@@ -185,48 +185,78 @@ class EffectContentTest {
 
     // --- Pétou ancestral ---
 
+    /** Équipe Pétou ancestral puis passe au combat suivant (son effet se pose en début de combat). */
+    private void equipPetouThenNextCombat() {
+        engine.equip(ItemRegistry.trinket("petou-ancestral"));
+        first.takeDamage(1000);
+        engine.submit(new Action.DrawCard());
+        assertEquals(2, state.combatNumber());
+    }
+
     @Test
-    void petouAncestralUnTourSurDeuxEtDixPvParTour() {
+    void petouAncestralHuitPvAChaqueCombatGagne() {
         setUp(List.of());
         state.player().takeDamage(50);
         engine.equip(ItemRegistry.trinket("petou-ancestral"));
-
-        assertTrue(engine.startTurn());              // tour 1 : joué, +10
-        assertEquals(60, state.player().hp(), DELTA);
-        engine.submit(new Action.DrawCard());        // −10
-        assertFalse(engine.startTurn());             // tour 2 : sauté, +10 puis −10
-        assertEquals(50, state.player().hp(), DELTA);
-        assertTrue(engine.startTurn());              // tour 3 : joué
-        assertEquals(60, state.player().hp(), DELTA);
-    }
-
-    @Test
-    void racletteEtPetouAncestralSeChevauchent() {
-        setUp(List.of());
-        state.player().takeDamage(80);
-        engine.equip(ItemRegistry.trinket("petou-ancestral"));
-
-        assertTrue(engine.startTurn());              // tour 1 : +10 → 30
-        use("raclette");                             // +50 → 80
-        engine.submit(new Action.DrawCard());        // −10 → 70
-
-        assertFalse(engine.startTurn());             // tour 2 : sauté par les deux à la fois
-        GameEvent.PlayerTurnSkipped skipped = (GameEvent.PlayerTurnSkipped) events.stream()
-                .filter(GameEvent.PlayerTurnSkipped.class::isInstance).findFirst().orElseThrow();
-        assertEquals(List.of("Pétou ancestral", "Raclette"), skipped.causes());
-        assertEquals(70, state.player().hp(), DELTA); // +10 −10
-
-        assertTrue(engine.startTurn(), "Raclette a servi au tour 2 : le tour 3 est joué");
-        assertEquals(List.of("petou-ancestral"), effectIds());
-    }
-
-    @Test
-    void petouAncestralRetireAvecLeTrinket() {
-        setUp(List.of());
-        engine.equip(ItemRegistry.trinket("petou-ancestral"));
-        assertEquals(List.of("petou-ancestral"), effectIds());
         first.takeDamage(1000);
-        engine.submit(new Action.DrawCard()); // fin de combat : l'effet permanent reste
-        assertEquals(List.of("petou-ancestral"), effectIds());
+        engine.submit(new Action.DrawCard());
+        // Soin feu sur Forêt (le feu bat la nature : ×1)
+        assertEquals(58, state.player().hp(), DELTA);
+        assertTrue(events.contains(new GameEvent.Healed(state.player(), 8, 1.0)));
+    }
+
+    @Test
+    void petouAncestralPasDeSoinEnCasDeDefaite() {
+        setUp(List.of());
+        engine.equip(ItemRegistry.trinket("petou-ancestral"));
+        state.player().takeDamage(95);
+        engine.submit(new Action.DrawCard()); // l'Hydre attaque : défaite
+        assertTrue(state.isLost());
+        assertFalse(events.stream().anyMatch(GameEvent.Healed.class::isInstance));
+    }
+
+    @Test
+    void petouAncestralSoinFeuBoosteParGrinder() {
+        setUp(List.of());
+        state.player().takeDamage(50);
+        engine.equip(ItemRegistry.trinket("petou-ancestral"));
+        engine.equip(ItemRegistry.trinket("grinder"));
+        first.takeDamage(1000);
+        engine.submit(new Action.DrawCard());
+        assertEquals(50 + 12, state.player().hp(), DELTA); // 8 × 1.5
+    }
+
+    @Test
+    void petouAncestralLAdversaireSauteSonPremierTour() {
+        setUp(List.of());
+        equipPetouThenNextCombat();
+        assertEquals("Pétou ancestral : l'adversaire saute son premier tour", state.effects().get(0).describe());
+        events.clear();
+
+        engine.submit(new Action.DrawCard());
+        assertEquals(new GameEvent.EnemyTurnSkipped(state.currentEnemy(), "Pétou ancestral",
+                "Sirène passe son tour : tu as fait tourner le j."),
+                events.stream().filter(GameEvent.EnemyTurnSkipped.class::isInstance).findFirst().orElseThrow());
+        assertEquals(100, state.player().hp(), DELTA);
+        assertTrue(state.effects().isEmpty());
+
+        engine.submit(new Action.DrawCard()); // la Sirène attaque ensuite normalement (Forêt : ×0.75)
+        assertEquals(100 - 7.5, state.player().hp(), DELTA);
+    }
+
+    @Test
+    void petouAncestralEtMoscowMuleLeMuleNEstPasGaspille() {
+        setUp(List.of());
+        equipPetouThenNextCombat();
+        use("moscow-mule");
+
+        // Rouler une clope termine le tour sans remplir la main.
+        engine.submit(new Action.RollCigarette());     // tour sauté par Pétou ancestral
+        assertEquals(List.of("moscow-mule"), effectIds());
+        engine.submit(new Action.RollCigarette());     // le Mule annule cette attaque-ci
+        assertEquals(100, state.player().hp(), DELTA);
+        assertTrue(state.effects().isEmpty());
+        engine.submit(new Action.RollCigarette());
+        assertEquals(100 - 7.5, state.player().hp(), DELTA);
     }
 }

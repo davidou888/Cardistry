@@ -461,17 +461,17 @@ class LanternaUiTest {
     @Test
     void effetsEnCoursAffichesAvecLeurDuree() throws Exception {
         open(80, 24);
-        GameState state = withInventory(List.of(), List.of(ItemRegistry.trinket("petou-ancestral")));
+        GameState state = withInventory(List.of(), List.of());
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
                 new cardistry.items.LootTable(List::of));
-        for (String id : List.of("shot-de-jager", "space-cake")) {
+        for (String id : List.of("shot-de-jager", "space-cake", "moscow-mule")) {
             engine.give(ItemRegistry.item(id));
             engine.submit(new Action.UseItem(0));
         }
         ui.showStatus(state);
         String text = dump("15-effets");
         // Trop long en version complète : version courte, objets d'abord.
-        assertTrue(text.contains("Shot de Jäger · Space cake (dans 3) · +1"), text);
+        assertTrue(text.contains("Shot de Jäger · Space cake (dans 3) · +1"), text); // Moscow Mule ne tient pas
 
         // L'inventaire liste tout, avec la durée.
         Thread player = new Thread(() -> ui.nextAction(state));
@@ -484,7 +484,7 @@ class LanternaUiTest {
         player.join(TIMEOUT.toMillis());
         assertTrue(inventory.contains("Shot de Jäger : prochain sort ×2"));
         assertTrue(inventory.contains("Space cake : dans 3 tours"));
-        assertTrue(inventory.contains("Pétou ancestral : un tour sur deux, +10 PV par tour"));
+        assertTrue(inventory.contains("Moscow Mule : annule la prochaine attaque"));
     }
 
     @Test
