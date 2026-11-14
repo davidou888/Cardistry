@@ -33,6 +33,21 @@ final class SpriteViewerScreen {
         String label = animation + (frames.isEmpty() ? " (générique)" : " " + (Math.floorMod(frame, frames.size()) + 1)
                 + "/" + frames.size());
         p.centered(6, label, Palette.INFO, false);
+        // Fenêtre avec une image : l'image à gauche, le repli ASCII à droite.
+        java.util.Optional<String> image = p.hasImages()
+                ? cardistry.ui.window.Images.enemy(entry.getKey(), animation, Math.max(0, frame)) : java.util.Optional.empty();
+        if (image.isPresent()) {
+            int half = p.cols() / 2;
+            p.text(half / 2 - 2, 7, "image", Palette.DIM);
+            p.text(half + half / 2 - 7, 7, "ASCII (repli)", Palette.DIM);
+            if (!hidden) {
+                p.image(Math.max(1, half / 2 - Sprite.MAX_WIDTH / 2), 8, Sprite.MAX_WIDTH, Sprite.MAX_HEIGHT,
+                        image.get(), flash ? TextColor.ANSI.WHITE_BRIGHT : null, 1f);
+                SpriteArt.draw(p, shown, half + Math.max(0, (half - sprite.width()) / 2), 8, p.rows() - 3, Palette.TEXT,
+                        flash ? TextColor.ANSI.WHITE_BRIGHT : null, p.cols() - 1);
+            }
+            return;
+        }
         if (!hidden) {
             int col = (p.cols() - sprite.width()) / 2;
             int top = 8 + Math.max(0, (Sprite.MAX_HEIGHT - sprite.height()) / 2);

@@ -189,6 +189,7 @@ final class ItemScreens {
         }
         p.text(5, row, prefix, Palette.DIM);
         int col = 5 + prefix.length();
+        col += p.icon(col, row, c.id());
         p.text(col, row, c.name(), Palette.rarity(c.rarity()), true);
         col += c.name().length();
         String rest = "  " + c.rarity().displayName() + " · " + tags(c) + " — " + c.description() + suffix;
@@ -214,6 +215,7 @@ final class ItemScreens {
     private static void drawCard(Painter p, int col, int row, int width, Collectible c, boolean selected) {
         int inner = width - 2;
         p.box(col, row, width, CARD_HEIGHT, Palette.rarity(c.rarity()), selected);
+        p.icon(col + width - 1 - Painter.ICON_WIDTH, row, c.id()); // dans le bord du haut, à droite
         int last = row + CARD_HEIGHT - 3; // dernière ligne de texte libre (la suivante = tags)
         int r = row + 1;
         p.text(col + 1, r++, Painter.fit(c.kindName() + " · " + c.rarity().displayName(), inner),

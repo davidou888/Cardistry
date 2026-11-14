@@ -977,4 +977,73 @@ class LanternaUiTest {
         String text = dump("71-shop-remplacer");
         assertTrue(text.contains("Que remplace"), text);
     }
+
+    // --- Images (fenêtre) ---
+
+    private cardistry.ui.window.ImageLayer layer;
+
+    private void openWithImages(int cols, int rows) throws IOException {
+        terminal = new DefaultVirtualTerminal(new TerminalSize(cols, rows));
+        layer = new cardistry.ui.window.ImageLayer();
+        ui = new LanternaUi(terminal, true, false, layer);
+    }
+
+    private static Enemy withImage() {
+        return Enemy.builder("test-image", "Imagé", Element.FIRE, cardistry.model.enemy.EnemyRank.COMMON).hp(20)
+                .behavior(cardistry.model.enemy.EnemyBehavior.always(cardistry.model.enemy.EnemyMove.basicAttack(5)))
+                .build();
+    }
+
+    @Test
+    void imageDeLAdversaireALaPlaceDuSpriteAscii() throws IOException {
+        openWithImages(80, 24);
+        ui.showStatus(combat(List.of(), withImage()));
+        List<cardistry.ui.window.ImageLayer.Placement> placed = layer.snapshot();
+        assertEquals(1, placed.size());
+        cardistry.ui.window.ImageLayer.Placement image = placed.get(0);
+        assertEquals("enemies/test-image.idle.1.png", image.path());
+        assertEquals(80 - 30 - 2, image.col());
+        assertEquals(30, image.cols());
+        assertEquals(10, image.rows());
+        assertFalse(screen().contains("? ?"), "pas de sprite ASCII (inconnu) dessous");
+    }
+
+    @Test
+    void sansImageLeSpriteAscii() throws IOException {
+        openWithImages(80, 24);
+        ui.showStatus(combat(List.of(), hydra())); // pas d'image pour cet adversaire
+        assertTrue(layer.snapshot().isEmpty());
+        assertTrue(screen().contains("? ?"), "sprite inconnu.txt");
+    }
+
+    @Test
+    void sansCalqueJamaisDImage() throws IOException {
+        open(80, 24); // terminal ou --no-images : pas de calque
+        ui.showStatus(combat(List.of(), withImage()));
+        assertTrue(screen().contains("? ?"));
+    }
+
+    /** Dessine avec un Painter muni d'un calque, et renvoie les images posées. */
+    private static List<cardistry.ui.window.ImageLayer.Placement> drawn(java.util.function.Consumer<Painter> draw) {
+        DefaultVirtualTerminal t = new DefaultVirtualTerminal(new TerminalSize(80, 30));
+        cardistry.ui.window.ImageLayer images = new cardistry.ui.window.ImageLayer();
+        images.begin();
+        draw.accept(new Painter(t.newTextGraphics(), new TerminalSize(80, 30), false, images));
+        images.commit();
+        return images.snapshot();
+    }
+
+    @Test
+    void iconesDObjets() {
+        GameState state = withInventory(List.of(mate()), List.of());
+        List<cardistry.ui.window.ImageLayer.Placement> inventory = drawn(p -> ItemScreens.inventory(p, state));
+        assertEquals(1, inventory.size());
+        assertEquals("items/mate.png", inventory.get(0).path());
+        assertEquals(Painter.ICON_WIDTH, inventory.get(0).cols());
+        assertEquals(1, inventory.get(0).rows());
+        List<cardistry.ui.window.ImageLayer.Placement> reward = drawn(p -> ItemScreens.reward(p, state,
+                List.of(mate(), ItemRegistry.trinket("pax")), 0, 1));
+        assertEquals(1, reward.size(), "seul Maté a une icône");
+        assertTrue(drawn(p -> ItemScreens.inventory(p, withInventory(List.of(), List.of()))).isEmpty());
+    }
 }

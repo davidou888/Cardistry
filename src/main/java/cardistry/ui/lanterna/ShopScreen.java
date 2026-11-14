@@ -89,8 +89,9 @@ final class ShopScreen {
                 p.text(col, row, Painter.fit(c.name() + " — vendu", 30), Palette.DIM);
                 continue;
             }
-            String name = Painter.fit(c.name(), 22);
-            p.text(col, row, name, Palette.rarity(c.rarity()), isSelected);
+            int icon = p.icon(col, row, c.id());
+            String name = Painter.fit(c.name(), 22 - icon);
+            p.text(col + icon, row, name, Palette.rarity(c.rarity()), isSelected);
             p.text(col + 24, row, offer.price() + " Ch.", priceColor(state, offer), isSelected);
         }
         return row + 2;

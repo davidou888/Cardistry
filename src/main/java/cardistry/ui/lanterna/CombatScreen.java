@@ -145,13 +145,36 @@ final class CombatScreen {
             return;
         }
         Enemy enemy = state.currentEnemy();
+        int areaLeft = p.cols() - SPRITE_WIDTH - 2;
+        if (drawSpriteImage(p, enemy, view, areaLeft)) {
+            return;
+        }
         cardistry.ui.sprite.Sprite sprite = cardistry.ui.sprite.Sprites.of(enemy);
         cardistry.ui.sprite.Sprite.Frame frame = frameFor(sprite, view);
-        int areaLeft = p.cols() - SPRITE_WIDTH - 2;
         int col = areaLeft + Math.max(0, (SPRITE_WIDTH - sprite.width()) / 2) + view.enemyOffsetX;
         int top = 1 + Math.max(0, (10 - sprite.height()) / 2);
         TextColor base = view.enemyDim ? Palette.DIM : Palette.element(enemy.element());
         SpriteArt.draw(p, frame, col, top, 10, base, view.enemyFlash, p.cols() - 1);
+    }
+
+    /**
+     * Image PNG de l'adversaire (fenêtre seulement), dans la zone du sprite : la frame de
+     * l'animation en cours, en blanc pendant le clignotement des dégâts, à demi transparente quand il
+     * meurt.
+     *
+     * @return {@code false} s'il n'y a pas d'image (dessiner le sprite ASCII)
+     */
+    static boolean drawSpriteImage(Painter p, Enemy enemy, ViewState view, int areaLeft) {
+        if (!p.hasImages()) {
+            return false;
+        }
+        boolean idle = view.spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE);
+        int idleFrames = Math.max(1, cardistry.ui.window.Images.idleFrames(enemy.spriteId()));
+        int frame = idle ? Math.floorMod(view.idleFrame, idleFrames) : view.spriteFrame;
+        return cardistry.ui.window.Images.enemy(enemy.spriteId(), view.spriteAnimation, frame)
+                .map(path -> p.image(areaLeft + view.enemyOffsetX, 1, SPRITE_WIDTH, 10, path, view.enemyFlash,
+                        view.enemyDim ? 0.5f : 1f))
+                .orElse(false);
     }
 
     /** Frame à dessiner : celle de l'animation en cours si le sprite l'a, sinon la frame idle. */
