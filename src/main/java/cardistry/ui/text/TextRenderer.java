@@ -82,7 +82,8 @@ public final class TextRenderer implements Renderer {
             }
             case GameEvent.CombatStarted e -> {
                 console.println();
-                console.println(Ansi.yellow("Combat " + e.number() + "/" + e.total()) + " : " + enemyName(e.enemy())
+                console.println(Ansi.yellow(e.total() > 0 ? "Combat " + e.number() + "/" + e.total() : "Combat")
+                        + " : " + enemyName(e.enemy())
                         + " (" + Ansi.element(e.enemy().element()) + ", " + num(e.enemy().hp()) + " PV)");
                 console.pause(1);
             }
@@ -162,6 +163,15 @@ public final class TextRenderer implements Renderer {
                 console.println();
                 console.println(Ansi.RED + "DÉFAITE..." + Ansi.END_COLOR + " Tu n'as plus de points de vie.");
             }
+            case GameEvent.LevelStarted e -> {
+                console.println();
+                console.println(Ansi.yellow("=== Niveau " + e.level() + " ==="));
+            }
+            case GameEvent.NodeEntered e -> {
+                if (!e.kind().equals("Combat") && !e.kind().equals("Élite") && !e.kind().equals("Boss")) {
+                    console.println("→ " + e.kind() + " : bientôt disponible, tu continues ta route.");
+                }
+            }
             case GameEvent.IntentChosen e -> {
                 // Affiché dans l'état (« Prochain tour »).
             }
@@ -171,6 +181,39 @@ public final class TextRenderer implements Renderer {
                     console.println("→ " + line);
                 }
             }
+        }
+    }
+
+    /**
+     * Carte du niveau en ASCII : les nœuds où tu peux aller sont numérotés, ta position est « @ »,
+     * les nœuds visités « . ». Puis la liste des choix.
+     */
+    @Override
+    public void showMap(cardistry.run.map.MapView view) {
+        lastState = view.state();
+        char[][] grid = cardistry.ui.MapArt.grid(view.map());
+        for (cardistry.run.map.MapNode node : view.visited()) {
+            grid[cardistry.ui.MapArt.row(node)][cardistry.ui.MapArt.col(node)] = '.';
+        }
+        if (view.position() != null) {
+            grid[cardistry.ui.MapArt.row(view.position())][cardistry.ui.MapArt.col(view.position())] = '@';
+        }
+        for (int i = 0; i < view.choices().size(); i++) {
+            cardistry.run.map.MapNode node = view.choices().get(i);
+            grid[cardistry.ui.MapArt.row(node)][cardistry.ui.MapArt.col(node)] = (char) ('1' + i);
+        }
+        console.println();
+        console.println(Ansi.yellow("Carte · Niveau " + view.map().level() + "/3") + " (étage "
+                + view.state().floor() + "/" + cardistry.run.map.RunMap.FLOORS + ")");
+        for (char[] line : grid) {
+            console.println("  " + new String(line).stripTrailing());
+        }
+        console.println("C combat · E élite · $ shop · ? événement · Z sieste · B boss · @ toi");
+        console.println("PV " + num(view.state().player().hp()) + "/" + num(view.state().maxHp()) + " · Clopes "
+                + view.state().cigarettes() + "/" + view.state().cigaretteMax() + " · Choomies " + view.state().choomies());
+        for (int i = 0; i < view.choices().size(); i++) {
+            cardistry.run.map.MapNode node = view.choices().get(i);
+            console.println("[" + (i + 1) + "] Étage " + node.floor() + " : " + node.type().displayName());
         }
     }
 
@@ -277,13 +320,12 @@ public final class TextRenderer implements Renderer {
 
     @Override
     public void showIntro(GameState state) {
-        List<Enemy> enemies = state.enemies();
-        console.println("Il y a " + enemies.size() + " ennemis :");
+        console.println("La partie a 3 niveaux de " + cardistry.run.map.RunMap.FLOORS + " étages.");
         console.pause(0.7);
-        for (Enemy enemy : enemies) {
-            console.println("- " + enemyName(enemy) + ", de type " + Ansi.element(enemy.element()));
-            console.pause(0.7);
-        }
+        console.println("Sur la carte, choisis ton chemin : combats, élites, shops, événements, sieste...");
+        console.pause(0.7);
+        console.println("Un boss t'attend au bout de chaque niveau. Chaque adversaire annonce son prochain coup.");
+        console.pause(0.7);
         waitForEnter("(Appuie sur Entrée pour continuer)");
 
         console.println("À chaque tour,");

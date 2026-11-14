@@ -47,6 +47,8 @@ public final class GameState {
     private boolean finalCombat = false;
     private boolean won = false;
     private int choomies = STARTING_CHOOMIES;
+    private int level = 0;
+    private int floor = 0;
     private TerrainCard terrain;
     private final List<Card> hand;
     private final Stats playerStats;
@@ -94,18 +96,10 @@ public final class GameState {
         return new GameState(player, List.of(), true, terrain, List.of(), playerStats);
     }
 
-    /**
-     * Nouvelle partie : terrain de départ, main vide (distribuée au début du combat). En attendant la
-     * carte de la run : un commun, une élite et le boss du niveau 1, dans l'ordre.
-     */
+    /** Nouvelle partie (carte de la run) : terrain de départ, main vide, aucun adversaire encore. */
     public static GameState newGame() {
         Stats stats = new Stats();
-        List<Enemy> enemies = List.of(
-                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1),
-                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.VAFI, 1),
-                cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.bossId(1), 1));
-        return new GameState(new Player(stats.get(StatType.MAX_HP)), enemies, CardPool.startingTerrain(), List.of(),
-                stats);
+        return openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats);
     }
 
     public Player player() {
@@ -129,6 +123,21 @@ public final class GameState {
 
     public Enemy currentEnemy() {
         return enemies.get(currentEnemyIndex);
+    }
+
+    /** Niveau de la carte (1 à 3) ; 0 hors carte (partie à adversaires fixés). */
+    public int level() {
+        return level;
+    }
+
+    /** Étage atteint sur la carte du niveau (0 avant le premier nœud). */
+    public int floor() {
+        return floor;
+    }
+
+    void setLocation(int level, int floor) {
+        this.level = level;
+        this.floor = floor;
     }
 
     /** Choomies (monnaie de la run). */

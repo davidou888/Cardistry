@@ -69,10 +69,30 @@ Règles communes :
 - Cartes mortes (« NO CARDS », « Exercice 3b ») : injouables jusqu'à la fin du combat, jamais remplacées.
 - Choomah : variante tirée au hasard ; deux Choomah ne se suivent pas, ni deux fois le même commun.
 
-## Structure d'une run (cible)
-- Carte à **embranchements** façon Slay the Spire, générée par seed.
-- Types de nœuds : Combat, Élite, Shop, Événement (`?`), Repos, Boss. **[À DÉCIDER]** nombre d'étages, nœuds par étage.
-- Mort = fin de la run. **[À DÉCIDER]** méta-progression entre les runs (déblocages) ou pas.
+## Structure d'une run
+- **3 niveaux** (sans nom) de **8 étages** chacun, boss compris : étages 1-6 au choix, 7 = Sieste, 8 = Boss.
+  Un boss différent à la fin de chaque niveau ; battre celui du niveau 3 gagne la partie.
+- Carte à **embranchements** façon Slay the Spire, générée par un **sous-flux nommé de la seed**
+  (`Rng.fork("carte-<niveau>")`) : même seed = même carte, quels que soient les autres tirages. Les
+  adversaires sont tirés dans un autre sous-flux (`rencontres-<niveau>`). Code : `run.map.MapGenerator`.
+- Génération : 5 colonnes, 4 chemins qui montent d'au plus une colonne par étage ; ils se rejoignent
+  mais ne se croisent jamais en X ; au moins deux départs.
+- Types de nœuds : Combat `C`, Élite `E`, Shop `$`, Événement `?`, Sieste `Z`, Boss `B`.
+
+| Étage | Contenu |
+|---|---|
+| 1 | Combat uniquement |
+| 2-3 | Combat 60 %, Événement 25 %, Shop 15 % (pas d'élite ni de sieste) |
+| 4-6 | Combat 45 %, Événement 22 %, Élite 15 %, Shop 10 %, Sieste 8 % (pas de sieste à l'étage 6) |
+| 7 | Sieste partout |
+| 8 | Boss |
+
+- Contraintes : jamais deux Shop, deux Élites ou deux Siestes à la suite sur un chemin ; au moins un
+  Shop par carte ; au moins un chemin sans élite.
+- Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
+  I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
+- En attendant les lots Shop et Événements, ces nœuds ne font rien (« bientôt disponible »).
+- Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
 - **[À DÉCIDER]** passer à un vrai deck (pioche / défausse / deck construit au fil de la run) au lieu de la pioche infinie aléatoire. Recommandé pour un roguelite.
 
 ## Objets et trinkets
@@ -227,7 +247,8 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 ## Interface (terminal ASCII, Lanterna)
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
 Fait aussi : écran de pioche au choix (Paquet de cartes : 3 cartes, touches 1/2/3, effet réel de la sélectionnée, phrase méta au premier déclenchement) ; écran « jeter un trinket » obligatoire (Diplôme perdu) ; sets dans l'inventaire (palier atteint, prochain palier, ×2 si amplifié) et bandeau « ★ Set … activé » ; trinkets amplifiés marqués « (effet ×2) » ; paquet de clopes (petit sprite ASCII en bas à droite, n/20, touches F fumer / G rouler, jauge Honoré) ; PV au-dessus du max en doré (Ross) ; transformation Googz affichée (journal + texte flottant) ; effets temporaires affichés avec leur durée restante (ligne au-dessus du terrain, liste complète dans l'inventaire) ; objets et cartes homonymes (Caïpirinha, Petit pétou) distingués à l'écran (« la carte … » / « l'objet … » dans le journal, couleur d'élément pour les cartes, de rareté pour les objets) ; écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
-Reste : carte de la run, shop, transitions d'écran.
+Fait aussi : carte de la run (écran Lanterna + mode texte), intents des adversaires, sprites animés et visionneuse `--sprites`.
+Reste : shop, événements, transitions d'écran.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.

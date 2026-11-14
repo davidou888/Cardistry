@@ -42,6 +42,15 @@ public interface Input extends PlayerDecisions {
         return new RewardChoice.Skip();
     }
 
+    /**
+     * Choix du prochain nœud de la carte : index dans {@code view.choices()}. Par défaut le premier.
+     *
+     * @throws cardistry.ui.QuitGameException si le joueur quitte
+     */
+    default int chooseNode(cardistry.run.map.MapView view) {
+        return 0;
+    }
+
     /** Attend avant de fermer le jeu, une fois l'écran de fin affiché. */
     default void waitForExit() {
     }

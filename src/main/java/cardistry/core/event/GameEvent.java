@@ -127,6 +127,18 @@ public sealed interface GameEvent {
     record CigarettesStolen(Enemy enemy, int amount) implements GameEvent {
     }
 
+    /** Nouveau niveau de la carte (1 à 3). */
+    record LevelStarted(int level) implements GameEvent {
+    }
+
+    /**
+     * Le joueur entre dans un nœud de la carte.
+     *
+     * @param kind nom affiché du type de nœud (« Combat », « Sieste »…)
+     */
+    record NodeEntered(int level, int floor, String kind) implements GameEvent {
+    }
+
     /** Les Choomies changent ; {@code delta} = gain (positif) ou perte. */
     record ChoomiesChanged(int choomies, int delta) implements GameEvent {
     }

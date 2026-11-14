@@ -17,6 +17,10 @@ public interface Renderer {
     /** Main du joueur et choix possibles. */
     void showHand(GameState state);
 
+    /** Carte du niveau, avant le choix du prochain nœud. */
+    default void showMap(cardistry.run.map.MapView view) {
+    }
+
     /**
      * Écran de fin (victoire ou défaite), une fois la partie terminée.
      *

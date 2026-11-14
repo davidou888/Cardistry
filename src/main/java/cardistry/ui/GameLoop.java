@@ -4,6 +4,7 @@ import cardistry.core.Action;
 import cardistry.core.ActionResult;
 import cardistry.run.Run;
 import cardistry.run.Secret;
+import cardistry.run.map.MapView;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -30,36 +31,52 @@ public final class GameLoop {
             renderer.showIntro(run.state());
         }
         while (!run.isOver()) {
-            boolean playerActs = run.startTurn();
-            if (run.isOver()) {
-                break;
-            }
-            if (!playerActs) {
-                // Tour sauté (ou adversaire tué en début de tour) : rien à choisir.
-                renderer.showStatus(run.state());
-                resolveRewards(run, input);
-                continue;
-            }
-            renderer.showStatus(run.state());
-            input.waitForContinue();
-            renderer.showHand(run.state());
-            // Action refusée ou gratuite (objet, Ctrl+Z) : on redemande jusqu'à la fin du tour.
-            while (true) {
-                Action action = input.nextAction(run.state());
-                ActionResult result = run.submit(action);
-                if (result == ActionResult.TURN_ENDED || run.isOver()) {
-                    break;
-                }
-                if (action instanceof Action.Undo && result == ActionResult.FREE_ACTION) {
-                    // Retour au début du tour précédent : on réaffiche tout.
-                    renderer.showStatus(run.state());
-                    renderer.showHand(run.state());
+            switch (run.phase()) {
+                case MAP -> chooseNode(run, renderer, input);
+                case COMBAT -> playTurn(run, renderer, input);
+                case REWARD -> resolveRewards(run, input);
+                case OVER -> {
                 }
             }
-            resolveRewards(run, input);
         }
         renderer.showGameOver(run.state(), unlockedThisRun.get().stream().map(Secret::displayName).toList());
         input.waitForExit();
+    }
+
+    private static void chooseNode(Run run, Renderer renderer, Input input) {
+        MapView view = new MapView(run.state(), run.map().orElseThrow(), run.visited(), run.position(), run.choices());
+        renderer.showMap(view);
+        int index = input.chooseNode(view);
+        if (index >= 0 && index < view.choices().size()) {
+            run.chooseNode(index);
+        }
+    }
+
+    private static void playTurn(Run run, Renderer renderer, Input input) {
+        boolean playerActs = run.startTurn();
+        if (run.isOver()) {
+            return;
+        }
+        renderer.showStatus(run.state());
+        if (!playerActs) {
+            // Tour sauté (ou adversaire tué en début de tour) : rien à choisir.
+            return;
+        }
+        input.waitForContinue();
+        renderer.showHand(run.state());
+        // Action refusée ou gratuite (objet, Ctrl+Z) : on redemande jusqu'à la fin du tour.
+        while (true) {
+            Action action = input.nextAction(run.state());
+            ActionResult result = run.submit(action);
+            if (result == ActionResult.TURN_ENDED || run.isOver()) {
+                break;
+            }
+            if (action instanceof Action.Undo && result == ActionResult.FREE_ACTION) {
+                // Retour au début du tour précédent : on réaffiche tout.
+                renderer.showStatus(run.state());
+                renderer.showHand(run.state());
+            }
+        }
     }
 
     private static void resolveRewards(Run run, Input input) {

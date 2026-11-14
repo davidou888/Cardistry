@@ -105,6 +105,17 @@ public final class ConsoleInput implements Input {
         }
     }
 
+    /** 1..n : nœud de la carte (la liste est affichée par le rendu de la carte). */
+    @Override
+    public int chooseNode(cardistry.run.map.MapView view) {
+        if (view.choices().size() == 1) {
+            console.println("(Appuie sur Entrée pour y aller)");
+            console.readLine();
+            return 0;
+        }
+        return readNumber("Où vas-tu ? ", 1, view.choices().size()) - 1;
+    }
+
     private boolean metaPhraseShown = false;
 
     @Override

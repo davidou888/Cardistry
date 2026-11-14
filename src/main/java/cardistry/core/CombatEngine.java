@@ -102,6 +102,28 @@ public final class CombatEngine {
     }
 
     /**
+     * {@code true} tant que le combat en cours n'est pas terminé : adversaire vivant, ou mort mais
+     * pas encore traité (tué par un effet au début du combat : traité au prochain {@link #startTurn()}).
+     */
+    public boolean combatActive() {
+        return state.hasEnemy() && state.currentEnemy() != lastKilled && !isOver();
+    }
+
+    // --- Carte de la run ---
+
+    /** Nouveau niveau de la carte. */
+    public void startLevel(int level) {
+        state.setLocation(level, 0);
+        bus.publish(new GameEvent.LevelStarted(level));
+    }
+
+    /** Le joueur entre dans un nœud ({@code kind} : nom affiché de son type). */
+    public void enterNode(int floor, String kind) {
+        state.setLocation(state.level(), floor);
+        bus.publish(new GameEvent.NodeEntered(state.level(), floor, kind));
+    }
+
+    /**
      * Début de tour : les effets temporaires avancent d'un tour, puis le joueur joue ou saute son
      * tour (l'adversaire attaque alors directement).
      *
@@ -291,7 +313,8 @@ public final class CombatEngine {
         state.resetCombatTurn();
         state.setUndoUsedThisCombat(false);
         state.clearHand();
-        bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
+        bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(),
+                state.isOpenEnded() ? 0 : state.enemies().size()));
         for (Curse curse : state.activatePendingCurses()) {
             bus.publish(new GameEvent.CurseStarted(curse));
         }

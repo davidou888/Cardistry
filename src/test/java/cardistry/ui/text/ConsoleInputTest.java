@@ -55,4 +55,22 @@ class ConsoleInputTest {
         engine.equip(ItemRegistry.trinket(ItemRegistry.CTRL_Z));
         assertEquals(new Action.Undo(), input("z\n").nextAction(state));
     }
+
+    @Test
+    void carteEnModeTexte() {
+        cardistry.run.Run run = new cardistry.run.Run(4, java.util.Set.of(), new EventBus());
+        run.start();
+        cardistry.run.map.MapView view = new cardistry.run.map.MapView(run.state(), run.map().orElseThrow(),
+                run.visited(), run.position(), run.choices());
+        Console console = new Console(new ByteArrayInputStream("9\n2\n".getBytes(StandardCharsets.UTF_8)),
+                new PrintStream(out, true, StandardCharsets.UTF_8), true, false, false);
+        new TextRenderer(console).showMap(view);
+        assertEquals(1, new ConsoleInput(console).chooseNode(view));
+        String text = out.toString(StandardCharsets.UTF_8);
+        assertTrue(text.contains("Carte · Niveau 1/3"), text);
+        assertTrue(text.contains("[1] Étage 1 : Combat"));
+        assertTrue(text.contains("[2] Étage 1 : Combat"));
+        assertTrue(text.contains("B"));
+        assertTrue(text.contains("Entre un nombre entre 1 et"), "9 est refusé");
+    }
 }

@@ -109,7 +109,11 @@ class CombatEngineTest {
     private static GameState startedGame(long seed) {
         GameState game = GameState.newGame();
         assertTrue(game.hand().isEmpty());
-        new CombatEngine(game, new CardPool(), new Rng(seed), new EventBus()).start();
+        CombatEngine engine = new CombatEngine(game, new CardPool(), new Rng(seed), new EventBus());
+        engine.start();
+        assertFalse(game.hasEnemy()); // carte de la run : le combat est lancé par le nœud choisi
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1),
+                false);
         return game;
     }
 

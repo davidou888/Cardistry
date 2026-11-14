@@ -86,7 +86,7 @@ public final class EnemyRegistry {
         if (rng.nextDouble() < CLARENCE_CHANCE) {
             return CLARENCE;
         }
-        String previous = CHOOMAH_VARIANTS.contains(previousId) ? CHOOMAH : previousId;
+        String previous = previousId != null && CHOOMAH_VARIANTS.contains(previousId) ? CHOOMAH : previousId;
         List<String> choices = COMMONS.stream().filter(id -> !id.equals(previous)).toList();
         String id = rng.pick(choices);
         return id.equals(CHOOMAH) ? rng.pick(CHOOMAH_VARIANTS) : id;
@@ -94,7 +94,7 @@ public final class EnemyRegistry {
 
     /** Élite au hasard, différente de {@code previousId}. */
     public static String pickElite(Rng rng, String previousId) {
-        return rng.pick(ELITES.stream().filter(id -> !id.equals(previousId)).toList());
+        return rng.pick(ELITES.stream().filter(id -> !id.equals(previousId)).toList()); // previousId peut être null
     }
 
     // ===================== Contenu =====================

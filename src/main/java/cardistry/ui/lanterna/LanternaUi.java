@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -55,6 +55,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private boolean showMetaPhrase = false;
     private final List<Secret> titleCodes = new java.util.ArrayList<>();
     private List<String> unlockedSecrets = List.of();
+    private cardistry.run.map.MapView mapView;
+    private int mapSelected = 0;
 
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast, boolean ascii) throws IOException {
@@ -163,7 +165,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 animateEnemyDeath();
             }
             case GameEvent.CombatStarted e -> {
-                view.log("Combat " + e.number() + "/" + e.total() + " : " + e.enemy().name(), Palette.WARNING);
+                view.log((e.total() > 0 ? "Combat " + e.number() + "/" + e.total() : "Combat") + " : "
+                        + e.enemy().name(), Palette.WARNING);
                 if (e.number() > 1) {
                     animateEnemyArrival();
                 }
@@ -264,6 +267,16 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
             case GameEvent.IntentChosen e -> render();
+            case GameEvent.LevelStarted e -> {
+                view.log("— Niveau " + e.level() + " —", Palette.ACCENT);
+                view.toast = "Niveau " + e.level() + "/3";
+            }
+            case GameEvent.NodeEntered e -> {
+                view.log("Étage " + e.floor() + " : " + e.kind(), Palette.INFO);
+                if (!e.kind().equals("Combat") && !e.kind().equals("Élite") && !e.kind().equals("Boss")) {
+                    view.toast = e.kind() + " : bientôt disponible";
+                }
+            }
             case GameEvent.EnemyMoveUsed e -> view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
             case GameEvent.EnemyDodged e -> {
                 view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
@@ -307,6 +320,48 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     @Override
     public void showHand(GameState state) {
         enterCombat(state);
+    }
+
+    @Override
+    public void showMap(cardistry.run.map.MapView view) {
+        this.state = view.state();
+        this.mapView = view;
+        mapSelected = Math.min(mapSelected, Math.max(0, view.choices().size() - 1));
+        page = Page.MAP;
+        render();
+    }
+
+    @Override
+    public int chooseNode(cardistry.run.map.MapView view) {
+        showMap(view);
+        int count = view.choices().size();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft, ArrowUp -> mapSelected = Math.floorMod(mapSelected - 1, count);
+                case ArrowRight, ArrowDown -> mapSelected = Math.floorMod(mapSelected + 1, count);
+                case Enter -> {
+                    int chosen = mapSelected;
+                    mapSelected = 0;
+                    return chosen;
+                }
+                case Escape -> confirmQuit();
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 'q') {
+                        confirmQuit();
+                    } else if (c == 'i') {
+                        showInventory();
+                    } else if (c >= '1' && c < '1' + count) {
+                        mapSelected = 0;
+                        return c - '1';
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
     }
 
     @Override
@@ -547,10 +602,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     private void showInventory() {
+        Page previous = page;
         page = Page.INVENTORY;
         render();
         readKey();
-        page = Page.COMBAT;
+        page = previous;
         render();
     }
 
@@ -813,6 +869,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
+                    case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
                                     : spriteFrame, spriteFlash, spriteHidden);

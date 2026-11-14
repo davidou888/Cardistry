@@ -243,8 +243,8 @@ class LanternaUiTest {
         bus.subscribe(ui::onEvent);
 
         press(KeyType.Enter); // titre
-        for (int i = 0; i < 200; i++) {
-            type("1ps"); // jouer la 1re carte, piocher, refuser les récompenses
+        for (int i = 0; i < 3000; i++) {
+            type("1ps"); // 1er nœud de la carte, jouer la 1re carte, piocher, refuser les récompenses
         }
 
         // Capture l'écran de combat au tour 3.
@@ -675,6 +675,7 @@ class LanternaUiTest {
         Run run = new Run(1, java.util.Set.of(), bus);
         run.addCode(cardistry.run.Secret.CTRL_Z);
         run.start();
+        run.chooseNode(0);
         run.startTurn();
         ui.showStatus(run.state());
         String available = dump("29-ctrl-z-disponible");
@@ -774,5 +775,41 @@ class LanternaUiTest {
         int col = text.lines().toList().get(row).indexOf("(O)") + 1;
         assertEquals(com.googlecode.lanterna.TextColor.ANSI.YELLOW_BRIGHT,
                 terminal.getCharacter(col, row).getForegroundColor());
+    }
+
+    // --- Carte ---
+
+    private static cardistry.run.map.MapView mapView() {
+        Run run = new Run(4, java.util.Set.of(), new EventBus());
+        run.start();
+        return new cardistry.run.map.MapView(run.state(), run.map().orElseThrow(), run.visited(), run.position(),
+                run.choices());
+    }
+
+    @Test
+    void ecranDeLaCarte() throws IOException {
+        open(80, 24);
+        cardistry.run.map.MapView view = mapView();
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        int chosen = assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseNode(view));
+        assertEquals(1 % view.choices().size(), chosen);
+        ui.showMap(view);
+        String text = dump("50-carte");
+        assertTrue(text.contains("Carte · Niveau 1/3"), text);
+        assertTrue(text.contains("Étage 0/8"));
+        assertTrue(text.contains("Légende"));
+        assertTrue(text.contains("[C]"), "nœud sélectionné");
+        assertTrue(text.contains("B"), "boss");
+        assertTrue(text.contains("15 Choomies"));
+        assertTrue(text.contains("→ Étage 1 : Combat"));
+    }
+
+    @Test
+    void carteChiffreDirect() throws IOException {
+        open(80, 24);
+        cardistry.run.map.MapView view = mapView();
+        type("2");
+        assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseNode(view)));
     }
 }

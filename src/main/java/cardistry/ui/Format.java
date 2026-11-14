@@ -60,4 +60,20 @@ public final class Format {
         }
         return lines;
     }
+
+    /**
+     * Où en est la partie : « Niveau 2 · Étage 5/8 · Élite » sur la carte, « Combat 2/3 » avec des
+     * adversaires fixés.
+     */
+    public static String location(cardistry.core.GameState state) {
+        String rank = !state.hasEnemy() ? "" : switch (state.currentEnemy().rank()) {
+            case COMMON -> "";
+            case ELITE -> " · Élite";
+            case BOSS -> " · Boss";
+        };
+        if (state.isOpenEnded()) {
+            return "Niveau " + state.level() + " · Étage " + state.floor() + "/" + cardistry.run.map.RunMap.FLOORS + rank;
+        }
+        return "Combat " + state.combatNumber() + "/" + state.enemies().size() + rank;
+    }
 }

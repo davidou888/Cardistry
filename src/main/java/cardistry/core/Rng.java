@@ -27,6 +27,19 @@ public final class Rng {
         return seed;
     }
 
+    /**
+     * Sous-flux nommé, dérivé de la seed seulement (pas de l'état actuel) : même seed + même nom =
+     * même suite de tirages, quoi qu'on ait tiré ailleurs (ex. la carte d'un niveau ne dépend pas des
+     * rerolls du shop).
+     */
+    public Rng fork(String name) {
+        long mixed = seed * 0x9E3779B97F4A7C15L + name.hashCode();
+        mixed ^= mixed >>> 31;
+        mixed *= 0xBF58476D1CE4E5B9L;
+        mixed ^= mixed >>> 27;
+        return new Rng(mixed);
+    }
+
     /** Entier dans [0, bound). */
     public int nextInt(int bound) {
         return random.nextInt(bound);

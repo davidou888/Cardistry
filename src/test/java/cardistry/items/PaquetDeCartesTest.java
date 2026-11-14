@@ -135,6 +135,8 @@ class PaquetDeCartesTest {
         });
         engine.equip(ItemRegistry.trinket("paquet-de-cartes"));
         engine.start();
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1),
+                false);
         assertEquals(GameState.STARTING_HAND, state.hand().size());
         assertTrue(offers.isEmpty());
     }

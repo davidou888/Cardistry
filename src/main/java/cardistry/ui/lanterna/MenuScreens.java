@@ -97,7 +97,9 @@ final class MenuScreens {
                 Palette.TEXT, false);
         long defeated = state.enemies().stream().filter(e -> !e.isAlive()).count();
         p.centered(top + 4, "Tours joués : " + state.turn(), Palette.TEXT, false);
-        p.centered(top + 5, "Adversaires vaincus : " + defeated + "/" + state.enemies().size(), Palette.TEXT, false);
+        p.centered(top + 5, state.isOpenEnded()
+                ? "Adversaires vaincus : " + defeated + " · atteint : niveau " + state.level() + ", étage " + state.floor()
+                : "Adversaires vaincus : " + defeated + "/" + state.enemies().size(), Palette.TEXT, false);
         p.centered(top + 6, "PV restants : " + num(Math.max(0, state.player().hp())) + "/" + num(state.maxHp()),
                 Palette.TEXT, false);
         int row = top + 8;
