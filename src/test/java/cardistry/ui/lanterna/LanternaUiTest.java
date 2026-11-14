@@ -17,6 +17,7 @@ import cardistry.core.stats.Stats;
 import cardistry.items.Collectible;
 import cardistry.items.Item;
 import cardistry.items.ItemRegistry;
+import cardistry.items.Rarity;
 import cardistry.items.Trinket;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
@@ -999,21 +1000,24 @@ class LanternaUiTest {
     void imageDeLAdversaireALaPlaceDuSpriteAscii() throws IOException {
         openWithImages(80, 24);
         ui.showStatus(combat(List.of(), withImage()));
-        List<cardistry.ui.window.ImageLayer.Placement> placed = layer.snapshot();
-        assertEquals(1, placed.size());
-        cardistry.ui.window.ImageLayer.Placement image = placed.get(0);
-        assertEquals("enemies/test-image.idle.1.png", image.path());
-        assertEquals(80 - 30 - 2, image.col());
-        assertEquals(30, image.cols());
-        assertEquals(10, image.rows());
+        cardistry.ui.window.ImageLayer.Placement image = placed("enemies/test-image.idle.1.png");
+        CombatWindowScreen.Layout l = CombatWindowScreen.Layout.of(80, 24);
+        assertEquals(80 - 3 - 14, image.col(), "à droite");
+        assertEquals(14, image.cols());
+        assertEquals(7, image.rows());
+        assertEquals(l.spriteTop(), image.row());
         assertFalse(screen().contains("? ?"), "pas de sprite ASCII (inconnu) dessous");
+        cardistry.ui.window.ImageLayer.Placement player = placed(CombatWindowScreen.PLAYER_IMAGE);
+        assertEquals(3, player.col(), "le joueur à gauche, en face");
+        assertEquals(image.row(), player.row());
+        assertEquals(image.cols(), player.cols());
     }
 
     @Test
     void sansImageLeSpriteAscii() throws IOException {
         openWithImages(80, 24);
         ui.showStatus(combat(List.of(), hydra())); // pas d'image pour cet adversaire
-        assertTrue(layer.snapshot().isEmpty());
+        assertTrue(layer.snapshot().stream().noneMatch(p -> p.path().startsWith("enemies/")));
         assertTrue(screen().contains("? ?"), "sprite inconnu.txt");
     }
 
@@ -1061,6 +1065,158 @@ class LanternaUiTest {
                 && s.alpha() < 0.3f).count();
         assertEquals(map.nodes().size() - reachable.size(), faded);
         assertTrue(faded > 0, "les autres départs ne sont plus atteignables");
+    }
+
+    private cardistry.ui.window.ImageLayer.Placement placed(String path) {
+        return layer.snapshot().stream().filter(p -> p.path().equals(path)).findFirst()
+                .orElseThrow(() -> new AssertionError("image absente : " + path + " dans " + layer.snapshot()));
+    }
+
+    private static java.awt.Color rgb(com.googlecode.lanterna.TextColor color) {
+        return cardistry.ui.window.CellPalette.foreground(color);
+    }
+
+    // --- Combat dans la fenêtre ---
+
+    @Test
+    void combatFenetreTientEn80x24() {
+        CombatWindowScreen.Layout l = CombatWindowScreen.Layout.of(80, 24);
+        assertEquals(6, l.cardHeight());
+        assertEquals(11, l.separator());
+        assertEquals(7, l.spriteRows());
+        assertEquals(22, l.lastActionRow());
+        assertEquals(l.lastActionRow() - 1, l.barRow() + 1, "barre sur 2 lignes, puis la dernière action");
+        assertTrue(l.infoWidth() >= 18, "PV et états à côté du sprite");
+        assertTrue(l.playerCol() + l.spriteCols() + 2 + l.infoWidth() <= l.enemyCol() - 2 - l.infoWidth(),
+                "les deux blocs d'état ne se touchent pas");
+        CombatWindowScreen.Layout big = CombatWindowScreen.Layout.of(100, 32);
+        assertEquals(8, big.cardHeight());
+        assertTrue(big.spriteRows() > l.spriteRows(), "le sprite profite de la place");
+        assertTrue(big.playerCol() + big.spriteCols() + 2 + big.infoWidth() <= big.enemyCol() - 2 - big.infoWidth());
+    }
+
+    @Test
+    void combatFenetreJoueurAGaucheAdversaireADroite() throws IOException {
+        openWithImages(80, 24);
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15),
+                new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE)), withImage());
+        ui.showStatus(state);
+        String text = dump("84-fenetre-combat-texte");
+        List<String> lines = text.lines().toList();
+        String info = lines.stream().filter(line -> line.contains("TOI")).findFirst().orElseThrow();
+        assertTrue(info.indexOf("TOI") < 40 && info.indexOf("IMAGÉ") > 40, info);
+        assertTrue(text.contains("100/100") && text.contains("20/20"), text);
+        assertTrue(text.contains("■ feu"));
+        assertTrue(text.contains("Terrain : EPFL (feu)"));
+        assertFalse(text.contains("Journal ─"), "journal fermé par défaut");
+        assertTrue(text.contains("J journal"));
+        assertTrue(lines.get(2).contains(cardistry.ui.IntentText.intent(state, state.currentEnemy())),
+                "intent au-dessus de l'adversaire");
+        assertEquals("ui/intent-attack.png", CombatWindowScreen.intentIcon(state.currentEnemy()));
+        assertEquals(2, placed("ui/intent-attack.png").row());
+    }
+
+    @Test
+    void cartesIllustreesAvecIconeDeTypeEtCouleurDElement() throws IOException {
+        openWithImages(80, 24);
+        ui.showStatus(combat(List.of(new SpellCard("Tsunami", Element.WATER, 15),
+                new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE),
+                new cardistry.model.card.DeadCard()), hydra()));
+        List<cardistry.ui.window.ImageLayer.Placement> images = layer.snapshot();
+        for (String type : List.of("spell", "heal", "terrain", "dead")) {
+            List<cardistry.ui.window.ImageLayer.Placement> ofType = images.stream()
+                    .filter(p -> p.path().equals("ui/type-" + type + ".png")).toList();
+            assertEquals(2, ofType.size(), type + " : illustration générique + icône de type");
+            assertEquals(1, ofType.stream().filter(p -> p.tint() == null && p.rows() == 1).count());
+        }
+        // Sans images/cards/<id>.png : l'icône de type en grand, à la couleur de l'élément.
+        assertEquals(rgb(Palette.element(Element.WATER)), images.stream()
+                .filter(p -> p.path().equals("ui/type-spell.png") && p.rows() == 2).findFirst().orElseThrow().tint());
+        assertEquals(rgb(Palette.element(Element.NATURE)), images.stream()
+                .filter(p -> p.path().equals("ui/type-heal.png") && p.rows() == 2).findFirst().orElseThrow().tint());
+        String text = screen();
+        assertTrue(text.contains("Tsunami") && text.contains("15") && text.contains("+10"), text);
+        assertEquals("", CombatWindowScreen.value(new TerrainCard("Forêt", Element.NATURE)));
+        assertEquals("ui/type-dead.png", CombatWindowScreen.typeIcon(new cardistry.model.card.DeadCard()));
+    }
+
+    @Test
+    void barreDIconesAuxCouleursDeRarete() throws IOException {
+        openWithImages(100, 32);
+        Trinket rare = ItemRegistry.trinkets().stream().filter(t -> t.rarity() == Rarity.RARE).findFirst().orElseThrow();
+        Trinket legendary = ItemRegistry.trinkets().stream().filter(t -> t.rarity() == Rarity.LEGENDARY).findFirst()
+                .orElseThrow();
+        GameState state = withInventory(List.of(mate()), List.of(rare, legendary));
+        ui.showStatus(state);
+        List<cardistry.ui.window.ImageLayer.Mark> marks = layer.marks();
+        java.util.Set<java.awt.Color> frames = new java.util.HashSet<>();
+        for (cardistry.ui.window.ImageLayer.Mark mark : marks) {
+            if (mark instanceof cardistry.ui.window.ImageLayer.Fill fill) {
+                frames.add(fill.color());
+            }
+        }
+        assertTrue(frames.contains(rgb(Palette.rarity(mate().rarity()))), "cadre de l'objet");
+        assertTrue(frames.contains(rgb(Palette.rarity(Rarity.RARE))), "cadre rare");
+        assertTrue(frames.contains(rgb(Palette.rarity(Rarity.LEGENDARY))), "cadre légendaire");
+        List<String> icons = marks.stream().filter(m -> m instanceof cardistry.ui.window.ImageLayer.Stamp)
+                .map(m -> ((cardistry.ui.window.ImageLayer.Stamp) m).path()).toList();
+        assertEquals(List.of("items/mate.png", "ui/trinket.png", "ui/trinket.png"), icons,
+                "icône de l'objet, placeholder pour les trinkets sans image");
+        String text = screen();
+        assertTrue(text.contains("Maté") && text.contains("[W]"), text);
+        assertFalse(text.contains(rare.name()), "trinkets en icônes seules");
+        assertTrue(text.contains("5/20 clopes") && text.contains("F fumer · G rouler"));
+        assertEquals("ui/pack.png", placed("ui/pack.png").path());
+    }
+
+    @Test
+    void couleursDeRarete() {
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.WHITE_BRIGHT, Palette.rarity(Rarity.COMMON));
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.GREEN_BRIGHT, Palette.rarity(Rarity.UNCOMMON));
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.BLUE_BRIGHT, Palette.rarity(Rarity.RARE));
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.YELLOW_BRIGHT, Palette.rarity(Rarity.LEGENDARY));
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.MAGENTA_BRIGHT, Palette.rarity(Rarity.SECRET));
+    }
+
+    @Test
+    void jaugeDeTrinketACoteDesClopes() {
+        cardistry.items.Gauge gauge = new cardistry.items.Gauge("Honoré", 5);
+        gauge.add(3);
+        assertEquals("Honoré [###..]", CombatWindowScreen.gaugeText(gauge));
+    }
+
+    @Test
+    void journalFermePuisOuvertAvecJ() throws IOException {
+        openWithImages(80, 24);
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15)), withImage());
+        ui.onEvent(new GameEvent.TurnStarted(1));
+        ui.onEvent(new GameEvent.CardPlayed(state.hand().get(0)));
+        type("j");
+        type("p");
+        assertEquals(new Action.DrawCard(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        String open = dump("85-fenetre-journal");
+        assertTrue(open.contains("Journal") && open.contains("J fermer"), open);
+        assertTrue(open.contains("— Tour 1 —"), "tout le journal, pas seulement la dernière ligne");
+        assertTrue(layer.snapshot().stream().noneMatch(p -> p.path().startsWith("enemies/")
+                || p.path().startsWith("player/")), "aucune image sous le panneau");
+        type("j");
+        type("p");
+        assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state));
+        String closed = screen();
+        assertFalse(closed.contains("— Tour 1 —"));
+        assertTrue(closed.contains("› Tu joues la carte Tsunami"), "dernière action sur une ligne : " + closed);
+        assertTrue(closed.contains("J journal"));
+        assertEquals("enemies/test-image.idle.1.png", placed("enemies/test-image.idle.1.png").path());
+    }
+
+    @Test
+    void journalToucheJSansEffetEnTerminal() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15)), hydra());
+        type("j");
+        type("p");
+        assertEquals(new Action.DrawCard(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        assertTrue(screen().contains("Journal"), "le terminal garde son journal toujours visible");
     }
 
     /** Dessine avec un Painter muni d'un calque, et renvoie les images posées. */

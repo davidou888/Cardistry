@@ -21,6 +21,10 @@ final class ViewState {
     /** Bandeau de notification (palier de set…), affiché jusqu'au tour suivant ; null si aucun. */
     String toast;
     final List<LogLine> log = new ArrayList<>();
+    /** Journal ouvert en panneau (fenêtre, touche J) ; fermé par défaut. */
+    boolean journalOpen = false;
+    /** Lignes remontées dans le journal ouvert (0 = les plus récentes). */
+    int journalScroll = 0;
 
     // --- Effets d'animation (remis à zéro après chaque animation) ---
     Double enemyHpShown;

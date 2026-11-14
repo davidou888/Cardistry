@@ -41,8 +41,8 @@ class WindowScreenshotTest {
         ui.onEvent(new GameEvent.GameStarted(4));
         ui.showStatus(state);
         GridRenderer renderer = new GridRenderer(new CellFonts(2));
-        save(renderer.render(terminal, layer.snapshot(), false), "80-fenetre-combat");
-        save(renderer.render(terminal, layer.snapshot(), true), "81-fenetre-combat-crt");
+        save(renderer.render(terminal, layer.snapshot(), layer.marks(), false), "80-fenetre-combat");
+        save(renderer.render(terminal, layer.snapshot(), layer.marks(), true), "81-fenetre-combat-crt");
         ui.close();
         assertTrue(Files.exists(Path.of("build/screens/80-fenetre-combat.png")));
     }
@@ -59,6 +59,38 @@ class WindowScreenshotTest {
         ImageLayer.Frame frame = layer.frame();
         save(new GridRenderer(new CellFonts(2)).render(terminal, frame.images(), frame.marks(), false), name);
         ui.close();
+    }
+
+    private static void combatScreenshot(int cols, int rows, String name, boolean journal) throws IOException {
+        DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(cols, rows));
+        ImageLayer layer = new ImageLayer();
+        LanternaUi ui = new LanternaUi(terminal, true, false, layer);
+        GameState state = GameState.newGame();
+        EventBus bus = new EventBus();
+        bus.subscribe(ui::onEvent);
+        CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(4), bus);
+        engine.start();
+        engine.give(cardistry.items.ItemRegistry.items().get(0));
+        engine.give(cardistry.items.ItemRegistry.items().get(3));
+        cardistry.items.ItemRegistry.trinkets().stream().limit(3).forEach(engine::equip);
+        engine.startCombat(EnemyRegistry.create(EnemyRegistry.CADDIE, 1), false);
+        ui.onEvent(new GameEvent.GameStarted(4));
+        if (journal) {
+            terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('j', false, false));
+        }
+        terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('p', false, false));
+        ui.nextAction(state);
+        ImageLayer.Frame frame = layer.frame();
+        save(new GridRenderer(new CellFonts(2)).render(terminal, frame.images(), frame.marks(), false), name);
+        ui.close();
+    }
+
+    @Test
+    void combatRefonduDansLaFenetre() throws IOException {
+        combatScreenshot(100, 32, "86-fenetre-combat-100x32", false);
+        combatScreenshot(80, 24, "87-fenetre-combat-80x24", false);
+        combatScreenshot(100, 32, "88-fenetre-combat-journal", true);
+        assertTrue(Files.exists(Path.of("build/screens/88-fenetre-combat-journal.png")));
     }
 
     @Test

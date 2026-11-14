@@ -179,6 +179,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 animateEnemyDeath();
             }
             case GameEvent.CombatStarted e -> {
+                view.journalOpen = false;
+                view.journalScroll = 0;
                 view.log((e.total() > 0 ? "Combat " + e.number() + "/" + e.total() : "Combat") + " : "
                         + e.enemy().name(), Palette.WARNING);
                 if (e.number() > 1) {
@@ -763,6 +765,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             if (isCtrl(key, 'z')) {
                 return new Action.Undo();
             }
+            if (journalKey(key)) {
+                render();
+                continue;
+            }
             switch (key.getKeyType()) {
                 case ArrowLeft -> moveSelection(-1, handSize);
                 case ArrowRight -> moveSelection(1, handSize);
@@ -803,6 +809,37 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }
             }
         }
+    }
+
+    /**
+     * Journal du combat (fenêtre seulement) : J l'ouvre et le ferme ; ouvert, ↑/↓ le font défiler et
+     * Échap le ferme.
+     *
+     * @return {@code true} si la touche a été consommée
+     */
+    private boolean journalKey(KeyStroke key) {
+        if (images == null) {
+            return false;
+        }
+        if (isChar(key, 'j') && !key.isCtrlDown()) {
+            view.journalOpen = !view.journalOpen;
+            view.journalScroll = 0;
+            return true;
+        }
+        if (!view.journalOpen) {
+            return false;
+        }
+        int capacity = CombatWindowScreen.journalCapacity(screen.getTerminalSize().getRows());
+        int maxScroll = Math.max(0, view.log.size() - capacity);
+        switch (key.getKeyType()) {
+            case Escape -> view.journalOpen = false;
+            case ArrowUp -> view.journalScroll = Math.min(maxScroll, view.journalScroll + 1);
+            case ArrowDown -> view.journalScroll = Math.max(0, view.journalScroll - 1);
+            default -> {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -1300,7 +1337,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case TITLE -> MenuScreens.title(painter, seed, titleCodes, titleSelected);
                     case RULES -> MenuScreens.rules(painter, state);
                     case COMBAT -> {
-                        if (state != null) {
+                        if (state != null && images != null) {
+                            CombatWindowScreen.draw(painter, state, view, seed);
+                        } else if (state != null) {
                             CombatScreen.draw(painter, state, view, seed);
                         }
                     }

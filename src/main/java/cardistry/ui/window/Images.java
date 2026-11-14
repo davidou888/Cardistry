@@ -14,6 +14,9 @@ import javax.imageio.ImageIO;
  *   <li>{@code images/enemies/<sprite>.png} : un adversaire ; {@code <sprite>.<animation>.<n>.png} :
  *       la frame n (à partir de 1) d'une animation (idle, attack, hurt, death) ;</li>
  *   <li>{@code images/items/<id>.png} : l'icône d'un objet ou d'un trinket ;</li>
+ *   <li>{@code images/cards/<id>.png} : l'illustration d'une carte ;</li>
+ *   <li>{@code images/ui/} : icônes de type de carte, d'intent, placeholders ; {@code images/player/} :
+ *       le joueur ;</li>
  *   <li>{@code images/map/<type>.png} : l'icône d'un nœud de la carte (combat, elite, boss, shop,
  *       rest, event).</li>
  * </ul>
@@ -52,6 +55,12 @@ public final class Images {
     /** Chemin de l'icône d'un objet ou trinket, si elle existe. */
     public static Optional<String> item(String id) {
         String path = "items/" + id + ".png";
+        return get(path).isPresent() ? Optional.of(path) : Optional.empty();
+    }
+
+    /** Chemin de l'illustration d'une carte ({@code cards/<id>.png}, id = nom sans accents), si elle existe. */
+    public static Optional<String> card(String id) {
+        String path = "cards/" + id + ".png";
         return get(path).isPresent() ? Optional.of(path) : Optional.empty();
     }
 

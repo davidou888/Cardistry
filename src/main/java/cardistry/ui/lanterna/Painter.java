@@ -113,6 +113,11 @@ final class Painter {
     }
 
     void text(int col, int row, String text, TextColor color, boolean bold) {
+        text(col, row, text, color, bold, TextColor.ANSI.DEFAULT);
+    }
+
+    /** @param background couleur de fond des cellules (intérieur d'une carte, d'un panneau) */
+    void text(int col, int row, String text, TextColor color, boolean bold, TextColor background) {
         if (row < 0 || row >= rows() || col >= cols() || text.isEmpty()) {
             return;
         }
@@ -130,7 +135,7 @@ final class Painter {
             text = cardistry.ui.Glyphs.toAscii(text);
         }
         g.setForegroundColor(color);
-        g.setBackgroundColor(TextColor.ANSI.DEFAULT);
+        g.setBackgroundColor(background);
         if (bold) {
             g.putString(col, row, text, SGR.BOLD);
         } else {

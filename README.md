@@ -177,11 +177,18 @@ Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou 
 - Adversaire : `src/main/resources/images/enemies/<id>.png` (même `id` que le sprite ASCII). Frames
   d'animation : `<id>.<animation>.<n>.png`, `n` à partir de 1, animations `idle`, `attack`, `hurt`,
   `death` (ex. `came.idle.1.png`, `came.idle.2.png`, `came.attack.1.png`). Une frame absente → `<id>.png`.
-- L'image est centrée dans la zone du sprite (30×10 cellules, soit 210×140 pixels à la taille 1),
-  agrandie d'un facteur **entier** sans lissage : dessiner en pixel art à petite taille (ex. 70×35).
+- L'image est centrée dans la zone du sprite (carrée : 14×7 cellules en 80×24, 24×12 en 100×32),
+  agrandie d'un facteur **entier** sans lissage : dessiner en pixel art, 64×64 px conseillé.
   Les dégâts la font clignoter en blanc ; la mort l'estompe.
-- Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône de 2×1 cellules, ex. 14×14 px),
-  affichée dans l'inventaire, les récompenses et le shop.
+- Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône 16×16 px),
+  affichée en combat, dans l'inventaire, les récompenses et le shop.
+- Combat (fenêtre) : joueur à gauche (`images/player/player.png`, placeholder), adversaire à droite,
+  intent avec icône au-dessus de lui ; la main en cartes illustrées (`images/cards/<id>.png`, 24×24 px,
+  `id` = nom sans accents ni espaces ; sans image, l'icône de type à la couleur de l'élément) avec une
+  icône de type (`images/ui/type-*.png`, 8×8 px) et un cadre à la couleur de l'élément ; une barre
+  d'icônes pour les objets, les trinkets (cadre à la couleur de rareté) et les clopes. Le journal est
+  fermé : une ligne « dernière action », et **J** l'ouvre en panneau (↑/↓ défiler, J ou Échap fermer).
+  Un adversaire sans image garde son sprite ASCII ; `--terminal` et `--no-images` gardent l'ancien écran.
 - Carte du monde : `src/main/resources/images/map/<type>.png` (16×16 px ; `combat`, `elite`, `boss`,
   `shop`, `rest`, `event`). Dans la fenêtre, la carte va de gauche à droite : icônes, chemins en
   pointillés courbes tirés de la seed (même seed, même dessin), nœud actuel cerclé d'or, nœuds
