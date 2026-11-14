@@ -122,6 +122,30 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         }
     }
 
+    /**
+     * Prépare l'interface pour une nouvelle partie (après un abandon ou une fin de partie) : journal,
+     * notifications, sélections et animations de la partie précédente sont oubliés.
+     */
+    public void backToTitle() {
+        view.log.clear();
+        view.toast = null;
+        view.selected = 0;
+        view.confirmingQuit = false;
+        view.journalOpen = false;
+        view.journalScroll = 0;
+        view.resetEffects();
+        mapSelected = 0;
+        rewardSelected = 0;
+        replaceSelected = 0;
+        discardSelected = 0;
+        cardSelected = 0;
+        restSelected = 0;
+        shopSelected = 0;
+        unlockedSecrets = List.of();
+        state = null;
+        page = Page.TITLE;
+    }
+
     // ===================== Renderer =====================
 
     @Override
@@ -347,7 +371,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         while (true) {
             KeyStroke key = readKey();
             if (isQuit(key)) {
-                throw new QuitGameException();
+                throw new cardistry.ui.LeaveGameException();
             }
             if (key.getKeyType() == KeyType.Enter || isChar(key, ' ')) {
                 return;
@@ -1020,7 +1044,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     /** Entrées du menu pause. */
-    static final List<String> PAUSE_ENTRIES = List.of("Reprendre", "Options", "Quitter");
+    static final List<String> PAUSE_ENTRIES = List.of("Reprendre", "Options", "Quitter la partie");
 
     /**
      * Menu pause (Échap au niveau principal) : Reprendre, Options, Quitter (avec confirmation).
@@ -1114,7 +1138,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         KeyStroke key = readKey();
         view.confirmingQuit = false;
         if (isChar(key, 'o') || isChar(key, 'y') || isChar(key, 'q')) {
-            throw new QuitGameException();
+            throw new cardistry.ui.LeaveGameException(); // la partie s'arrête, pas l'application
         }
         render();
     }
@@ -1382,7 +1406,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 }
                 if (view.confirmingQuit) {
                     painter.text(1, size.getRows() - 1, "─".repeat(size.getColumns() - 2), Palette.FRAME);
-                    painter.text(2, size.getRows() - 1, " Quitter la partie ? [O]ui / [N]on ", Palette.WARNING, true);
+                    painter.text(2, size.getRows() - 1, " Quitter la partie et revenir au titre ? [O]ui / [N]on ", Palette.WARNING, true);
                 }
             }
             if (images != null) {

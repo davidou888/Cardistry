@@ -110,7 +110,7 @@ final class MenuScreens {
 
     static void gameOver(Painter p, GameState state, long seed, List<String> unlockedSecrets) {
         boolean won = state.isWon();
-        p.frame("Cardistry", "Seed " + seed, "Appuie sur une touche pour quitter");
+        p.frame("Cardistry", "Seed " + seed, "Appuie sur une touche pour revenir au titre");
         int top = Math.max(2, p.rows() / 2 - 5);
         String title = won ? "★  VICTOIRE  ★" : "—  DÉFAITE  —";
         p.centered(top, title, won ? Palette.ACCENT : Palette.DAMAGE, true);

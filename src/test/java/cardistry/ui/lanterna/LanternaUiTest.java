@@ -210,7 +210,9 @@ class LanternaUiTest {
         assertEquals(new Action.PlayCard(0), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
 
         type("qo");
-        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        // Abandonner la partie ramène au titre : ce n'est pas QuitGameException (quitter l'application).
+        assertThrows(cardistry.ui.LeaveGameException.class,
+                () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
     }
 
     @Test
@@ -1501,7 +1503,7 @@ class LanternaUiTest {
         press(KeyType.ArrowDown);
         press(KeyType.Enter); // Quitter
         type("o"); // confirmer
-        assertThrows(cardistry.ui.QuitGameException.class,
+        assertThrows(cardistry.ui.LeaveGameException.class,
                 () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
         assertEquals(7, settings.settings().music());
     }

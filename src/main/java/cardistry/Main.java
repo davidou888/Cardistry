@@ -97,13 +97,23 @@ public final class Main {
         if (options.contains("--reset-unlocks")) {
             System.out.println("Secrets débloqués effacés.");
         }
-        Game game = prepare(options, store);
         Sound sound = Sound.open(options, SettingsFile.inSaveDirectory());
-        game.bus().subscribe(sound.director()); // avant l'interface : le son part avec l'animation
+        // Une partie par passage à l'écran titre. Les suivantes n'effacent plus les déblocages.
+        List<String> replayOptions = options.stream().filter(o -> !o.equals("--reset-unlocks")).toList();
+        boolean[] first = {true};
+        java.util.function.Supplier<Game> games = () -> {
+            Game game = prepare(first[0] ? options : replayOptions, store);
+            first[0] = false;
+            game.bus().subscribe(sound.director()); // avant l'interface : le son part avec l'animation
+            return game;
+        };
         switch (mode) {
-            case TEXT -> runText(game, game.bus(), fast, textAscii, color, sound);
-            case TERMINAL -> runFullScreen(game, game.bus(), fast, textAscii, color, sound);
-            case WINDOW -> runWindow(game, game.bus(), display, sound);
+            case TEXT -> {
+                Game game = games.get();
+                runText(game, game.bus(), fast, textAscii, color, sound);
+            }
+            case TERMINAL -> runFullScreen(games, fast, textAscii, color, sound);
+            case WINDOW -> runWindow(games, display, sound);
         }
         sound.director().audio().close();
     }
@@ -186,20 +196,39 @@ public final class Main {
         GameLoop.run(game.run(), renderer, input, game.tracker()::unlockedThisRun, sound.director());
     }
 
-    private static void runFullScreen(Game game, EventBus bus, boolean fast, boolean ascii, boolean color, Sound sound) {
+    /**
+     * Enchaîne les parties dans le plein écran ou la fenêtre : une partie abandonnée
+     * ({@link cardistry.ui.LeaveGameException}) ou terminée ramène à l'écran titre, avec une nouvelle
+     * partie. Ne se termine que par une {@link QuitGameException} (« Quitter » du titre, fenêtre fermée).
+     */
+    static void sessions(java.util.function.Supplier<Game> games, LanternaUi ui, Sound sound) {
+        ui.setSounds(sound.director()::ui);
+        ui.setOptions(sound.settings());
+        while (true) {
+            Game game = games.get();
+            game.bus().subscribe(ui::onEvent);
+            try {
+                play(game, ui, ui, sound);
+            } catch (cardistry.ui.LeaveGameException e) {
+                // Partie abandonnée : retour au titre.
+            }
+            ui.backToTitle();
+        }
+    }
+
+    private static void runFullScreen(java.util.function.Supplier<Game> games, boolean fast, boolean ascii,
+            boolean color, Sound sound) {
         LanternaUi ui;
         try {
             ui = LanternaUi.open(fast, ascii);
         } catch (IOException e) {
             System.err.println("Impossible d'ouvrir le plein écran (" + e.getMessage() + ") : mode texte.");
-            runText(game, bus, fast, ascii, color, sound);
+            Game game = games.get();
+            runText(game, game.bus(), fast, ascii, color, sound);
             return;
         }
         try (ui) {
-            bus.subscribe(ui::onEvent);
-            ui.setSounds(sound.director()::ui);
-            ui.setOptions(sound.settings());
-            play(game, ui, ui, sound);
+            sessions(games, ui, sound);
         } catch (QuitGameException e) {
             // Le joueur a quitté : l'écran est restauré par close().
         } catch (IOException e) {
@@ -208,12 +237,9 @@ public final class Main {
     }
 
     /** Fenêtre du jeu (police embarquée : Unicode toujours disponible) ; quitte la JVM à la fin. */
-    private static void runWindow(Game game, EventBus bus, Display d, Sound sound) {
+    private static void runWindow(java.util.function.Supplier<Game> games, Display d, Sound sound) {
         try (LanternaUi ui = LanternaUi.openWindow(d.fast(), d.asciiRequested(), d.crt(), d.images())) {
-            bus.subscribe(ui::onEvent);
-            ui.setSounds(sound.director()::ui);
-            ui.setOptions(sound.settings());
-            play(game, ui, ui, sound);
+            sessions(games, ui, sound);
         } catch (QuitGameException e) {
             // Le joueur a quitté.
         } catch (IOException e) {
@@ -238,7 +264,7 @@ public final class Main {
             ConsoleInput input = new ConsoleInput(console);
             input.setOptions(sound.settings());
             play(game, renderer, input, sound);
-        } catch (QuitGameException e) {
+        } catch (QuitGameException | cardistry.ui.LeaveGameException e) {
             console.println();
             console.println("Partie interrompue.");
         }

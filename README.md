@@ -73,9 +73,12 @@ icônes, carte (voir « Interface de la fenêtre »).
 ### Menus
 
 - Écran titre : **Jouer**, **Règles**, **Options**, **Quitter** (↑/↓ ou ←/→, Entrée ; R et Q en raccourci).
-- En jeu, **Échap** ouvre le menu **pause** (Reprendre, Options, Quitter) sur la carte, en combat, à la
+- En jeu, **Échap** ouvre le menu **pause** (Reprendre, Options, Quitter la partie) sur la carte, en combat, à la
   Sieste, dans un événement et sur les écrans de récompense. Dans un sous-écran (remplacer un objet,
   faire le tri, inventaire…), Échap annule d'abord ; au shop, P fait partir.
+- **Quitter la partie** (menu pause, ou Q puis O) ramène à l'**écran titre**, prêt pour une nouvelle
+  partie ; la fin d'une partie aussi. Seul « Quitter » de l'écran titre (ou fermer la fenêtre) ferme le jeu.
+  En mode texte (`--no-ui`), la fin de la partie termine le programme.
 - **Options** : volume de la musique et des effets (0 à 10, ←/→, appliqué tout de suite) et son coupé.
   Sauvegardé dans `settings.txt`, à côté des déblocages. En mode texte : taper `options` à l'écran titre.
 
