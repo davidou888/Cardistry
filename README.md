@@ -274,8 +274,10 @@ Le son passe par une seule sortie audio (44,1 kHz stéréo) : il marche dans la 
 en `--no-ui`, sous Linux (PipeWire, PulseAudio), macOS et Windows. Sans carte son, le jeu tourne
 simplement en silence. Les tests ne jouent jamais de son.
 
-**Les sons actuels sont des placeholders générés** (bips et petites boucles chiptune) :
-`tools/generate-sounds.sh` les recrée (Java + ffmpeg avec libvorbis).
+Les effets et les musiques sont ceux choisis par Louis (WAV et OGG stéréo 44,1 kHz). Seule la musique de
+victoire (`music/victory.ogg`) est encore un placeholder généré ; `tools/generate-sounds.sh` recrée les
+placeholders (bips et petites boucles chiptune ; Java + ffmpeg avec libvorbis) et **écraserait les vrais
+sons** : ne plus le lancer sans sauvegarde.
 
 ### Ajouter ou remplacer un son
 

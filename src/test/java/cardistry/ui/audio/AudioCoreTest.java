@@ -88,8 +88,20 @@ class AudioCoreTest {
     // --- Décodage ---
 
     @Test
-    void wavMono22kEnStereo44k() {
-        Pcm pcm = Pcm.load("sfx/ui-cursor.wav").orElseThrow(); // 22,05 kHz mono, 25 ms
+    void wavMono22kEnStereo44k() throws Exception {
+        // WAV fabriqué ici (22,05 kHz mono, 25 ms) : le test ne dépend pas des sons du jeu.
+        int frames = 22_050 * 25 / 1000;
+        byte[] data = new byte[frames * 2];
+        for (int i = 0; i < frames; i++) {
+            short sample = (short) (Math.sin(i * 0.3) * 12_000);
+            data[i * 2] = (byte) sample;
+            data[i * 2 + 1] = (byte) (sample >> 8);
+        }
+        java.io.ByteArrayOutputStream wav = new java.io.ByteArrayOutputStream();
+        javax.sound.sampled.AudioSystem.write(new javax.sound.sampled.AudioInputStream(
+                new java.io.ByteArrayInputStream(data), new javax.sound.sampled.AudioFormat(22_050, 16, 1, true, false),
+                frames), javax.sound.sampled.AudioFileFormat.Type.WAVE, wav);
+        Pcm pcm = Pcm.decode(new java.io.ByteArrayInputStream(wav.toByteArray()));
         assertEquals(Pcm.RATE * 25 / 1000, pcm.frames(), 2);
         float[] s = pcm.samples();
         for (int f = 0; f < pcm.frames(); f++) {
