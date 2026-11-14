@@ -18,7 +18,7 @@ final class MenuScreens {
     private MenuScreens() {
     }
 
-    static void title(Painter p, long seed) {
+    static void title(Painter p, long seed, List<cardistry.run.Secret> codes) {
         p.frame("Cardistry", "Seed " + seed, "Entrée jouer · R règles · Q quitter");
         List<String> banner = Resources.banner("title");
         int width = banner.stream().mapToInt(String::length).max().orElse(0);
@@ -30,6 +30,10 @@ final class MenuScreens {
         p.centered(row, "Un jeu de cartes élémentaire, au tour par tour", Palette.TEXT, false);
         p.centered(row + 2, elementsLine(), Palette.DIM, false);
         p.centered(row + 5, "[Entrée] Jouer     [R] Règles     [Q] Quitter", Palette.TEXT, true);
+        for (int i = 0; i < codes.size(); i++) {
+            p.centered(row + 7 + i, "✦ Code accepté : " + codes.get(i).displayName() + " équipé pour cette partie",
+                    Palette.SECRET, true);
+        }
     }
 
     private static String elementsLine() {
@@ -88,7 +92,7 @@ final class MenuScreens {
         return row + lines.size();
     }
 
-    static void gameOver(Painter p, GameState state, long seed) {
+    static void gameOver(Painter p, GameState state, long seed, List<String> unlockedSecrets) {
         boolean won = state.isWon();
         p.frame("Cardistry", "Seed " + seed, "Appuie sur une touche pour quitter");
         int top = Math.max(2, p.rows() / 2 - 5);
@@ -101,7 +105,11 @@ final class MenuScreens {
         p.centered(top + 5, "Adversaires vaincus : " + defeated + "/" + state.enemies().size(), Palette.TEXT, false);
         p.centered(top + 6, "PV restants : " + num(Math.max(0, state.player().hp())) + "/" + num(state.maxHp()),
                 Palette.TEXT, false);
-        p.centered(top + 8, "Rejouer cette partie : --seed " + seed, Palette.DIM, false);
+        int row = top + 8;
+        for (String secret : unlockedSecrets) {
+            p.centered(row++, "✦ Secret débloqué : " + secret + " ✦", Palette.SECRET, true);
+        }
+        p.centered(unlockedSecrets.isEmpty() ? row : row + 1, "Rejouer cette partie : --seed " + seed, Palette.DIM, false);
     }
 
     static void tooSmall(Painter p) {

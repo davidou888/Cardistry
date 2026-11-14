@@ -1,51 +1,70 @@
 package cardistry.ui;
 
+import cardistry.core.Action;
 import cardistry.core.ActionResult;
-import cardistry.core.CombatEngine;
-import cardistry.core.GameState;
+import cardistry.run.Run;
+import cardistry.run.Secret;
+import java.util.List;
+import java.util.function.Supplier;
 
-/** Relie le moteur, l'affichage et la saisie. */
+/** Relie la partie, l'affichage et la saisie. */
 public final class GameLoop {
 
     private GameLoop() {
     }
 
-    public static void run(CombatEngine engine, Renderer renderer, Input input) {
-        GameState state = engine.state();
-        engine.setDecisions(input);
-        engine.start();
-        if (input.wantsIntro()) {
-            renderer.showIntro(state);
+    /** Partie sans suivi des déblocages. */
+    public static void run(Run run, Renderer renderer, Input input) {
+        run(run, renderer, input, List::of);
+    }
+
+    /**
+     * @param unlockedThisRun secrets débloqués pendant la partie, affichés sur l'écran de fin
+     */
+    public static void run(Run run, Renderer renderer, Input input, Supplier<List<Secret>> unlockedThisRun) {
+        TitleChoice title = input.title(run.seed());
+        title.codes().forEach(run::addCode);
+        run.setDecisions(input);
+        run.start();
+        if (title.showRules()) {
+            renderer.showIntro(run.state());
         }
-        while (!engine.isOver()) {
-            boolean playerActs = engine.startTurn();
-            if (engine.isOver()) {
+        while (!run.isOver()) {
+            boolean playerActs = run.startTurn();
+            if (run.isOver()) {
                 break;
             }
             if (!playerActs) {
                 // Tour sauté (ou adversaire tué en début de tour) : rien à choisir.
-                renderer.showStatus(state);
-                resolveRewards(engine, input, state);
+                renderer.showStatus(run.state());
+                resolveRewards(run, input);
                 continue;
             }
-            renderer.showStatus(state);
+            renderer.showStatus(run.state());
             input.waitForContinue();
-            renderer.showHand(state);
-            // Action refusée ou gratuite (objet) : on redemande jusqu'à la fin du tour.
-            while (engine.submit(input.nextAction(state)) != ActionResult.TURN_ENDED) {
-                if (engine.isOver()) {
+            renderer.showHand(run.state());
+            // Action refusée ou gratuite (objet, Ctrl+Z) : on redemande jusqu'à la fin du tour.
+            while (true) {
+                Action action = input.nextAction(run.state());
+                ActionResult result = run.submit(action);
+                if (result == ActionResult.TURN_ENDED || run.isOver()) {
                     break;
                 }
+                if (action instanceof Action.Undo && result == ActionResult.FREE_ACTION) {
+                    // Retour au début du tour précédent : on réaffiche tout.
+                    renderer.showStatus(run.state());
+                    renderer.showHand(run.state());
+                }
             }
-            resolveRewards(engine, input, state);
+            resolveRewards(run, input);
         }
-        renderer.showGameOver(state);
+        renderer.showGameOver(run.state(), unlockedThisRun.get().stream().map(Secret::displayName).toList());
         input.waitForExit();
     }
 
-    private static void resolveRewards(CombatEngine engine, Input input, GameState state) {
-        while (engine.hasPendingReward()) {
-            engine.resolveReward(input.chooseReward(state, engine.pendingReward()));
+    private static void resolveRewards(Run run, Input input) {
+        while (run.hasPendingReward()) {
+            run.resolveReward(input.chooseReward(run.state(), run.pendingReward()));
         }
     }
 }

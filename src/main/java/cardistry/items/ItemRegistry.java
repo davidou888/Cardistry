@@ -3,6 +3,7 @@ package cardistry.items;
 import static cardistry.items.Rarity.COMMON;
 import static cardistry.items.Rarity.LEGENDARY;
 import static cardistry.items.Rarity.RARE;
+import static cardistry.items.Rarity.SECRET;
 import static cardistry.items.Rarity.UNCOMMON;
 
 import cardistry.core.EffectContext;
@@ -14,6 +15,7 @@ import cardistry.core.stats.StatType;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
+import cardistry.model.card.DeadCard;
 import cardistry.model.card.TerrainCard;
 import java.util.ArrayList;
 import java.util.List;
@@ -221,7 +223,7 @@ public final class ItemRegistry {
                                 List<Card> hand = ctx.state().hand();
                                 List<Integer> others = new ArrayList<>();
                                 for (int i = 0; i < hand.size(); i++) {
-                                    if (hand.get(i) != event.card()) {
+                                    if (hand.get(i) != event.card() && !(hand.get(i) instanceof DeadCard)) {
                                         others.add(i);
                                     }
                                 }
@@ -230,7 +232,58 @@ public final class ItemRegistry {
                                 }
                             }
                         })
+                        .build(),
+
+                // --- Secrets (voir docs/SECRETS.md) : tirés seulement une fois débloqués ---
+                nullPointerException(),
+                Trinket.builder(CTRL_Z, "Ctrl+Z", SECRET)
+                        .description("Une fois par combat, Ctrl+Z annule ton dernier tour (retour au début du tour"
+                                + " précédent)")
+                        .tags(Tag.META)
+                        .build(),
+                Trinket.builder(CLAUDE_MD, "CLAUDE.md", SECRET)
+                        .description("Chaque tirage de chance en ta faveur est fait deux fois : tu gardes le meilleur"
+                                + " (Googz, NullPointerException, rareté des récompenses)")
+                        .tags(Tag.META)
+                        .flat(StatType.LUCKY_ROLLS, 1)
                         .build());
+    }
+
+    /** Identifiants des trinkets Secret. */
+    public static final String NULL_POINTER_EXCEPTION = "null-pointer-exception";
+    public static final String CTRL_Z = "ctrl-z";
+    public static final String CLAUDE_MD = "claude-md";
+
+    /**
+     * NullPointerException : au début de chaque combat (main distribuée), un tirage unique
+     * (voir {@link NullPointerRoll}).
+     */
+    private static Trinket nullPointerException() {
+        return Trinket.builder(NULL_POINTER_EXCEPTION, "NullPointerException", SECRET)
+                .description("Au début de chaque combat, un tirage : 5 % que l'adversaire devienne null (mort sur"
+                        + " le coup, jamais le boss), 10 % qu'une de tes cartes devienne « NO CARDS » (injouable"
+                        + " jusqu'à la fin du combat)")
+                .tags(Tag.META)
+                .hooks(new GameHooks() {
+                    @Override
+                    public void onHandDealt(GameEvent.HandDealt event, EffectContext ctx) {
+                        boolean boss = ctx.state().isLastCombat();
+                        NullPointerRoll roll = ctx.favorable(
+                                () -> NullPointerRoll.of(ctx.rng().nextDouble(), boss), NullPointerRoll::compareFavor);
+                        switch (roll) {
+                            case ENEMY_NULL -> ctx.nullifyEnemy();
+                            case DEAD_CARD -> {
+                                int size = ctx.state().hand().size();
+                                if (size > 0) {
+                                    ctx.voidCardInHand(ctx.rng().nextInt(size));
+                                }
+                            }
+                            case NOTHING -> {
+                            }
+                        }
+                    }
+                })
+                .build();
     }
 
     /**

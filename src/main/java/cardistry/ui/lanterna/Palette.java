@@ -15,11 +15,16 @@ final class Palette {
     static final TextColor HEAL = TextColor.ANSI.GREEN_BRIGHT;
     static final TextColor WARNING = TextColor.ANSI.YELLOW;
     static final TextColor INFO = TextColor.ANSI.CYAN;
+    /** Secrets (même couleur que la rareté Secret). */
+    static final TextColor SECRET = TextColor.ANSI.MAGENTA_BRIGHT;
 
     private Palette() {
     }
 
     static TextColor element(Element element) {
+        if (element == null) {
+            return DIM; // carte morte (NO CARDS)
+        }
         return switch (element) {
             case FIRE -> TextColor.ANSI.RED_BRIGHT;
             case WATER -> TextColor.ANSI.BLUE_BRIGHT;
@@ -33,7 +38,7 @@ final class Palette {
             case UNCOMMON -> TextColor.ANSI.GREEN_BRIGHT;
             case RARE -> TextColor.ANSI.BLUE_BRIGHT;
             case LEGENDARY -> TextColor.ANSI.YELLOW_BRIGHT;
-            case SECRET -> TextColor.ANSI.MAGENTA_BRIGHT;
+            case SECRET -> SECRET;
         };
     }
 

@@ -112,6 +112,16 @@ public final class GameState {
         return playerStats.get(StatType.UNCAPPED_HEALING) > 0;
     }
 
+    /** {@code true} si les tirages de chance sont faits deux fois (CLAUDE.md, stat {@link StatType#LUCKY_ROLLS}). */
+    public boolean luckyRolls() {
+        return playerStats.get(StatType.LUCKY_ROLLS) > 0;
+    }
+
+    /** {@code true} pendant le combat contre le dernier adversaire (le boss). */
+    public boolean isLastCombat() {
+        return !hasNextEnemy();
+    }
+
     /** Stats du joueur : c'est ici que trinkets et objets ajouteront leurs modificateurs. */
     public Stats playerStats() {
         return playerStats;

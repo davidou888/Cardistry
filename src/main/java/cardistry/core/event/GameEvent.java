@@ -210,8 +210,28 @@ public sealed interface GameEvent {
             /** Plus de clope à fumer. */
             NO_CIGARETTE,
             /** Paquet plein : impossible de rouler. */
-            PACK_FULL
+            PACK_FULL,
+            /** Carte injouable (NO CARDS). */
+            UNPLAYABLE_CARD,
+            /** Annulation impossible (pas de Ctrl+Z, déjà utilisé ce combat, ou pas de tour à annuler). */
+            UNDO_UNAVAILABLE
         }
+    }
+
+    /** NullPointerException : l'adversaire devient null (mort sur le coup). */
+    record EnemyNulled(Enemy enemy) implements GameEvent {
+    }
+
+    /** NullPointerException : une carte de la main devient « NO CARDS » ({@code dead}). */
+    record CardVoided(Card removed, Card dead) implements GameEvent {
+    }
+
+    /** Ctrl+Z : la partie est revenue au début du tour {@code turn}. */
+    record TurnUndone(int turn) implements GameEvent {
+    }
+
+    /** Secret débloqué pour les parties suivantes. */
+    record SecretUnlocked(String name) implements GameEvent {
     }
 
     record GameWon() implements GameEvent {

@@ -8,7 +8,7 @@ import cardistry.model.Element;
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
  * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
- * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}. {@link #GOLD_GAIN} attend le shop.
+ * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #LUCKY_ROLLS}. {@link #GOLD_GAIN} attend le shop.
  */
 public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
@@ -46,7 +46,9 @@ public enum StatType {
     /** Taille du paquet de clopes. */
     CIGARETTE_MAX(20),
     /** Chance (0 à 1) qu'une clope fumée se transforme en Petit pétou. */
-    CIGARETTE_TRANSFORM_CHANCE(0);
+    CIGARETTE_TRANSFORM_CHANCE(0),
+    /** Si &gt; 0 : les tirages de chance en faveur du joueur sont faits deux fois (voir {@code core.Luck}). */
+    LUCKY_ROLLS(0);
 
     private final double defaultBase;
 

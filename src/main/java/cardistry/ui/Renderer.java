@@ -17,7 +17,11 @@ public interface Renderer {
     /** Main du joueur et choix possibles. */
     void showHand(GameState state);
 
-    /** Écran de fin (victoire ou défaite), une fois la partie terminée. */
-    default void showGameOver(GameState state) {
+    /**
+     * Écran de fin (victoire ou défaite), une fois la partie terminée.
+     *
+     * @param unlockedSecrets noms des secrets débloqués pendant cette partie (souvent aucun)
+     */
+    default void showGameOver(GameState state, java.util.List<String> unlockedSecrets) {
     }
 }

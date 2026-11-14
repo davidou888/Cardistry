@@ -16,14 +16,19 @@ public interface Input extends PlayerDecisions {
         return 0;
     }
 
-    /** {@code true} si le joueur veut voir l'intro. */
-    boolean wantsIntro();
+    /**
+     * Écran titre, avant le début de la partie : jouer, voir les règles, ou entrer un code secret.
+     *
+     * @throws cardistry.ui.QuitGameException si le joueur quitte
+     */
+    TitleChoice title(long seed);
 
     /** Attend que le joueur veuille continuer. */
     void waitForContinue();
 
     /**
-     * Action choisie par le joueur (pas forcément valide : le moteur valide).
+     * Action choisie par le joueur (pas forcément valide : le moteur valide). {@link Action.Undo}
+     * demande d'annuler le dernier tour (trinket Ctrl+Z).
      *
      * @throws cardistry.ui.QuitGameException si le joueur quitte
      */

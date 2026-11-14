@@ -9,10 +9,12 @@ import cardistry.core.RewardChoice;
 import cardistry.core.event.GameEvent;
 import cardistry.items.Collectible;
 import cardistry.model.Enemy;
+import cardistry.run.Secret;
 import cardistry.ui.ItemKeys;
 import cardistry.ui.Input;
 import cardistry.ui.QuitGameException;
 import cardistry.ui.Renderer;
+import cardistry.ui.TitleChoice;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.input.KeyStroke;
@@ -51,6 +53,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private int cardSelected = 0;
     private boolean metaPhraseShown = false;
     private boolean showMetaPhrase = false;
+    private final List<Secret> titleCodes = new java.util.ArrayList<>();
+    private List<String> unlockedSecrets = List.of();
 
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast, boolean ascii) throws IOException {
@@ -178,6 +182,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer.";
                     case NO_CIGARETTE -> "Plus de clope : G pour en rouler une.";
                     case PACK_FULL -> "Paquet plein : impossible de rouler.";
+                    case UNPLAYABLE_CARD -> "NO CARDS : carte injouable.";
+                    case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant.";
                 }, Palette.WARNING);
                 render();
             }
@@ -240,6 +246,21 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     + e.description(), Palette.WARNING);
             case GameEvent.TrinketDiscarded e -> view.log("Tu jettes " + e.trinket().name(), Palette.WARNING);
             case GameEvent.RewardSkipped e -> view.log("Récompense refusée", Palette.DIM);
+            case GameEvent.EnemyNulled e -> {
+                view.log(e.enemy().name() + " = null", Palette.SECRET);
+                view.toast = "NullPointerException : " + e.enemy().name() + " devient null";
+                render();
+            }
+            case GameEvent.CardVoided e -> {
+                view.log(e.removed().name() + " devient " + e.dead().name(), Palette.SECRET);
+                render();
+            }
+            case GameEvent.TurnUndone e -> {
+                view.log("Ctrl+Z : retour au début du tour " + e.turn(), Palette.SECRET);
+                view.toast = "Ctrl+Z : tour " + e.turn() + " annulé";
+                view.resetEffects();
+            }
+            case GameEvent.SecretUnlocked e -> view.log("Secret débloqué : " + e.name(), Palette.SECRET);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
         }
@@ -272,8 +293,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     @Override
-    public void showGameOver(GameState state) {
+    public void showGameOver(GameState state, List<String> unlockedSecrets) {
         this.state = state;
+        this.unlockedSecrets = List.copyOf(unlockedSecrets);
         pause(600);
         page = Page.GAME_OVER;
         render();
@@ -288,21 +310,47 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     // ===================== Input =====================
 
+    /** Code tapé sur l'écran titre pour CLAUDE.md. */
+    static final String CLAUDE_CODE = "claude";
+
     @Override
-    public boolean wantsIntro() {
+    public TitleChoice title(long seed) {
+        this.seed = seed;
+        titleCodes.clear();
         page = Page.TITLE;
         render();
+        StringBuilder typed = new StringBuilder();
         while (true) {
             KeyStroke key = readKey();
+            if (isCtrl(key, 'z')) {
+                addTitleCode(Secret.CTRL_Z);
+                continue;
+            }
             if (isQuit(key)) {
                 throw new QuitGameException();
             }
             if (key.getKeyType() == KeyType.Enter) {
-                return false;
+                return new TitleChoice(false, titleCodes);
             }
             if (isChar(key, 'r')) {
-                return true;
+                return new TitleChoice(true, titleCodes);
             }
+            if (key.getKeyType() == KeyType.Character) {
+                typed.append(Character.toLowerCase(key.getCharacter()));
+                if (typed.length() > CLAUDE_CODE.length()) {
+                    typed.deleteCharAt(0);
+                }
+                if (typed.toString().equals(CLAUDE_CODE)) {
+                    addTitleCode(Secret.CLAUDE_MD);
+                }
+            }
+        }
+    }
+
+    private void addTitleCode(Secret secret) {
+        if (!titleCodes.contains(secret)) {
+            titleCodes.add(secret);
+            render();
         }
     }
 
@@ -320,6 +368,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         while (true) {
             KeyStroke key = readKey();
             int handSize = state.hand().size();
+            if (isCtrl(key, 'z')) {
+                return new Action.Undo();
+            }
             switch (key.getKeyType()) {
                 case ArrowLeft -> moveSelection(-1, handSize);
                 case ArrowRight -> moveSelection(1, handSize);
@@ -641,7 +692,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 MenuScreens.tooSmall(painter);
             } else {
                 switch (page) {
-                    case TITLE -> MenuScreens.title(painter, seed);
+                    case TITLE -> MenuScreens.title(painter, seed, titleCodes);
                     case RULES -> MenuScreens.rules(painter, state);
                     case COMBAT -> {
                         if (state != null) {
@@ -655,7 +706,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
-                    case GAME_OVER -> MenuScreens.gameOver(painter, state, seed);
+                    case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
                 }
                 if (view.confirmingQuit) {
                     painter.text(1, size.getRows() - 1, "─".repeat(size.getColumns() - 2), Palette.FRAME);
@@ -692,6 +743,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private static boolean isChar(KeyStroke key, char expected) {
         return key.getKeyType() == KeyType.Character
                 && Character.toLowerCase(key.getCharacter()) == expected;
+    }
+
+    /** Ctrl+lettre (Lanterna capte Ctrl+Z comme une touche : le jeu n'est pas suspendu). */
+    private static boolean isCtrl(KeyStroke key, char letter) {
+        return key.getKeyType() == KeyType.Character && key.isCtrlDown()
+                && Character.toLowerCase(key.getCharacter()) == letter;
     }
 
     private static boolean isQuit(KeyStroke key) {

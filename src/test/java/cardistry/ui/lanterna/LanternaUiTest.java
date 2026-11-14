@@ -27,6 +27,7 @@ import cardistry.model.card.CardPool;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
+import cardistry.run.Run;
 import cardistry.ui.GameLoop;
 import cardistry.ui.QuitGameException;
 import cardistry.ui.Renderer;
@@ -105,10 +106,9 @@ class LanternaUiTest {
     @Test
     void titreEntreeLanceSansIntro() throws IOException {
         open(80, 24);
-        ui.onEvent(new GameEvent.GameStarted(42));
         press(KeyType.Enter);
 
-        assertFalse(assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
+        assertFalse(assertTimeoutPreemptively(TIMEOUT, () -> ui.title(42)).showRules());
 
         String text = dump("01-titre");
         assertTrue(text.contains("[Entrée] Jouer"));
@@ -119,7 +119,7 @@ class LanternaUiTest {
     void titreRAfficheLesRegles() throws IOException {
         open(80, 24);
         type("r");
-        assertTrue(assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
+        assertTrue(assertTimeoutPreemptively(TIMEOUT, () -> ui.title(1)).showRules());
 
         GameState state = GameState.newGame();
         press(KeyType.Enter);
@@ -135,7 +135,7 @@ class LanternaUiTest {
     void titreQQuitte() throws IOException {
         open(80, 24);
         type("q");
-        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
+        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.title(1)));
     }
 
     // --- Combat ---
@@ -239,10 +239,8 @@ class LanternaUiTest {
     @Test
     void partieCompleteJusquAEcranDeFin() throws IOException {
         open(80, 24);
-        Rng rng = new Rng(7);
-        CardPool pool = new CardPool();
         EventBus bus = new EventBus();
-        CombatEngine engine = new CombatEngine(GameState.newGame(), pool, rng, bus);
+        Run engine = new Run(7, java.util.Set.of(), bus);
         bus.subscribe(ui::onEvent);
 
         press(KeyType.Enter); // titre
@@ -265,7 +263,7 @@ class LanternaUiTest {
                     }
                 }
             }
-            @Override public void showGameOver(GameState state) { ui.showGameOver(state); }
+            @Override public void showGameOver(GameState state, List<String> secrets) { ui.showGameOver(state, secrets); }
         };
 
         assertTimeoutPreemptively(TIMEOUT, () -> GameLoop.run(engine, recorder, ui));
@@ -624,10 +622,82 @@ class LanternaUiTest {
         assertTrue(combat.contains("Caipirinha"), "accents retirés");
 
         type("q");
-        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, ui::wantsIntro));
+        assertThrows(QuitGameException.class, () -> assertTimeoutPreemptively(TIMEOUT, () -> ui.title(1)));
         String title = dump("23-ascii-titre");
         assertTrue(title.chars().allMatch(c -> c < 128), title);
         assertTrue(title.contains("###"), "bannière en #");
+    }
+
+    // --- Secrets ---
+
+    private void ctrl(char c) {
+        terminal.addInput(new KeyStroke(c, true, false));
+    }
+
+    @Test
+    void titreCodesSecrets() throws IOException {
+        open(80, 24);
+        ctrl('z');
+        type("xclaude");
+        ctrl('z'); // déjà pris : pas de doublon
+        press(KeyType.Enter);
+        cardistry.ui.TitleChoice choice = assertTimeoutPreemptively(TIMEOUT, () -> ui.title(3));
+        assertEquals(List.of(cardistry.run.Secret.CTRL_Z, cardistry.run.Secret.CLAUDE_MD), choice.codes());
+        assertFalse(choice.showRules());
+        String text = dump("24-titre-codes");
+        assertTrue(text.contains("Code accepté : Ctrl+Z équipé pour cette partie"), text);
+        assertTrue(text.contains("Code accepté : CLAUDE.md équipé pour cette partie"), text);
+    }
+
+    @Test
+    void titreCodeIncompletIgnore() throws IOException {
+        open(80, 24);
+        type("claud cloude");
+        press(KeyType.Enter);
+        assertTrue(assertTimeoutPreemptively(TIMEOUT, () -> ui.title(3)).codes().isEmpty());
+        assertFalse(dump("24b-titre-sans-code").contains("Code accepté"));
+    }
+
+    @Test
+    void ctrlZEnCombatDemandeLAnnulation() throws IOException {
+        open(80, 24);
+        GameState state = withInventory(List.of(), List.of(ItemRegistry.trinket(ItemRegistry.CTRL_Z)));
+        ctrl('z');
+        assertEquals(new Action.Undo(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
+        String text = dump("25-combat-ctrl-z");
+        assertTrue(text.contains("Ctrl+Z annuler"), text);
+        assertTrue(text.contains("Q quitter ─"), "l'aide tient dans le cadre");
+    }
+
+    @Test
+    void carteMorteAffichee() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(new cardistry.model.card.DeadCard(), new SpellCard("Jet d'eau", Element.WATER, 10)),
+                hydra());
+        ui.showHand(state);
+        String text = dump("26-no-cards");
+        assertTrue(text.contains("NO CARDS"), text);
+        assertTrue(text.contains("bloquée"), text);
+        assertTrue(text.contains("injouable jusqu"), text);
+    }
+
+    @Test
+    void ecranDeFinSecretDebloque() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(), hydra());
+        state.player().takeDamage(1000);
+        ui.showGameOver(state, List.of("Ctrl+Z"));
+        String text = dump("27-fin-secret");
+        assertTrue(text.contains("Secret débloqué : Ctrl+Z"), text);
+        assertTrue(text.contains("--seed"), text);
+    }
+
+    @Test
+    void ecranDeFinSansSecret() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(), hydra());
+        ui.showGameOver(state, List.of());
+        assertFalse(dump("28-fin-sans-secret").contains("Secret"));
     }
 
     private void waitFor(java.util.function.BooleanSupplier condition) {

@@ -1,11 +1,13 @@
 package cardistry;
 
-import cardistry.core.CombatEngine;
-import cardistry.core.GameState;
 import cardistry.core.Rng;
 import cardistry.core.event.EventBus;
-import cardistry.model.card.CardPool;
 import cardistry.platform.Os;
+import cardistry.platform.UnlockFile;
+import cardistry.run.Run;
+import cardistry.run.Secret;
+import cardistry.run.UnlockStore;
+import cardistry.run.UnlockTracker;
 import cardistry.ui.GameLoop;
 import cardistry.ui.Glyphs;
 import cardistry.ui.QuitGameException;
@@ -26,6 +28,7 @@ public final class Main {
      * Options :
      * <ul>
      *   <li>{@code --seed N} rejoue la partie de seed N</li>
+     *   <li>{@code --reset-unlocks} efface les secrets débloqués, puis lance le jeu</li>
      *   <li>{@code --fast} supprime les pauses et animations (pratique pour tester)</li>
      *   <li>{@code --no-ui} rendu texte simple ; automatique si l'entrée n'est pas un vrai terminal
      *       (pipe, {@code ./gradlew run}) ou s'il n'y a pas d'affichage graphique pour la fenêtre</li>
@@ -43,41 +46,69 @@ public final class Main {
         boolean window = options.contains("--window") || os == Os.WINDOWS;
         boolean asciiRequested = options.contains("--ascii");
         boolean color = !options.contains("--no-color") && ansiColorsLikely(os);
-        Rng rng = parseSeed(options);
-
-        EventBus bus = new EventBus();
-        CardPool pool = new CardPool();
-        CombatEngine engine = new CombatEngine(GameState.newGame(), pool, rng, bus);
+        UnlockStore store = UnlockFile.inSaveDirectory();
+        if (options.contains("--reset-unlocks")) {
+            System.out.println("Secrets débloqués effacés.");
+        }
+        Game game = prepare(options, store);
+        EventBus bus = game.bus();
 
         boolean textAscii = asciiRequested || !Glyphs.unicodeLikely();
         if (options.contains("--no-ui")) {
-            runText(engine, bus, fast, textAscii, color);
+            runText(game, bus, fast, textAscii, color);
         } else if (window) {
             if (GraphicsEnvironment.isHeadless()) {
                 System.err.println("Pas d'affichage graphique pour la fenêtre : mode texte.");
-                runText(engine, bus, fast, textAscii, color);
+                runText(game, bus, fast, textAscii, color);
             } else {
-                runWindow(engine, bus, fast, asciiRequested);
+                runWindow(game, bus, fast, asciiRequested);
             }
         } else if (isInteractiveTerminal()) {
-            runFullScreen(engine, bus, fast, textAscii, color);
+            runFullScreen(game, bus, fast, textAscii, color);
         } else {
-            runText(engine, bus, fast, textAscii, color);
+            runText(game, bus, fast, textAscii, color);
         }
     }
 
-    private static void runFullScreen(CombatEngine engine, EventBus bus, boolean fast, boolean ascii, boolean color) {
+    /** Partie prête à lancer : la partie, le suivi des déblocages et le bus de l'interface. */
+    record Game(Run run, UnlockTracker tracker, EventBus bus) {
+    }
+
+    /**
+     * Prépare la partie selon les options : {@code --reset-unlocks} (efface les déblocages avant de
+     * les lire), {@code --seed N} ou {@code --seed null} (seed au hasard et NullPointerException
+     * équipé pour cette partie seulement).
+     */
+    static Game prepare(List<String> options, UnlockStore store) {
+        if (options.contains("--reset-unlocks")) {
+            store.reset();
+        }
+        EventBus bus = new EventBus();
+        Run run = new Run(parseSeed(options).seed(), store.load(), bus);
+        if (isNullSeed(options)) {
+            run.addCode(Secret.NULL_POINTER_EXCEPTION);
+        }
+        UnlockTracker tracker = new UnlockTracker(run::state, store, bus);
+        bus.subscribe(tracker);
+        return new Game(run, tracker, bus);
+    }
+
+    private static void play(Game game, cardistry.ui.Renderer renderer, cardistry.ui.Input input) {
+        GameLoop.run(game.run(), renderer, input, game.tracker()::unlockedThisRun);
+    }
+
+    private static void runFullScreen(Game game, EventBus bus, boolean fast, boolean ascii, boolean color) {
         LanternaUi ui;
         try {
             ui = LanternaUi.open(fast, ascii);
         } catch (IOException e) {
             System.err.println("Impossible d'ouvrir le plein écran (" + e.getMessage() + ") : mode texte.");
-            runText(engine, bus, fast, ascii, color);
+            runText(game, bus, fast, ascii, color);
             return;
         }
         try (ui) {
             bus.subscribe(ui::onEvent);
-            GameLoop.run(engine, ui, ui);
+            play(game, ui, ui);
         } catch (QuitGameException e) {
             // Le joueur a quitté : l'écran est restauré par close().
         } catch (IOException e) {
@@ -86,10 +117,10 @@ public final class Main {
     }
 
     /** Fenêtre de l'émulateur Lanterna (Unicode toujours disponible) ; quitte la JVM à la fin. */
-    private static void runWindow(CombatEngine engine, EventBus bus, boolean fast, boolean ascii) {
+    private static void runWindow(Game game, EventBus bus, boolean fast, boolean ascii) {
         try (LanternaUi ui = LanternaUi.openWindow(fast, ascii)) {
             bus.subscribe(ui::onEvent);
-            GameLoop.run(engine, ui, ui);
+            play(game, ui, ui);
         } catch (QuitGameException e) {
             // Le joueur a quitté.
         } catch (IOException e) {
@@ -106,12 +137,12 @@ public final class Main {
         return os != Os.WINDOWS || System.getenv("WT_SESSION") != null || System.getenv("TERM") != null;
     }
 
-    private static void runText(CombatEngine engine, EventBus bus, boolean fast, boolean ascii, boolean color) {
+    private static void runText(Game game, EventBus bus, boolean fast, boolean ascii, boolean color) {
         Console console = new Console(System.in, System.out, fast, ascii, color);
         TextRenderer renderer = new TextRenderer(console);
         bus.subscribe(renderer::onEvent);
         try {
-            GameLoop.run(engine, renderer, new ConsoleInput(console));
+            play(game, renderer, new ConsoleInput(console));
         } catch (QuitGameException e) {
             console.println();
             console.println("Partie interrompue.");
@@ -137,9 +168,15 @@ public final class Main {
         }
     }
 
-    private static Rng parseSeed(List<String> options) {
+    /** {@code --seed null} : code secret NullPointerException. */
+    static boolean isNullSeed(List<String> options) {
         int index = options.indexOf("--seed");
-        if (index < 0) {
+        return index >= 0 && index + 1 < options.size() && options.get(index + 1).equals("null");
+    }
+
+    static Rng parseSeed(List<String> options) {
+        int index = options.indexOf("--seed");
+        if (index < 0 || isNullSeed(options)) {
             return Rng.withRandomSeed();
         }
         if (index + 1 >= options.size()) {

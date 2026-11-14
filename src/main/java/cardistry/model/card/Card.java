@@ -2,8 +2,8 @@ package cardistry.model.card;
 
 import cardistry.model.Element;
 
-/** Une carte jouable. Les sous-types sont fermés : sortilège, soin, terrain. */
-public abstract sealed class Card permits SpellCard, HealCard, TerrainCard {
+/** Une carte. Les sous-types sont fermés : sortilège, soin, terrain, et la carte morte (injouable). */
+public abstract sealed class Card permits SpellCard, HealCard, TerrainCard, DeadCard {
 
     private final String name;
     private final Element element;
@@ -17,6 +17,7 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard {
         return name;
     }
 
+    /** Élément de la carte ; {@code null} pour la carte morte ({@link DeadCard}). */
     public Element element() {
         return element;
     }

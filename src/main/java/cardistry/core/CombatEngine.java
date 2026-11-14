@@ -16,6 +16,7 @@ import cardistry.model.Enemy;
 import cardistry.model.Player;
 import cardistry.model.card.Card;
 import cardistry.model.card.CardPool;
+import cardistry.model.card.DeadCard;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
@@ -205,6 +206,7 @@ public final class CombatEngine {
                 bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
                 yield true;
             }
+            case Action.Undo undo -> throw new AssertionError("refusée par validate");
         };
         if (state.isLost()) {
             return ActionResult.TURN_ENDED; // mort de son propre effet (GameLost déjà publié)
@@ -231,6 +233,9 @@ public final class CombatEngine {
                 if (play.slot() >= state.hand().size()) {
                     yield Optional.of(Reason.EMPTY_SLOT);
                 }
+                if (state.hand().get(play.slot()) instanceof DeadCard) {
+                    yield Optional.of(Reason.UNPLAYABLE_CARD);
+                }
                 yield Optional.empty();
             }
             case Action.UseItem use -> use.slot() < 0 || use.slot() >= state.items().size()
@@ -242,6 +247,8 @@ public final class CombatEngine {
             case Action.RollCigarette roll -> state.cigarettes() >= state.cigaretteMax()
                     ? Optional.of(Reason.PACK_FULL)
                     : Optional.empty();
+            // Seul run.Run sait annuler un tour (en rejouant la partie).
+            case Action.Undo undo -> Optional.of(Reason.UNDO_UNAVAILABLE);
         };
     }
 
@@ -463,6 +470,7 @@ public final class CombatEngine {
                 state.setTerrain(terrain);
                 bus.publish(new GameEvent.TerrainChanged(previous, terrain));
             }
+            case DeadCard dead -> throw new AssertionError("refusée par validate");
         }
     }
 
@@ -477,7 +485,7 @@ public final class CombatEngine {
         state.setCigarettes(state.cigarettes() - 1);
         bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
         double chance = state.playerStats().get(StatType.CIGARETTE_TRANSFORM_CHANCE);
-        boolean transformed = chance > 0 && rng.nextDouble() < chance;
+        boolean transformed = chance > 0 && Luck.chance(state, rng, chance);
         bus.publish(new GameEvent.CigaretteSmoked(transformed));
         if (transformed) {
             cardistry.items.ItemRegistry.item(PETIT_PETOU).use(effects);
@@ -649,6 +657,9 @@ public final class CombatEngine {
 
         @Override
         public void replaceCardInHand(int slot) {
+            if (state.hand().get(slot) instanceof DeadCard) {
+                return;
+            }
             Card replacement = drawFromPool();
             Card removed = state.replaceInHand(slot, replacement);
             bus.publish(new GameEvent.CardReplaced(removed, replacement));
@@ -664,6 +675,23 @@ public final class CombatEngine {
         public void healPlayer(double amount) {
             double mult = state.playerStats().get(StatType.HEAL_EFFICIENCY);
             CombatEngine.this.healPlayer(amount * mult, mult);
+        }
+
+        @Override
+        public void nullifyEnemy() {
+            Enemy enemy = state.currentEnemy();
+            if (!enemy.isAlive()) {
+                return;
+            }
+            enemy.takeDamage(enemy.hp());
+            bus.publish(new GameEvent.EnemyNulled(enemy));
+        }
+
+        @Override
+        public void voidCardInHand(int slot) {
+            Card dead = new DeadCard();
+            Card removed = state.replaceInHand(slot, dead);
+            bus.publish(new GameEvent.CardVoided(removed, dead));
         }
 
         @Override

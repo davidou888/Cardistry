@@ -21,7 +21,10 @@ public interface EffectContext {
      */
     void elementalDamage(double amount, Element element);
 
-    /** Remplace la carte à l'index {@code slot} de la main par une carte tirée du pool. */
+    /**
+     * Remplace la carte à l'index {@code slot} de la main par une carte tirée du pool. Sans effet
+     * sur une carte morte (NO CARDS).
+     */
     void replaceCardInHand(int slot);
 
     /**
@@ -50,4 +53,23 @@ public interface EffectContext {
 
     /** Pioche jusqu'à {@code count} cartes, sans dépasser la taille de main. */
     void drawCards(int count);
+
+    /**
+     * L'adversaire actuel devient null : mort sur le coup (sa mort est résolue par le moteur au
+     * prochain point de contrôle, comme une mort par dégâts).
+     */
+    void nullifyEnemy();
+
+    /** La carte à l'index {@code slot} de la main devient « NO CARDS » (injouable jusqu'à la fin du combat). */
+    void voidCardInHand(int slot);
+
+    /** Tirage de chance en faveur du joueur (deux chances avec CLAUDE.md, voir {@link Luck}). */
+    default boolean chance(double probability) {
+        return Luck.chance(state(), rng(), probability);
+    }
+
+    /** Tirage en faveur du joueur : le plus favorable de deux avec CLAUDE.md (voir {@link Luck}). */
+    default <T> T favorable(java.util.function.Supplier<T> roll, java.util.Comparator<? super T> better) {
+        return Luck.favorable(state(), roll, better);
+    }
 }

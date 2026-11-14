@@ -13,6 +13,7 @@ import cardistry.model.Element;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
+import cardistry.model.card.DeadCard;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
@@ -35,9 +36,7 @@ public final class TextRenderer implements Renderer {
     public void onEvent(GameEvent event) {
         switch (event) {
             case GameEvent.GameStarted e -> {
-                console.println("Bienvenue dans " + Ansi.yellow("Cardistry") + " !");
-                console.println("Seed : " + e.seed());
-                console.println();
+                // Bienvenue et seed : affichés par l'écran titre (ConsoleInput).
             }
             case GameEvent.PlayerTurnStarted e -> {
                 // Rien de plus à afficher.
@@ -97,7 +96,18 @@ public final class TextRenderer implements Renderer {
                 case INVENTORY_FULL -> "Inventaire plein : choisis quoi remplacer";
                 case NO_CIGARETTE -> "Plus de clope : roule-en une (g)";
                 case PACK_FULL -> "Paquet plein : impossible de rouler";
+                case UNPLAYABLE_CARD -> "NO CARDS : cette carte est injouable";
+                case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant";
             });
+            case GameEvent.EnemyNulled e -> console.println(Ansi.MAGENTA + "NullPointerException : "
+                    + e.enemy().name() + " devient null !" + Ansi.END_COLOR);
+            case GameEvent.CardVoided e -> console.println(Ansi.MAGENTA + "NullPointerException : "
+                    + e.removed().name() + " devient " + e.dead().name() + Ansi.END_COLOR);
+            case GameEvent.TurnUndone e -> console.println(Ansi.MAGENTA + "Ctrl+Z : retour au début du tour "
+                    + e.turn() + Ansi.END_COLOR);
+            case GameEvent.SecretUnlocked e -> {
+                // Affiché sur l'écran de fin.
+            }
             case GameEvent.EffectAdded e -> console.println("→ " + e.effect().describe());
             case GameEvent.EffectActivated e -> console.println("→ " + Ansi.yellow(e.effect().name()) + " se déclenche !");
             case GameEvent.EffectEnded e -> console.println("→ " + e.effect().name() + " : terminé.");
@@ -232,6 +242,9 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println("[0] Piocher une carte");
         console.println("[f] Fumer une clope (gratuit)   [g] Rouler une clope");
+        if (state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
+            console.println("[" + ConsoleInput.UNDO + "] Ctrl+Z : annuler ton dernier tour (une fois par combat)");
+        }
         for (int i = 0; i < state.items().size(); i++) {
             console.println("[" + ItemKeys.key(i) + "] Utiliser l'" + describe(state.items().get(i)).replaceFirst("^Objet", "objet")
                     + " (gratuit)");
@@ -240,6 +253,13 @@ public final class TextRenderer implements Renderer {
         console.println(SEPARATOR);
         console.println();
         console.pause(1);
+    }
+
+    @Override
+    public void showGameOver(GameState state, List<String> unlockedSecrets) {
+        for (String secret : unlockedSecrets) {
+            console.println(Ansi.MAGENTA + "Secret débloqué : " + secret + Ansi.END_COLOR);
+        }
     }
 
     @Override
@@ -314,6 +334,7 @@ public final class TextRenderer implements Renderer {
             case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : " + num(s.damage()) + " dégâts";
             case HealCard h -> "Soin " + cardName(h) + " (" + type + ") : " + num(h.amount()) + " PV";
             case TerrainCard t -> "Terrain " + cardName(t) + " (" + type + ")";
+            case DeadCard d -> cardName(d) + " : injouable jusqu'à la fin du combat";
         };
     }
 }

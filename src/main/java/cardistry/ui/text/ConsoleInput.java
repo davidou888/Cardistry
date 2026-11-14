@@ -5,8 +5,10 @@ import cardistry.core.GameState;
 import cardistry.core.RewardChoice;
 import cardistry.items.Collectible;
 import cardistry.items.Trinket;
+import cardistry.run.Secret;
 import cardistry.ui.Input;
 import cardistry.ui.ItemKeys;
+import cardistry.ui.TitleChoice;
 import java.util.List;
 
 public final class ConsoleInput implements Input {
@@ -17,10 +19,31 @@ public final class ConsoleInput implements Input {
         this.console = console;
     }
 
+    /** Commande d'annulation du dernier tour (trinket Ctrl+Z) : Ctrl+Z est pris par le terminal. */
+    static final String UNDO = "z";
+
+    /** Code secret de l'écran titre (CLAUDE.md). En mode texte, Ctrl+Z n'est pas lisible. */
+    static final String CLAUDE_CODE = "claude";
+
     @Override
-    public boolean wantsIntro() {
-        console.println("(Appuie sur Entrée pour continuer, ou s puis Entrée pour passer l'intro)");
-        return !console.readLine().trim().equalsIgnoreCase("s");
+    public TitleChoice title(long seed) {
+        console.println("Bienvenue dans " + Ansi.yellow("Cardistry") + " !");
+        console.println("Seed : " + seed);
+        console.println();
+        List<Secret> codes = new java.util.ArrayList<>();
+        while (true) {
+            console.println("(Appuie sur Entrée pour continuer, ou s puis Entrée pour passer l'intro)");
+            String line = console.readLine().trim();
+            if (line.equalsIgnoreCase(CLAUDE_CODE)) {
+                if (!codes.contains(Secret.CLAUDE_MD)) {
+                    codes.add(Secret.CLAUDE_MD);
+                }
+                console.println(Ansi.MAGENTA + "Code accepté : " + Secret.CLAUDE_MD.displayName()
+                        + " équipé pour cette partie." + Ansi.END_COLOR);
+                continue;
+            }
+            return new TitleChoice(!line.equalsIgnoreCase("s"), codes);
+        }
     }
 
     @Override
@@ -35,6 +58,9 @@ public final class ConsoleInput implements Input {
         while (true) {
             console.print("Que veux-tu jouer ? ");
             String line = console.readLine().trim();
+            if (line.equalsIgnoreCase(UNDO) && state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
+                return new Action.Undo();
+            }
             if (line.equalsIgnoreCase("f")) {
                 return new Action.Smoke();
             }

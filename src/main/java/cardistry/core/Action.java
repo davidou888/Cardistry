@@ -19,6 +19,13 @@ public sealed interface Action {
     record RollCigarette() implements Action {
     }
 
+    /**
+     * Annuler son dernier tour (trinket Ctrl+Z) : gérée par {@code run.Run}, qui rejoue la partie ;
+     * le moteur seul la refuse.
+     */
+    record Undo() implements Action {
+    }
+
     /** Utiliser l'objet à l'index {@code slot} de l'inventaire : action gratuite. */
     record UseItem(int slot) implements Action {
     }

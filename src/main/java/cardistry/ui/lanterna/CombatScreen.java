@@ -8,6 +8,7 @@ import cardistry.core.TemporaryEffect;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
+import cardistry.model.card.DeadCard;
 import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
@@ -35,6 +36,8 @@ import java.util.List;
 final class CombatScreen {
 
     static final String HELP = "←/→ Entrée · 1-7 · P piocher · W/E/R objets · I inventaire · Q quitter";
+    /** Aide avec le trinket Ctrl+Z équipé. */
+    static final String HELP_UNDO = "←/→ 1-7 · P pioche · W/E/R objets · I inv. · Ctrl+Z annuler · Q quitter";
     private static final int SPRITE_WIDTH = 30;
     private static final int BAR_WIDTH = 20;
     private static final int CARD_HEIGHT = 6;
@@ -44,7 +47,8 @@ final class CombatScreen {
     }
 
     static void draw(Painter p, GameState state, ViewState view, long seed) {
-        p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed, HELP);
+        p.frame("Cardistry", "Tour " + state.turn() + " · Seed " + seed,
+                state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z) ? HELP_UNDO : HELP);
         drawEnemy(p, state, view);
         drawEffects(p, state);
         drawSprite(p, state, view);
@@ -296,11 +300,13 @@ final class CombatScreen {
         for (int i = 0; i < name.size(); i++) {
             p.text(col + 1, row + 1 + i, name.get(i), Palette.TEXT, selected);
         }
-        p.text(col + 1, row + 3, Painter.fit(card.element().displayName(), inner), Palette.element(card.element()));
+        String element = card.element() == null ? "null" : card.element().displayName();
+        p.text(col + 1, row + 3, Painter.fit(element, inner), Palette.element(card.element()));
         String value = switch (card) {
             case SpellCard s -> num(s.damage()) + " dgt";
             case HealCard h -> "+" + num(h.amount()) + " PV";
             case TerrainCard t -> "terrain";
+            case DeadCard d -> "bloquée";
         };
         p.text(col + 1, row + 4, Painter.fit(value, inner), Palette.DIM);
     }
@@ -340,6 +346,7 @@ final class CombatScreen {
                         + (mult != 1.0 ? " ×" + num(mult) : "") + " → +" + num(healed) + " PV"
                         + (healed < h.amount() * mult ? " (PV max)" : "");
             }
+            case DeadCard d -> head + "injouable jusqu'à la fin du combat (NullPointerException)";
             case TerrainCard t -> {
                 double now = state.enemyAttackMultiplier();
                 double after = ElementRules.terrainAttackMultiplier(t.element(), enemy.element());

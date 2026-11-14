@@ -11,16 +11,21 @@ public final class Ansi {
     public static final String GREEN = "\u001B[32m";
     public static final String YELLOW = "\u001B[33m";
     public static final String BLUE = "\u001B[34m";
+    /** Secrets. */
+    public static final String MAGENTA = "\u001B[35m";
 
     private Ansi() {
     }
 
     public static String element(Element element) {
-        return element(element, element.displayName());
+        return element == null ? "sans élément" : element(element, element.displayName());
     }
 
     /** {@code text} coloré selon {@code element}. */
     public static String element(Element element, String text) {
+        if (element == null) {
+            return text; // carte morte (NO CARDS)
+        }
         String color = switch (element) {
             case FIRE -> RED;
             case WATER -> BLUE;

@@ -77,6 +77,18 @@ public final class HookDispatcher {
             case GameEvent.ActionRejected e -> {
                 // Concerne seulement l'UI.
             }
+            case GameEvent.EnemyNulled e -> {
+                // Pas de hook pour l'instant (la mort passe par EnemyKilled).
+            }
+            case GameEvent.CardVoided e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.TurnUndone e -> {
+                // Publié par run.Run, hors moteur : jamais livré aux trinkets.
+            }
+            case GameEvent.SecretUnlocked e -> {
+                // Publié par run.UnlockTracker, hors moteur.
+            }
         }
     }
 }
