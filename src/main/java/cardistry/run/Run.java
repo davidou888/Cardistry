@@ -60,6 +60,8 @@ public final class Run {
         REST,
         /** Shop : acheter, retirer une carte, reroll, ou partir. */
         SHOP,
+        /** Événement : choisir une option. */
+        EVENT,
         /** Partie terminée. */
         OVER
     }
@@ -90,6 +92,9 @@ public final class Run {
     }
 
     private record ShopStep(cardistry.core.shop.ShopAction action) implements Step {
+    }
+
+    private record StoryStep(int choice) implements Step {
     }
 
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
@@ -244,6 +249,25 @@ public final class Run {
         session.rest(option, cardIndex);
     }
 
+    /** Événement en cours (phase {@link Phase#EVENT}). */
+    public Optional<cardistry.story.Story> story() {
+        return session.engine.story();
+    }
+
+    /** Résultat du dernier choix d'événement. */
+    public Optional<GameEvent.StoryResolved> lastStoryResult() {
+        return session.engine.lastStoryResult();
+    }
+
+    /** Choix {@code index} de l'événement en cours ; {@code false} s'il n'est pas disponible. */
+    public boolean chooseStory(int index) {
+        if (phase() != Phase.EVENT) {
+            throw new IllegalStateException("Pas d'événement maintenant");
+        }
+        history.add(new StoryStep(index));
+        return session.engine.chooseStory(index);
+    }
+
     /** Shop ouvert (phase {@link Phase#SHOP}). */
     public Optional<cardistry.core.Shop> shop() {
         return session.engine.shop();
@@ -391,6 +415,7 @@ public final class Run {
                 case ChooseNode c -> replayed.chooseNode(c.index());
                 case Rest r -> replayed.rest(r.option(), r.cardIndex());
                 case ShopStep s -> replayed.engine.shopAction(s.action());
+                case StoryStep s -> replayed.engine.chooseStory(s.choice());
                 case CardReward c -> {
                     replayed.engine.resolveCardReward(c.index());
                     replayed.settle();
@@ -448,6 +473,9 @@ public final class Run {
             if (engine.shop().isPresent()) {
                 return Phase.SHOP;
             }
+            if (engine.story().isPresent()) {
+                return Phase.EVENT;
+            }
             return resting ? Phase.REST : Phase.MAP;
         }
 
@@ -482,11 +510,25 @@ public final class Run {
                 }
                 case REST -> resting = true;
                 case SHOP -> engine.openShop();
-                case EVENT -> {
-                    // Événements : à venir (lot 3). On passe.
-                }
+                case EVENT -> engine.startStory(nextStory());
             }
             settle();
+        }
+
+        /** Événements déjà vus dans la partie (on n'en revoit un que quand tous sont passés). */
+        final List<String> seenStories = new ArrayList<>();
+        final Rng stories = new Rng(seed).fork("evenements");
+
+        cardistry.story.Story nextStory() {
+            List<cardistry.story.Story> all = cardistry.story.StoryRegistry.all();
+            List<cardistry.story.Story> fresh = all.stream().filter(s -> !seenStories.contains(s.id())).toList();
+            if (fresh.isEmpty()) {
+                seenStories.clear();
+                fresh = all;
+            }
+            cardistry.story.Story story = stories.pick(fresh);
+            seenStories.add(story.id());
+            return story;
         }
 
         List<RestOption> restOptions() {

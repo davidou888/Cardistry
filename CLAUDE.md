@@ -25,7 +25,7 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
 - `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
 - Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` (et le rendu fenêtre en `.png`) pour relire la mise en page. Les tests tournent en `java.awt.headless`.
 - `core/Shop` + `core/shop/` — shop ouvert (articles, vendus, rerolls), `ShopPrices` (tous les prix), `ShopOffer`, `ShopAction` ; joué par `CombatEngine.shopAction`
-- `run/` reste à compléter : événements.
+- `story/` — événements des nœuds `?` : `Story` (texte + choix), `StoryChoice` (condition, conséquence), `StoryContext` (ce qu'une conséquence peut faire, fourni par le moteur), `StoryRegistry` (**registre**, 3 placeholders)
 
 ### Ajouter un objet ou un trinket
 1. Une entrée dans `ItemRegistry` (nom **exactement** comme dans GAME_DESIGN.md). Trinket : `Trinket.builder(id, nom, rareté).description(…).tags(…)` puis `.percent(stat, x)` / `.flat(stat, x)` pour les stats, `.cardWeight(carte, facteur)` pour la fréquence d'une carte, `.multiply(stat, x)` pour un multiplicateur final, `.gauge(new Gauge(…))` pour une jauge affichée, `.boostsTag(tag, x)` pour amplifier un tag (Diplôme EPFL ; les hooks lisent leur puissance avec `ctx.potency(id)`), `.hooks(new GameHooks() { … })` pour réagir aux événements. Objet : `new Item(…, ctx -> …)` ; un effet qui dure passe par `ctx.addEffect(TemporaryEffect.builder(…)…build())`. Identifiants qualifiés `carte:` / `objet:` / `trinket:` : un objet peut porter le nom d'une carte.

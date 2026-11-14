@@ -40,6 +40,7 @@ public final class GameLoop {
                     run.resolveCardReward(index < run.pendingCardReward().size() ? index : -1);
                 }
                 case REST -> rest(run, input);
+                case EVENT -> story(run, renderer, input);
                 case SHOP -> run.shop(input.chooseShopAction(run.state(), run.shop().orElseThrow(),
                         run.cardRemovalPrice()));
                 case OVER -> {
@@ -83,6 +84,13 @@ public final class GameLoop {
                 renderer.showStatus(run.state());
                 renderer.showHand(run.state());
             }
+        }
+    }
+
+    private static void story(Run run, Renderer renderer, Input input) {
+        cardistry.story.Story story = run.story().orElseThrow();
+        if (run.chooseStory(input.chooseStory(run.state(), story))) {
+            renderer.showStoryResult(run.state(), run.lastStoryResult().orElseThrow());
         }
     }
 

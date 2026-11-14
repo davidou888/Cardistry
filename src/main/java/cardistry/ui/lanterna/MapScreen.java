@@ -86,7 +86,7 @@ final class MapScreen {
             case COMBAT -> "Un adversaire commun.";
             case ELITE -> "Plus dur, meilleure récompense.";
             case SHOP -> "Cartes, objets, trinkets.";
-            case EVENT -> "Bientôt : un événement.";
+            case EVENT -> "Une rencontre, un choix.";
             case REST -> "Une pause avant le boss.";
             case BOSS -> "Le boss du niveau.";
         };

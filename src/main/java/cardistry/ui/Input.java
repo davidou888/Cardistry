@@ -72,6 +72,19 @@ public interface Input extends PlayerDecisions {
         return new cardistry.core.shop.ShopAction.Leave();
     }
 
+    /**
+     * Événement : index du choix (le moteur refuse un choix indisponible et redemande). Par défaut :
+     * le premier choix disponible.
+     */
+    default int chooseStory(GameState state, cardistry.story.Story story) {
+        for (int i = 0; i < story.choices().size(); i++) {
+            if (story.choices().get(i).isAvailable(state)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
     default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         return options.get(0);

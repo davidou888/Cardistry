@@ -109,4 +109,15 @@ class ConsoleInputTest {
         input("0\n").chooseShopAction(state, engine.shop().orElseThrow(), 75);
         assertTrue(out.toString(StandardCharsets.UTF_8).contains("(trop cher)"));
     }
+
+    @Test
+    void evenementEnModeTexte() {
+        GameState state = GameState.newGame();
+        cardistry.story.Story machine = cardistry.story.StoryRegistry.byId("machine-a-clopes").orElseThrow();
+        assertEquals(2, input("1\n3\n").chooseStory(state, machine));
+        String text = out.toString(StandardCharsets.UTF_8);
+        assertTrue(text.contains("? Machine à clopes ?"), text);
+        assertTrue(text.contains("[1] Acheter un paquet (indisponible : il te faut 20 Choomies)"));
+        assertTrue(text.contains("Ce choix n'est pas possible"));
+    }
 }

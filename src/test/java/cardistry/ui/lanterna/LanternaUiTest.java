@@ -244,7 +244,7 @@ class LanternaUiTest {
 
         press(KeyType.Enter); // titre
         for (int i = 0; i < 3000; i++) {
-            type("1ps"); // 1er nœud de la carte, jouer la 1re carte, piocher, refuser les récompenses
+            type("12ps"); // 1er nœud, 1re carte (ou 2e choix d'un événement), piocher, refuser les récompenses
             press(KeyType.Escape); // quitter le shop (ailleurs : demande de confirmation…
             type("n"); // … refusée)
         }
@@ -1045,5 +1045,31 @@ class LanternaUiTest {
                 List.of(mate(), ItemRegistry.trinket("pax")), 0, 1));
         assertEquals(1, reward.size(), "seul Maté a une icône");
         assertTrue(drawn(p -> ItemScreens.inventory(p, withInventory(List.of(), List.of()))).isEmpty());
+    }
+
+    // --- Événements ---
+
+    @Test
+    void ecranDEvenementEtResultat() throws IOException {
+        open(80, 24);
+        GameState state = GameState.newGame(); // 15 Choomies : le paquet de la machine est trop cher
+        cardistry.story.Story machine = cardistry.story.StoryRegistry.byId("machine-a-clopes").orElseThrow();
+        type("1"); // indisponible : ignoré
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter);
+        assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseStory(state, machine)));
+        String text = dump("90-evenement");
+        assertTrue(text.contains("Machine à clopes"), text);
+        assertTrue(text.contains("[1] Acheter un paquet"));
+        assertTrue(text.contains("(il te faut 20 Choomies)"));
+        assertTrue(text.contains("[2] Taper dessus"));
+        assertTrue(text.contains("[3] Partir"));
+
+        press(KeyType.Enter);
+        assertTimeoutPreemptively(TIMEOUT, () -> ui.showStoryResult(state,
+                new GameEvent.StoryResolved("Machine à clopes", "Taper dessus", List.of("Deux clopes tombent ! (+2)"))));
+        String result = dump("91-evenement-resultat");
+        assertTrue(result.contains("Tu choisis : Taper dessus"), result);
+        assertTrue(result.contains("Deux clopes tombent !"));
     }
 }

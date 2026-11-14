@@ -58,6 +58,7 @@ class RunMapTest {
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
+                case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -80,6 +81,7 @@ class RunMapTest {
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
+                case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -357,6 +359,7 @@ class RunMapTest {
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
+                case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case SHOP, OVER -> {
                 }
             }
@@ -392,6 +395,7 @@ class RunMapTest {
                 case MAP -> run.chooseNode(0);
                 case REST -> run.rest(RestOption.HEAL);
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
+                case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 default -> throw new AssertionError(run.phase());
             }
         }
@@ -403,6 +407,60 @@ class RunMapTest {
         assertEquals(deck, run.state().deck().size());
         if (bought) {
             assertTrue(run.state().choomies() < choomies + 200);
+        }
+    }
+
+    // --- Événements ---
+
+    @Test
+    void evenementsSansRepetitionPuisRejouables() {
+        // Une partie qui préfère les « ? » : chaque événement vu une fois avant d'en revoir un.
+        EventBus bus = new EventBus();
+        List<String> seen = new ArrayList<>();
+        bus.subscribe(e -> {
+            if (e instanceof GameEvent.StoryStarted s) {
+                seen.add(s.story().id());
+            }
+        });
+        Run run = new Run(6, Set.of(), bus,
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        run.start();
+        int guard = 0;
+        while (!run.isOver() && guard++ < 10_000) {
+            switch (run.phase()) {
+                case MAP -> {
+                    List<MapNode> choices = run.choices();
+                    int pick = 0;
+                    for (int i = 0; i < choices.size(); i++) {
+                        if (choices.get(i).type() == NodeType.EVENT) {
+                            pick = i;
+                        }
+                    }
+                    run.chooseNode(pick);
+                }
+                case EVENT -> {
+                    assertEquals(NodeType.EVENT, run.position().type());
+                    run.chooseStory(run.story().orElseThrow().choices().size() - 1);
+                    assertTrue(run.lastStoryResult().isPresent());
+                }
+                case COMBAT -> {
+                    if (run.startTurn()) {
+                        run.submit(new Action.PlayCard(0));
+                    }
+                }
+                case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case CARD_REWARD -> run.resolveCardReward(-1);
+                case REST -> run.rest(RestOption.HEAL);
+                case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
+                case OVER -> {
+                }
+            }
+        }
+        assertTrue(seen.size() >= 3, "au moins un tour complet : " + seen);
+        int n = cardistry.story.StoryRegistry.all().size();
+        for (int start = 0; start + n <= seen.size(); start += n) {
+            assertEquals(n, seen.subList(start, start + n).stream().distinct().count(), "répétition : " + seen);
         }
     }
 }

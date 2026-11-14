@@ -652,6 +652,112 @@ public final class CombatEngine {
         return replaceSlot < used ? null : Reason.INVALID_REWARD;
     }
 
+    // --- Événements ---
+
+    private cardistry.story.Story story;
+    private GameEvent.StoryResolved lastStoryResult;
+
+    /** Résultat du dernier choix d'événement (pour l'afficher). */
+    public Optional<GameEvent.StoryResolved> lastStoryResult() {
+        return Optional.ofNullable(lastStoryResult);
+    }
+
+    /** Événement en cours (nœud {@code ?} de la carte), s'il y en a un. */
+    public Optional<cardistry.story.Story> story() {
+        return Optional.ofNullable(story);
+    }
+
+    /** Commence un événement : le moteur attend {@link #chooseStory(int)}. */
+    public void startStory(cardistry.story.Story newStory) {
+        if (inCombat() || hasPendingReward() || hasPendingCardReward() || shop != null || story != null || isOver()) {
+            throw new IllegalStateException("Pas d'événement maintenant");
+        }
+        story = newStory;
+        bus.publish(new GameEvent.StoryStarted(newStory));
+    }
+
+    /**
+     * Applique le choix {@code index} de l'événement en cours, puis le termine.
+     *
+     * @return {@code false} si le choix n'existe pas ou n'est pas disponible (l'événement reste ouvert)
+     */
+    public boolean chooseStory(int index) {
+        if (story == null) {
+            throw new IllegalStateException("Aucun événement en cours");
+        }
+        if (index < 0 || index >= story.choices().size() || !story.choices().get(index).isAvailable(state)) {
+            bus.publish(new GameEvent.ActionRejected(Reason.CHOICE_UNAVAILABLE));
+            return false;
+        }
+        cardistry.story.Story current = story;
+        cardistry.story.StoryChoice choice = current.choices().get(index);
+        List<String> lines = new java.util.ArrayList<>();
+        story = null;
+        choice.outcome().accept(new StoryEffects(lines));
+        lastStoryResult = new GameEvent.StoryResolved(current.title(), choice.label(), lines);
+        bus.publish(lastStoryResult);
+        return true;
+    }
+
+    /** Conséquences d'un choix d'événement. */
+    private final class StoryEffects implements cardistry.story.StoryContext {
+
+        private final List<String> lines;
+
+        StoryEffects(List<String> lines) {
+            this.lines = lines;
+        }
+
+        @Override
+        public GameState state() {
+            return state;
+        }
+
+        @Override
+        public void say(String line) {
+            lines.add(line);
+        }
+
+        @Override
+        public boolean chance(double probability) {
+            return effects.chance(probability);
+        }
+
+        @Override
+        public void choomies(int amount) {
+            changeChoomies(amount);
+        }
+
+        @Override
+        public void heal(double amount) {
+            effects.healPlayer(amount);
+        }
+
+        @Override
+        public void hurt(double amount) {
+            double dealt = Math.min(amount, Math.max(0, state.player().hp() - 1));
+            if (dealt > 0) {
+                effects.damagePlayer(dealt);
+            }
+        }
+
+        @Override
+        public int cigarettes(int count) {
+            return effects.addCigarettes(count);
+        }
+
+        @Override
+        public void hangover() {
+            state.addPendingCurse(Curse.HANGOVER, 1);
+            bus.publish(new GameEvent.CurseGained(Curse.HANGOVER));
+        }
+
+        @Override
+        public void addCard(Card card) {
+            addCardToDeck(card);
+        }
+    }
+
     // --- Shop ---
 
     private Shop shop;
@@ -663,7 +769,7 @@ public final class CombatEngine {
 
     /** Ouvre un shop : articles tirés, rerolls à zéro. */
     public void openShop() {
-        if (inCombat() || hasPendingReward() || hasPendingCardReward() || isOver()) {
+        if (inCombat() || hasPendingReward() || hasPendingCardReward() || story != null || isOver()) {
             throw new IllegalStateException("Pas de shop maintenant");
         }
         shop = new Shop();

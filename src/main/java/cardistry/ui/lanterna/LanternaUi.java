@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -204,6 +204,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case NOT_ENOUGH_CHOOMIES -> "Pas assez de Choomies.";
                     case SOLD_OUT -> "Déjà vendu.";
                     case DECK_TOO_SMALL -> "Ton deck est au minimum (" + cardistry.core.CombatEngine.MIN_DECK_SIZE + " cartes).";
+                    case CHOICE_UNAVAILABLE -> "Ce choix n'est pas possible.";
                 };
                 view.log(message, Palette.WARNING);
                 if (page != Page.COMBAT) {
@@ -295,6 +296,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.CardRewardOffered e -> {
             }
             case GameEvent.CardRewardSkipped e -> view.log("Carte refusée", Palette.DIM);
+            case GameEvent.StoryStarted e -> view.log("Événement : " + e.story().title(), Palette.INFO);
+            case GameEvent.StoryResolved e -> e.lines().forEach(line -> view.log(line, Palette.INFO));
             case GameEvent.ShopEntered e -> {
                 view.log("Shop", Palette.ACCENT);
                 view.toast = null;
@@ -313,9 +316,6 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             }
             case GameEvent.NodeEntered e -> {
                 view.log("Étage " + e.floor() + " : " + e.kind(), Palette.INFO);
-                if (e.kind().equals("Événement")) {
-                    view.toast = e.kind() + " : bientôt disponible";
-                }
             }
             case GameEvent.EnemyMoveUsed e -> view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
             case GameEvent.EnemyDodged e -> {
@@ -437,6 +437,63 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     }
 
     private int deckSelected = 0;
+    private cardistry.story.Story story;
+    private int storySelected = 0;
+    private GameEvent.StoryResolved storyResult;
+
+    @Override
+    public int chooseStory(GameState state, cardistry.story.Story story) {
+        this.state = state;
+        this.story = story;
+        int count = story.choices().size();
+        storySelected = 0;
+        page = Page.STORY;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowUp, ArrowLeft -> storySelected = Math.floorMod(storySelected - 1, count);
+                case ArrowDown, ArrowRight -> storySelected = Math.floorMod(storySelected + 1, count);
+                case Enter -> {
+                    if (story.choices().get(storySelected).isAvailable(state)) {
+                        return storySelected;
+                    }
+                }
+                case Escape -> confirmQuit();
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 'q') {
+                        confirmQuit();
+                    } else if (c >= '1' && c < '1' + count) {
+                        storySelected = c - '1';
+                        if (story.choices().get(storySelected).isAvailable(state)) {
+                            return storySelected;
+                        }
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    @Override
+    public void showStoryResult(GameState state, GameEvent.StoryResolved result) {
+        this.state = state;
+        this.storyResult = result;
+        page = Page.STORY_RESULT;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            if (key.getKeyType() == KeyType.Enter || key.getKeyType() == KeyType.Escape || isChar(key, ' ')) {
+                return;
+            }
+            if (isChar(key, 'q')) {
+                confirmQuit();
+            }
+        }
+    }
     private cardistry.core.Shop shop;
     private int shopSelected = 0;
     private int removalPrice = 0;
@@ -1106,6 +1163,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case INVENTORY -> ItemScreens.inventory(painter, state);
                     case REWARD -> ItemScreens.reward(painter, state, rewardOptions, rewardSelected, seed);
                     case REPLACE -> ItemScreens.replace(painter, state, replaceTarget, replaceSelected, seed);
+                    case STORY -> StoryScreen.choices(painter, state, story, storySelected, seed);
+                    case STORY_RESULT -> StoryScreen.result(painter, state, storyResult, seed);
                     case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,

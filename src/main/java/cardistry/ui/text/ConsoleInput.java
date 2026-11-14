@@ -214,6 +214,27 @@ public final class ConsoleInput implements Input {
                 + " (deck " + state.deck().size() + ")   0) Partir");
     }
 
+    /** Événement : le texte, les choix numérotés (indisponibles marqués), puis le numéro choisi. */
+    @Override
+    public int chooseStory(GameState state, cardistry.story.Story story) {
+        console.println();
+        console.println(Ansi.yellow("? " + story.title() + " ?"));
+        console.println(story.text());
+        for (int i = 0; i < story.choices().size(); i++) {
+            cardistry.story.StoryChoice choice = story.choices().get(i);
+            boolean available = choice.isAvailable(state);
+            String detail = available ? choice.hint() : "indisponible : " + choice.requirement();
+            console.println("[" + (i + 1) + "] " + choice.label() + (detail.isEmpty() ? "" : " (" + detail + ")"));
+        }
+        while (true) {
+            int index = readNumber("Ton choix ? ", 1, story.choices().size()) - 1;
+            if (story.choices().get(index).isAvailable(state)) {
+                return index;
+            }
+            console.println("Ce choix n'est pas possible : " + story.choices().get(index).requirement());
+        }
+    }
+
     @Override
     public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         console.println();

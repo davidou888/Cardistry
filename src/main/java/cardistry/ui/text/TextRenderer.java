@@ -103,6 +103,7 @@ public final class TextRenderer implements Renderer {
                 case NOT_ENOUGH_CHOOMIES -> "Pas assez de Choomies";
                 case SOLD_OUT -> "Déjà vendu";
                 case DECK_TOO_SMALL -> "Ton deck ne peut pas descendre sous " + cardistry.core.CombatEngine.MIN_DECK_SIZE + " cartes";
+                case CHOICE_UNAVAILABLE -> "Ce choix n'est pas possible";
             });
             case GameEvent.EnemyNulled e -> console.println(Ansi.MAGENTA + "NullPointerException : "
                     + e.enemy().name() + " devient null !" + Ansi.END_COLOR);
@@ -172,6 +173,12 @@ public final class TextRenderer implements Renderer {
             case GameEvent.CardAddedToDeck e -> console.println("→ " + cardName(e.card()) + " ajoutée à ton deck.");
             case GameEvent.CardRemovedFromDeck e -> console.println("→ " + cardName(e.card()) + " retirée de ton deck.");
             case GameEvent.CardRewardSkipped e -> console.println("Tu passes la carte.");
+            case GameEvent.StoryStarted e -> {
+                // Le texte et les choix sont affichés par la saisie.
+            }
+            case GameEvent.StoryResolved e -> {
+                // Affiché par showStoryResult.
+            }
             case GameEvent.ShopEntered e -> {
                 // Les articles sont affichés par la saisie.
             }
@@ -194,9 +201,7 @@ public final class TextRenderer implements Renderer {
                 console.println(Ansi.yellow("=== Niveau " + e.level() + " ==="));
             }
             case GameEvent.NodeEntered e -> {
-                if (e.kind().equals("Événement")) {
-                    console.println("→ " + e.kind() + " : bientôt disponible, tu continues ta route.");
-                }
+                // Le nœud s'affiche par son écran (combat, shop, événement…).
             }
             case GameEvent.IntentChosen e -> {
                 // Affiché dans l'état (« Prochain tour »).
@@ -241,6 +246,14 @@ public final class TextRenderer implements Renderer {
             cardistry.run.map.MapNode node = view.choices().get(i);
             console.println("[" + (i + 1) + "] Étage " + node.floor() + " : " + node.type().displayName());
         }
+    }
+
+    @Override
+    public void showStoryResult(GameState state, GameEvent.StoryResolved result) {
+        for (String line : result.lines()) {
+            console.println("→ " + line);
+        }
+        waitForEnter("(Appuie sur Entrée pour continuer)");
     }
 
     /** Dernier état affiché (pour les événements qui ne portent pas l'état). */

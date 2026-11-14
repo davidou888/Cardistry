@@ -91,7 +91,7 @@ Règles communes :
   Shop par carte ; au moins un chemin sans élite.
 - Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
   I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
-- En attendant le lot Événements, les nœuds `?` ne font rien (« bientôt disponible »).
+- Nœud `?` : un **événement** (voir « Événements »).
 - **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max ; c'est un
   **soin** : efficacité des soins et Ross s'appliquent, sans plafond avec Ross), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une
   carte du deck, avec le deck construit). Elle n'efface **pas** la Gueule de bois (les clopes sont là pour ça).
@@ -257,6 +257,25 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - Les Choomah en volent (5 par vol). Jamais sous 0.
 - Affichage : en haut de l'écran de combat (« 15 Choomies »), dans l'état en mode texte.
 
+## Événements (lot 3)
+Code : `cardistry.story` (`Story`, `StoryChoice`, `StoryContext`, `StoryRegistry` = registre), joué par
+`CombatEngine.startStory` / `chooseStory`.
+- Un événement = un titre, un texte, des choix. Un choix peut demander une condition (ex. « il te faut 20
+  Choomies ») : sinon il est affiché grisé avec ce qui manque, et on ne peut pas le prendre.
+- Conséquences possibles (`StoryContext`) : Choomies (gain ou paiement), soin (un vrai soin : efficacité,
+  Ross), dégâts (**jamais mortels** hors combat : il reste au moins 1 PV), clopes, Gueule de bois au
+  prochain combat, carte ajoutée au deck, et des tirages de chance (en faveur du joueur : doublés par
+  CLAUDE.md). On en ajoutera selon les vrais événements.
+- Tirage : un sous-flux de la seed (`evenements`) ; on ne revoit un événement qu'après les avoir tous vus.
+- Après le choix, un écran montre ce qui s'est passé (« Entrée continuer »). Ctrl+Z rejoue les choix.
+- **Placeholders** (en attendant les vrais, références EPFL et soirées) :
+
+| Événement | Choix |
+|---|---|
+| Distributeur en panne | Secouer : 50 % +25 Choomies, sinon −6 PV · Passer ton chemin |
+| Un inconnu généreux | Accepter : +15 PV et Gueule de bois au prochain combat · Lui demander une astuce : +1 Boule de feu dans le deck · Refuser |
+| Machine à clopes | Acheter un paquet (20 Choomies) : +4 clopes · Taper dessus : 30 % +2 clopes, sinon −4 PV · Partir |
+
 ## Shop (lot 2)
 Code : `CombatEngine.openShop` / `shopAction`, `core.Shop`, `core.shop` (`ShopPrices`, `ShopOffer`, `ShopAction`).
 - Nœud `$` de la carte. **5 cartes** (noms différents, tirées du registre avec les poids des trinkets),
@@ -289,7 +308,8 @@ Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ +
 Fait aussi : écran de pioche au choix (Paquet de cartes : 3 cartes, touches 1/2/3, effet réel de la sélectionnée, phrase méta au premier déclenchement) ; écran « jeter un trinket » obligatoire (Diplôme perdu) ; sets dans l'inventaire (palier atteint, prochain palier, ×2 si amplifié) et bandeau « ★ Set … activé » ; trinkets amplifiés marqués « (effet ×2) » ; paquet de clopes (petit sprite ASCII en bas à droite, n/20, touches F fumer / G rouler, jauge Honoré) ; PV au-dessus du max en doré (Ross) ; transformation Googz affichée (journal + texte flottant) ; effets temporaires affichés avec leur durée restante (ligne au-dessus du terrain, liste complète dans l'inventaire) ; objets et cartes homonymes (Caïpirinha, Petit pétou) distingués à l'écran (« la carte … » / « l'objet … » dans le journal, couleur d'élément pour les cartes, de rareté pour les objets) ; écran de récompense (cartes côte à côte, couleur de rareté), écran de remplacement si inventaire plein, inventaire (touche I), objets utilisables avec W/E/R (clavier QWERTZ, action gratuite), trinkets affichés en combat.
 Fait aussi : carte de la run (écran Lanterna + mode texte), intents des adversaires, sprites animés et visionneuse `--sprites`.
 Fait aussi : shop (plein écran + mode texte) ; fenêtre du jeu par défaut (police pixel embarquée, double buffer, images PNG avec repli ASCII, filtre CRT désactivé par défaut).
-Reste : événements, transitions d'écran.
+Fait aussi : événements (plein écran + mode texte).
+Reste : transitions d'écran, son et musique.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
@@ -301,6 +321,7 @@ Reste : événements, transitions d'écran.
 - **[À DÉCIDER]** Noms et attaques des 3 boss (placeholders « Boss du niveau 1/2/3 »).
 - **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
 - **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil.
+- **[À DÉCIDER]** Les vrais événements (les 3 actuels sont des placeholders).
 - Provisoire : rareté des cartes au shop (voir « Shop »).
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).

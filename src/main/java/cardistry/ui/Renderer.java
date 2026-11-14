@@ -17,6 +17,10 @@ public interface Renderer {
     /** Main du joueur et choix possibles. */
     void showHand(GameState state);
 
+    /** Résultat d'un choix d'événement (le texte est dans {@code result}) ; peut attendre le joueur. */
+    default void showStoryResult(GameState state, cardistry.core.event.GameEvent.StoryResolved result) {
+    }
+
     /** Carte du niveau, avant le choix du prochain nœud. */
     default void showMap(cardistry.run.map.MapView view) {
     }

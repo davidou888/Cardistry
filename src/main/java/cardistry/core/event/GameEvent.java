@@ -139,6 +139,18 @@ public sealed interface GameEvent {
     record NodeEntered(int level, int floor, String kind) implements GameEvent {
     }
 
+    /** Un événement commence (nœud {@code ?}) : texte et choix dans {@code story}. */
+    record StoryStarted(cardistry.story.Story story) implements GameEvent {
+    }
+
+    /** Le joueur a fait un choix ; {@code lines} = ce qui s'est passé, prêt à afficher. */
+    record StoryResolved(String title, String choice, List<String> lines) implements GameEvent {
+
+        public StoryResolved {
+            lines = List.copyOf(lines);
+        }
+    }
+
     /** Entrée dans un shop (articles : {@code shop.offers()}). */
     record ShopEntered(cardistry.core.Shop shop) implements GameEvent {
     }
@@ -326,7 +338,9 @@ public sealed interface GameEvent {
             /** Shop : article déjà vendu (ou inexistant). */
             SOLD_OUT,
             /** Retrait impossible : le deck est au minimum. */
-            DECK_TOO_SMALL
+            DECK_TOO_SMALL,
+            /** Événement : ce choix n'est pas disponible (il manque quelque chose). */
+            CHOICE_UNAVAILABLE
         }
     }
 
