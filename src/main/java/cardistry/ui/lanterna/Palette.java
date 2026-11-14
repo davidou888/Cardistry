@@ -21,6 +21,31 @@ final class Palette {
     private Palette() {
     }
 
+    /**
+     * Couleur d'une lettre de carte de couleurs de sprite : r g y b m c w k (majuscule = vif) ;
+     * autre caractère = {@code fallback}.
+     */
+    static TextColor sprite(char letter, TextColor fallback) {
+        return switch (letter) {
+            case 'r' -> TextColor.ANSI.RED;
+            case 'R' -> TextColor.ANSI.RED_BRIGHT;
+            case 'g' -> TextColor.ANSI.GREEN;
+            case 'G' -> TextColor.ANSI.GREEN_BRIGHT;
+            case 'y' -> TextColor.ANSI.YELLOW;
+            case 'Y' -> TextColor.ANSI.YELLOW_BRIGHT;
+            case 'b' -> TextColor.ANSI.BLUE;
+            case 'B' -> TextColor.ANSI.BLUE_BRIGHT;
+            case 'm' -> TextColor.ANSI.MAGENTA;
+            case 'M' -> TextColor.ANSI.MAGENTA_BRIGHT;
+            case 'c' -> TextColor.ANSI.CYAN;
+            case 'C' -> TextColor.ANSI.CYAN_BRIGHT;
+            case 'w' -> TextColor.ANSI.WHITE;
+            case 'W' -> TextColor.ANSI.WHITE_BRIGHT;
+            case 'k', 'K' -> TextColor.ANSI.BLACK_BRIGHT;
+            default -> fallback;
+        };
+    }
+
     static TextColor element(Element element) {
         if (element == null) {
             return DIM; // carte morte (NO CARDS)

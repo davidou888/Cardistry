@@ -145,21 +145,23 @@ final class CombatScreen {
             return;
         }
         Enemy enemy = state.currentEnemy();
-        List<String> sprite = Resources.enemySprite(enemy.spriteId());
-        int width = sprite.stream().mapToInt(String::length).max().orElse(0);
+        cardistry.ui.sprite.Sprite sprite = cardistry.ui.sprite.Sprites.of(enemy);
+        cardistry.ui.sprite.Sprite.Frame frame = frameFor(sprite, view);
         int areaLeft = p.cols() - SPRITE_WIDTH - 2;
-        int col = areaLeft + Math.max(0, (SPRITE_WIDTH - width) / 2) + view.enemyOffsetX;
-        int top = 1 + Math.max(0, (10 - sprite.size()) / 2);
-        TextColor color = view.enemyFlash != null ? view.enemyFlash
-                : view.enemyDim ? Palette.DIM : Palette.element(enemy.element());
-        for (int i = 0; i < sprite.size() && top + i <= 10; i++) {
-            // Ne pas déborder sur le cadre de droite.
-            String line = sprite.get(i);
-            int maxLen = p.cols() - 1 - col;
-            if (maxLen > 0) {
-                p.text(col, top + i, Painter.fit(line, maxLen), color, view.enemyFlash != null);
-            }
+        int col = areaLeft + Math.max(0, (SPRITE_WIDTH - sprite.width()) / 2) + view.enemyOffsetX;
+        int top = 1 + Math.max(0, (10 - sprite.height()) / 2);
+        TextColor base = view.enemyDim ? Palette.DIM : Palette.element(enemy.element());
+        SpriteArt.draw(p, frame, col, top, 10, base, view.enemyFlash, p.cols() - 1);
+    }
+
+    /** Frame à dessiner : celle de l'animation en cours si le sprite l'a, sinon la frame idle. */
+    static cardistry.ui.sprite.Sprite.Frame frameFor(cardistry.ui.sprite.Sprite sprite, ViewState view) {
+        List<cardistry.ui.sprite.Sprite.Frame> frames = sprite.frames(view.spriteAnimation);
+        if (!frames.isEmpty()) {
+            return frames.get(Math.min(view.spriteFrame, frames.size() - 1));
         }
+        List<cardistry.ui.sprite.Sprite.Frame> idle = sprite.idle();
+        return idle.get(Math.floorMod(view.idleFrame, idle.size()));
     }
 
     private static void drawTerrainAndPlayer(Painter p, GameState state, ViewState view) {

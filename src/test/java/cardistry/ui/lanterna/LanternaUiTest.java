@@ -743,4 +743,36 @@ class LanternaUiTest {
     private static Enemy hydra() {
         return new Enemy("Mannequin", Element.FIRE, 20, 5);
     }
+
+    // --- Sprites ---
+
+    @Test
+    void visionneuseDeSprites() throws IOException {
+        open(80, 24);
+        press(KeyType.ArrowRight);
+        type("2");
+        type("q");
+        assertTimeoutPreemptively(TIMEOUT, () -> ui.viewSprites());
+        String text = dump("40-sprites");
+        assertTrue(text.contains("Sprites"));
+        assertTrue(text.contains("Choomah"), text); // 2e sprite du registre
+        assertTrue(text.contains("sprites/choomah.txt"));
+        assertTrue(text.contains("1 idle"));
+    }
+
+    @Test
+    void spriteEnCouleurDansLeCombat() throws IOException {
+        open(80, 24);
+        Enemy caddie = cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), caddie);
+        ui.onEvent(new GameEvent.GameStarted(42));
+        ui.showStatus(state);
+        String text = dump("41-combat-caddie");
+        assertTrue(text.contains("(O)      (O)"), text);
+        assertTrue(text.contains("Prochain : Roue voilée : 6"));
+        int row = text.lines().toList().indexOf(text.lines().filter(l -> l.contains("(O)")).findFirst().orElseThrow());
+        int col = text.lines().toList().get(row).indexOf("(O)") + 1;
+        assertEquals(com.googlecode.lanterna.TextColor.ANSI.YELLOW_BRIGHT,
+                terminal.getCharacter(col, row).getForegroundColor());
+    }
 }

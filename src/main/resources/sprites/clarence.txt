@@ -1,0 +1,9 @@
+@name Clarence
+@# Sprite provisoire : a remplacer (voir README, format des sprites).
+@frame idle
++----------------------+
+|                      |
+|       CLARENCE       |
+|     (a dessiner)     |
+|                      |
++----------------------+

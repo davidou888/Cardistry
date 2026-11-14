@@ -14,6 +14,7 @@ import cardistry.ui.QuitGameException;
 import cardistry.ui.lanterna.LanternaUi;
 import cardistry.ui.text.Console;
 import cardistry.ui.text.ConsoleInput;
+import cardistry.ui.text.SpriteViewerText;
 import cardistry.ui.text.TextRenderer;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public final class Main {
      * <ul>
      *   <li>{@code --seed N} rejoue la partie de seed N</li>
      *   <li>{@code --reset-unlocks} efface les secrets débloqués, puis lance le jeu</li>
+     *   <li>{@code --sprites} visionneuse : fait défiler les sprites et leurs animations, sans partie</li>
      *   <li>{@code --fast} supprime les pauses et animations (pratique pour tester)</li>
      *   <li>{@code --no-ui} rendu texte simple ; automatique si l'entrée n'est pas un vrai terminal
      *       (pipe, {@code ./gradlew run}) ou s'il n'y a pas d'affichage graphique pour la fenêtre</li>
@@ -46,6 +48,11 @@ public final class Main {
         boolean window = options.contains("--window") || os == Os.WINDOWS;
         boolean asciiRequested = options.contains("--ascii");
         boolean color = !options.contains("--no-color") && ansiColorsLikely(os);
+        boolean textAscii = asciiRequested || !Glyphs.unicodeLikely();
+        if (options.contains("--sprites")) {
+            viewSprites(options, os, window, fast, asciiRequested, textAscii, color);
+            return;
+        }
         UnlockStore store = UnlockFile.inSaveDirectory();
         if (options.contains("--reset-unlocks")) {
             System.out.println("Secrets débloqués effacés.");
@@ -53,7 +60,6 @@ public final class Main {
         Game game = prepare(options, store);
         EventBus bus = game.bus();
 
-        boolean textAscii = asciiRequested || !Glyphs.unicodeLikely();
         if (options.contains("--no-ui")) {
             runText(game, bus, fast, textAscii, color);
         } else if (window) {
@@ -67,6 +73,26 @@ public final class Main {
             runFullScreen(game, bus, fast, textAscii, color);
         } else {
             runText(game, bus, fast, textAscii, color);
+        }
+    }
+
+    /** Visionneuse de sprites, dans le même affichage que le jeu (plein écran, fenêtre ou texte). */
+    private static void viewSprites(List<String> options, Os os, boolean window, boolean fast, boolean asciiRequested,
+            boolean textAscii, boolean color) {
+        boolean text = options.contains("--no-ui") || (window ? GraphicsEnvironment.isHeadless() : !isInteractiveTerminal());
+        if (text) {
+            SpriteViewerText.run(new Console(System.in, System.out, fast, textAscii, color));
+            return;
+        }
+        try (LanternaUi ui = window ? LanternaUi.openWindow(fast, asciiRequested) : LanternaUi.open(fast, textAscii)) {
+            ui.viewSprites();
+        } catch (QuitGameException e) {
+            // Fermé.
+        } catch (IOException e) {
+            System.err.println("Erreur du terminal : " + e.getMessage());
+        }
+        if (window) {
+            System.exit(0);
         }
     }
 

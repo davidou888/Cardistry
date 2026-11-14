@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -583,14 +583,85 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         render();
     }
 
+    // ===================== Visionneuse de sprites =====================
+
+    private List<java.util.Map.Entry<String, cardistry.ui.sprite.Sprite>> catalog = List.of();
+    private int spriteIndex = 0;
+    private String spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
+    private int spriteFrame = 0;
+    private boolean spriteFlash = false;
+    private boolean spriteHidden = false;
+
+    /**
+     * Visionneuse ({@code --sprites}) : fait défiler les sprites de tous les adversaires et leurs
+     * animations, sans lancer de partie. Q ou Échap pour quitter.
+     */
+    public void viewSprites() {
+        catalog = cardistry.ui.sprite.Sprites.catalog();
+        page = Page.SPRITES;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            if (isQuit(key)) {
+                return;
+            }
+            switch (key.getKeyType()) {
+                case ArrowLeft -> selectSprite(-1);
+                case ArrowRight -> selectSprite(1);
+                case Character -> {
+                    char c = key.getCharacter();
+                    if (c >= '1' && c <= '4') {
+                        playSprite(cardistry.ui.sprite.Sprite.ANIMATIONS.get(c - '1'));
+                    }
+                }
+                default -> {
+                }
+            }
+        }
+    }
+
+    private void selectSprite(int delta) {
+        spriteIndex = Math.floorMod(spriteIndex + delta, catalog.size());
+        spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        spriteFrame = 0;
+        render();
+    }
+
+    /** Joue une animation une fois (l'idle : deux tours), puis revient à l'idle. */
+    private void playSprite(String animation) {
+        cardistry.ui.sprite.Sprite sprite = catalog.get(spriteIndex).getValue();
+        int frames = Math.max(1, sprite.frames(animation).size());
+        boolean generic = sprite.frames(animation).isEmpty();
+        int steps = animation.equals(cardistry.ui.sprite.Sprite.IDLE) ? frames * 2 : Math.max(frames, generic ? 6 : 1);
+        spriteAnimation = animation;
+        for (int i = 0; i < steps; i++) {
+            spriteFrame = generic ? 0 : i % frames;
+            spriteFlash = generic && animation.equals(cardistry.ui.sprite.Sprite.HURT) && i % 2 == 0;
+            spriteHidden = generic && animation.equals(cardistry.ui.sprite.Sprite.DEATH) && i % 2 == 1;
+            render();
+            if (!fast) {
+                sleep(generic ? FRAME_MS * 3 : IDLE_MS);
+            }
+        }
+        spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        spriteFrame = 0;
+        spriteFlash = false;
+        spriteHidden = false;
+        render();
+    }
+
     // ===================== Animations =====================
 
     private void animateEnemyHit(Enemy enemy, double amount) {
         double before = enemy.hp() + amount;
         int[] shake = {2, -2, 1, -1, 0, 0};
+        boolean hurtFrames = !currentSprite().frames(cardistry.ui.sprite.Sprite.HURT).isEmpty();
         for (int i = 0; i < shake.length; i++) {
             view.enemyOffsetX = shake[i];
-            view.enemyFlash = i < 3 ? TextColor.ANSI.WHITE_BRIGHT : null;
+            view.spriteAnimation = cardistry.ui.sprite.Sprite.HURT;
+            view.spriteFrame = i / 2;
+            // Avec une frame « hurt », un seul clignotement ; sans, clignotement comme avant.
+            view.enemyFlash = (hurtFrames ? i == 0 : i < 3) ? TextColor.ANSI.WHITE_BRIGHT : null;
             view.enemyHpShown = before - amount * (i + 1) / shake.length;
             view.floating.clear();
             view.floating.add(new ViewState.Floating("-" + num(amount), Palette.ACCENT, true, i / 2));
@@ -637,14 +708,23 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private void animateEnemyAttack() {
         pause(250);
-        for (int offset : new int[] {-2, -4, -2, 0}) {
-            view.enemyOffsetX = offset;
+        int[] offsets = {-2, -4, -2, 0};
+        for (int i = 0; i < offsets.length; i++) {
+            view.enemyOffsetX = offsets[i];
+            view.spriteAnimation = cardistry.ui.sprite.Sprite.ATTACK;
+            view.spriteFrame = i;
             frame();
         }
         view.resetEffects();
     }
 
     private void animateEnemyDeath() {
+        java.util.List<cardistry.ui.sprite.Sprite.Frame> death = currentSprite().frames(cardistry.ui.sprite.Sprite.DEATH);
+        for (int i = 0; i < death.size() * 3; i++) {
+            view.spriteAnimation = cardistry.ui.sprite.Sprite.DEATH;
+            view.spriteFrame = i / 3;
+            frame();
+        }
         for (int i = 0; i < 6; i++) {
             view.enemyHidden = i % 2 == 1;
             view.enemyDim = true;
@@ -675,6 +755,15 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         view.resetEffects();
         render();
     }
+
+    private cardistry.ui.sprite.Sprite currentSprite() {
+        return state != null && state.hasEnemy()
+                ? cardistry.ui.sprite.Sprites.of(state.currentEnemy())
+                : cardistry.ui.sprite.Sprite.placeholder("?");
+    }
+
+    /** Durée d'une frame idle. */
+    static final int IDLE_MS = 500;
 
     /** Dessine une image d'animation puis attend. */
     private void frame() {
@@ -724,6 +813,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
+                    case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
+                            spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
+                                    : spriteFrame, spriteFlash, spriteHidden);
                 }
                 if (view.confirmingQuit) {
                     painter.text(1, size.getRows() - 1, "─".repeat(size.getColumns() - 2), Palette.FRAME);
@@ -738,6 +830,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     /** Attend une touche ; redessine si le terminal change de taille. */
     private KeyStroke readKey() {
+        long nextIdle = System.currentTimeMillis() + IDLE_MS;
         try {
             while (true) {
                 KeyStroke key = screen.pollInput();
@@ -750,11 +843,25 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 if (screen.doResizeIfNecessary() != null) {
                     render();
                 }
+                if (!fast && idleAnimated() && System.currentTimeMillis() >= nextIdle) {
+                    view.idleFrame++;
+                    nextIdle = System.currentTimeMillis() + IDLE_MS;
+                    render();
+                }
                 sleep(POLL_MS);
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** Idle animé : écran de combat, adversaire vivant avec plusieurs frames idle. */
+    private boolean idleAnimated() {
+        if (page == Page.SPRITES) {
+            return true;
+        }
+        return page == Page.COMBAT && state != null && state.hasEnemy() && state.currentEnemy().isAlive()
+                && currentSprite().idle().size() > 1;
     }
 
     private static boolean isChar(KeyStroke key, char expected) {

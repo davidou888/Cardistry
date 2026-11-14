@@ -19,7 +19,8 @@ Prototype jouable en plein écran Lanterna : 3 combats (un par adversaire), nouv
 - `ui/` — interfaces `Renderer`/`Input`, `GameLoop` (pilote un `run.Run`), `TitleChoice` (règles + codes de l'écran titre), `Format`, `ItemKeys` (W/E/R…, clavier QWERTZ), `QuitGameException`
   - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen`, `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
-- `src/main/resources/sprites/<nom-sans-accents>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
+- `ui/sprite/` — `Sprite` (format multi-frames + carte de couleurs, voir README), `Sprites` (chargement, catalogue de la visionneuse `--sprites`)
+- `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
 - Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` pour relire la mise en page.
 - `run/` reste à compléter : carte à embranchements, shop.
 
@@ -67,7 +68,7 @@ src/test/java/...             JUnit 5
 
 ## Commandes
 - Build : `./gradlew build`
-- Lancer : `./play` (Linux/macOS, plein écran terminal), `play.bat` (Windows, fenêtre Lanterna). Options : `--seed N`, `--reset-unlocks`, `--fast`, `--no-ui`, `--window`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
+- Lancer : `./play` (Linux/macOS, plein écran terminal), `play.bat` (Windows, fenêtre Lanterna). Options : `--seed N`, `--reset-unlocks`, `--sprites`, `--fast`, `--no-ui`, `--window`, `--ascii`, `--no-color` (voir README.md). Pour tester sans toucher à la vraie sauvegarde : `XDG_DATA_HOME=/tmp/x ./play`. `./gradlew run` ne fournit pas de vrai terminal : le jeu y passe en mode texte.
 - Mode texte : `./play --no-ui`
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Tests : `./gradlew test`

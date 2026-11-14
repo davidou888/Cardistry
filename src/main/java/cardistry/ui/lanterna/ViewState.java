@@ -33,6 +33,11 @@ final class ViewState {
     TextColor terrainFlash;
     int highlightSlot = -1;
     final List<Floating> floating = new ArrayList<>();
+    /** Animation du sprite de l'adversaire (attaque, dégâts, mort) ; idle par défaut. */
+    String spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
+    int spriteFrame = 0;
+    /** Frame idle en cours (avance toute seule pendant l'attente d'une touche). */
+    int idleFrame = 0;
 
     void log(String text, TextColor color) {
         log.add(new LogLine(text, color));
@@ -52,5 +57,7 @@ final class ViewState {
         terrainFlash = null;
         highlightSlot = -1;
         floating.clear();
+        spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        spriteFrame = 0;
     }
 }

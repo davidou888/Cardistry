@@ -1,0 +1,9 @@
+@name Choomah
+@# Sprite provisoire : a remplacer (voir README, format des sprites).
+@frame idle
++----------------------+
+|                      |
+|       CHOOMAH        |
+|     (a dessiner)     |
+|                      |
++----------------------+

@@ -9,19 +9,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Sprites et bannières ASCII, lus dans src/main/resources. */
+/** Bannières ASCII, lues dans src/main/resources (les sprites : {@code ui.sprite.Sprites}). */
 final class Resources {
 
-    private static final String UNKNOWN_SPRITE = "inconnu";
     private static final Map<String, List<String>> CACHE = new ConcurrentHashMap<>();
 
     private Resources() {
-    }
-
-    /** Sprite d'un adversaire : {@code sprites/<nom-sans-accents>.txt}, sinon le sprite inconnu. */
-    static List<String> enemySprite(String enemyName) {
-        List<String> sprite = load("/sprites/" + key(enemyName) + ".txt");
-        return sprite != null ? sprite : load("/sprites/" + UNKNOWN_SPRITE + ".txt");
     }
 
     static List<String> banner(String name) {

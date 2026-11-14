@@ -28,6 +28,7 @@ Mode texte simple, partout : `./play --no-ui` (Linux, macOS) ou `play.bat --no-u
 |---|---|
 | `--seed N` | rejoue la partie de seed N |
 | `--reset-unlocks` | efface les secrets débloqués, puis lance le jeu |
+| `--sprites` | visionneuse : fait défiler les sprites des adversaires et leurs animations, sans partie |
 | `--fast` | sans pauses ni animations |
 | `--no-ui` | mode texte simple (lignes, saisie au clavier + Entrée) |
 | `--window` | jeu dans une fenêtre (par défaut sous Windows) |
@@ -67,6 +68,35 @@ Le jeu range ses données (secrets débloqués, dans `unlocks.txt`, un fichier t
 | Windows | `%APPDATA%\Cardistry` |
 
 Fichier absent ou abîmé : le jeu repart de zéro sans planter. `--reset-unlocks` remet tout à zéro.
+
+## Sprites des adversaires
+
+Un fichier texte par sprite : `src/main/resources/sprites/<id>.txt` (l'`id` est celui du registre des
+adversaires, ex. `caddie-enerve`). Zone maximale : **30 colonnes × 10 lignes**. Le dessin est en
+**ASCII pur** (un test le vérifie), donc il s'affiche tel quel avec `--ascii`.
+
+```
+@name Caddie énervé       nom affiché par la visionneuse (facultatif)
+@# commentaire
+@frame idle               une frame ; 2-3 blocs « idle » = animation au repos (en boucle)
+...le dessin...
+@colors                   facultatif : couleurs de la frame juste au-dessus
+...une lettre par caractère du dessin
+@frame idle
+...
+@frame attack             frames jouées quand l'adversaire attaque
+@frame hurt               quand il prend des dégâts (sinon : clignotement)
+@frame death              à sa mort (sinon : clignotement puis disparition)
+```
+
+- **Couleurs** : `r` rouge, `g` vert, `y` jaune, `b` bleu, `m` magenta, `c` cyan, `w` blanc, `k` gris ;
+  en majuscule, la version vive. `.` ou espace : couleur de l'élément de l'adversaire.
+- Une frame sans `@colors` reprend les couleurs de la première frame du fichier.
+- Un fichier sans aucune directive est une seule frame idle, sans couleurs.
+- Pas de fichier : sprite `inconnu.txt`. Choomah, Clarence et les boss ont un cadre provisoire à
+  remplacer.
+- Pour voir le résultat : `./play --sprites` (←/→ change de sprite, 1-4 joue idle / attaque / dégâts /
+  mort, Q quitte ; en mode texte, les frames défilent).
 
 ## Développement
 

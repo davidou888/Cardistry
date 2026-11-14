@@ -1,0 +1,9 @@
+@name Boss
+@# Sprite provisoire : a remplacer (voir README, format des sprites).
+@frame idle
++----------------------+
+|                      |
+|         BOSS         |
+|     (a dessiner)     |
+|                      |
++----------------------+
