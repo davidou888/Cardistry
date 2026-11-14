@@ -1,7 +1,8 @@
 # Cardistry
 
-Jeu de cartes roguelite au tour par tour, en Java, joué dans le terminal (interface plein écran
-[Lanterna](https://github.com/mabe02/lanterna)). Tourne sous **Linux, macOS et Windows**.
+Jeu de cartes roguelite au tour par tour, en Java. Il s'ouvre dans sa propre fenêtre, en pixel art
+(carte, combats, cartes illustrées), et se joue aussi en plein écran dans un terminal
+([Lanterna](https://github.com/mabe02/lanterna)) ou en mode texte. Tourne sous **Linux, macOS et Windows**.
 
 ## Installer l'app
 
@@ -58,7 +59,8 @@ Les déblocages et réglages ne sont pas effacés à la désinstallation (voir �
 | Windows | `play.bat` |
 
 Par défaut, le jeu s'ouvre dans **sa propre fenêtre** sur les trois OS : il y dessine lui-même sa grille
-de caractères avec une police pixel embarquée (aucun scintillement), et peut afficher des images.
+de caractères avec une police pixel embarquée (aucun scintillement) et y ajoute les images : sprites,
+icônes, carte (voir « Interface de la fenêtre »).
 
 - `--terminal` : plein écran dans le terminal (Lanterna), comme avant. Il faut un vrai terminal d'au
   moins **80×24**.
@@ -99,7 +101,7 @@ quitte le jeu (les déblocages sont déjà sauvegardés).
 | `--terminal` | plein écran dans le terminal au lieu de la fenêtre |
 | `--no-ui` | mode texte simple |
 | `--crt` | fenêtre : filtre CRT activé au départ (désactivé par défaut) |
-| `--no-images` | fenêtre : sprites ASCII même quand une image existe |
+| `--no-images` | fenêtre : aucun PNG, les écrans en texte (sprites ASCII, carte en lettres) |
 | `--mute` | sans aucun son (cette session seulement) |
 | `--no-music` | sans musique, effets gardés (cette session seulement) |
 | `--ascii` | ASCII pur (cadres `+-|`, barres `#`, accents retirés) |
@@ -140,7 +142,10 @@ Le jeu range ses données (secrets débloqués, dans `unlocks.txt`, un fichier t
 
 Fichier absent ou abîmé : le jeu repart de zéro sans planter. `--reset-unlocks` remet tout à zéro.
 
-## Sprites des adversaires
+## Sprites ASCII des adversaires
+
+Ces sprites servent en `--terminal`, avec `--no-images` et en mode texte ; dans la fenêtre, ce sont les
+images PNG qui sont affichées (voir « Interface de la fenêtre »).
 
 Un fichier texte par sprite : `src/main/resources/sprites/<id>.txt` (l'`id` est celui du registre des
 adversaires, ex. `caddie-enerve`). Zone maximale : **30 colonnes × 10 lignes**. Le dessin est en
@@ -169,39 +174,67 @@ adversaires, ex. `caddie-enerve`). Zone maximale : **30 colonnes × 10 lignes**.
 - Pour voir le résultat : `./play --sprites` (←/→ change de sprite, 1-4 joue idle / attaque / dégâts /
   mort, Q quitte ; en mode texte, les frames défilent).
 
-## Images (fenêtre)
+## Interface de la fenêtre
 
-Dans la fenêtre, une image PNG peut remplacer un sprite ASCII ; sans image (ou avec `--terminal`,
-`--no-images`), le sprite ASCII reste affiché.
+Dans la fenêtre, le jeu dessine des images PNG par-dessus sa grille de caractères. Avec `--terminal` ou
+`--no-images`, il garde ses écrans en texte (sprites ASCII, carte en lettres, journal toujours visible).
 
-- Adversaire : `src/main/resources/images/enemies/<id>.png` (même `id` que le sprite ASCII). Frames
-  d'animation : `<id>.<animation>.<n>.png`, `n` à partir de 1, animations `idle`, `attack`, `hurt`,
-  `death` (ex. `came.idle.1.png`, `came.idle.2.png`, `came.attack.1.png`). Une frame absente → `<id>.png`.
-- L'image est centrée dans la zone du sprite (carrée : 14×7 cellules en 80×24, 30×15 en 100×32),
-  agrandie d'un facteur **entier** sans lissage (64×64 px : ×3 en 80×24, ×6 en 100×32).
-  Les dégâts la font clignoter en blanc ; la mort l'estompe.
-- Objet ou trinket : `src/main/resources/images/items/<id>.png` (icône 16×16 px),
-  affichée en combat, dans l'inventaire, les récompenses et le shop.
-- Combat (fenêtre) : joueur à gauche (`images/player/player.png`, placeholder), adversaire à droite,
-  une barre de PV sous chaque sprite, intent avec icône au-dessus de l'adversaire ; la main en cartes illustrées (`images/cards/<id>.png`, 24×24 px,
-  `id` = nom sans accents ni espaces ; sans image, l'icône de type à la couleur de l'élément) avec une
-  icône de type (`images/ui/type-*.png`, 8×8 px) et un cadre à la couleur de l'élément ; une barre
-  d'icônes pour les objets, les trinkets (cadre à la couleur de rareté) et les clopes. Le journal est
-  fermé : une ligne « dernière action », et **J** l'ouvre en panneau (↑/↓ défiler, J ou Échap fermer).
-  Les mêmes cartes illustrées et les mêmes icônes encadrées (couleur de rareté) servent dans les
-  récompenses et au shop ; sans `images/items/<id>.png`, un placeholder par catégorie.
-  Tous les adversaires ont un sprite (Choomah, Clarence et le boss : un placeholder à redessiner) ; un
-  adversaire sans image garderait son sprite ASCII ; `--terminal` et `--no-images` gardent l'ancien écran.
-- Carte du monde : `src/main/resources/images/map/<type>.png` (16×16 px ; `combat`, `elite`, `boss`,
-  `shop`, `rest`, `event`). Dans la fenêtre, la carte va de gauche à droite : icônes, chemins en
-  pointillés courbes tirés de la seed (même seed, même dessin), nœud actuel cerclé d'or, nœuds
-  accessibles qui pulsent. En `--terminal` ou `--no-images`, elle reste en lettres.
-- `./play --sprites` montre l'image et son repli ASCII côte à côte.
+**Carte** — de gauche (étage 1) à droite (boss) : une icône par nœud, des chemins courbes en
+pointillés, les nœuds décalés dans leur colonne. Le tracé vient de la seed : même seed, même dessin.
+Le nœud où tu es est cerclé d'or, le chemin parcouru est en or, le nœud sélectionné est cerclé de
+blanc, les autres nœuds accessibles pulsent, ceux que tu ne peux plus atteindre sont estompés.
+
+**Combat** — toi à gauche, l'adversaire à droite, une barre de PV sous chaque sprite. L'attaque
+annoncée (intent) est au-dessus de l'adversaire avec son icône ; tes états (Ivresse, Gueule de bois,
+effets en cours) sont à côté de ton sprite. En bas, la main en cartes illustrées (illustration, icône
+de type, valeur, nom, cadre à la couleur de l'élément), puis une barre d'icônes : objets, trinkets,
+paquet de clopes.
+
+| Touche (combat) | Effet |
+|---|---|
+| ←/→ puis Entrée, ou 1-7 | jouer une carte |
+| P | piocher |
+| W / E / R | utiliser un objet |
+| F / G | fumer / rouler une clope |
+| J | ouvrir ou fermer le **journal** (↑/↓ pour défiler, Échap le ferme aussi) |
+| I | inventaire |
+
+Le journal est fermé par défaut : la dernière action tient sur une ligne en bas de l'écran.
+
+**Couleurs** — le cadre d'une carte porte la couleur de son élément (feu rouge, eau bleu, plante vert,
+neutre gris). Le cadre d'une icône d'objet ou de trinket porte la couleur de sa rareté (Commun blanc,
+Peu commun vert, Rare bleu, Légendaire jaune, Secret magenta), en combat, dans les récompenses et au shop.
+
+**Shop** — P pour partir ; Échap ouvre la pause, comme ailleurs.
+
+### Fichiers d'images
+
+Tout est dans `src/main/resources/images/`, en pixel art agrandi d'un facteur **entier**, sans lissage.
+
+| Dossier | Contenu | Taille |
+|---|---|---|
+| `enemies/` | `<id>.<animation>.<n>.png` (`n` à partir de 1 ; animations `idle`, `attack`, `hurt`, `death`) et `<id>.png`, l'image de base | 64×64 |
+| `player/player.png` | le joueur (placeholder) | 64×64 |
+| `cards/<id>.png` | illustration d'une carte ; `id` = nom en minuscules, sans accents, avec des tirets (`jet-d-eau`) | 24×24 |
+| `items/<id>.png` | icône d'un objet ou d'un trinket (même `id` que dans le registre) | 16×16 |
+| `map/<type>.png` | nœuds de la carte : `combat`, `elite`, `boss`, `shop`, `rest`, `event` | 16×16 |
+| `ui/` | icônes de type de carte (`type-*.png`), d'intent (`intent-*.png`), paquet de clopes, placeholders | 8×8 et 16×16 |
+
+- **Adversaires** : le sprite est affiché ×3 en 80×24 et ×6 en 100×32. Les dégâts le font clignoter en
+  blanc, la mort l'estompe. Une animation plus courte que prévu reste sur sa dernière frame ; une
+  animation absente utilise `<id>.png`. Choomah, Clarence et le boss ont un placeholder à redessiner.
+- **Image absente** : une carte montre son icône de type en grand, à la couleur de son élément ; un objet
+  ou un trinket, le placeholder de sa catégorie ; un adversaire, son sprite ASCII ; un nœud, sa lettre.
+- `./play --sprites` montre l'image d'un adversaire et son repli ASCII côte à côte.
 
 ## Pixel art (Aseprite)
 
 Les sources sont dans `art/` (hors du jeu), les PNG exportés sont commités dans
 `src/main/resources/images/` : sans Aseprite, rien à faire, le jeu utilise les PNG.
+
+Pour **retoucher un dessin** : l'ouvrir dans Aseprite (`art/items.aseprite`, `art/enemies/came.aseprite`…),
+le modifier, enregistrer, puis `./gradlew exportArt planche`. Pour **ajouter** une icône : une nouvelle
+frame avec un tag à son id.
 
 | Source | Contenu | Export |
 |---|---|---|
@@ -222,8 +255,6 @@ tag qui donne le nom du PNG. Pour un adversaire, un tag = une animation (une ou 
   `enemies.lua` (dessin par formes). Pour refaire une ébauche : supprimer son tag (et sa frame).
 - `./gradlew exportArt` : réexporte tous les PNG. Aseprite est cherché dans le `PATH` ou dans la
   variable `ASEPRITE` ; s'il est absent, `generateArt` et `exportArt` sont ignorées.
-- `./gradlew animationCheck` : ouvre la vraie fenêtre, joue tout seul (carte, combats, journal) et
-  écrit la trace des animations réellement affichées ; `-Penemies=came,vafi` pour choisir les adversaires.
 - `./gradlew planche` : `art/planche.png` (toutes les icônes agrandies avec leur nom et leur id, par
   catégorie et rareté ; les manquantes sont marquées « à faire ») et `art/planche-ennemis.png` (toutes
   les frames des adversaires qui ont un sprite).
@@ -293,6 +324,10 @@ séparés) : voir [`licenses/THIRD-PARTY.md`](licenses/THIRD-PARTY.md).
 
 - Tests : `./gradlew test` (Windows : `gradlew.bat test`). La CI GitHub Actions les lance sur Ubuntu,
   macOS et Windows.
-- Les tests d'interface écrivent chaque écran testé dans `build/screens/*.txt`.
+- Les tests d'interface écrivent chaque écran testé dans `build/screens/*.txt`, et le rendu de la
+  fenêtre (carte, combat, récompense, shop) dans `build/screens/*.png`.
+- `./gradlew animationCheck` : ouvre la vraie fenêtre, joue tout seul (carte, combats, journal) à vitesse
+  normale et écrit la trace des animations réellement affichées ; `-Penemies=came,vafi` pour choisir
+  les adversaires. Il faut un écran : ce n'est pas un test de la CI.
 - Contexte et conventions du projet : [`CLAUDE.md`](CLAUDE.md) ; game design :
   [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md).

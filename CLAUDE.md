@@ -5,7 +5,7 @@ Version personnelle de Louis, développée en parallèle de celle de David (dép
 
 ## État actuel du code
 
-Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à embranchements (8 étages, boss au bout), deck construit (12 cartes au départ, pioche / défausse, récompense de carte après chaque combat), nouvelle main de 5 cartes par combat, récompense (objet ou trinket, 1 parmi 3) après chaque adversaire vaincu, adversaires à attaques annoncées (intents). Lancement : `./play` (voir « Commandes »).
+Prototype jouable, par défaut dans sa propre fenêtre en pixel art (carte, combat, cartes et icônes illustrées), sinon en plein écran terminal ou en mode texte : run de 3 niveaux sur une carte à embranchements (8 étages, boss au bout), deck construit (12 cartes au départ, pioche / défausse, récompense de carte après chaque combat), nouvelle main de 5 cartes par combat, récompense (objet ou trinket, 1 parmi 3) après chaque adversaire vaincu, adversaires à attaques annoncées (intents). Lancement : `./play` (voir « Commandes »).
 
 - `cardistry.Main` — assemble tout, choisit l'affichage selon l'OS et les options (voir README.md)
 - `platform/` — `Os` (détection), `SaveDirectory` (dossier de sauvegarde par OS), `UnlockFile` (secrets débloqués, `unlocks.txt`, corrompu → vide)
@@ -19,14 +19,15 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
 - `model/` — `Element` (dont `NEUTRAL`, adversaires seulement ; la nature s'affiche « plante »), `ElementRules` (**toutes** les tables de multiplicateurs), `Player`/`Enemy`, `enemy/` (`EnemyRegistry` = **registre des adversaires** avec scaling par niveau, `EnemyMove` + `MoveEffect` = attaques déclarées, `EnemyBehavior` = choix de l'intent, `EnemyRank`), `card/` (`Card` scellée, dont `DeadCard` injouable et sans élément — « NO CARDS », « Exercice 3b » ; `CardPool` = registre + `startingDeck()` ; les tirages renvoient des copies)
 - `items/` — `SetBonus` + `SetBonuses` (registre des sets, paliers cumulables), `Gauge` (jauge de trinket), `Rarity`, `Tag`, `Collectible` (scellée : `Item` consommable, `Trinket` passif = modificateurs de stats + hooks, construit par builder), `ItemRegistry` (**registre de tout le contenu**), `LootTable` (tirage pondéré par rareté, seedé ; secrets débloqués au poids 2 ; rareté doublée par CLAUDE.md), `NullPointerRoll`
 - `ui/` — interfaces `Renderer`/`Input`, `GameLoop` (pilote un `run.Run`), `TitleChoice` (règles + codes de l'écran titre), `Format`, `ItemKeys` (W/E/R…, clavier QWERTZ), `QuitGameException`
-  - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen` (terminal), `CombatWindowScreen` (fenêtre : joueur à gauche, adversaire à droite, cartes illustrées, barre d'icônes aux couleurs de rareté, journal en panneau sur J), `MapScreen` (pixels dans la fenêtre, lettres en terminal), `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24.
+  - `ui/lanterna/` — plein écran : `LanternaUi` (Renderer + Input + animations), `CombatScreen` (terminal), `CombatWindowScreen` (fenêtre : joueur à gauche, adversaire à droite, cartes illustrées, barre d'icônes aux couleurs de rareté, journal en panneau sur J), `MapScreen` (pixels dans la fenêtre, lettres en terminal), `MenuScreens` (titre, règles, fin, terminal trop petit), `ItemScreens` (récompense, remplacement, inventaire), `ShopScreen` (P partir, Échap = pause), `StoryScreen`, `Painter` (dessin), `ViewState` (sélection, journal, effets en cours). Minimum 80×24. Un écran qui dessine des images teste `p.hasImages()` et garde un rendu texte complet sinon (`--terminal`, `--no-images`). Animations de l'adversaire : `LanternaUi.enemyFrames` compte les frames PNG dans la fenêtre, celles du sprite ASCII sinon.
   - `ui/window/` — fenêtre par défaut : `CellWindow` (Swing, double buffer, redimensionnable, F10 CRT, F11, Ctrl ±) dessine elle-même un terminal virtuel Lanterna ; `GridRenderer` (grille → image, testable sans écran), `CellFonts` (Departure Mono + JetBrains Mono, OFL), `CellPalette`, `KeyMapper`, `ImageLayer` + `Images` (PNG alignés sur la grille, repli ASCII ; `ImageLayer.Mark` = dessin au pixel près en unités de 1/7 de colonne, posé par `Painter.fill` / `Painter.stamp`), `AppIcon` (icône provisoire). `LanternaUi` est le même dans la fenêtre et en `--terminal`.
   - `ui/audio/` — son : `AudioDirector` (écoute le bus → effets ; l'écran → la musique ; jamais appelé par la logique), `Audio` (+ `silent()`, muet automatique sans carte son et en test via `cardistry.audio=off`), `SoftwareAudio` (une sortie 44,1 kHz, un fil), `Mixer` (pur, testé : musique en boucle + fondu, 16 effets), `SoundTable` (`audio/sounds.txt`, **table éditable**), `Pcm` (WAV et OGG via VorbisSPI), `Volume` (échelle perceptive). Placeholders : `tools/generate-sounds.sh`.
   - `ui/Settings` + `ui/OptionsController` + `platform/SettingsFile` (`settings.txt`) : volumes et muet ; menu pause (Échap) et Options dans `LanternaUi`, commande `options` en mode texte
   - `ui/text/` — rendu texte simple (`--no-ui`, ou automatique si l'entrée n'est pas un vrai terminal)
 - `ui/sprite/` — `Sprite` (format multi-frames + carte de couleurs, voir README), `Sprites` (chargement, catalogue de la visionneuse `--sprites`)
-- `src/main/resources/sprites/<id>.txt` — sprites des adversaires (`inconnu.txt` par défaut) ; `banners/` — bannière du titre
-- `art/` — sources Aseprite (icônes : une frame taguée par icône, tag = id ; `art/enemies/<id>.aseprite` : un tag par animation), `palette.gpl`, planches ; `art/tools/generate.lua` ajoute les ébauches manquantes et **n'écrase jamais un tag existant** (Louis retouche les .aseprite à la main) ; `./gradlew art` = `generateArt` + `exportArt` (PNG commités dans `src/main/resources/images/`, ignorées sans Aseprite) + `planche` (`cardistry.tools.ArtSheet`, côté tests)
+- `src/main/resources/sprites/<id>.txt` — sprites ASCII des adversaires (`inconnu.txt` par défaut ; terminal et mode texte) ; `banners/` — bannière du titre
+- `src/main/resources/images/` — PNG de la fenêtre, chemins résolus par `ui.window.Images` : `enemies/<id>.<animation>.<n>.png` + `<id>.png` (64×64), `player/player.png` (64×64, placeholder), `cards/<slug du nom>.png` (24×24), `items/<id>.png` (objets et trinkets, 16×16), `map/<type>.png` (16×16), `ui/` (icônes de type et d'intent 8×8, paquet de clopes, placeholders). Image absente → repli (icône de type teintée, placeholder de catégorie, sprite ASCII, lettre du nœud).
+- `art/` — sources Aseprite (icônes : une frame taguée par icône, tag = id ; `art/enemies/<id>.aseprite` : un tag par animation), `palette.gpl`, planches ; `art/tools/generate.lua` ajoute les ébauches manquantes et **n'écrase jamais un tag existant** (Louis retouche les .aseprite à la main) ; `./gradlew art` = `generateArt` + `exportArt` (PNG commités dans `src/main/resources/images/`, ignorées sans Aseprite) + `planche` (`cardistry.tools.ArtSheet`, côté tests). Ébauches : `art/tools/items.txt`, `trinkets.txt` (grilles de lettres de palette), `cards.lua`, `enemies.lua` (dessin par formes ; `standard(id, draw)` fabrique idle / attack / hurt / death). `cardistry.tools.AnimationCheck` (côté tests) : jeu auto-piloté dans la vraie fenêtre.
 - Tests UI sur terminal virtuel (`LanternaUiTest`) ; ils écrivent chaque écran dans `build/screens/*.txt` (et le rendu fenêtre en `.png`) pour relire la mise en page. Les tests tournent en `java.awt.headless`.
 - `core/Shop` + `core/shop/` — shop ouvert (articles, vendus, rerolls), `ShopPrices` (tous les prix), `ShopOffer`, `ShopAction` ; joué par `CombatEngine.shopAction`
 - `story/` — événements des nœuds `?` : `Story` (texte + choix), `StoryChoice` (condition, conséquence), `StoryContext` (ce qu'une conséquence peut faire, fourni par le moteur), `StoryRegistry` (**registre**, 3 placeholders)
@@ -36,7 +37,15 @@ Prototype jouable en plein écran Lanterna : run de 3 niveaux sur une carte à e
 2. Si l'effet a besoin d'une action que `EffectContext` n'offre pas, l'y ajouter (elle doit publier l'événement correspondant).
 3. Un test par effet chiffré.
 
+### Ajouter une icône ou un sprite
+1. Icône d'objet ou de trinket : une grille 16×16 « == id » dans `art/tools/items.txt` ou `trinkets.txt` ; illustration de carte : une entrée `{ id, draw }` dans `art/tools/cards.lua` (24×24) ; adversaire : `standard("<spriteId>", draw)` dans `art/tools/enemies.lua` (64×64, tourné vers la gauche). Dessins originaux, palette commune, aucun logo ni marque ; un trinket à prénom a une icône liée à son effet, pas un portrait.
+2. `./gradlew art`, relire `art/planche.png` / `art/planche-ennemis.png`, commiter les `.aseprite` **et** les PNG.
+3. Ne jamais régénérer un tag existant pour « l'améliorer » : Louis retouche les `.aseprite` à la main. Le test `toutLeContenuAUneIcone` échoue si un objet, un trinket, une carte ou un adversaire du registre n'a pas d'image.
+
 ### Dettes restantes
+- Placeholders à dessiner par Louis : le joueur (`images/player/player.png`), Choomah, Clarence, le boss (un sprite pour les trois niveaux, idle seulement).
+- Les animations de mort des ébauches sont la pose « touché » écrasée vers le sol.
+- En fenêtre 80×24, un adversaire sans PNG aurait son sprite ASCII coupé (7 lignes disponibles) ; aucun dans le registre aujourd'hui.
 - Les états à adversaires fixés (tests) n'ont pas de deck : leur pioche tire dans le pool, sans fin (`GameState.usesDeck()`).
 - `CardPool` (model) dépend de `core.Rng` ; `core` et `items` dépendent l'un de l'autre (inventaire dans `GameState`, effets via `EffectContext`).
 
@@ -66,7 +75,7 @@ src/test/java/...             JUnit 5
 - Fork indépendante de davidou888/Cardistry. Ne jamais pousser, merger ni ouvrir de PR vers upstream.
 - À la fin de chaque tâche, quand les tests passent, pousser sur origin sans demander.
 - Le jeu doit tourner sur Linux, macOS et Windows : aucun chemin, raccourci clavier ou caractère spécifique à un OS sans repli.
-- Java 17+ (vérifier `java -version` sur la machine), Gradle avec wrapper, JUnit 5.
+- Java 21+ (le build compile en `release = 21`), Gradle avec wrapper, JUnit 5.
 - UI terminal : **Lanterna 3.x** (vérifier la dernière version sur Maven Central).
 - Noms de code en anglais, **textes affichés au joueur en français**.
 - Petits commits ciblés, un sujet par commit. Ne pas réécrire tout l'historique git.
@@ -79,6 +88,6 @@ src/test/java/...             JUnit 5
 - Mode texte : `./play --no-ui`
 - CI : `.github/workflows/ci.yml` lance les tests sur Ubuntu, macOS et Windows (JDK 21).
 - Paquets : `./gradlew jpackageImage` (app autonome), `./gradlew jpackage` (installateurs de l'OS courant ; JDK avec jmods requise). Release : tag `v*` → `.github/workflows/release.yml` (paquets des 3 OS → GitHub Release ; titre = message du tag annoté). Identifiant `io.github.megaray.cardistry`, éditeur « Cardistry ».
-- Tests : `./gradlew test`
+- Tests : `./gradlew test` ; captures de la fenêtre dans `build/screens/*.png` (`WindowScreenshotTest`) : les relire après tout changement de mise en page.
 - Vérifier les animations dans la vraie fenêtre (jeu auto-piloté, trace sur la sortie) : `./gradlew animationCheck [-Penemies=id,id]`
 - Art : `./gradlew art` (ébauches manquantes + export PNG + planches) ; détail : `generateArt`, `exportArt`, `planche`
