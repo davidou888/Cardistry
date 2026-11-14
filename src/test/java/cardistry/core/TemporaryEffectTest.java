@@ -154,6 +154,27 @@ class TemporaryEffectTest {
         assertEquals(90, state.player().hp(), DELTA);
     }
 
+    // --- Tour sauté de l'adversaire ---
+
+    @Test
+    void lAdversaireSauteSonProchainTourAvantUneAnnulation() {
+        setUp(List.of());
+        addEffect(() -> TemporaryEffect.builder("mule", "Mule").charges(1).cancelsNextEnemyAttack().build());
+        addEffect(() -> TemporaryEffect.builder("pause", "Pause").charges(1)
+                .skipsNextEnemyTurn("{adversaire} passe son tour").build());
+
+        engine.submit(new Action.DrawCard());
+        assertEquals(new GameEvent.EnemyTurnSkipped(first, "Pause", "Hydre passe son tour"),
+                events.stream().filter(GameEvent.EnemyTurnSkipped.class::isInstance).findFirst().orElseThrow());
+        assertFalse(events.stream().anyMatch(GameEvent.EnemyAttacked.class::isInstance));
+        assertEquals(List.of("mule"), state.effects().stream().map(TemporaryEffect::id).toList(), "le Mule reste");
+
+        engine.submit(new Action.DrawCard());   // le Mule annule l'attaque suivante
+        assertEquals(100, state.player().hp(), DELTA);
+        engine.submit(new Action.DrawCard());
+        assertEquals(90, state.player().hp(), DELTA);
+    }
+
     // --- Sauter un tour ---
 
     @Test

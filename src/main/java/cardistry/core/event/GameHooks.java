@@ -66,6 +66,9 @@ public interface GameHooks {
     default void onTurnSkipped(GameEvent.PlayerTurnSkipped event, EffectContext ctx) {
     }
 
+    default void onEnemyTurnSkipped(GameEvent.EnemyTurnSkipped event, EffectContext ctx) {
+    }
+
     default void onAttackCancelled(GameEvent.AttackCancelled event, EffectContext ctx) {
     }
 

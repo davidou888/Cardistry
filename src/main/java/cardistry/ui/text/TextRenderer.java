@@ -100,6 +100,7 @@ public final class TextRenderer implements Renderer {
                 console.println(Ansi.RED + "Tu sautes ce tour" + Ansi.END_COLOR + " (" + String.join(", ", e.causes()) + ").");
                 console.pause(1);
             }
+            case GameEvent.EnemyTurnSkipped e -> console.println("→ " + e.message());
             case GameEvent.AttackCancelled e -> console.println("→ " + e.cause() + " annule l'attaque de "
                     + enemyName(e.enemy()) + " !");
             case GameEvent.DrunkennessChanged e -> {

@@ -30,6 +30,7 @@ public final class HookDispatcher {
             case GameEvent.CurseGained e -> hook.onCurseGained(e, ctx);
             case GameEvent.PlayerTurnSkipped e -> hook.onTurnSkipped(e, ctx);
             case GameEvent.AttackCancelled e -> hook.onAttackCancelled(e, ctx);
+            case GameEvent.EnemyTurnSkipped e -> hook.onEnemyTurnSkipped(e, ctx);
             case GameEvent.EffectAdded e -> {
                 // Pas de hook pour l'instant.
             }

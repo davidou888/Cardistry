@@ -44,6 +44,7 @@ public final class TemporaryEffect {
     private final boolean keepAcrossCombats;
     private final double spellMultiplier;
     private final boolean cancelsEnemyAttack;
+    private final String enemySkipMessage;
     private final SkipRule skipRule;
     private final List<Mod> mods;
     private final Consumer<EffectContext> onActivate;
@@ -69,6 +70,7 @@ public final class TemporaryEffect {
         this.keepAcrossCombats = b.keepAcrossCombats;
         this.spellMultiplier = b.spellMultiplier;
         this.cancelsEnemyAttack = b.cancelsEnemyAttack;
+        this.enemySkipMessage = b.enemySkipMessage;
         this.skipRule = b.skipRule;
         this.mods = List.copyOf(b.mods);
         this.onActivate = b.onActivate;
@@ -128,6 +130,16 @@ public final class TemporaryEffect {
 
     public boolean cancelsEnemyAttack() {
         return cancelsEnemyAttack;
+    }
+
+    /** {@code true} si l'effet fait sauter le prochain tour de l'adversaire (consomme une charge). */
+    public boolean skipsEnemyTurn() {
+        return enemySkipMessage != null;
+    }
+
+    /** Message du tour sauté, avec le nom de l'adversaire. */
+    public String enemySkipMessage(String enemyName) {
+        return enemySkipMessage == null ? "" : enemySkipMessage.replace("{adversaire}", enemyName);
     }
 
     public SkipRule skipRule() {
@@ -233,6 +245,7 @@ public final class TemporaryEffect {
         private boolean keepAcrossCombats = false;
         private double spellMultiplier = 1.0;
         private boolean cancelsEnemyAttack = false;
+        private String enemySkipMessage = null;
         private SkipRule skipRule = SkipRule.NONE;
         private final List<Mod> mods = new ArrayList<>();
         private Consumer<EffectContext> onActivate = ctx -> { };
@@ -280,6 +293,16 @@ public final class TemporaryEffect {
 
         public Builder cancelsNextEnemyAttack() {
             this.cancelsEnemyAttack = true;
+            return this;
+        }
+
+        /**
+         * L'adversaire saute son prochain tour : il n'attaque pas du tout (passe avant les
+         * annulations d'attaque, qui restent pour la suivante). {@code message} peut contenir
+         * « {adversaire} ».
+         */
+        public Builder skipsNextEnemyTurn(String message) {
+            this.enemySkipMessage = message;
             return this;
         }
 

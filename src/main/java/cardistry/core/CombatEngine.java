@@ -497,6 +497,13 @@ public final class CombatEngine {
         Player player = state.player();
         double mult = state.enemyAttackMultiplier();
         double amount = state.enemyAttackDamage();
+        Optional<TemporaryEffect> skip = state.effects().stream()
+                .filter(e -> e.isActive() && e.skipsEnemyTurn()).findFirst();
+        if (skip.isPresent()) {
+            bus.publish(new GameEvent.EnemyTurnSkipped(enemy, skip.get().name(), skip.get().enemySkipMessage(enemy.name())));
+            consume(skip.get());
+            return;
+        }
         bus.publish(new GameEvent.EnemyAttacked(enemy));
         Optional<TemporaryEffect> shield = state.effects().stream()
                 .filter(e -> e.isActive() && e.cancelsEnemyAttack()).findFirst();

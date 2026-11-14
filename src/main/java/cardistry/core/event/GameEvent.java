@@ -95,6 +95,10 @@ public sealed interface GameEvent {
         }
     }
 
+    /** L'adversaire saute son tour (il n'attaque pas) ; {@code message} est prêt à afficher. */
+    record EnemyTurnSkipped(Enemy enemy, String cause, String message) implements GameEvent {
+    }
+
     /** L'attaque de l'adversaire est annulée par un effet. */
     record AttackCancelled(Enemy enemy, String cause) implements GameEvent {
     }

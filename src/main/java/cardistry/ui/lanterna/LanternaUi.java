@@ -151,6 +151,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 render();
                 pause(600);
             }
+            case GameEvent.EnemyTurnSkipped e -> {
+                view.log(e.message(), Palette.HEAL);
+                render();
+            }
             case GameEvent.AttackCancelled e -> view.log(e.cause() + " annule l'attaque de " + e.enemy().name(),
                     Palette.HEAL);
             case GameEvent.DrunkennessChanged e -> {
