@@ -553,10 +553,13 @@ public final class CombatEngine {
     /** Part des PV manquants rendue après chaque boss (sauf le dernier). */
     public static final double BOSS_RECOVERY = 0.5;
 
-    /** Sieste : soin de {@link #REST_HEAL} des PV max (brut, plafonné aux PV max). */
+    /**
+     * Sieste : soin de {@link #REST_HEAL} des PV max. C'est un soin : efficacité des soins et Ross
+     * s'appliquent (avec Ross, pas de plafond).
+     */
     public void restHeal(String choice) {
         bus.publish(new GameEvent.RestTaken(choice));
-        healPlayer(state.maxHp() * REST_HEAL, 1.0);
+        effects.healPlayer(state.maxHp() * REST_HEAL);
     }
 
     /** Sieste : +{@link #REST_CIGARETTES} clopes (sans dépasser le paquet) ; renvoie le nombre ajouté. */
@@ -571,7 +574,7 @@ public final class CombatEngine {
         removeCardFromDeck(index);
     }
 
-    /** Après un boss : la moitié des PV manquants (brut). */
+    /** Après un boss : la moitié des PV manquants. Récupération, pas un soin : aucun bonus de soin. */
     public void recoverAfterBoss() {
         double missing = Math.max(0, state.maxHp() - state.player().hp());
         if (missing > 0) {

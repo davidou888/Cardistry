@@ -112,6 +112,47 @@ class RunMapTest {
     }
 
     @Test
+    void siesteEstUnSoinBoosteParLesSoinsEtRoss() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
+        run.state().playerStats().add(cardistry.core.stats.StatModifier.percent(
+                cardistry.core.stats.StatType.HEAL_EFFICIENCY, 0.5, "test"));
+        run.state().player().takeDamage(80); // 20/100
+        run.rest(RestOption.HEAL);
+        assertEquals(65, run.state().player().hp(), 1e-9); // 20 + 30 × 1.5
+    }
+
+    @Test
+    void siesteAvecRossDepasseLeMax() {
+        EventBus bus = new EventBus();
+        Run run = new Run(2, Set.of(), bus,
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        run.start();
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
+        double before = run.state().player().hp();
+        run.state().playerStats().add(cardistry.core.stats.StatModifier.flat(
+                cardistry.core.stats.StatType.UNCAPPED_HEALING, 1, "test"));
+        run.rest(RestOption.HEAL);
+        assertEquals(before + 30, run.state().player().hp(), 1e-9);
+        assertTrue(run.state().player().hp() > 100);
+    }
+
+    @Test
+    void recuperationApresBossSansBonus() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.COMBAT && r.state().isBossFight());
+        run.state().playerStats().add(cardistry.core.stats.StatModifier.percent(
+                cardistry.core.stats.StatType.HEAL_EFFICIENCY, 1.0, "test"));
+        run.state().player().takeDamage(60);
+        run.startTurn();
+        run.submit(new Action.PlayCard(0));
+        run.resolveReward(new RewardChoice.Skip());
+        run.resolveCardReward(-1);
+        assertEquals(70, run.state().player().hp(), 1e-9);
+    }
+
+    @Test
     void siesteClopes() {
         Run run = strongRun(2);
         playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);

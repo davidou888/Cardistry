@@ -92,13 +92,13 @@ Règles communes :
 - Écran de carte : boss en haut, étage 1 en bas ; ←/→ (ou 1-n) pour choisir, Entrée pour y aller,
   I inventaire. Mode texte : la carte en ASCII, les choix numérotés.
 - En attendant les lots Shop et Événements, ces nœuds ne font rien (« bientôt disponible »).
-- **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max, brut,
-  plafonné), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une
+- **Sieste** (étage 7, parfois aux étages 4-5) : un choix parmi « Dormir » (+30 % des PV max ; c'est un
+  **soin** : efficacité des soins et Ross s'appliquent, sans plafond avec Ross), « Rouler tranquille » (+3 clopes, sans dépasser le paquet), « Faire le tri » (retirer une
   carte du deck, avec le deck construit). Elle n'efface **pas** la Gueule de bois (les clopes sont là pour ça).
 - **Récompenses** : 1 parmi 3 après chaque combat ; élite : toutes au moins Peu commun ; boss : toutes au
   moins Rare (les secrets débloqués restent possibles).
-- **Après chaque boss** (sauf le dernier) : la moitié des PV manquants est rendue (brut), puis le niveau
-  suivant commence.
+- **Après chaque boss** (sauf le dernier) : la moitié des PV manquants est rendue — une **récupération**,
+  pas un soin (aucun bonus de soin, pas de Ross) —, puis le niveau suivant commence.
 - Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
 
 ### Deck construit (lot 1 bis)
@@ -111,7 +111,7 @@ Règles communes :
   Pioche et défausse vides : piocher est refusé (« Plus aucune carte à piocher »).
 - **Récompense de carte** après chaque combat (sauf le boss final), **après** la récompense d'objet :
   3 cartes de noms différents tirées du registre (poids des trinkets compris), on en ajoute 1 au deck ou
-  on passe. *(Provisoire : en plus du 1 parmi 3 d'objets.)*
+  on passe (en plus du 1 parmi 3 d'objets).
 - **Retirer une carte** : Sieste « Faire le tri » (le shop viendra) ; jamais sous **5 cartes**.
 - Grinder : +1 Petit pétou dans le deck à l'obtention, Petit pétou ×2 dans les récompenses de cartes (et
   pour George). Paquet de cartes : 3 cartes de la pioche, les 2 autres à la défausse. George : carte du
@@ -282,8 +282,7 @@ Reste : shop, événements, transitions d'écran.
 ## Questions ouvertes
 - **[À DÉCIDER]** Noms et attaques des 3 boss (placeholders « Boss du niveau 1/2/3 »).
 - **[À DÉCIDER]** Noms des variantes de Choomah (provisoires : « Choomah pressé », « Choomah costaud »).
-- Provisoire : la Sieste et le soin après boss sont **bruts** (ni efficacité des soins, ni Ross) ; l'esquive
-  du Paresseux consomme un Shot de Jäger actif ; les intents des Choomah gardent les chiffres lisibles dans le cri.
+- Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
@@ -305,4 +304,5 @@ Reste : shop, événements, transitions d'écran.
 - ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés ; un secret débloqué pendant la partie gagnante compte. Ctrl+Z : une fois par combat, ni après la mort ni au premier tour d'un combat. `--seed null` : seed aléatoire affichée. Mode texte : seul le code « claude » (détails : `docs/SECRETS.md`).
 - ~~Pioche infinie~~ → remplacée par un deck construit (lot 1 bis de la run complète).
 - ~~Run complète (lot 1)~~ → 3 niveaux de 8 étages boss compris (7 = Sieste, 8 = Boss) ; valeurs d'adversaires, de boss et de scaling validées pour démarrer ; Rebond du Peneu ne tue pas ; Sieste : soin 30 %, +3 clopes ou retirer une carte, n'efface pas la Gueule de bois ; après chaque boss, la moitié des PV manquants ; NullPointerException peut annuler une élite (seuls les 3 boss sont immunisés) ; Moscow Mule annule toute une attaque mais pas les vols ni la Taxe ; tirages des adversaires hors CLAUDE.md ; carte tirée d'un sous-flux nommé de la seed ; « Plante » affiché pour l'élément nature.
+- ~~Lot 1 : choix provisoires~~ → récompense de carte à part, après l'objet ; Peu commun en élite, Rare au boss ; la Sieste est un soin (efficacité, Ross), la récupération après boss non ; le Shot de Jäger est consommé si le Paresseux esquive ; Sieste possible aux étages 4-5.
 - ~~Koala~~ → c'est un **Paresseux** accroché à sa branche (« Badoing, badoing ! »), peu de dégâts, pas de saut. ~~Contrôle surprise~~ → **Série d'algèbre** (Vafi). Les Choomah parlent en cris (« ooOOOaAAAOaAOOA »).
