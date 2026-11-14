@@ -151,6 +151,53 @@ class RunTest {
         assertTrue(events.contains(new GameEvent.ActionRejected(GameEvent.ActionRejected.Reason.UNDO_UNAVAILABLE)));
     }
 
+    /** Partie à deux combats : le premier adversaire meurt en trois sorts de 10. */
+    private Run twoCombats() {
+        Run run = new Run(1, Set.of(), bus,
+                () -> new GameState(new Player(100), List.of(new Enemy("A", FIRE, 30, 1), new Enemy("B", FIRE, 200, 1)),
+                        new TerrainCard("EPFL", FIRE), List.of(), new Stats()),
+                () -> new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10))));
+        run.addCode(Secret.CTRL_Z);
+        run.start();
+        return run;
+    }
+
+    @Test
+    void ctrlZUneFoisParCombatSurDeuxCombats() {
+        Run run = twoCombats();
+        run.startTurn();
+        run.submit(new Action.PlayCard(0));
+        run.startTurn();
+        assertFalse(run.state().undoUsedThisCombat(), "disponible");
+        assertEquals(ActionResult.FREE_ACTION, run.submit(new Action.Undo()));
+        assertTrue(run.state().undoUsedThisCombat(), "utilisé");
+
+        // Fin du combat 1 : la deuxième demande est refusée, même plusieurs tours plus tard.
+        run.submit(new Action.PlayCard(0));
+        run.startTurn();
+        assertEquals(ActionResult.REJECTED, run.submit(new Action.Undo()));
+        run.submit(new Action.PlayCard(0));
+        run.startTurn();
+        assertEquals(ActionResult.REJECTED, run.submit(new Action.Undo()));
+        run.submit(new Action.PlayCard(0)); // 3e sort : A meurt
+        while (run.hasPendingReward()) {
+            run.resolveReward(new cardistry.core.RewardChoice.Skip());
+        }
+
+        // Combat 2 : de nouveau disponible, une fois.
+        assertEquals(2, run.state().combatNumber());
+        assertFalse(run.state().undoUsedThisCombat());
+        run.startTurn();
+        run.submit(new Action.PlayCard(0));
+        run.startTurn();
+        assertEquals(ActionResult.FREE_ACTION, run.submit(new Action.Undo()));
+        assertTrue(run.state().undoUsedThisCombat());
+        run.submit(new Action.PlayCard(0));
+        run.startTurn();
+        assertEquals(ActionResult.REJECTED, run.submit(new Action.Undo()));
+        assertEquals(2, events.stream().filter(e -> e instanceof GameEvent.TurnUndone).count());
+    }
+
     @Test
     void ctrlZImpossibleAuPremierTourDuCombat() {
         Run run = run(2, Secret.CTRL_Z);

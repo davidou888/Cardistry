@@ -122,6 +122,48 @@ class UnlockFileTest {
         assertEquals(Set.of(Secret.NULL_POINTER_EXCEPTION), next.unlockedSecrets());
     }
 
+    // --- Dossier de sauvegarde selon l'OS (os.name simulé) ---
+
+    private void sauvegardeRelueDans(String osName, java.util.Map<String, String> env, Path expectedDir) {
+        Path home = dir.resolve("home");
+        UnlockFile store = UnlockFile.inSaveDirectory(osName, env::get, home);
+        assertEquals(expectedDir.resolve(UnlockFile.FILE_NAME), store.path());
+        store.save(EnumSet.of(Secret.CTRL_Z));
+        assertTrue(Files.isRegularFile(expectedDir.resolve(UnlockFile.FILE_NAME)));
+        assertEquals(Set.of(Secret.CTRL_Z), UnlockFile.inSaveDirectory(osName, env::get, home).load());
+    }
+
+    @Test
+    void sauvegardeLinuxXdg() {
+        Path xdg = dir.resolve("xdg");
+        sauvegardeRelueDans("Linux", java.util.Map.of("XDG_DATA_HOME", xdg.toString()), xdg.resolve("cardistry"));
+    }
+
+    @Test
+    void sauvegardeLinuxSansXdg() {
+        sauvegardeRelueDans("Linux", java.util.Map.of(),
+                dir.resolve("home").resolve(".local").resolve("share").resolve("cardistry"));
+    }
+
+    @Test
+    void sauvegardeMacOs() {
+        // XDG_DATA_HOME est ignoré sous macOS.
+        sauvegardeRelueDans("Mac OS X", java.util.Map.of("XDG_DATA_HOME", dir.resolve("xdg").toString()),
+                dir.resolve("home").resolve("Library").resolve("Application Support").resolve("Cardistry"));
+    }
+
+    @Test
+    void sauvegardeWindowsAppData() {
+        Path appData = dir.resolve("AppData").resolve("Roaming");
+        sauvegardeRelueDans("Windows 11", java.util.Map.of("APPDATA", appData.toString()), appData.resolve("Cardistry"));
+    }
+
+    @Test
+    void sauvegardeWindowsSansAppData() {
+        sauvegardeRelueDans("Windows 10", java.util.Map.of(),
+                dir.resolve("home").resolve("AppData").resolve("Roaming").resolve("Cardistry"));
+    }
+
     /** Une partie réduite où l'on gagne le premier combat avec la dernière carte. */
     private static final class UnlockTrackerHarness {
 

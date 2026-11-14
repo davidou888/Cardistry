@@ -257,6 +257,7 @@ public final class CombatEngine {
     /** Nouvelle main, compteur de tours du combat remis à zéro. */
     private void beginCombat() {
         state.resetCombatTurn();
+        state.setUndoUsedThisCombat(false);
         state.clearHand();
         bus.publish(new GameEvent.CombatStarted(state.currentEnemy(), state.combatNumber(), state.enemies().size()));
         for (Curse curse : state.activatePendingCurses()) {
@@ -708,6 +709,11 @@ public final class CombatEngine {
     public void equip(Trinket trinket) {
         state.equipTrinket(trinket);
         publishSetChanges();
+    }
+
+    /** Note que Ctrl+Z a servi pendant ce combat (appelé par {@code run.Run} après l'annulation). */
+    public void markUndoUsed() {
+        state.setUndoUsedThisCombat(true);
     }
 
     /** Ajoute un objet à l'inventaire. */

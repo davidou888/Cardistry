@@ -67,7 +67,6 @@ public final class Run {
     private final List<TurnMark> marks = new ArrayList<>();
     private PlayerDecisions decisions = PlayerDecisions.FIRST;
     private CombatEngine engine;
-    private int undoUsedInCombat = 0;
 
     /** Partie standard. */
     public Run(long seed, Set<Secret> unlocked, EventBus front) {
@@ -199,7 +198,7 @@ public final class Run {
     public boolean canUndo() {
         return engine != null && !isOver() && !hasPendingReward()
                 && state().hasTrinket(ItemRegistry.CTRL_Z)
-                && undoUsedInCombat != state().combatNumber()
+                && !state().undoUsedThisCombat()
                 && previousTurn().isPresent();
     }
 
@@ -216,10 +215,10 @@ public final class Run {
 
     private void undo() {
         TurnMark target = previousTurn().orElseThrow();
-        undoUsedInCombat = target.combat();
         history.subList(target.historySize(), history.size()).clear();
         marks.subList(marks.indexOf(target) + 1, marks.size()).clear();
         engine = replay();
+        engine.markUndoUsed();
         front.publish(new GameEvent.TurnUndone(target.turn()));
     }
 

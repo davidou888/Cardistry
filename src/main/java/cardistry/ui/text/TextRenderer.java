@@ -219,6 +219,10 @@ public final class TextRenderer implements Renderer {
                 console.println("- " + effect.describe());
             }
         }
+        if (state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
+            console.println(Ansi.MAGENTA + "Ctrl+Z : " + (state.undoUsedThisCombat() ? "utilisé" : "disponible")
+                    + Ansi.END_COLOR + " (une fois par combat)");
+        }
         console.println("TRINKETS (" + state.trinkets().size() + "/" + state.trinketSlots() + ") :"
                 + (state.trinkets().isEmpty() ? " aucun" : ""));
         for (Trinket trinket : state.trinkets()) {

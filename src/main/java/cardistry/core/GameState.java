@@ -57,6 +57,7 @@ public final class GameState {
     private List<ActiveSetTier> activeSetTiers = List.of();
     private final List<SetChange> pendingSetChanges = new ArrayList<>();
     private final List<TemporaryEffect> effects = new ArrayList<>();
+    private boolean undoUsedThisCombat = false;
 
     public GameState(Player player, List<Enemy> enemies, TerrainCard terrain, List<Card> hand, Stats playerStats) {
         if (enemies.isEmpty()) {
@@ -115,6 +116,15 @@ public final class GameState {
     /** {@code true} si les tirages de chance sont faits deux fois (CLAUDE.md, stat {@link StatType#LUCKY_ROLLS}). */
     public boolean luckyRolls() {
         return playerStats.get(StatType.LUCKY_ROLLS) > 0;
+    }
+
+    /** {@code true} si Ctrl+Z (trinket) a déjà servi pendant ce combat : une fois par combat. */
+    public boolean undoUsedThisCombat() {
+        return undoUsedThisCombat;
+    }
+
+    void setUndoUsedThisCombat(boolean value) {
+        undoUsedThisCombat = value;
     }
 
     /** {@code true} pendant le combat contre le dernier adversaire (le boss). */

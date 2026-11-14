@@ -38,6 +38,11 @@ public final class UnlockFile implements UnlockStore {
         return new UnlockFile(SaveDirectory.resolve().resolve(FILE_NAME));
     }
 
+    /** Version testable : nom d'OS, variables d'environnement et dossier personnel injectés. */
+    static UnlockFile inSaveDirectory(String osName, java.util.function.Function<String, String> env, Path home) {
+        return new UnlockFile(SaveDirectory.resolve(osName, env, home).resolve(FILE_NAME));
+    }
+
     public UnlockFile(Path file) {
         this.file = file;
     }

@@ -670,6 +670,33 @@ class LanternaUiTest {
     }
 
     @Test
+    void ctrlZDisponiblePuisUtiliseAffiche() throws IOException {
+        open(80, 24);
+        EventBus bus = new EventBus();
+        Run run = new Run(1, java.util.Set.of(), bus);
+        run.addCode(cardistry.run.Secret.CTRL_Z);
+        run.start();
+        run.startTurn();
+        ui.showStatus(run.state());
+        String available = dump("29-ctrl-z-disponible");
+        assertTrue(available.contains("Ctrl+Z : disponible"), available);
+
+        run.submit(new Action.DrawCard());
+        run.startTurn();
+        run.submit(new Action.Undo());
+        ui.showStatus(run.state());
+        String used = dump("30-ctrl-z-utilise");
+        assertTrue(used.contains("Ctrl+Z : utilisé"), used);
+    }
+
+    @Test
+    void sansCtrlZPasDEtat() throws IOException {
+        open(80, 24);
+        ui.showStatus(withInventory(List.of(), List.of()));
+        assertFalse(screen().contains("Ctrl+Z :"));
+    }
+
+    @Test
     void carteMorteAffichee() throws IOException {
         open(80, 24);
         GameState state = combat(List.of(new cardistry.model.card.DeadCard(), new SpellCard("Jet d'eau", Element.WATER, 10)),

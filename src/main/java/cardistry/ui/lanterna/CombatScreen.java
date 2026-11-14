@@ -54,6 +54,7 @@ final class CombatScreen {
         drawSprite(p, state, view);
         drawTerrainAndPlayer(p, state, view);
         p.separator(11, "Ta main " + state.hand().size() + "/" + state.handSize());
+        drawUndoStatus(p, state);
         drawHand(p, state, view);
         drawDetail(p, state, view);
         p.separator(20, "Journal");
@@ -230,6 +231,22 @@ final class CombatScreen {
     }
 
     /** Ligne 10 : trinkets équipés, colorés par rareté. */
+    /** « Ctrl+Z : disponible / utilisé » à droite du séparateur de la main, si le trinket est équipé. */
+    static String undoStatus(GameState state) {
+        if (!state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
+            return "";
+        }
+        return "Ctrl+Z : " + (state.undoUsedThisCombat() ? "utilisé" : "disponible");
+    }
+
+    private static void drawUndoStatus(Painter p, GameState state) {
+        String status = undoStatus(state);
+        if (!status.isEmpty()) {
+            p.text(p.cols() - status.length() - 4, 11, " " + status + " ",
+                    state.undoUsedThisCombat() ? Palette.DIM : Palette.SECRET, !state.undoUsedThisCombat());
+        }
+    }
+
     private static void drawTrinkets(Painter p, GameState state) {
         String label = "Trinkets " + state.trinkets().size() + "/" + state.trinketSlots();
         p.text(2, 10, label, Palette.DIM);

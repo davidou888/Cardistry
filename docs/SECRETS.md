@@ -47,6 +47,8 @@ Absents du pool tant qu'ils ne sont pas débloqués. Tous trois tag Méta.
 **Ctrl+Z**
 - Touche Ctrl+Z pendant ton tour (mode texte : `z`). Retour au **début du tour précédent** du même combat :
   tes actions gratuites de ce tour et du tour en cours sont annulées aussi.
+- **Une fois par combat** : de nouveau disponible au combat suivant. L'écran de combat affiche
+  « Ctrl+Z : disponible » ou « Ctrl+Z : utilisé » (à droite de « Ta main » ; en mode texte, dans l'état).
 - Implémenté en rejouant la partie depuis la seed avec tous tes choix : rejouer la même action redonne
   exactement le même résultat (même pioche, mêmes tirages).
 
@@ -57,15 +59,12 @@ Absents du pool tant qu'ils ne sont pas débloqués. Tous trois tag Méta.
   - rareté des récompenses : pour chaque proposition, on garde la plus rare des deux.
 - Pas concernés : la pioche de cartes, le choix des 3 récompenses (seule leur rareté l'est).
 
-### Choix provisoires (à confirmer)
-- **[À DÉCIDER]** Ctrl+Z après la mort : *provisoire : impossible*, la défaite est définitive (l'annulation
-  ne se fait que pendant ton tour).
-- **[À DÉCIDER]** Ctrl+Z au premier tour d'un combat : *provisoire : impossible* (pas de retour au combat
-  précédent ni à l'écran de récompense).
-- **[À DÉCIDER]** CLAUDE.md : un NullPointerException débloqué pendant la partie gagnante compte-t-il comme
-  « déjà débloqué » ? *Provisoire : oui* (on vérifie au moment de la victoire).
-- **[À DÉCIDER]** `--seed null` : *provisoire : seed tirée au hasard* (affichée comme d'habitude).
-- **[À DÉCIDER]** Codes en mode texte : *provisoire : seulement « claude »* (le terminal intercepte Ctrl+Z
-  avant le jeu). En plein écran et en fenêtre, Lanterna reçoit Ctrl+Z comme une touche : le jeu n'est
-  plus suspendu par Ctrl+Z.
+### Choix tranchés
+- Ctrl+Z après la mort : impossible, la défaite est définitive (l'annulation ne se fait que pendant ton tour).
+- Ctrl+Z au premier tour d'un combat : impossible (pas de retour au combat précédent ni à l'écran de récompense).
+- CLAUDE.md : un secret débloqué pendant la partie gagnante compte comme « déjà débloqué » (on vérifie au
+  moment de la victoire).
+- `--seed null` : seed tirée au hasard, affichée comme d'habitude.
+- Codes en mode texte : seulement « claude » (le terminal intercepte Ctrl+Z avant le jeu). En plein écran et
+  en fenêtre, Lanterna reçoit Ctrl+Z comme une touche : le jeu n'est pas suspendu par Ctrl+Z.
 - Une carte NO CARDS n'est jamais remplacée par George ni par un autre effet de remplacement.

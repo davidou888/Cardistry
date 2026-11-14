@@ -198,7 +198,6 @@ Reste : carte de la run, shop, transitions d'écran.
 ## Questions ouvertes
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Secrets : cinq choix provisoires (Ctrl+Z après la mort, Ctrl+Z au premier tour d'un combat, CLAUDE.md et un déblocage de la même partie, `--seed null`, codes en mode texte) : voir `docs/SECRETS.md` (spoilers).
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
@@ -215,5 +214,5 @@ Reste : carte de la run, shop, transitions d'écran.
 - ~~Ptit Sat ?~~ → dégâts élémentaires, comme CMS.
 - ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
 - ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
-- ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés (détails : `docs/SECRETS.md`).
+- ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés ; un secret débloqué pendant la partie gagnante compte. Ctrl+Z : une fois par combat, ni après la mort ni au premier tour d'un combat. `--seed null` : seed aléatoire affichée. Mode texte : seul le code « claude » (détails : `docs/SECRETS.md`).
 - ~~Pioche infinie~~ → on la garde pour l'instant (doublons du registre = poids). Le vrai deck reste à décider (« Structure d'une run »).
