@@ -49,6 +49,10 @@ public final class GameState {
     private int choomies = STARTING_CHOOMIES;
     private int level = 0;
     private int floor = 0;
+    /** Deck de la run ; {@code null} = pas de deck, la pioche tire dans le pool (tests, scénarios). */
+    private final List<Card> deck;
+    private final List<Card> drawPile = new ArrayList<>();
+    private final List<Card> discardPile = new ArrayList<>();
     private TerrainCard terrain;
     private final List<Card> hand;
     private final Stats playerStats;
@@ -80,6 +84,12 @@ public final class GameState {
 
     private GameState(Player player, List<Enemy> enemies, boolean openEnded, TerrainCard terrain, List<Card> hand,
             Stats playerStats) {
+        this(player, enemies, openEnded, terrain, hand, playerStats, null);
+    }
+
+    private GameState(Player player, List<Enemy> enemies, boolean openEnded, TerrainCard terrain, List<Card> hand,
+            Stats playerStats, List<Card> deck) {
+        this.deck = deck == null ? null : new ArrayList<>(deck);
         this.player = player;
         this.enemies = new ArrayList<>(enemies);
         this.openEnded = openEnded;
@@ -96,10 +106,93 @@ public final class GameState {
         return new GameState(player, List.of(), true, terrain, List.of(), playerStats);
     }
 
-    /** Nouvelle partie (carte de la run) : terrain de départ, main vide, aucun adversaire encore. */
+    /** Partie ouverte avec un deck : chaque combat pioche dans une copie mélangée du deck. */
+    public static GameState openRun(Player player, TerrainCard terrain, Stats playerStats, List<Card> deck) {
+        return new GameState(player, List.of(), true, terrain, List.of(), playerStats, deck);
+    }
+
+    /** Nouvelle partie (carte de la run) : terrain de départ, deck de départ, aucun adversaire encore. */
     public static GameState newGame() {
+        return newGame(CardPool.startingDeck());
+    }
+
+    /** Nouvelle partie avec le deck {@code deck} (tests). */
+    public static GameState newGame(List<Card> deck) {
         Stats stats = new Stats();
-        return openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats);
+        return openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats, deck);
+    }
+
+    // --- Deck ---
+
+    /** {@code true} si la partie a un deck (sinon la pioche tire dans le pool, sans fin). */
+    public boolean usesDeck() {
+        return deck != null;
+    }
+
+    /** Deck de la run (vue non modifiable ; vide sans deck). */
+    public List<Card> deck() {
+        return deck == null ? List.of() : Collections.unmodifiableList(deck);
+    }
+
+    /** Pioche du combat en cours (le dessus est le dernier élément). */
+    public List<Card> drawPile() {
+        return Collections.unmodifiableList(drawPile);
+    }
+
+    /** Défausse du combat en cours. */
+    public List<Card> discardPile() {
+        return Collections.unmodifiableList(discardPile);
+    }
+
+    void addToDeck(Card card) {
+        deck.add(card);
+    }
+
+    Card removeFromDeck(int index) {
+        return deck.remove(index);
+    }
+
+    /** Pioche neuve : copies du deck, mélangées ; défausse vidée. */
+    void resetPiles(Rng rng) {
+        drawPile.clear();
+        discardPile.clear();
+        for (Card card : deck) {
+            drawPile.add(card.copy());
+        }
+        shuffle(drawPile, rng);
+    }
+
+    /** Défausse remélangée dans la pioche ; renvoie le nombre de cartes. */
+    int reshuffleDiscard(Rng rng) {
+        drawPile.addAll(discardPile);
+        discardPile.clear();
+        shuffle(drawPile, rng);
+        return drawPile.size();
+    }
+
+    Card takeFromDrawPile() {
+        return drawPile.remove(drawPile.size() - 1);
+    }
+
+    void discard(Card card) {
+        if (!(card instanceof cardistry.model.card.DeadCard)) {
+            discardPile.add(card);
+        }
+    }
+
+    void clearPiles() {
+        drawPile.clear();
+        discardPile.clear();
+    }
+
+    /** Fisher-Yates avec le Rng seedé. */
+    private static void shuffle(List<Card> cards, Rng rng) {
+        for (int i = cards.size() - 1; i > 0; i--) {
+            int j = rng.nextInt(i + 1);
+            Card tmp = cards.get(i);
+            cards.set(i, cards.get(j));
+            cards.set(j, tmp);
+        }
     }
 
     public Player player() {

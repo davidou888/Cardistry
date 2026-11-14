@@ -222,7 +222,7 @@ public final class CombatEngine {
         if (isOver()) {
             throw new IllegalStateException("La partie est terminée");
         }
-        if (hasPendingReward()) {
+        if (hasPendingReward() || hasPendingCardReward()) {
             throw new IllegalStateException("Une récompense attend d'être choisie");
         }
         Optional<Reason> rejection = validate(action);
@@ -277,9 +277,15 @@ public final class CombatEngine {
 
     private Optional<Reason> validate(Action action) {
         return switch (action) {
-            case Action.DrawCard draw -> state.hand().size() >= state.handSize()
-                    ? Optional.of(Reason.HAND_FULL)
-                    : Optional.empty();
+            case Action.DrawCard draw -> {
+                if (state.hand().size() >= state.handSize()) {
+                    yield Optional.of(Reason.HAND_FULL);
+                }
+                if (state.usesDeck() && state.drawPile().isEmpty() && state.discardPile().isEmpty()) {
+                    yield Optional.of(Reason.DECK_EMPTY);
+                }
+                yield Optional.empty();
+            }
             case Action.PlayCard play -> {
                 if (play.slot() < 0 || play.slot() >= state.handSize()) {
                     yield Optional.of(Reason.INVALID_CHOICE);
@@ -318,9 +324,16 @@ public final class CombatEngine {
         for (Curse curse : state.activatePendingCurses()) {
             bus.publish(new GameEvent.CurseStarted(curse));
         }
+        if (state.usesDeck()) {
+            state.resetPiles(rng);
+        }
         int dealt = Math.min(state.playerStats().getInt(StatType.STARTING_HAND), state.handSize());
         for (int i = 0; i < dealt; i++) {
-            state.addToHand(drawFromPool());
+            Optional<Card> card = drawOne();
+            if (card.isEmpty()) {
+                break;
+            }
+            state.addToHand(card.get());
         }
         bus.publish(new GameEvent.HandDealt(state.hand()));
         if (state.currentEnemy().isAlive()) {
@@ -392,7 +405,12 @@ public final class CombatEngine {
             return true;
         }
         List<Collectible> offer = loot.offer(state, rng, REWARD_OPTIONS, minimumRarity(enemy));
+        pendingCardReward = List.of();
+        if (state.usesDeck()) {
+            pendingCardReward = cardRewardOptions(); // proposée après la récompense d'objet
+        }
         if (offer.isEmpty()) {
+            offerCardReward();
             if (!state.isOpenEnded()) {
                 nextCombat();
             }
@@ -434,6 +452,86 @@ public final class CombatEngine {
 
     // --- Récompenses ---
 
+    // --- Deck ---
+
+    /** Cartes proposées après chaque combat (deck seulement). */
+    public static final int CARD_REWARD_OPTIONS = 3;
+    /** Le deck ne descend jamais sous cette taille (retirer une carte). */
+    public static final int MIN_DECK_SIZE = 5;
+
+    private List<Card> pendingCardReward = List.of();
+
+    /** {@code CARD_REWARD_OPTIONS} cartes de noms différents, tirées du pool (poids des trinkets compris). */
+    private List<Card> cardRewardOptions() {
+        List<Card> options = new java.util.ArrayList<>();
+        int guard = 0;
+        while (options.size() < CARD_REWARD_OPTIONS && guard++ < 200) {
+            Card card = drawFromPool();
+            if (options.stream().noneMatch(c -> c.name().equals(card.name()))) {
+                options.add(card);
+            }
+        }
+        return List.copyOf(options);
+    }
+
+    private void offerCardReward() {
+        if (hasPendingCardReward()) {
+            bus.publish(new GameEvent.CardRewardOffered(pendingCardReward));
+        }
+    }
+
+    /** {@code true} si une récompense de carte attend (après la récompense d'objet). */
+    public boolean hasPendingCardReward() {
+        return !pendingCardReward.isEmpty();
+    }
+
+    public List<Card> pendingCardReward() {
+        return pendingCardReward;
+    }
+
+    /**
+     * Ajoute la carte {@code index} au deck, ou passe ({@code index} &lt; 0). À appeler après la
+     * récompense d'objet.
+     */
+    public void resolveCardReward(int index) {
+        if (!hasPendingCardReward()) {
+            throw new IllegalStateException("Aucune carte en attente");
+        }
+        if (index >= pendingCardReward.size()) {
+            bus.publish(new GameEvent.ActionRejected(Reason.INVALID_REWARD));
+            return;
+        }
+        List<Card> options = pendingCardReward;
+        pendingCardReward = List.of();
+        if (index < 0) {
+            bus.publish(new GameEvent.CardRewardSkipped());
+        } else {
+            addCardToDeck(options.get(index));
+        }
+    }
+
+    /** Ajoute une carte au deck de la run (sans deck : rien). */
+    public void addCardToDeck(Card card) {
+        if (!state.usesDeck()) {
+            return;
+        }
+        state.addToDeck(card.copy());
+        bus.publish(new GameEvent.CardAddedToDeck(card));
+    }
+
+    /** {@code true} si on peut encore retirer une carte du deck (au-dessus de {@link #MIN_DECK_SIZE}). */
+    public boolean canRemoveCard() {
+        return state.usesDeck() && state.deck().size() > MIN_DECK_SIZE;
+    }
+
+    /** Retire la carte {@code index} du deck. */
+    public void removeCardFromDeck(int index) {
+        if (!canRemoveCard() || index < 0 || index >= state.deck().size()) {
+            throw new IllegalArgumentException("Carte impossible à retirer : " + index);
+        }
+        bus.publish(new GameEvent.CardRemovedFromDeck(state.removeFromDeck(index)));
+    }
+
     /** Nombre de propositions après chaque adversaire vaincu. */
     public static final int REWARD_OPTIONS = 3;
 
@@ -465,6 +563,12 @@ public final class CombatEngine {
     public int restCigarettes(String choice) {
         bus.publish(new GameEvent.RestTaken(choice));
         return effects.addCigarettes(REST_CIGARETTES);
+    }
+
+    /** Sieste : retire la carte {@code index} du deck. */
+    public void restRemoveCard(String choice, int index) {
+        bus.publish(new GameEvent.RestTaken(choice));
+        removeCardFromDeck(index);
     }
 
     /** Après un boss : la moitié des PV manquants (brut). */
@@ -523,6 +627,7 @@ public final class CombatEngine {
             }
         }
         pendingReward = List.of();
+        offerCardReward();
         if (!state.isOpenEnded()) {
             nextCombat();
         }
@@ -562,20 +667,50 @@ public final class CombatEngine {
     }
 
     /**
+     * Une carte de la pioche : avec un deck, le dessus de la pioche (la défausse est remélangée si
+     * elle est vide ; rien si les deux sont vides) ; sans deck, une carte du pool.
+     */
+    private Optional<Card> drawOne() {
+        if (!state.usesDeck()) {
+            return Optional.of(drawFromPool());
+        }
+        if (state.drawPile().isEmpty()) {
+            if (state.discardPile().isEmpty()) {
+                return Optional.empty();
+            }
+            bus.publish(new GameEvent.DeckShuffled(state.reshuffleDiscard(rng)));
+        }
+        return Optional.of(state.takeFromDrawPile());
+    }
+
+    /** Carte qui quitte la main (jouée, remplacée, transformée) : à la défausse s'il y a un deck. */
+    private void discard(Card card) {
+        if (state.usesDeck()) {
+            state.discard(card);
+        }
+    }
+
+    /**
      * Pioche une carte. Si la stat {@link StatType#DRAW_CHOICES} vaut N &gt; 1 (Paquet de cartes), N
-     * cartes sont tirées et le joueur en garde une ; les autres sont défaussées.
+     * cartes sont tirées de la pioche et le joueur en garde une ; les autres vont à la défausse.
      */
     private void drawCard() {
         int choices = state.playerStats().getInt(StatType.DRAW_CHOICES);
-        Card card = choices <= 1 ? drawFromPool() : chooseAmong(choices);
-        state.addToHand(card);
-        bus.publish(new GameEvent.CardDrawn(card));
+        Optional<Card> card = choices <= 1 ? drawOne() : chooseAmong(choices);
+        if (card.isEmpty()) {
+            return;
+        }
+        state.addToHand(card.get());
+        bus.publish(new GameEvent.CardDrawn(card.get()));
     }
 
-    private Card chooseAmong(int count) {
+    private Optional<Card> chooseAmong(int count) {
         List<Card> options = new java.util.ArrayList<>();
         for (int i = 0; i < count; i++) {
-            options.add(drawFromPool());
+            drawOne().ifPresent(options::add);
+        }
+        if (options.size() <= 1) {
+            return options.stream().findFirst();
         }
         bus.publish(new GameEvent.CardChoiceOffered(options));
         int index;
@@ -583,8 +718,9 @@ public final class CombatEngine {
             index = decisions.chooseDrawnCard(state, List.copyOf(options));
         } while (index < 0 || index >= options.size());
         Card kept = options.remove(index);
+        options.forEach(this::discard);
         bus.publish(new GameEvent.CardChosen(kept, options));
-        return kept;
+        return Optional.of(kept);
     }
 
     private void playCard(int slot) {
@@ -608,6 +744,7 @@ public final class CombatEngine {
             }
             case DeadCard dead -> throw new AssertionError("refusée par validate");
         }
+        discard(card);
     }
 
     /** Identifiant de l'objet dont une clope transformée donne l'effet (Googz). */
@@ -743,6 +880,7 @@ public final class CombatEngine {
                     int slot = rng.pick(slots);
                     Card dead = new DeadCard(curse.cardName());
                     Card removed = state.replaceInHand(slot, dead);
+                    discard(removed);
                     bus.publish(new GameEvent.CardCursed(enemy, removed, dead));
                 }
             }
@@ -933,6 +1071,7 @@ public final class CombatEngine {
             }
             Card replacement = drawFromPool();
             Card removed = state.replaceInHand(slot, replacement);
+            discard(removed);
             bus.publish(new GameEvent.CardReplaced(removed, replacement));
         }
 
@@ -962,7 +1101,13 @@ public final class CombatEngine {
         public void voidCardInHand(int slot) {
             Card dead = new DeadCard();
             Card removed = state.replaceInHand(slot, dead);
+            discard(removed);
             bus.publish(new GameEvent.CardVoided(removed, dead));
+        }
+
+        @Override
+        public void addCardToDeck(Card card) {
+            CombatEngine.this.addCardToDeck(card);
         }
 
         @Override

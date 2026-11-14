@@ -100,7 +100,23 @@ Règles communes :
 - **Après chaque boss** (sauf le dernier) : la moitié des PV manquants est rendue (brut), puis le niveau
   suivant commence.
 - Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
-- **[À DÉCIDER]** passer à un vrai deck (pioche / défausse / deck construit au fil de la run) au lieu de la pioche infinie aléatoire. Recommandé pour un roguelite.
+
+### Deck construit (lot 1 bis)
+- **Deck de départ, 12 cartes** : 6 sorts (Boule de feu 10, Pluie de flammes 15, Jet d'eau 10, Tsunami 15,
+  Fouet de lianes 10, Tempête d'épines 15), 3 soins (Potion, Caïpirinha, Petit pétou), 3 terrains (Enfer,
+  Atlantis, Amazonie). Le terrain de départ (EPFL) est en jeu, pas dans le deck.
+- Au début de chaque combat, tout le deck est mélangé en une **pioche** ; la main de 5 en est tirée.
+  Les cartes jouées, remplacées (George) ou transformées (NO CARDS, Exercice 3b) vont à la **défausse** ;
+  les cartes mortes, elles, disparaissent à la fin du combat. Pioche vide : la défausse est remélangée.
+  Pioche et défausse vides : piocher est refusé (« Plus aucune carte à piocher »).
+- **Récompense de carte** après chaque combat (sauf le boss final), **après** la récompense d'objet :
+  3 cartes de noms différents tirées du registre (poids des trinkets compris), on en ajoute 1 au deck ou
+  on passe. *(Provisoire : en plus du 1 parmi 3 d'objets.)*
+- **Retirer une carte** : Sieste « Faire le tri » (le shop viendra) ; jamais sous **5 cartes**.
+- Grinder : +1 Petit pétou dans le deck à l'obtention, Petit pétou ×2 dans les récompenses de cartes (et
+  pour George). Paquet de cartes : 3 cartes de la pioche, les 2 autres à la défausse. George : carte du
+  registre (elle ne reste pas dans le deck).
+- Écran de combat : « Ta main 5/7 · Pioche 7 · Défausse 0 » ; inventaire (I) : le deck.
 
 ## Objets et trinkets
 | | Objet | Trinket |
@@ -166,7 +182,7 @@ Précisions d'implémentation :
 - Polycopié d'Analyse I ne réduit que les attaques adverses (pas les dégâts qu'on s'inflige soi-même), jamais sous 0.
 - Compréhension algébrique ne compte que les dégâts des sorts joués (pas ceux des objets ni de Plan du campus).
 - Plan du campus et les dégâts « bruts » des objets ignorent éléments et stats ; Gaz du bat Inf est traité comme un sort de l'élément tiré.
-- George ne se déclenche que sur les pioches (pas sur la main distribuée en début de combat).
+- George ne se déclenche que sur les pioches (pas sur la main distribuée en début de combat). La carte remplacée part à la défausse ; la nouvelle vient du registre et ne rejoint pas le deck.
 - Pichet vide : les 5 PV perdus ignorent Polycopié d'Analyse I et peuvent tuer le joueur ; si le joueur et l'adversaire meurent en même temps, c'est une défaite.
 - Ptit Sat ? : même portée que CMS (dégâts élémentaires), recalculé à chaque changement d'Ivresse.
 

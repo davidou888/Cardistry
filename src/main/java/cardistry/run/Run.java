@@ -54,6 +54,8 @@ public final class Run {
         COMBAT,
         /** Choisir une récompense. */
         REWARD,
+        /** Ajouter une carte au deck (ou passer), après la récompense d'objet. */
+        CARD_REWARD,
         /** Sieste : choisir quoi faire ({@link RestOption}). */
         REST,
         /** Partie terminée. */
@@ -79,7 +81,10 @@ public final class Run {
     private record ChooseNode(int index) implements Step {
     }
 
-    private record Rest(RestOption option) implements Step {
+    private record Rest(RestOption option, int cardIndex) implements Step {
+    }
+
+    private record CardReward(int index) implements Step {
     }
 
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
@@ -211,16 +216,48 @@ public final class Run {
         return session.restOptions();
     }
 
-    /** Sieste : applique {@code option} puis revient à la carte. */
+    /** Sieste : applique {@code option} (pas « Faire le tri ») puis revient à la carte. */
     public void rest(RestOption option) {
+        rest(option, -1);
+    }
+
+    /**
+     * Sieste : applique {@code option} puis revient à la carte. « Faire le tri » retire la carte
+     * {@code cardIndex} du deck.
+     */
+    public void rest(RestOption option, int cardIndex) {
         if (phase() != Phase.REST) {
             throw new IllegalStateException("Pas de sieste maintenant");
         }
         if (!restOptions().contains(option)) {
             throw new IllegalArgumentException("Choix indisponible : " + option);
         }
-        history.add(new Rest(option));
-        session.rest(option);
+        if (option == RestOption.REMOVE_CARD && (cardIndex < 0 || cardIndex >= state().deck().size())) {
+            throw new IllegalArgumentException("Carte inexistante : " + cardIndex);
+        }
+        history.add(new Rest(option, cardIndex));
+        session.rest(option, cardIndex);
+    }
+
+    public boolean hasPendingCardReward() {
+        return session.engine.hasPendingCardReward();
+    }
+
+    public List<Card> pendingCardReward() {
+        return session.engine.pendingCardReward();
+    }
+
+    /** Ajoute la carte {@code index} de {@link #pendingCardReward()} au deck, ou passe ({@code index} &lt; 0). */
+    public void resolveCardReward(int index) {
+        if (phase() != Phase.CARD_REWARD) {
+            throw new IllegalStateException("Pas de carte à choisir maintenant");
+        }
+        if (index >= pendingCardReward().size()) {
+            throw new IllegalArgumentException("Carte inexistante : " + index);
+        }
+        history.add(new CardReward(index));
+        session.engine.resolveCardReward(index);
+        session.settle();
     }
 
     /** Voir {@link CombatEngine#startTurn()}. */
@@ -325,7 +362,11 @@ public final class Run {
                     replayed.settle();
                 }
                 case ChooseNode c -> replayed.chooseNode(c.index());
-                case Rest r -> replayed.rest(r.option());
+                case Rest r -> replayed.rest(r.option(), r.cardIndex());
+                case CardReward c -> {
+                    replayed.engine.resolveCardReward(c.index());
+                    replayed.settle();
+                }
                 case Decision d -> throw new IllegalStateException("Décision hors d'une action");
             }
         }
@@ -369,6 +410,9 @@ public final class Run {
             }
             if (engine.hasPendingReward()) {
                 return Phase.REWARD;
+            }
+            if (engine.hasPendingCardReward()) {
+                return Phase.CARD_REWARD;
             }
             if (engine.combatActive() || !mapped) {
                 return Phase.COMBAT;
@@ -414,14 +458,18 @@ public final class Run {
         }
 
         List<RestOption> restOptions() {
-            return List.of(RestOption.HEAL, RestOption.CIGARETTES);
+            return engine.canRemoveCard()
+                    ? List.of(RestOption.HEAL, RestOption.CIGARETTES, RestOption.REMOVE_CARD)
+                    : List.of(RestOption.HEAL, RestOption.CIGARETTES);
         }
 
-        void rest(RestOption option) {
+        void rest(RestOption option, int cardIndex) {
             switch (option) {
                 case HEAL -> engine.restHeal(option.displayName());
                 case CIGARETTES -> engine.restCigarettes(option.displayName());
-                case REMOVE_CARD -> throw new IllegalArgumentException("Pas encore de deck");
+                case REMOVE_CARD -> {
+                    engine.restRemoveCard(option.displayName(), cardIndex);
+                }
             }
             resting = false;
         }

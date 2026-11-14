@@ -62,6 +62,47 @@ final class ItemScreens {
         p.text(2, 15, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
     }
 
+    /** Récompense de carte : 1 carte parmi les propositions à ajouter au deck, ou passer. */
+    static void cardReward(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
+            long seed) {
+        p.frame("Nouvelle carte", "Deck " + state.deck().size() + " cartes · Seed " + seed,
+                "1-" + options.size() + " ou ←/→ + Entrée ajouter au deck · S passer");
+        p.centered(2, "Ajoute une carte à ton deck", Palette.ACCENT, true);
+        int width = Math.min(18, (p.cols() - 4 - 2 * (options.size() - 1)) / options.size());
+        int total = options.size() * width + 2 * (options.size() - 1);
+        int left = Math.max(2, (p.cols() - total) / 2);
+        for (int i = 0; i < options.size(); i++) {
+            boolean isSelected = i == selected;
+            CombatScreen.drawCard(p, left + i * (width + 2), isSelected ? 5 : 6, width, i + 1, options.get(i),
+                    isSelected, false);
+        }
+        p.text(2, 14, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
+    }
+
+    /** Colonnes de la liste du deck (« Faire le tri »). */
+    static final int DECK_COLUMNS = 2;
+
+    /** Sieste « Faire le tri » : le deck, le joueur choisit la carte à retirer. */
+    static void deckRemove(Painter p, GameState state, int selected, long seed) {
+        p.frame("Faire le tri", "Deck " + state.deck().size() + " cartes · Seed " + seed,
+                "←/→/↑/↓ choisir · Entrée retirer · Échap revenir");
+        p.centered(2, "Choisis la carte à retirer de ton deck", Palette.ACCENT, true);
+        int columns = DECK_COLUMNS;
+        int width = (p.cols() - 6) / columns;
+        for (int i = 0; i < state.deck().size(); i++) {
+            cardistry.model.card.Card card = state.deck().get(i);
+            int col = 3 + (i % columns) * width;
+            int row = 4 + i / columns;
+            if (row >= p.rows() - 2) {
+                break;
+            }
+            boolean isSelected = i == selected;
+            p.text(col, row, isSelected ? "▶" : " ", Palette.ACCENT, true);
+            p.text(col + 2, row, Painter.fit(card.name() + " (" + Format.cardKind(card) + ")", width - 3),
+                    Palette.element(card.element()), isSelected);
+        }
+    }
+
     /** Trop de trinkets pour les emplacements : liste, le joueur en choisit un à jeter. */
     static void discard(Painter p, GameState state, int selected, long seed) {
         p.frame("Jeter un trinket", "Seed " + seed, "↑/↓ choisir · Entrée jeter");
@@ -125,8 +166,21 @@ final class ItemScreens {
             }
         }
         if (state.effects().isEmpty()) {
-            p.text(5, row, "aucun", Palette.DIM);
+            p.text(5, row++, "aucun", Palette.DIM);
         }
+        if (state.usesDeck() && row + 1 < p.rows() - 1) {
+            row++;
+            p.text(3, row++, "Deck " + state.deck().size() + " cartes", Palette.TEXT, true);
+            p.text(5, row, Painter.fit(deckSummary(state.deck()), p.cols() - 7), Palette.TEXT);
+        }
+    }
+
+    /** « Boule de feu, Tsunami ×2, Potion… » (dans l'ordre du deck, doublons regroupés). */
+    static String deckSummary(List<cardistry.model.card.Card> deck) {
+        java.util.Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        deck.forEach(c -> counts.merge(c.name(), 1, Integer::sum));
+        return String.join(", ", counts.entrySet().stream()
+                .map(e -> e.getValue() > 1 ? e.getKey() + " ×" + e.getValue() : e.getKey()).toList());
     }
 
     private static int line(Painter p, int row, String prefix, Collectible c, String suffix) {

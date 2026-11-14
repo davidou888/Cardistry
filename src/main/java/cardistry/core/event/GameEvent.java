@@ -139,6 +139,29 @@ public sealed interface GameEvent {
     record NodeEntered(int level, int floor, String kind) implements GameEvent {
     }
 
+    /** La défausse est remélangée dans la pioche ({@code size} cartes). */
+    record DeckShuffled(int size) implements GameEvent {
+    }
+
+    /** Récompense de carte : ajoute 1 carte parmi {@code options} à ton deck (ou passe). */
+    record CardRewardOffered(List<Card> options) implements GameEvent {
+
+        public CardRewardOffered {
+            options = List.copyOf(options);
+        }
+    }
+
+    record CardRewardSkipped() implements GameEvent {
+    }
+
+    /** Carte ajoutée au deck de la run. */
+    record CardAddedToDeck(Card card) implements GameEvent {
+    }
+
+    /** Carte retirée du deck de la run. */
+    record CardRemovedFromDeck(Card card) implements GameEvent {
+    }
+
     /** Sieste : le joueur a choisi {@code choice} (nom affiché). */
     record RestTaken(String choice) implements GameEvent {
     }
@@ -273,7 +296,9 @@ public sealed interface GameEvent {
             /** Carte injouable (NO CARDS). */
             UNPLAYABLE_CARD,
             /** Annulation impossible (pas de Ctrl+Z, déjà utilisé ce combat, ou pas de tour à annuler). */
-            UNDO_UNAVAILABLE
+            UNDO_UNAVAILABLE,
+            /** Plus aucune carte à piocher (pioche et défausse vides). */
+            DECK_EMPTY
         }
     }
 

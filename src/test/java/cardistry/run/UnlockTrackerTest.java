@@ -167,7 +167,7 @@ class UnlockTrackerTest {
     /** Partie sur la carte, sort surpuissant ; joue jusqu'au combat contre le boss du niveau {@code level}. */
     private cardistry.run.Run runToBoss(int level) {
         EventBus bus = new EventBus();
-        cardistry.run.Run run = new cardistry.run.Run(2, Set.of(), bus, GameState::newGame,
+        cardistry.run.Run run = new cardistry.run.Run(2, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
                 () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
         tracker = new UnlockTracker(run::state, store, bus);
         bus.subscribe(tracker);
@@ -183,6 +183,7 @@ class UnlockTrackerTest {
                     }
                 }
                 case REWARD -> run.resolveReward(new cardistry.core.RewardChoice.Skip());
+                case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> throw new AssertionError("partie finie trop tôt");
             }

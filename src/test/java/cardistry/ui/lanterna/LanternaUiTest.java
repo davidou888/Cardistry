@@ -812,4 +812,69 @@ class LanternaUiTest {
         type("2");
         assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseNode(view)));
     }
+
+    // --- Deck, récompense de carte, Sieste ---
+
+    private static GameState deckState() {
+        GameState state = GameState.newGame();
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(state, new cardistry.model.card.CardPool(),
+                new cardistry.core.Rng(1), new EventBus());
+        engine.start();
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CAME, 1), false);
+        return state;
+    }
+
+    @Test
+    void piocheEtDefausseAffichees() throws IOException {
+        open(80, 24);
+        ui.showStatus(deckState());
+        String text = dump("60-combat-deck");
+        assertTrue(text.contains("Ta main 5/7 · Pioche 7 · Défausse 0"), text);
+    }
+
+    @Test
+    void recompenseDeCarte() throws IOException {
+        open(80, 24);
+        GameState state = deckState();
+        List<Card> options = List.of(new SpellCard("Tsunami", Element.WATER, 15), new HealCard("Potion", Element.NATURE, 10),
+                new TerrainCard("Forêt", Element.NATURE));
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));
+        String text = dump("61-recompense-carte");
+        assertTrue(text.contains("Ajoute une carte à ton deck"), text);
+        assertTrue(text.contains("Deck 12 cartes"));
+        type("s");
+        assertEquals(-1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));
+    }
+
+    @Test
+    void siesteEtTri() throws IOException {
+        open(80, 24);
+        GameState state = deckState();
+        press(KeyType.ArrowDown);
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter);
+        List<cardistry.run.RestOption> options = List.of(cardistry.run.RestOption.values());
+        assertEquals(cardistry.run.RestOption.REMOVE_CARD,
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseRest(state, options)));
+        String rest = dump("62-sieste");
+        assertTrue(rest.contains("Sieste"), rest);
+        assertTrue(rest.contains("Dormir : +30 % de tes PV max"));
+        assertTrue(rest.contains("Faire le tri"));
+
+        press(KeyType.ArrowRight);
+        press(KeyType.Enter);
+        assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardToRemove(state)));
+        String deck = dump("63-tri");
+        assertTrue(deck.contains("Choisis la carte à retirer"), deck);
+        assertTrue(deck.contains("Boule de feu"));
+    }
+
+    @Test
+    void resumeDuDeck() {
+        List<Card> deck = List.of(new SpellCard("Tsunami", Element.WATER, 15), new HealCard("Potion", Element.NATURE, 10),
+                new SpellCard("Tsunami", Element.WATER, 15));
+        assertEquals("Tsunami ×2, Potion", ItemScreens.deckSummary(deck));
+    }
 }

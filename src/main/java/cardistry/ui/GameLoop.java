@@ -35,7 +35,11 @@ public final class GameLoop {
                 case MAP -> chooseNode(run, renderer, input);
                 case COMBAT -> playTurn(run, renderer, input);
                 case REWARD -> resolveRewards(run, input);
-                case REST -> run.rest(input.chooseRest(run.state(), run.restOptions()));
+                case CARD_REWARD -> {
+                    int index = input.chooseCardReward(run.state(), run.pendingCardReward());
+                    run.resolveCardReward(index < run.pendingCardReward().size() ? index : -1);
+                }
+                case REST -> rest(run, input);
                 case OVER -> {
                 }
             }
@@ -77,6 +81,19 @@ public final class GameLoop {
                 renderer.showStatus(run.state());
                 renderer.showHand(run.state());
             }
+        }
+    }
+
+    private static void rest(Run run, Input input) {
+        cardistry.run.RestOption option = input.chooseRest(run.state(), run.restOptions());
+        if (option == cardistry.run.RestOption.REMOVE_CARD) {
+            int index = input.chooseCardToRemove(run.state());
+            if (index < 0 || index >= run.state().deck().size()) {
+                return; // annulé : on redemande
+            }
+            run.rest(option, index);
+        } else {
+            run.rest(option);
         }
     }
 

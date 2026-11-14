@@ -120,8 +120,9 @@ final class MenuScreens {
             "  | \\___________\\",
             "  |  |___________|",
         };
+        int bedWidth = java.util.Arrays.stream(bed).mapToInt(String::length).max().orElse(0);
         for (int i = 0; i < bed.length; i++) {
-            p.centered(top + i, bed[i], Palette.HEAL, false);
+            p.text((p.cols() - bedWidth) / 2, top + i, bed[i], Palette.HEAL);
         }
         int row = top + bed.length + 2;
         p.centered(row, "Une pause avant le boss. PV " + num(state.player().hp()) + "/" + num(state.maxHp())

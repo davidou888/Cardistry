@@ -72,4 +72,8 @@ public interface EffectContext {
     default <T> T favorable(java.util.function.Supplier<T> roll, java.util.Comparator<? super T> better) {
         return Luck.favorable(state(), roll, better);
     }
+
+    /** Ajoute une carte au deck de la run (sans deck : rien). */
+    default void addCardToDeck(cardistry.model.card.Card card) {
+    }
 }

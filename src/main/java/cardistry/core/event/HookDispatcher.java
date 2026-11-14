@@ -116,6 +116,21 @@ public final class HookDispatcher {
             case GameEvent.CigarettesStolen e -> {
                 // Pas de hook pour l'instant (le paquet change : CigarettesChanged).
             }
+            case GameEvent.DeckShuffled e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CardRewardOffered e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CardRewardSkipped e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CardAddedToDeck e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.CardRemovedFromDeck e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.RestTaken e -> {
                 // Pas de hook pour l'instant.
             }

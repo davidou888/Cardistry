@@ -99,6 +99,7 @@ public final class TextRenderer implements Renderer {
                 case PACK_FULL -> "Paquet plein : impossible de rouler";
                 case UNPLAYABLE_CARD -> "NO CARDS : cette carte est injouable";
                 case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant";
+                case DECK_EMPTY -> "Plus aucune carte à piocher";
             });
             case GameEvent.EnemyNulled e -> console.println(Ansi.MAGENTA + "NullPointerException : "
                     + e.enemy().name() + " devient null !" + Ansi.END_COLOR);
@@ -164,6 +165,18 @@ public final class TextRenderer implements Renderer {
                 console.println(Ansi.RED + "DÉFAITE..." + Ansi.END_COLOR + " Tu n'as plus de points de vie.");
             }
             case GameEvent.RestTaken e -> console.println("Sieste : " + e.choice() + ".");
+            case GameEvent.DeckShuffled e -> console.println("→ Défausse remélangée dans la pioche (" + e.size() + " cartes).");
+            case GameEvent.CardAddedToDeck e -> console.println("→ " + cardName(e.card()) + " ajoutée à ton deck.");
+            case GameEvent.CardRemovedFromDeck e -> console.println("→ " + cardName(e.card()) + " retirée de ton deck.");
+            case GameEvent.CardRewardSkipped e -> console.println("Tu passes la carte.");
+            case GameEvent.CardRewardOffered e -> {
+                console.println();
+                console.println(Ansi.yellow("Nouvelle carte !") + " Ajoute-en une à ton deck :");
+                for (int i = 0; i < e.options().size(); i++) {
+                    console.println("[" + (i + 1) + "] " + describe(e.options().get(i)));
+                }
+                console.println("[0] Passer");
+            }
             case GameEvent.LevelStarted e -> {
                 console.println();
                 console.println(Ansi.yellow("=== Niveau " + e.level() + " ==="));

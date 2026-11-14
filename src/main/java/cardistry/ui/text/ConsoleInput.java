@@ -116,6 +116,21 @@ public final class ConsoleInput implements Input {
         return readNumber("Où vas-tu ? ", 1, view.choices().size()) - 1;
     }
 
+    /** 1..n = ajouter la carte, 0 = passer (la liste est affichée par le rendu). */
+    @Override
+    public int chooseCardReward(GameState state, List<cardistry.model.card.Card> options) {
+        return readNumber("Carte à ajouter (0 pour passer) ? ", 0, options.size()) - 1;
+    }
+
+    @Override
+    public int chooseCardToRemove(GameState state) {
+        console.println("Ton deck :");
+        for (int i = 0; i < state.deck().size(); i++) {
+            console.println("[" + (i + 1) + "] " + TextRenderer.describe(state.deck().get(i)));
+        }
+        return readNumber("Carte à retirer (0 pour revenir) ? ", 0, state.deck().size()) - 1;
+    }
+
     @Override
     public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         console.println();

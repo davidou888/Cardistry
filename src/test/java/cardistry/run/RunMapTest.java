@@ -33,7 +33,7 @@ class RunMapTest {
     private Run strongRun(long seed) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        Run run = new Run(seed, Set.of(), bus, GameState::newGame,
+        Run run = new Run(seed, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
                 () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
         run.start();
         return run;
@@ -56,6 +56,7 @@ class RunMapTest {
                     }
                 }
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -76,6 +77,7 @@ class RunMapTest {
                     }
                 }
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
+                case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
                 case OVER -> {
                 }
@@ -88,9 +90,9 @@ class RunMapTest {
     @Test
     void siesteAvantLeBoss() {
         Run run = strongRun(2);
-        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
         assertEquals(RunMap.REST_FLOOR, run.state().floor());
-        assertEquals(List.of(RestOption.HEAL, RestOption.CIGARETTES), run.restOptions());
+        assertEquals(3, run.restOptions().size());
         assertThrows(IllegalStateException.class, () -> run.chooseNode(0));
         run.state().player().takeDamage(50);
         run.rest(RestOption.HEAL);
@@ -103,7 +105,7 @@ class RunMapTest {
     @Test
     void siesteSoinPlafonne() {
         Run run = strongRun(2);
-        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
         run.state().player().takeDamage(10);
         run.rest(RestOption.HEAL);
         assertEquals(100, run.state().player().hp(), 1e-9);
@@ -112,17 +114,22 @@ class RunMapTest {
     @Test
     void siesteClopes() {
         Run run = strongRun(2);
-        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
         int before = run.state().cigarettes();
         run.rest(RestOption.CIGARETTES);
         assertEquals(before + 3, run.state().cigarettes());
     }
 
     @Test
-    void retirerUneCarteIndisponibleSansDeck() {
+    void faireLeTriRetireUneCarteDuDeck() {
         Run run = strongRun(2);
-        playUntil(run, r -> r.phase() == Run.Phase.REST);
+        playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
+        assertEquals(List.of(RestOption.HEAL, RestOption.CIGARETTES, RestOption.REMOVE_CARD), run.restOptions());
+        int before = run.state().deck().size();
         assertThrows(IllegalArgumentException.class, () -> run.rest(RestOption.REMOVE_CARD));
+        run.rest(RestOption.REMOVE_CARD, 0);
+        assertEquals(before - 1, run.state().deck().size());
+        assertTrue(events.stream().anyMatch(e -> e instanceof GameEvent.CardRemovedFromDeck));
     }
 
     // --- Après un boss ---
@@ -137,6 +144,7 @@ class RunMapTest {
         if (run.phase() == Run.Phase.REWARD) {
             run.resolveReward(new RewardChoice.Skip());
         }
+        run.resolveCardReward(-1);
         assertEquals(2, run.state().level());
         assertEquals(70, run.state().player().hp(), 1e-9); // 40 + 60 / 2
     }
@@ -172,10 +180,12 @@ class RunMapTest {
         assertEquals(EnemyRank.COMMON, run.state().currentEnemy().rank());
         assertTrue(run.startTurn());
         assertEquals(ActionResult.TURN_ENDED, run.submit(new Action.PlayCard(0)));
-        assertTrue(run.phase() == Run.Phase.REWARD || run.phase() == Run.Phase.MAP);
+        assertTrue(run.phase() == Run.Phase.REWARD || run.phase() == Run.Phase.CARD_REWARD);
         if (run.phase() == Run.Phase.REWARD) {
             run.resolveReward(new RewardChoice.Skip());
         }
+        assertEquals(Run.Phase.CARD_REWARD, run.phase());
+        run.resolveCardReward(-1);
         assertEquals(Run.Phase.MAP, run.phase());
         assertEquals(run.map().orElseThrow().choicesAfter(run.position()), run.choices());
         assertEquals(2, run.choices().get(0).floor());

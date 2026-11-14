@@ -114,10 +114,19 @@ public final class ItemRegistry {
                         })
                         .build(),
                 Trinket.builder("grinder", "Grinder", UNCOMMON)
-                        .description("Soins de type feu +50 % ; Petit pétou deux fois plus fréquent dans la pioche")
+                        .description("Soins de type feu +50 % ; +1 Petit pétou dans ton deck à l'obtention ;"
+                                + " Petit pétou deux fois plus fréquent dans les récompenses")
                         .tags(Tag.HEAL, Tag.PARTY)
                         .percent(StatType.FIRE_HEAL, 0.5)
                         .cardWeight("Petit pétou", 2)
+                        .hooks(new GameHooks() {
+                            @Override
+                            public void onRewardTaken(GameEvent.RewardTaken event, EffectContext ctx) {
+                                if (event.taken().id().equals("grinder")) {
+                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15));
+                                }
+                            }
+                        })
                         .build(),
 
                 // --- Rares ---

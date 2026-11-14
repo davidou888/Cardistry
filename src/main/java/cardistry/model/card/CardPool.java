@@ -9,8 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Registre des cartes piochables. La pioche est infinie et avec remise ;
- * une carte présente plusieurs fois a plus de chances d'être tirée.
+ * Registre des cartes : tirées pour les récompenses de cartes et les effets qui créent une carte
+ * (George), et pour la pioche des parties sans deck (tests). Une carte présente plusieurs fois a
+ * plus de chances d'être tirée.
  */
 public class CardPool {
 
@@ -55,6 +56,26 @@ public class CardPool {
     /** Cartes du registre (avec leurs doublons), en lecture seule. */
     public List<Card> cards() {
         return java.util.Collections.unmodifiableList(cards);
+    }
+
+    /**
+     * Deck de départ (12 cartes) : 6 sorts (un de 10 et un de 15 par élément), 3 soins, 3 terrains.
+     * Le terrain de départ (EPFL) est en jeu, pas dans le deck.
+     */
+    public static List<Card> startingDeck() {
+        return List.of(
+                new SpellCard("Boule de feu", FIRE, 10.0),
+                new SpellCard("Pluie de flammes", FIRE, 15.0),
+                new SpellCard("Jet d'eau", WATER, 10.0),
+                new SpellCard("Tsunami", WATER, 15.0),
+                new SpellCard("Fouet de lianes", NATURE, 10.0),
+                new SpellCard("Tempête d'épines", NATURE, 15.0),
+                new HealCard("Potion", NATURE, 10.0),
+                new HealCard("Caïpirinha", WATER, 10.0),
+                new HealCard("Petit pétou", FIRE, 15.0),
+                new TerrainCard("Enfer", FIRE),
+                new TerrainCard("Atlantis", WATER),
+                new TerrainCard("Amazonie", NATURE));
     }
 
     /** Terrain sur lequel commence la partie. */

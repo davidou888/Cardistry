@@ -32,7 +32,7 @@ import java.util.List;
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
-    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST }
+    private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE }
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -189,6 +189,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case PACK_FULL -> "Paquet plein : impossible de rouler.";
                     case UNPLAYABLE_CARD -> "NO CARDS : carte injouable.";
                     case UNDO_UNAVAILABLE -> "Impossible d'annuler maintenant.";
+                    case DECK_EMPTY -> "Plus aucune carte à piocher.";
                 }, Palette.WARNING);
                 render();
             }
@@ -270,6 +271,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
             case GameEvent.IntentChosen e -> render();
             case GameEvent.RestTaken e -> view.log("Sieste : " + e.choice(), Palette.HEAL);
+            case GameEvent.DeckShuffled e -> view.log("Défausse remélangée : " + e.size() + " cartes", Palette.DIM);
+            case GameEvent.CardAddedToDeck e -> view.log(e.card().name() + " ajoutée au deck", Palette.ACCENT);
+            case GameEvent.CardRemovedFromDeck e -> view.log(e.card().name() + " retirée du deck", Palette.WARNING);
+            case GameEvent.CardRewardOffered e -> {
+            }
+            case GameEvent.CardRewardSkipped e -> view.log("Carte refusée", Palette.DIM);
             case GameEvent.LevelStarted e -> {
                 view.log("— Niveau " + e.level() + " —", Palette.ACCENT);
                 view.toast = "Niveau " + e.level() + "/3";
@@ -359,6 +366,67 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         mapSelected = 0;
                         return c - '1';
                     }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    @Override
+    public int chooseCardReward(GameState state, List<cardistry.model.card.Card> options) {
+        this.state = state;
+        cardOptions = options;
+        cardSelected = 0;
+        page = Page.CARD_REWARD;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft -> cardSelected = Math.floorMod(cardSelected - 1, options.size());
+                case ArrowRight -> cardSelected = Math.floorMod(cardSelected + 1, options.size());
+                case Enter -> {
+                    return cardSelected;
+                }
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 's') {
+                        return -1;
+                    } else if (c == 'q') {
+                        confirmQuit();
+                    } else if (c >= '1' && c < '1' + options.size()) {
+                        return c - '1';
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    private int deckSelected = 0;
+
+    @Override
+    public int chooseCardToRemove(GameState state) {
+        this.state = state;
+        deckSelected = 0;
+        page = Page.DECK_REMOVE;
+        render();
+        int count = state.deck().size();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft -> deckSelected = Math.floorMod(deckSelected - 1, count);
+                case ArrowRight -> deckSelected = Math.floorMod(deckSelected + 1, count);
+                case ArrowUp -> deckSelected = Math.floorMod(deckSelected - ItemScreens.DECK_COLUMNS, count);
+                case ArrowDown -> deckSelected = Math.floorMod(deckSelected + ItemScreens.DECK_COLUMNS, count);
+                case Enter -> {
+                    return deckSelected;
+                }
+                case Escape -> {
+                    return -1;
                 }
                 default -> {
                 }
@@ -903,6 +971,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
                             showMetaPhrase, seed);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
+                    case CARD_REWARD -> ItemScreens.cardReward(painter, state, cardOptions, cardSelected, seed);
+                    case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,

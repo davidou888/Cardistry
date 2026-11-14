@@ -76,4 +76,14 @@ public final class Format {
         }
         return "Combat " + state.combatNumber() + "/" + state.enemies().size() + rank;
     }
+
+    /** « sort 10 », « soin 15 », « terrain », « injouable ». */
+    public static String cardKind(cardistry.model.card.Card card) {
+        return switch (card) {
+            case cardistry.model.card.SpellCard spell -> spell.element().displayName() + ", " + num(spell.damage());
+            case cardistry.model.card.HealCard heal -> "soin " + heal.element().displayName() + ", " + num(heal.amount());
+            case cardistry.model.card.TerrainCard terrain -> "terrain " + terrain.element().displayName();
+            case cardistry.model.card.DeadCard dead -> "injouable";
+        };
+    }
 }

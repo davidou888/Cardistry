@@ -51,6 +51,16 @@ public interface Input extends PlayerDecisions {
         return 0;
     }
 
+    /** Récompense de carte : index dans {@code options}, ou −1 pour passer. Par défaut : passe. */
+    default int chooseCardReward(GameState state, List<cardistry.model.card.Card> options) {
+        return -1;
+    }
+
+    /** Sieste « Faire le tri » : index de la carte du deck à retirer. Par défaut la première. */
+    default int chooseCardToRemove(GameState state) {
+        return 0;
+    }
+
     /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
     default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         return options.get(0);
