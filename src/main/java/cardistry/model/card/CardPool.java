@@ -70,9 +70,11 @@ public class CardPool {
         //UNCOMMON
         cards.add(new TerrainCard("Amazonie", NATURE, UNCOMMON).withBonuses("attaques plante +20 %",
                 percent(StatType.NATURE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
-        cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, UNCOMMON));
+        cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, UNCOMMON).withEffect(
+                TerrainCard.Effect.DEEP_HYPNOSIS, "l'hypnose fait ×4 au lieu de ×2"));
         cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, UNCOMMON));
-        cards.add(new TerrainCard("Fractale", GEOMETRIC, UNCOMMON));
+        cards.add(new TerrainCard("Fractale", GEOMETRIC, UNCOMMON).withEffect(TerrainCard.Effect.CEILING,
+                "tous les multiplicateurs (toi et l'adversaire) arrondis à l'entier supérieur"));
 
         //RARE
         cards.add(new TerrainCard("Enfer", FIRE, RARE).withBonuses("attaques feu +20 %",

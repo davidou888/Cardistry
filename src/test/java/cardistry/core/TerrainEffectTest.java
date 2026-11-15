@@ -133,4 +133,58 @@ class TerrainEffectTest {
         assertTrue(terrain("Gare").effectText().orElseThrow().contains("ne coûte pas le tour"));
         assertTrue(CardPool.startingTerrain().effectText().orElseThrow().contains("+10 %"));
     }
+
+    // --- Désert kaléidoscopique, Fractale ---
+
+    private void setUpAgainst(TerrainCard start, Element enemyElement, double enemyAttack, Card... hand) {
+        enemy = Enemy.builder("cible", "Cible", enemyElement, EnemyRank.COMMON).hp(1000)
+                .behavior(EnemyBehavior.always(EnemyMove.basicAttack(enemyAttack))).build();
+        state = new GameState(new Player(100), List.of(enemy), start, List.of(hand), new Stats());
+        engine = new CombatEngine(state, new CardPool(), new Rng(5), new EventBus(), new LootTable(List::of));
+        engine.startTurn();
+    }
+
+    @Test
+    void desertLHypnoseFaitX4() {
+        setUpAgainst(terrain("Désert kaléidoscopique"), Element.NEUTRAL, 0, spell(Element.NEUTRAL, 10));
+        state.statuses(cardistry.core.status.StatusTarget.ENEMY).apply(cardistry.core.status.StatusType.HYPNOTIZED, 1,
+                cardistry.core.status.StatusTarget.PLAYER);
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(1000 - 40, enemy.hp());
+    }
+
+    @Test
+    void desertLeJoueurHypnotiseSubitX4() {
+        setUpAgainst(terrain("Désert kaléidoscopique"), Element.NEUTRAL, 5);
+        state.statuses(cardistry.core.status.StatusTarget.PLAYER).apply(cardistry.core.status.StatusType.HYPNOTIZED, 1,
+                cardistry.core.status.StatusTarget.ENEMY);
+        engine.submit(new Action.DrawCard());
+        assertEquals(80, state.player().hp());
+    }
+
+    @Test
+    void fractaleArrondiALEntierSuperieurPourLeJoueur() {
+        setUpAgainst(terrain("Fractale"), Element.FIRE, 0, spell(Element.WATER, 10), spell(Element.NATURE, 10));
+        assertEquals(2.0, state.spellMultiplier((SpellCard) state.hand().get(0)), 1e-9, "×1.5 → ×2");
+        assertEquals(1.0, state.spellMultiplier((SpellCard) state.hand().get(1)), 1e-9, "×0.5 → ×1");
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(1000 - 20, enemy.hp());
+    }
+
+    @Test
+    void fractaleArrondiAussiLAttaqueAdverseEtLesSoins() {
+        setUpAgainst(terrain("Fractale"), Element.FIRE, 10);
+        state.playerStats().add(cardistry.core.stats.StatModifier.percent(StatType.ENEMY_DAMAGE, 0.25, "test"));
+        state.playerStats().add(cardistry.core.stats.StatModifier.percent(StatType.HEAL_EFFICIENCY, 0.1, "test"));
+        assertEquals(2.0, state.enemyAttackMultiplier(), 1e-9, "×1.25 → ×2");
+        assertEquals(2.0, state.healMultiplier(Element.NATURE), 1e-9, "×1.1 → ×2");
+        engine.submit(new Action.DrawCard());
+        assertEquals(80, state.player().hp());
+    }
+
+    @Test
+    void horsDeLaFractaleLesMultiplicateursRestentDecimaux() {
+        setUpAgainst(terrain("Forêt"), Element.FIRE, 0, spell(Element.WATER, 10));
+        assertEquals(1.5, state.spellMultiplier((SpellCard) state.hand().get(0)), 1e-9);
+    }
 }

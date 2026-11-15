@@ -24,6 +24,8 @@ public enum StatusType {
     public static final double INTOX_DAMAGE = 5;
     /** Multiplicateur des cartes d'attaque contre une cible hypnotisée. */
     public static final double HYPNOSIS_MULTIPLIER = 2;
+    /** Hypnose sur le Désert kaléidoscopique. */
+    public static final double DEEP_HYPNOSIS_MULTIPLIER = 4;
     public static final double BONDAGE_STEAL = 5;
     public static final double BONDAGE_STEAL_PLANT = 8;
     public static final double BURN_DAMAGE = 4;

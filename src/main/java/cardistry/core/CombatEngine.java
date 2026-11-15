@@ -1546,8 +1546,8 @@ public final class CombatEngine {
 
         @Override
         public void elementalDamage(double amount, Element element) {
-            double mult = ElementRules.spellMultiplier(element, state.currentEnemy().element())
-                    * state.playerStats().get(StatType.damageMultiplier(element));
+            double mult = state.terrainRounding(ElementRules.spellMultiplier(element, state.currentEnemy().element())
+                    * state.playerStats().get(StatType.damageMultiplier(element)));
             CombatEngine.this.damageEnemy(amount * mult, mult, GameEvent.DamageDealt.Source.EFFECT);
         }
 

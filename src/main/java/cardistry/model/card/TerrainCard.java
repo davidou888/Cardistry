@@ -17,7 +17,11 @@ public final class TerrainCard extends Card {
     public enum Effect {
         NONE,
         /** Gare : jouer une carte terrain depuis ce terrain ne coûte pas le tour et donne +1 clope. */
-        FREE_DEPARTURE
+        FREE_DEPARTURE,
+        /** Désert kaléidoscopique : l'hypnose fait ×4 au lieu de ×2. */
+        DEEP_HYPNOSIS,
+        /** Fractale : tous les multiplicateurs (joueur et adversaire) arrondis à l'entier supérieur. */
+        CEILING
     }
 
     private List<StatModifier> bonuses = List.of();

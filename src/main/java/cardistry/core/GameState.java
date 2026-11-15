@@ -551,10 +551,10 @@ public final class GameState {
 
     /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
     public double spellMultiplier(SpellCard spell) {
-        return ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
+        return terrainRounding(ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
                 * playerStats.get(StatType.damageMultiplier(spell.element()))
                 * hypnosisMultiplier(cardistry.core.status.StatusTarget.ENEMY)
-                * nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0);
+                * nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0));
     }
 
     /** Effet actif qui multipliera le prochain sort (le plus ancien), s'il y en a un. */
@@ -574,22 +574,34 @@ public final class GameState {
 
     /** Multiplicateur d'un soin de l'élément {@code element} (carte ou objet « soin feu »). */
     public double healMultiplier(cardistry.model.Element element) {
-        return ElementRules.healMultiplier(element, terrain.element())
+        return terrainRounding(ElementRules.healMultiplier(element, terrain.element())
                 * playerStats.get(StatType.HEAL_EFFICIENCY)
-                * playerStats.get(StatType.healMultiplier(element));
+                * playerStats.get(StatType.healMultiplier(element)));
     }
 
     /** Multiplicateur actuel de l'attaque de l'adversaire (terrain × stat {@link StatType#ENEMY_DAMAGE}). */
     public double enemyAttackMultiplier() {
-        return ElementRules.terrainAttackMultiplier(terrain.element(), currentEnemy().element())
+        return terrainRounding(ElementRules.terrainAttackMultiplier(terrain.element(), currentEnemy().element())
                 * playerStats.get(StatType.ENEMY_DAMAGE)
-                * hypnosisMultiplier(cardistry.core.status.StatusTarget.PLAYER);
+                * hypnosisMultiplier(cardistry.core.status.StatusTarget.PLAYER));
+    }
+
+    /**
+     * Fractale : un multiplicateur total arrondi à l'entier supérieur (×1.25 → ×2, ×0.5 → ×1) ;
+     * ailleurs, inchangé.
+     */
+    public double terrainRounding(double multiplier) {
+        return terrain.effect() == TerrainCard.Effect.CEILING ? Math.ceil(multiplier - 1e-9) : multiplier;
     }
 
     /** ×{@link cardistry.core.status.StatusType#HYPNOSIS_MULTIPLIER} si {@code target} est hypnotisé, ×1 sinon. */
     public double hypnosisMultiplier(cardistry.core.status.StatusTarget target) {
-        return statuses(target).has(cardistry.core.status.StatusType.HYPNOTIZED)
-                ? cardistry.core.status.StatusType.HYPNOSIS_MULTIPLIER : 1.0;
+        if (!statuses(target).has(cardistry.core.status.StatusType.HYPNOTIZED)) {
+            return 1.0;
+        }
+        return terrain.effect() == TerrainCard.Effect.DEEP_HYPNOSIS
+                ? cardistry.core.status.StatusType.DEEP_HYPNOSIS_MULTIPLIER
+                : cardistry.core.status.StatusType.HYPNOSIS_MULTIPLIER;
     }
 
     /**
