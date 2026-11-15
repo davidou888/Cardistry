@@ -21,7 +21,9 @@ public final class TerrainCard extends Card {
         /** Désert kaléidoscopique : l'hypnose fait ×4 au lieu de ×2. */
         DEEP_HYPNOSIS,
         /** Fractale : tous les multiplicateurs (joueur et adversaire) arrondis à l'entier supérieur. */
-        CEILING
+        CEILING,
+        /** Espace de dimension n : chaque carte jouée est rejouée une fois à 50 % au tour suivant. */
+        REPLAY
     }
 
     private List<StatModifier> bonuses = List.of();

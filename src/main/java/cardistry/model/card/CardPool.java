@@ -72,7 +72,8 @@ public class CardPool {
                 percent(StatType.NATURE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, UNCOMMON).withEffect(
                 TerrainCard.Effect.DEEP_HYPNOSIS, "l'hypnose fait ×4 au lieu de ×2"));
-        cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, UNCOMMON));
+        cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, UNCOMMON).withEffect(TerrainCard.Effect.REPLAY,
+                "chaque carte jouée ici est rejouée une fois à 50 % au tour suivant, si tu y es encore"));
         cards.add(new TerrainCard("Fractale", GEOMETRIC, UNCOMMON).withEffect(TerrainCard.Effect.CEILING,
                 "tous les multiplicateurs (toi et l'adversaire) arrondis à l'entier supérieur"));
 

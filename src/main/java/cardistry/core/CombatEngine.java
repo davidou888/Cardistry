@@ -153,6 +153,10 @@ public final class CombatEngine {
         if (isOver()) {
             return false;
         }
+        replayEchoes();
+        if (isOver() || resolveEnemyDeath()) {
+            return false;
+        }
         List<String> skipCauses = skipCauses();
         if (skipCauses.isEmpty()) {
             bus.publish(new GameEvent.PlayerTurnStarted(state.turn()));
@@ -392,6 +396,7 @@ public final class CombatEngine {
         }
         state.playerStats().removeBySource(COMBAT_BONUS_SOURCE);
         state.playerStats().removeBySource(TERRAIN_SOURCE);
+        state.takeEchoes();
         for (StatusTarget target : StatusTarget.values()) {
             for (Status status : state.statuses(target).clear()) {
                 bus.publish(new GameEvent.StatusEnded(target, status.type()));
@@ -549,6 +554,9 @@ public final class CombatEngine {
         TerrainCard previous = state.terrain();
         state.setTerrain(terrain);
         applyTerrainBonuses();
+        if (terrain.effect() != TerrainCard.Effect.REPLAY) {
+            state.takeEchoes(); // quitter l'Espace : plus rien à rejouer
+        }
         bus.publish(new GameEvent.TerrainChanged(previous, terrain));
         if (terrain.element() == Element.WATER) {
             for (StatusTarget owner : StatusTarget.values()) {
@@ -1190,15 +1198,33 @@ public final class CombatEngine {
 
     private void playCard(int slot) {
         Card card = state.removeFromHand(slot);
+        boolean onSpace = state.terrain().effect() == TerrainCard.Effect.REPLAY;
         bus.publish(new GameEvent.CardPlayed(card));
+        resolveCard(card, 1.0);
+        if (onSpace && !(card instanceof TerrainCard) && state.terrain().effect() == TerrainCard.Effect.REPLAY) {
+            state.addEcho(card);
+        }
+        discard(card);
+    }
+
+    /** Part des dégâts et des soins d'une carte rejouée par l'Espace de dimension n. */
+    public static final double ECHO_FACTOR = 0.5;
+
+    /**
+     * Effet d'une carte : dégâts ou soin × {@code factor} (1 au jeu, {@link #ECHO_FACTOR} au rejeu),
+     * changement de terrain, puis son pouvoir (en entier, avec ses chances normales). Un rejeu ne
+     * consomme pas le prochain sort ×N.
+     */
+    private void resolveCard(Card card, double factor) {
+        boolean echo = factor != 1.0;
         switch (card) {
             case SpellCard spell -> {
-                Optional<TemporaryEffect> boost = state.nextSpellBoost();
+                Optional<TemporaryEffect> boost = echo ? Optional.empty() : state.nextSpellBoost();
                 double base = spell.baseDamage(effects); // calculé avant le coup (Matrix, Pyromane…)
-                double mult = spell.isUnmultiplied() ? 1.0 : state.spellMultiplier(spell);
+                double mult = spell.isUnmultiplied() ? 1.0 : state.spellMultiplier(spell, !echo);
                 Enemy target = state.currentEnemy();
                 if (base > 0) {
-                    double hpLost = damageEnemy(base * mult, mult, GameEvent.DamageDealt.Source.SPELL);
+                    double hpLost = damageEnemy(base * mult * factor, mult, GameEvent.DamageDealt.Source.SPELL);
                     if (!spell.isUnmultiplied()) {
                         boost.ifPresent(this::consume);
                     }
@@ -1209,7 +1235,7 @@ public final class CombatEngine {
             }
             case HealCard heal -> {
                 double mult = state.healMultiplier(heal);
-                healPlayer(heal.amount() * mult, mult);
+                healPlayer(heal.amount() * mult * factor, mult);
             }
             case TerrainCard terrain -> changeTerrain(terrain);
             case DeadCard dead -> throw new AssertionError("refusée par validate");
@@ -1218,7 +1244,21 @@ public final class CombatEngine {
             bus.publish(new GameEvent.CardPowerTriggered(card, power.text()));
             power.effect().accept(effects);
         });
-        discard(card);
+    }
+
+    /** Début du tour du joueur : rejoue à 50 % les cartes jouées sur l'Espace, s'il y est encore. */
+    private void replayEchoes() {
+        List<Card> echoes = state.takeEchoes();
+        if (state.terrain().effect() != TerrainCard.Effect.REPLAY) {
+            return;
+        }
+        for (Card card : echoes) {
+            if (state.isLost() || !state.currentEnemy().isAlive()) {
+                return;
+            }
+            bus.publish(new GameEvent.CardReplayed(card, ECHO_FACTOR));
+            resolveCard(card, ECHO_FACTOR);
+        }
     }
 
     /** Identifiant de l'objet dont une clope transformée donne l'effet (Googz). */

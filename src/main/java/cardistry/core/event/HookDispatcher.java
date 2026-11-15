@@ -16,6 +16,9 @@ public final class HookDispatcher {
             case GameEvent.TurnStarted e -> hook.onTurnStart(e, ctx);
             case GameEvent.PlayerTurnStarted e -> hook.onPlayerTurnStart(e, ctx);
             case GameEvent.CardPlayed e -> hook.onCardPlayed(e, ctx);
+            case GameEvent.CardReplayed e -> {
+                // Concerne seulement l'UI.
+            }
             case GameEvent.CardPowerTriggered e -> {
                 // Concerne seulement l'UI.
             }

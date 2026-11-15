@@ -161,6 +161,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 // Rien de plus à afficher.
             }
             case GameEvent.CardPlayed e -> view.log("Tu joues la carte " + e.card().name(), Palette.TEXT);
+            case GameEvent.CardReplayed e -> view.log("Espace : " + e.card().name() + " rejouée à "
+                    + num(e.factor() * 100) + " %", Palette.INFO);
             case GameEvent.CardReplaced e -> {
                 view.log(e.removed().name() + " remplacée par " + e.replacement().name(), Palette.INFO);
                 render();

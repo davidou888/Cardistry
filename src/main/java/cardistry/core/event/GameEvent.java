@@ -32,6 +32,10 @@ public sealed interface GameEvent {
     record CardPlayed(Card card) implements GameEvent {
     }
 
+    /** Une carte jouée sur l'Espace de dimension n est rejouée ({@code factor} : part de ses dégâts ou soins). */
+    record CardReplayed(Card card, double factor) implements GameEvent {
+    }
+
     /** Le pouvoir d'une carte jouée se déclenche (après son effet principal). */
     record CardPowerTriggered(Card card, String text) implements GameEvent {
     }

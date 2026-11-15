@@ -70,6 +70,8 @@ public final class GameState {
     private List<ActiveSetTier> activeSetTiers = List.of();
     private final List<SetChange> pendingSetChanges = new ArrayList<>();
     private final List<TemporaryEffect> effects = new ArrayList<>();
+    /** Cartes jouées sur l'Espace de dimension n, rejouées à 50 % au prochain tour du joueur. */
+    private final List<Card> echoes = new ArrayList<>();
     private final cardistry.core.status.Statuses playerStatuses = new cardistry.core.status.Statuses();
     private final cardistry.core.status.Statuses enemyStatuses = new cardistry.core.status.Statuses();
     private boolean undoUsedThisCombat = false;
@@ -283,6 +285,21 @@ public final class GameState {
     void setLocation(int level, int floor) {
         this.level = level;
         this.floor = floor;
+    }
+
+    /** Cartes à rejouer au prochain tour (Espace de dimension n). */
+    public List<Card> echoes() {
+        return Collections.unmodifiableList(echoes);
+    }
+
+    void addEcho(Card card) {
+        echoes.add(card);
+    }
+
+    List<Card> takeEchoes() {
+        List<Card> taken = List.copyOf(echoes);
+        echoes.clear();
+        return taken;
     }
 
     /** Étages parcourus depuis le début de la partie (un par nœud de la carte où l'on est entré). */
@@ -551,10 +568,15 @@ public final class GameState {
 
     /** Multiplicateur total d'un sortilège contre l'adversaire actuel (élément × stats). */
     public double spellMultiplier(SpellCard spell) {
+        return spellMultiplier(spell, true);
+    }
+
+    /** Comme {@link #spellMultiplier(SpellCard)} ; {@code withBoost} : compte le prochain sort ×N (Shot de Jäger). */
+    public double spellMultiplier(SpellCard spell, boolean withBoost) {
         return terrainRounding(ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
                 * playerStats.get(StatType.damageMultiplier(spell.element()))
                 * hypnosisMultiplier(cardistry.core.status.StatusTarget.ENEMY)
-                * nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0));
+                * (withBoost ? nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0) : 1.0));
     }
 
     /** Effet actif qui multipliera le prochain sort (le plus ancien), s'il y en a un. */

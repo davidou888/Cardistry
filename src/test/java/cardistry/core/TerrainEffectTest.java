@@ -187,4 +187,71 @@ class TerrainEffectTest {
         setUpAgainst(terrain("Forêt"), Element.FIRE, 0, spell(Element.WATER, 10));
         assertEquals(1.5, state.spellMultiplier((SpellCard) state.hand().get(0)), 1e-9);
     }
+
+    // --- Espace de dimension n ---
+
+    @Test
+    void espaceUnSortEstRejoueAMoitieAuTourSuivant() {
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0, spell(Element.NEUTRAL, 10),
+                spell(Element.NEUTRAL, 1));
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(990, enemy.hp());
+        engine.startTurn();
+        assertEquals(985, enemy.hp(), "rejoué à 50 %");
+        engine.submit(new Action.DrawCard());
+        engine.startTurn();
+        assertEquals(985, enemy.hp(), "une seule fois");
+    }
+
+    @Test
+    void espaceUnSoinEstRejoueAMoitie() {
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0,
+                new cardistry.model.card.HealCard("Soin", Element.NEUTRAL, 20, Rarity.COMMON));
+        state.player().takeDamage(50);
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(70, state.player().hp());
+        engine.startTurn();
+        assertEquals(80, state.player().hp());
+    }
+
+    @Test
+    void espaceRienSiOnNYEstPlus() {
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0, spell(Element.NEUTRAL, 10));
+        engine.submit(new Action.PlayCard(0));
+        state.setTerrain(terrain("Forêt"));
+        engine.startTurn();
+        assertEquals(990, enemy.hp());
+    }
+
+    @Test
+    void espaceLesTerrainsNeSontPasRejouesEtLeQuitterAnnuleLeRejeu() {
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0, terrain("Forêt"));
+        engine.submit(new Action.PlayCard(0));
+        assertTrue(state.echoes().isEmpty());
+        assertEquals("Forêt", state.terrain().name());
+    }
+
+    @Test
+    void espaceLePouvoirEstRejoueAvecSaChanceNormale() {
+        int[] calls = new int[1];
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0, spell(Element.NEUTRAL, 10)
+                .withPower("compte", ctx -> calls[0]++));
+        engine.submit(new Action.PlayCard(0));
+        engine.startTurn();
+        assertEquals(2, calls[0]);
+    }
+
+    @Test
+    void espaceUnRejeuNeConsommePasLeProchainSortBoost() {
+        setUpAgainst(terrain("Espace de dimension n"), Element.NEUTRAL, 0, spell(Element.NEUTRAL, 10),
+                spell(Element.NEUTRAL, 10));
+        engine.submit(new Action.PlayCard(0));
+        engine.give(new cardistry.items.Item("jager", "Jäger", "", "", Rarity.COMMON, java.util.Set.of(),
+                ctx -> ctx.addEffect(TemporaryEffect.builder("jager", "Jäger").multipliesNextSpell(2).charges(1).build())));
+        engine.submit(new Action.UseItem(0));
+        engine.startTurn(); // rejeu : 5, sans le boost
+        assertEquals(985, enemy.hp());
+        engine.submit(new Action.PlayCard(0)); // 10 × 2
+        assertEquals(965, enemy.hp());
+    }
 }

@@ -129,6 +129,8 @@ public final class TextRenderer implements Renderer {
                     console.println("→ " + cardistry.ui.Format.drunkenness(lastState));
                 }
             }
+            case GameEvent.CardReplayed e -> console.println("Espace : " + e.card().name() + " rejouée à "
+                    + num(e.factor() * 100) + " %");
             case GameEvent.AbilityTriggered e -> console.println(Ansi.MAGENTA + "✦ " + e.message() + Ansi.END_COLOR);
             case GameEvent.CurseGained e -> console.println(Ansi.RED + "Gueule de bois en vue !" + Ansi.END_COLOR
                     + " " + e.curse().displayName() + " (" + lastState.describeCurse(e.curse(), 1) + ") au prochain combat.");
