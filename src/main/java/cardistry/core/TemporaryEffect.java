@@ -35,6 +35,7 @@ public final class TemporaryEffect {
     private final boolean keepAcrossCombats;
     private final double spellMultiplier;
     private final boolean cancelsEnemyAttack;
+    private final boolean cancelsNextStatus;
     private final String enemySkipMessage;
     private final boolean skipsNextTurn;
     private final List<Mod> mods;
@@ -59,6 +60,7 @@ public final class TemporaryEffect {
         this.keepAcrossCombats = b.keepAcrossCombats;
         this.spellMultiplier = b.spellMultiplier;
         this.cancelsEnemyAttack = b.cancelsEnemyAttack;
+        this.cancelsNextStatus = b.cancelsNextStatus;
         this.enemySkipMessage = b.enemySkipMessage;
         this.skipsNextTurn = b.skipsNextTurn;
         this.mods = List.copyOf(b.mods);
@@ -118,6 +120,11 @@ public final class TemporaryEffect {
 
     public boolean cancelsEnemyAttack() {
         return cancelsEnemyAttack;
+    }
+
+    /** {@code true} si l'effet annule le prochain statut que le joueur subirait (consomme une charge). */
+    public boolean cancelsNextStatus() {
+        return cancelsNextStatus;
     }
 
     /** {@code true} si l'effet fait sauter le prochain tour de l'adversaire (consomme une charge). */
@@ -221,6 +228,7 @@ public final class TemporaryEffect {
         private boolean keepAcrossCombats = false;
         private double spellMultiplier = 1.0;
         private boolean cancelsEnemyAttack = false;
+        private boolean cancelsNextStatus = false;
         private String enemySkipMessage = null;
         private boolean skipsNextTurn = false;
         private final List<Mod> mods = new ArrayList<>();
@@ -268,6 +276,12 @@ public final class TemporaryEffect {
 
         public Builder cancelsNextEnemyAttack() {
             this.cancelsEnemyAttack = true;
+            return this;
+        }
+
+        /** Annule le prochain statut posé sur le joueur (Contre-exemple). */
+        public Builder cancelsNextStatus() {
+            this.cancelsNextStatus = true;
             return this;
         }
 

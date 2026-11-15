@@ -443,6 +443,15 @@ public final class CombatEngine {
             bus.publish(new GameEvent.StatusRefused(target, type, "l'eau éteint la Brûlure"));
             return false;
         }
+        if (target == StatusTarget.PLAYER) {
+            Optional<TemporaryEffect> ward = state.effects().stream()
+                    .filter(e -> e.isActive() && e.cancelsNextStatus()).findFirst();
+            if (ward.isPresent()) {
+                bus.publish(new GameEvent.StatusRefused(target, type, ward.get().name() + " l'annule"));
+                consume(ward.get());
+                return false;
+            }
+        }
         Statuses.Outcome outcome = state.statuses(target).apply(type, turns, inflictedBy, extras);
         if (outcome == Statuses.Outcome.REFUSED) {
             bus.publish(new GameEvent.StatusRefused(target, type, type.displayName() + " déjà actif"));

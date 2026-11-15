@@ -58,10 +58,12 @@ public class CardPool {
         cards.add(moindreCarre());
         cards.add(distPlayer());
         cards.add(somnifere());
+        cards.add(reveilBrutal());
 
         //RARE
         cards.add(purificationDesChakra());
         cards.add(pyromane());
+        cards.add(contreExemple());
         //LEGENDARY
         cards.add(new SpellCard("Big Lez Shotgun", NEUTRAL, 80, LEGENDARY));
         cards.add(professeurDOr());
@@ -107,6 +109,9 @@ public class CardPool {
         //COMMON
         cards.add(new HealCard("Potion", NATURE, 10.0, COMMON));
         cards.add(petiteTaffe());
+        cards.add(new HealCard("Verre d'eau", WATER, 10, COMMON));
+        cards.add(new HealCard("Sparadrap", NEUTRAL, 12, COMMON));
+        cards.add(soupeDeMamie());
         //UNCOMMON
         cards.add(new HealCard("Grande potion", NATURE, 20.0, UNCOMMON));
         //RARE
@@ -251,6 +256,32 @@ public class CardPool {
     public static SpellCard somnifere() {
         return new SpellCard("Somnifère", SPIRIT, 0, UNCOMMON).withPower("endort l'adversaire (Fons 1 tour)",
                 ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.FONS, 1, 1));
+    }
+
+    public static final double REVEIL_BRUTAL_ASLEEP = 20;
+    public static final double REVEIL_BRUTAL_AWAKE = 8;
+
+    /** Réveil brutal : 20 dégâts à un adversaire en Fons (et le réveille), sinon 8. */
+    public static SpellCard reveilBrutal() {
+        return new SpellCard("Réveil brutal", NEUTRAL, REVEIL_BRUTAL_AWAKE, UNCOMMON).withDamageRule("8 / 20",
+                ctx -> ctx.state().statuses(StatusTarget.ENEMY).has(StatusType.FONS)
+                        ? REVEIL_BRUTAL_ASLEEP : REVEIL_BRUTAL_AWAKE)
+                .withPower("20 si l'adversaire dort (Fons), et il se réveille",
+                        ctx -> ctx.removeStatus(StatusTarget.ENEMY, StatusType.FONS));
+    }
+
+    /** Contre-exemple : aucun dégât, annule le prochain statut que tu subirais (pendant ce combat). */
+    public static SpellCard contreExemple() {
+        return new SpellCard("Contre-exemple", ALGEBRAIC, 0, RARE).withPower(
+                "annule le prochain statut que tu subirais (ce combat)",
+                ctx -> ctx.addEffect(cardistry.core.TemporaryEffect.builder("contre-exemple", "Contre-exemple")
+                        .summary("annule le prochain statut").charges(1).cancelsNextStatus().build()));
+    }
+
+    /** Soupe de mamie : +10 PV et retire l'Intox. */
+    public static HealCard soupeDeMamie() {
+        return new HealCard("Soupe de mamie", NEUTRAL, 10, COMMON).withPower("retire l'Intox",
+                ctx -> ctx.removeStatus(StatusTarget.PLAYER, StatusType.INTOX));
     }
 
     /** Tours passés à l'EPFL avant le retour automatique au Dojo. */

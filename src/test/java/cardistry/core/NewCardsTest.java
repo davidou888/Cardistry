@@ -199,4 +199,91 @@ class NewCardsTest {
         assertEquals(90, state.player().hp(), "réveillé");
         assertEquals(Rarity.UNCOMMON, CardPool.somnifere().rarity());
     }
+
+    // --- Lot 3 ---
+
+    /** Terrain feu (sans effet sur les soins eau et neutres), adversaire neutre qui frappe de {@code attack}. */
+    private void setUpFire(double attack, Card... hand) {
+        enemy = new Enemy("Cible", Element.NEUTRAL, 100, attack);
+        state = new GameState(new Player(100), List.of(enemy), new TerrainCard("Braise", Element.FIRE, Rarity.COMMON),
+                List.of(hand), new Stats());
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(), new LootTable(List::of));
+        engine.startTurn();
+    }
+
+    /** Pose {@code type} sur le joueur avec un objet (action gratuite) ; {@code true} s'il a été posé. */
+    private boolean inflictOnPlayer(cardistry.core.status.StatusType type) {
+        boolean[] landed = new boolean[1];
+        engine.give(new cardistry.items.Item("test", "Test", "", "", Rarity.COMMON, java.util.Set.of(),
+                ctx -> landed[0] = ctx.applyStatus(cardistry.core.status.StatusTarget.PLAYER, type, 1, 3)));
+        engine.submit(new Action.UseItem(state.items().size() - 1));
+        return landed[0];
+    }
+
+    @Test
+    void reveilBrutalHuitOuVingtEtReveille() {
+        setUp(100, CardPool.reveilBrutal());
+        play();
+        assertEquals(92, enemy.hp());
+        setUpFire(10, CardPool.reveilBrutal());
+        state.statuses(cardistry.core.status.StatusTarget.ENEMY).apply(cardistry.core.status.StatusType.FONS, 3,
+                cardistry.core.status.StatusTarget.PLAYER);
+        play();
+        assertEquals(80, enemy.hp());
+        assertEquals(90, state.player().hp(), "réveillé : il attaque à son tour");
+        assertEquals(Rarity.UNCOMMON, CardPool.reveilBrutal().rarity());
+    }
+
+    @Test
+    void contreExempleAnnuleLeProchainStatutSubi() {
+        setUpFire(0, CardPool.contreExemple(), CardPool.contreExemple());
+        play();
+        assertEquals(100, enemy.hp(), "aucun dégât");
+        engine.startTurn();
+        assertTrue(!inflictOnPlayer(cardistry.core.status.StatusType.INTOX), "annulé");
+        assertTrue(inflictOnPlayer(cardistry.core.status.StatusType.BURN), "un seul");
+        play(); // deuxième Contre-exemple : deux gardes possibles d'affilée
+        engine.startTurn();
+        assertTrue(!inflictOnPlayer(cardistry.core.status.StatusType.BONDAGE));
+        assertEquals(Element.ALGEBRAIC, CardPool.contreExemple().element());
+        assertEquals(Rarity.RARE, CardPool.contreExemple().rarity());
+    }
+
+    @Test
+    void contreExemplePerduALaFinDuCombat() {
+        enemy = new Enemy("Cible", Element.NEUTRAL, 5, 0);
+        state = new GameState(new Player(100), List.of(enemy, new Enemy("Suivant", Element.NEUTRAL, 100, 0)),
+                new TerrainCard("Braise", Element.FIRE, Rarity.COMMON),
+                List.of(CardPool.contreExemple(), new cardistry.model.card.SpellCard("Fin", Element.NEUTRAL, 10,
+                        Rarity.COMMON)), new Stats());
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(), new LootTable(List::of));
+        engine.startTurn();
+        play();
+        engine.startTurn();
+        play(); // tue le premier adversaire
+        assertTrue(state.effects().stream().noneMatch(TemporaryEffect::cancelsNextStatus));
+    }
+
+    @Test
+    void verreDEauSparadrapSoupeDeMamie() {
+        setUpFire(0, card("Verre d'eau"), card("Sparadrap"), CardPool.soupeDeMamie());
+        state.player().takeDamage(50);
+        play();
+        assertEquals(60, state.player().hp());
+        engine.startTurn();
+        play();
+        assertEquals(72, state.player().hp());
+        state.statuses(cardistry.core.status.StatusTarget.PLAYER).apply(cardistry.core.status.StatusType.INTOX, 3,
+                cardistry.core.status.StatusTarget.ENEMY);
+        engine.startTurn(); // Intox −5
+        assertEquals(67, state.player().hp());
+        play();
+        assertEquals(77, state.player().hp());
+        assertTrue(!state.statuses(cardistry.core.status.StatusTarget.PLAYER).has(cardistry.core.status.StatusType.INTOX));
+        assertEquals(Element.WATER, card("Verre d'eau").element());
+        assertEquals(Element.NEUTRAL, card("Sparadrap").element());
+        for (String name : List.of("Verre d'eau", "Sparadrap", "Soupe de mamie")) {
+            assertEquals(Rarity.COMMON, card(name).rarity(), name);
+        }
+    }
 }

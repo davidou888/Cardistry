@@ -286,6 +286,43 @@ return {
     c:hline(15, 19, 3, "C"); c:line(19, 3, 15, 7, "C"); c:hline(15, 19, 7, "C")
     c:hline(20, 22, 9, "C"); c:line(22, 9, 20, 11, "C"); c:hline(20, 22, 11, "C")
   end },
+  -- ---- plan V2, lot 3
+  { id = "reveil-brutal", draw = function(c)
+    -- réveil qui sonne, cloches et vibrations
+    c:disc(12, 13, 8, "R"); c:disc(12, 13, 6, "6")
+    c:disc(6, 5, 3, "4"); c:disc(18, 5, 3, "4")
+    c:vline(12, 9, 13, "1"); c:line(12, 13, 15, 15, "1")
+    c:line(7, 20, 5, 23, "2"); c:line(17, 20, 19, 23, "2")
+    c:px(1, 10, "Y"); c:px(2, 14, "Y"); c:px(22, 10, "Y"); c:px(21, 14, "Y")
+  end },
+  { id = "contre-exemple", draw = function(c)
+    -- une égalité barrée (algébrique : cyan, croix rouge)
+    c:rect(0, 0, 24, 24, "1")
+    c:hline(3, 8, 9, "C"); c:hline(3, 8, 13, "C")
+    c:hline(11, 13, 10, "C"); c:hline(11, 13, 12, "C")
+    c:vline(17, 8, 14, "C"); c:hline(16, 17, 8, "C"); c:hline(16, 19, 14, "C")
+    c:line(2, 20, 21, 3, "R", 2)
+  end },
+  { id = "verre-d-eau", draw = function(c)
+    -- verre d'eau
+    c:rect(6, 4, 12, 17, "4"); c:rect(7, 4, 10, 16, "1")
+    c:rect(7, 9, 10, 11, "b"); c:rect(7, 9, 10, 1, "C")
+    c:vline(8, 11, 18, "B"); c:px(13, 13, "C"); c:px(11, 16, "C")
+    c:hline(6, 17, 21, "3")
+  end },
+  { id = "sparadrap", draw = function(c)
+    -- pansement en diagonale
+    c:line(4, 19, 19, 4, "s", 5)
+    c:rect(10, 9, 5, 5, "5"); c:px(11, 10, "4"); c:px(13, 12, "4"); c:px(11, 12, "4"); c:px(13, 10, "4")
+    c:px(6, 18, "n"); c:px(18, 6, "n")
+  end },
+  { id = "soupe-de-mamie", draw = function(c)
+    -- bol de soupe fumante
+    c:ellipse(12, 14, 9, 3, "o"); c:ellipse(12, 14, 8, 2, "Y")
+    for y = 0, 5 do c:hline(3 + y, 21 - y, 15 + y, y < 1 and "d" or "r") end
+    c:px(9, 14, "G"); c:px(14, 13, "G"); c:px(12, 15, "R")
+    c:arc(9, 7, 2, 3, 90, 270, "4"); c:arc(15, 6, 2, 3, 270, 450, "4")
+  end },
   -- ---- terrains (nouveaux)
   { id = "volcan", draw = function(c)
     c:rect(0, 20, 24, 4, "2")
