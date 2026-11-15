@@ -1,7 +1,6 @@
 package cardistry.hero;
 
 import cardistry.core.EffectContext;
-import cardistry.core.TemporaryEffect;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatModifier;
@@ -14,10 +13,8 @@ import java.util.NoSuchElementException;
 public final class HeroRegistry {
 
     // --- Louis : MAN ---
-    /** Multiplicateur du premier sort de chaque combat. */
-    public static final double MAN_FIRST_SPELL = 1.5;
-    /** Multiplicateur du malus de Gueule de bois. */
-    public static final double MAN_HANGOVER = 2;
+    /** Bonus de dégâts permanent (tous éléments, additionné aux autres pourcentages). */
+    public static final double MAN_DAMAGE_BONUS = 0.5;
 
     // --- Sassy : wadayatalkinabit ---
     /** PV max en plus. */
@@ -28,17 +25,10 @@ public final class HeroRegistry {
     public static final double ALIEN_MISS_CHANCE = 0.10;
 
     public static final Hero LOUIS = new Hero("louis", "Louis", "MAN",
-            "La première attaque de chaque combat inflige +50 % de dégâts. Le malus de Gueule de bois est doublé.",
-            List.of(StatModifier.multiply(StatType.HANGOVER_SEVERITY, MAN_HANGOVER, Hero.modifierSource("louis"))),
+            "+50 % de dégâts, tout le temps.",
+            StatType.allDamageMultipliers().stream()
+                    .map(stat -> StatModifier.percent(stat, MAN_DAMAGE_BONUS, Hero.modifierSource("louis"))).toList(),
             new GameHooks() {
-                @Override
-                public void onCombatStart(GameEvent.CombatStarted event, EffectContext ctx) {
-                    ctx.addEffect(TemporaryEffect.builder("man", "MAN")
-                            .summary("première attaque ×" + MAN_FIRST_SPELL)
-                            .charges(1)
-                            .multipliesNextSpell(MAN_FIRST_SPELL)
-                            .build());
-                }
             });
 
     public static final Hero DAVE = new Hero("dave", "Dave", "Full skill Mr. Le Juge",
@@ -76,7 +66,12 @@ public final class HeroRegistry {
                 }
             });
 
-    private static final List<Hero> ALL = List.of(LOUIS, DAVE, SASSY);
+    /** Frederic BLC : aucune compétence, rien de spécial. */
+    public static final Hero FREDERIC = new Hero("frederic-blc", "Frederic BLC", "Aucune",
+            "Aucune compétence, rien de spécial.", List.of(), new GameHooks() {
+            });
+
+    private static final List<Hero> ALL = List.of(LOUIS, DAVE, SASSY, FREDERIC);
 
     private HeroRegistry() {
     }

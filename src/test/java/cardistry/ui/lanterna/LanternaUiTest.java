@@ -288,9 +288,13 @@ class LanternaUiTest {
         assertEquals(cardistry.hero.HeroRegistry.SASSY, hero.orElseThrow());
         String text = dump("92-personnages");
         for (cardistry.hero.Hero h : cardistry.hero.HeroRegistry.all()) {
-            assertTrue(text.contains(h.name()) && text.contains(h.abilityName()), text);
+            assertTrue(text.contains(" " + h.name() + " "), text);
         }
         assertTrue(text.contains("130 PV") && text.contains("100 PV"), text);
+        // Le personnage sélectionné (Sassy) : capacité et description entières, sur toute la largeur.
+        assertTrue(text.contains("▶ Sassy · wadayatalkinabit"), text);
+        String flat = text.replaceAll("[│\\s]+", " ");
+        assertTrue(flat.contains(cardistry.hero.HeroRegistry.SASSY.description()), text);
     }
 
     @Test

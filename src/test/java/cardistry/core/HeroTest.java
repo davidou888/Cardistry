@@ -65,15 +65,17 @@ class HeroTest {
     }
 
     @Test
-    void troisPersonnagesDansLOrdre() {
-        assertEquals(List.of("Louis", "Dave", "Sassy"), HeroRegistry.all().stream().map(Hero::name).toList());
+    void quatrePersonnagesDansLOrdre() {
+        assertEquals(List.of("Louis", "Dave", "Sassy", "Frederic BLC"),
+                HeroRegistry.all().stream().map(Hero::name).toList());
         assertEquals(HeroRegistry.DAVE, HeroRegistry.hero("dave"));
+        assertEquals(HeroRegistry.FREDERIC, HeroRegistry.hero("frederic-blc"));
     }
 
     // --- Louis : MAN ---
 
     @Test
-    void louisPremierSortDuCombatPlus50PourCent() {
+    void louisPlus50PourCentDeDegatsAChaqueSort() {
         setUp(HeroRegistry.LOUIS, 1, WATER, List.of(spell(FIRE, 10), spell(FIRE, 10)), enemy(FIRE, 500));
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
@@ -82,21 +84,22 @@ class HeroTest {
         events.clear();
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(10, damageToEnemy(), DELTA, "le deuxième sort est normal");
+        assertEquals(15, damageToEnemy(), DELTA, "tout le temps, pas seulement le premier sort");
+        assertTrue(state.nextSpellBoost().isEmpty(), "plus d'effet « premier sort »");
     }
 
     @Test
-    void louisLeBonusRevientAChaqueCombat() {
-        setUp(HeroRegistry.LOUIS, 1, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 15), enemy(FIRE, 500));
-        engine.startTurn();
-        engine.submit(new Action.PlayCard(0)); // 15 dégâts : le premier adversaire meurt
-        assertEquals(2, state.combatNumber());
-        assertTrue(state.nextSpellBoost().isPresent(), "MAN est de retour");
-        assertEquals(HeroRegistry.MAN_FIRST_SPELL, state.nextSpellBoost().get().spellMultiplier(), DELTA);
+    void louisLeBonusSAdditionneAuxAutresPourcentages() {
+        setUp(HeroRegistry.LOUIS, 1, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 500));
+        state.playerStats().add(cardistry.core.stats.StatModifier.percent(cardistry.core.stats.StatType.FIRE_DAMAGE,
+                0.25, "briquets"));
+        assertEquals(1.75, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
+        assertEquals(1.5, state.playerStats().get(cardistry.core.stats.StatType.SPIRIT_DAMAGE), DELTA,
+                "tous les éléments");
     }
 
     @Test
-    void louisGueuleDeBoisDoublee() {
+    void louisPlusDeMalusDeGueuleDeBois() {
         setUp(HeroRegistry.LOUIS, 1, WATER, List.of(spell(FIRE, 100)), enemy(FIRE, 20), enemy(FIRE, 500));
         int handSize = state.handSize();
         for (int i = 0; i < 3; i++) {
@@ -105,24 +108,21 @@ class HeroTest {
         }
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-
         assertEquals(1, state.activeIntensity(Curse.HANGOVER));
-        assertEquals(handSize - 2, state.handSize(), "−2 de taille de main par point d'intensité");
-        assertEquals("−2 taille de main", state.describeCurse(Curse.HANGOVER, 1));
+        assertEquals(handSize - 1, state.handSize(), "−1 comme tout le monde");
     }
 
+    // --- Frederic BLC : rien de spécial ---
+
     @Test
-    void sansLouisGueuleDeBoisNormale() {
-        setUp(HeroRegistry.DAVE, 1, WATER, List.of(spell(FIRE, 100)), enemy(FIRE, 20), enemy(FIRE, 500));
-        int handSize = state.handSize();
-        for (int i = 0; i < 3; i++) {
-            engine.give(new Item("biere", "Bière", "x", "", Rarity.COMMON, Set.of(Tag.DRINK), ctx -> { }));
-            engine.submit(new Action.UseItem(0));
-        }
+    void fredericBlcAucuneCompetence() {
+        setUp(HeroRegistry.FREDERIC, 1, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 500));
+        assertEquals(100, state.maxHp(), DELTA);
+        assertEquals(1.0, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(handSize - 1, state.handSize());
-        assertEquals("−1 taille de main", state.describeCurse(Curse.HANGOVER, 1));
+        assertEquals(10, damageToEnemy(), DELTA);
+        assertTrue(HeroRegistry.FREDERIC.modifiers().isEmpty());
     }
 
     // --- Dave : Full skill Mr. Le Juge ---

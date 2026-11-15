@@ -1,5 +1,7 @@
 package cardistry.ui.lanterna;
 
+import com.googlecode.lanterna.TextColor;
+
 import static cardistry.ui.Format.num;
 
 import cardistry.core.GameState;
@@ -73,34 +75,42 @@ final class MenuScreens {
                 + " · Entrée valider · Échap retour");
         int width = Math.min(30, (p.cols() - 4 - 2 * (heroes.size() - 1)) / heroes.size());
         int left = (p.cols() - (heroes.size() * width + 2 * (heroes.size() - 1))) / 2;
-        // Fenêtre : portrait carré au-dessus du nom, aussi grand que la hauteur le permet.
-        int portraitRows = p.hasImages() ? Math.max(0, Math.min(p.rows() - 20, (width - 4) / 2)) : 0;
-        int top = Math.max(2, (p.rows() - (portraitRows + 14)) / 2);
+        // Fenêtre : portrait carré au-dessus du nom, aussi grand que la hauteur le permet ; le détail
+        // du personnage sélectionné (capacité, description entière) occupe toute la largeur en dessous.
+        int detailRows = 5;
+        int portraitRows = p.hasImages() ? Math.max(0, Math.min(p.rows() - 13 - detailRows, (width - 4) / 2)) : 0;
+        int boxHeight = portraitRows + 4;
+        int top = Math.max(2, (p.rows() - (boxHeight + detailRows + 2)) / 2);
         for (int i = 0; i < heroes.size(); i++) {
             cardistry.hero.Hero hero = heroes.get(i);
             boolean isSelected = i == selected;
             int col = left + i * (width + 2);
-            int height = Math.min(p.rows() - top - 2, portraitRows + 14);
-            p.box(col, top, width, height, isSelected ? Palette.ACCENT : Palette.FRAME, isSelected);
+            p.box(col, top, width, boxHeight, isSelected ? Palette.ACCENT : Palette.FRAME, isSelected);
             int row = top + 1;
             if (portraitRows >= 3) {
                 p.image(col + (width - portraitRows * 2) / 2, row, portraitRows * 2, portraitRows, heroImage(hero),
                         null, isSelected ? 1f : 0.45f);
                 row += portraitRows;
             }
-            String name = (isSelected ? "▶ " : "") + "[" + (i + 1) + "] " + hero.name();
-            p.text(col + Math.max(1, (width - name.length()) / 2), row, name,
-                    isSelected ? Palette.ACCENT : Palette.TEXT, true);
+            p.text(col + 1, top, String.valueOf(i + 1), isSelected ? Palette.ACCENT : Palette.TEXT, true); // touche 1-4
+            centeredIn(p, col, width, row, hero.name(), isSelected ? Palette.ACCENT : Palette.TEXT, true);
             double hp = cardistry.core.GameState.newGame(hero).maxHp();
-            String stats = num(hp) + " PV";
-            p.text(col + (width - stats.length()) / 2, row + 1, stats, Palette.HEAL);
-            String ability = Painter.fit(hero.abilityName(), width - 2);
-            p.text(col + (width - ability.length()) / 2, row + 3, ability, Palette.SECRET, true);
-            List<String> lines = Format.wrap(hero.description(), width - 4);
-            for (int k = 0; k < lines.size() && row + 5 + k < top + height - 1; k++) {
-                p.text(col + 2, row + 5 + k, lines.get(k), isSelected ? Palette.TEXT : Palette.DIM);
+            centeredIn(p, col, width, row + 1, num(hp) + " PV", Palette.HEAL, false);
+        }
+        cardistry.hero.Hero hero = heroes.get(selected);
+        int row = top + boxHeight + 1;
+        p.text(3, row++, "▶ " + hero.name() + " · " + hero.abilityName(), Palette.SECRET, true);
+        for (String line : Format.wrap(hero.description(), p.cols() - 8)) {
+            if (row < p.rows() - 1) {
+                p.text(5, row++, line, Palette.TEXT);
             }
         }
+    }
+
+    /** {@code text} centré dans une colonne de {@code width} (cadre compris), coupé seulement s'il ne tient pas. */
+    private static void centeredIn(Painter p, int col, int width, int row, String text, TextColor color, boolean bold) {
+        String shown = Painter.fit(text, width - 2);
+        p.text(col + 1 + (width - 2 - shown.length()) / 2, row, shown, color, bold);
     }
 
     /**
