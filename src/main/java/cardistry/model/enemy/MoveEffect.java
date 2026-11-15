@@ -111,4 +111,13 @@ public sealed interface MoveEffect {
             return false;
         }
     }
+
+    /** L'adversaire passe à un autre élément (tiré au hasard) jusqu'à la fin du combat. */
+    record ChangeElement() implements MoveEffect {
+
+        @Override
+        public boolean isAttack() {
+            return false;
+        }
+    }
 }

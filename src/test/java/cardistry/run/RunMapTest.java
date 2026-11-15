@@ -71,6 +71,9 @@ class RunMapTest {
     private static void playUntil(Run run, java.util.function.Predicate<Run> stop) {
         int guard = 0;
         while (!stop.test(run) && !run.isOver() && guard++ < 10_000) {
+            // Le trajet n'est pas ce qu'on teste : PV remis au max à chaque étape (le Rebond du Peneu
+            // renvoie une part des 10 000 dégâts du Météore) ; chaque test pose ses dégâts à l'arrivée.
+            run.state().player().heal(run.state().maxHp() - run.state().player().hp());
             switch (run.phase()) {
                 case MAP -> run.chooseNode(0);
                 case COMBAT -> {

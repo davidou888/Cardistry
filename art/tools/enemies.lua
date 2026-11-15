@@ -467,6 +467,153 @@ local function vafi(c, pose)
   c:rect(28, 19, 2, 3, "n")
 end
 
+-- ------------------------------------------------------------------ Gourou du Sat (spirituel)
+-- Moine en tailleur, robe magenta, barbe, troisième œil ; à l'attaque, regard en spirale.
+
+local function gourou(c, pose)
+  local bob = pose.alt and 1 or 0
+  c:ellipse(32, 56, 22, 6, "m"); c:ellipse(32, 46, 15, 12, "m"); c:ellipse(32, 47, 12, 10, "M")
+  c:line(20, 44, 12, 52, "m", 3); c:line(44, 44, 52, 52, "m", 3)
+  c:disc(12, 53, 2, "s"); c:disc(52, 53, 2, "s")
+  local h = c:shift(0, bob)
+  h:disc(32, 24, 11, "s"); h:ellipse(32, 33, 7, 6, "5"); h:ellipse(32, 31, 5, 3, "s")
+  h:disc(32, 17, 2, pose.attack and "M" or "m")
+  for _, x in ipairs({ 27, 37 }) do
+    if pose.hurt then
+      xEye(h, x - 2, 22, 3, "1")
+    elseif pose.attack then
+      h:disc(x, 24, 2, "M"); h:px(x, 24, "6")
+      h:arc(x, 24, 3, 3, 0, 300, "M")
+    else
+      h:hline(x - 2, x + 2, 24, "1")
+    end
+  end
+  if pose.attack then
+    for i = 1, pose.attack * 2 do h:arc(32, 24, 12 + i * 3, 12 + i * 3, 150, 210, "M") end
+  end
+end
+
+-- ------------------------------------------------------------------ NG (algébrique)
+-- Silhouette en pull cyan, lunettes, craie ; à l'attaque il écrit au tableau.
+
+local function ng(c, pose)
+  local bob = pose.alt and 1 or 0
+  c:rect(18, 38, 28, 25, "c"); c:rect(20, 40, 24, 23, "C"); c:hline(18, 45, 38, "c")
+  c:rect(30, 40, 4, 8, "6")
+  local arm = pose.attack and (8 + pose.attack * 3) or 0
+  c:line(20, 42, 12 - arm / 2, 50 - arm, "c", 3)
+  c:disc(11 - arm / 2, 50 - arm, 2, "s"); c:rect(7 - arm / 2, 47 - arm, 3, 2, "6")
+  if pose.attack then
+    c:hline(2, 8, 20, "6"); c:px(4, 18, "6"); c:px(4, 22, "6"); c:hline(2, 9, 26, "C"); c:px(9, 24, "C")
+  end
+  local h = c:shift(0, bob)
+  h:disc(32, 24, 11, "s"); h:rect(21, 12, 22, 6, "N"); h:rect(21, 17, 3, 6, "N")
+  for _, x in ipairs({ 27, 37 }) do
+    if pose.hurt then
+      xEye(h, x - 2, 22, 3, "1")
+    else
+      h:frame(x - 3, 21, 7, 5, "1"); h:px(x, 23, "1")
+    end
+  end
+  h:hline(30, 33, 23, "1")
+  h:hline(28, 36, 30, pose.attack and "d" or "n")
+end
+
+-- ------------------------------------------------------------------ Hypercube misogyne (géométrique)
+-- Tesseract en fil de fer jaune, yeux mauvais ; à l'attaque, un tunnel qui s'ouvre vers le joueur.
+
+local function hypercube(c, pose)
+  local bob = pose.alt and 1 or 0
+  local b = c:shift(0, bob)
+  b:frame(16, 20, 26, 26, "y"); b:frame(26, 12, 26, 26, "Y")
+  b:line(16, 20, 26, 12, "Y"); b:line(41, 20, 51, 12, "Y"); b:line(16, 45, 26, 37, "y"); b:line(41, 45, 51, 37, "Y")
+  b:frame(24, 26, 12, 12, "o"); b:line(16, 20, 24, 26, "o"); b:line(41, 45, 35, 37, "o")
+  for _, x in ipairs({ 27, 33 }) do
+    if pose.hurt then
+      xEye(b, x - 2, 29, 3, "R")
+    else
+      b:rect(x - 1, 30, 3, 3, "6"); b:px(x, 31, "1")
+      b:line(x - 2, 28, x + 2, 29, "R")
+    end
+  end
+  b:line(28, 35, 32, 34, "R")
+  if pose.attack then
+    for i = 1, pose.attack + 1 do b:frame(14 - i * 4, 22 + i * 2, 8, 20 - i * 4, "Y") end
+  end
+  c:ellipse(32, 60, 16, 2, "2")
+end
+
+-- ------------------------------------------------------------------ Engeance des cookies (GLITCH)
+-- Énorme cookie aux pépites, yeux rougis, fumée ; des pixels décalés (glitch).
+
+local function engeance(c, pose)
+  local bob = pose.alt and 1 or 0
+  local b = c:shift(0, bob)
+  b:disc(32, 36, 22, "n"); b:disc(32, 35, 20, "y"); b:arc(32, 36, 22, 22, 0, 360, "N")
+  for _, p in ipairs({ { 20, 26 }, { 40, 24 }, { 27, 46 }, { 44, 44 }, { 17, 40 }, { 34, 52 } }) do
+    b:disc(p[1], p[2], 2, "N")
+  end
+  for _, x in ipairs({ 25, 39 }) do
+    if pose.hurt then
+      xEye(b, x - 3, 30, 5, "1")
+    else
+      b:disc(x, 33, 4, "6"); b:disc(x, 34, 2, "R"); b:px(x, 34, "1")
+      b:hline(x - 4, x + 4, 29, "y"); b:hline(x - 4, x + 4, 30, "n")
+    end
+  end
+  if pose.attack then
+    b:ellipse(31, 44, 7, 3 + pose.attack, "d"); b:hline(26, 36, 43, "6")
+  else
+    b:arc(31, 41, 6, 3, 20, 160, "d")
+  end
+  -- glitch : bandes décalées et pixels parasites
+  b:rect(8, 30, 6, 2, "M"); b:rect(50, 38, 6, 2, "C"); b:px(5, 20, "G"); b:px(58, 50, "M")
+  c:arc(52, 10, 3, 3, 90, 360, "4"); c:arc(56, 5, 2, 2, 180, 420, "3")
+end
+
+-- ------------------------------------------------------------------ Gobelin (plante)
+-- Petit gobelin vert en sweat ; attaque « 67 » : les deux mains montent et descendent en alternance.
+
+local function gobelin(c, pose)
+  local bob = pose.alt and 1 or 0
+  c:rect(20, 40, 24, 22, "v"); c:rect(22, 42, 20, 20, "g"); c:rect(29, 50, 6, 4, "v")
+  -- mains : hauteur gauche / droite (pose.hands = { gauche, droite } en pixels vers le haut)
+  local hands = pose.hands or { 0, 0 }
+  local lh, rh = 46 - hands[1], 46 - hands[2]
+  c:line(21, 44, 12, lh, "g", 3); c:disc(11, lh, 3, "G")
+  c:line(42, 44, 51, rh, "g", 3); c:disc(52, rh, 3, "G")
+  local h = c:shift(0, bob)
+  h:disc(32, 27, 12, "G"); h:tri(20, 22, 6, 14, 22, 30, "G"); h:tri(44, 22, 58, 14, 42, 30, "G")
+  h:tri(20, 22, 9, 16, 21, 27, "g"); h:tri(44, 22, 55, 16, 43, 27, "g")
+  for _, x in ipairs({ 27, 37 }) do
+    if pose.hurt then
+      xEye(h, x - 2, 24, 3, "1")
+    else
+      h:rect(x - 2, 23, 5, 4, "Y"); h:px(x - (pose.hands and 1 or 0), 25, "1")
+    end
+  end
+  if pose.hands then
+    h:ellipse(32, 33, 4, 2, "1"); h:hline(30, 34, 32, "6")
+  else
+    h:hline(28, 36, 33, "v")
+  end
+  c:rect(23, 14, 18, 3, "R")
+end
+
+local function gobelinSprite()
+  local sprite = standard("gobelin", gobelin)
+  local function frame(left, right, dx)
+    return function(lib)
+      return lib.drawn(64, function(c) gobelin(c:shift(dx, 0), { hands = { left, right } }) end)
+    end
+  end
+  -- « 67 » : main gauche en haut, puis la droite, deux fois (le moteur joue 4 frames d'attaque)
+  sprite.animations[2] = { name = "attack", frames = {
+    frame(10, 0, -2), frame(0, 10, -3), frame(10, 0, -3), frame(0, 10, -2),
+  } }
+  return sprite
+end
+
 -- ------------------------------------------------------------------ placeholders
 -- Choomah, Clarence et le boss sont dessinés à la main : une silhouette « ? » en attendant, avec le
 -- seul tag idle. Remplacer le dessin dans le .aseprite (le script n'y touchera plus).
@@ -492,6 +639,8 @@ return {
   caddieEnerve, seauDeFuite,
   standard("came", came), standard("paresseux", paresseux), standard("le-peneu", peneu),
   standard("t-rex-defonce", trex), standard("etudiant-post-examen", etudiant), standard("vafi", vafi),
+  standard("gourou-du-sat", gourou), standard("ng", ng), standard("hypercube-misogyne", hypercube),
+  gobelinSprite(), standard("engeance-des-cookies", engeance),
   placeholder("choomah", false), placeholder("clarence", false), placeholder("boss", true),
 }
 

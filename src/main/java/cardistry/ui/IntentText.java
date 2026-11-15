@@ -57,6 +57,9 @@ public final class IntentText {
                     + say(e.enemy(), "te vole " + e.amount() + " Choomies !");
             case cardistry.core.event.GameEvent.CigarettesStolen e -> e.enemy().name() + " "
                     + say(e.enemy(), "te prend " + plural(e.amount(), "clope") + " !");
+            case cardistry.core.event.GameEvent.EnemyElementChanged e -> e.enemy().name() + " "
+                    + say(e.enemy(), "passe de l'élément " + e.previous().displayName() + " à l'élément "
+                            + e.current().displayName() + " !");
             case cardistry.core.event.GameEvent.ChoomiesChanged e -> e.delta() > 0
                     ? "+" + e.delta() + " Choomies (" + e.choomies() + ")" : null;
             default -> null;
@@ -97,6 +100,7 @@ public final class IntentText {
             case MoveEffect.CurseCard curse -> "une carte devient « " + curse.cardName() + " »";
             case MoveEffect.HealSelf heal -> "se soigne de "
                     + num(heal.amount() * (state.hasEnemy() ? state.currentEnemy().damageScale() : 1));
+            case MoveEffect.ChangeElement change -> "change d'élément";
             case MoveEffect.Inflict inflict -> (inflict.chance() < 1 ? percent(inflict.chance()) + " de " : "")
                     + cardistry.core.status.StatusType.byId(inflict.status()).displayName()
                     + (inflict.turns() > 0 ? " " + StatusText.turns(inflict.turns()) : "");

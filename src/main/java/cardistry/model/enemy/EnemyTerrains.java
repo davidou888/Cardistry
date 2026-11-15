@@ -35,7 +35,7 @@ public final class EnemyTerrains {
     private static final Map<String, Supplier<TerrainCard>> TERRAINS = Map.ofEntries(
             Map.entry(EnemyRegistry.CADDIE, () -> terrain("Parking du Migros", NEUTRAL, "−1 taille de main",
                     flat(StatType.HAND_SIZE, -1, ""))),
-            Map.entry(EnemyRegistry.CLARENCE, () -> new TerrainCard("Le canapé", NEUTRAL, COMMON)),
+            Map.entry(EnemyRegistry.CLARENCE, EnemyTerrains::couch),
             Map.entry(EnemyRegistry.PENEU, () -> terrain("Bord d'autoroute", NEUTRAL, "+2 dégâts subis par coup",
                     flat(StatType.DAMAGE_TAKEN, HIGHWAY_EXTRA_DAMAGE, ""))),
             Map.entry(EnemyRegistry.CHOOMAH, EnemyTerrains::bush),
@@ -50,7 +50,15 @@ public final class EnemyTerrains {
             Map.entry(EnemyRegistry.SEAU, () -> terrain("Toit qui fuit", WATER, "−20 % de soins",
                     percent(StatType.HEAL_EFFICIENCY, HEAL_MALUS, ""))),
             Map.entry(EnemyRegistry.ETUDIANT, () -> terrain("Biblio à 3h du mat", WATER, "−1 taille de main",
-                    flat(StatType.HAND_SIZE, -1, ""))));
+                    flat(StatType.HAND_SIZE, -1, ""))),
+            Map.entry(EnemyRegistry.GOUROU, () -> spellMalus("Salle de méditation", Element.SPIRIT, CANOPY_SPELL_MALUS)),
+            Map.entry(EnemyRegistry.NG, () -> terrain("Salle d'exercices", Element.ALGEBRAIC, "−1 taille de main",
+                    flat(StatType.HAND_SIZE, -1, ""))),
+            Map.entry(EnemyRegistry.HYPERCUBE, () -> terrain("Cabinet psy scintillant", Element.GEOMETRIC,
+                    "l'adversaire fait +15 % de dégâts", percent(StatType.ENEMY_DAMAGE, ENEMY_DAMAGE_BONUS, ""))),
+            Map.entry(EnemyRegistry.GOBELIN, () -> terrain("Clairière d'adolescent de base", NATURE,
+                    "−1 taille de main", flat(StatType.HAND_SIZE, -1, ""))),
+            Map.entry(EnemyRegistry.ENGEANCE, EnemyTerrains::couch));
 
     private EnemyTerrains() {
     }
@@ -64,6 +72,11 @@ public final class EnemyTerrains {
     /** Adversaires qui ont leur propre terrain (les autres commencent sur le Dojo). */
     public static java.util.Set<String> enemiesWithTerrain() {
         return TERRAINS.keySet();
+    }
+
+    /** Le canapé (Clarence, Engeance des cookies) : aucun malus. */
+    private static TerrainCard couch() {
+        return new TerrainCard("Le canapé", NEUTRAL, COMMON);
     }
 
     private static TerrainCard bush() {

@@ -4,6 +4,10 @@ import static cardistry.model.Element.FIRE;
 import static cardistry.model.Element.NATURE;
 import static cardistry.model.Element.NEUTRAL;
 import static cardistry.model.Element.WATER;
+import static cardistry.model.Element.ALGEBRAIC;
+import static cardistry.model.Element.GEOMETRIC;
+import static cardistry.model.Element.GLITCH;
+import static cardistry.model.Element.SPIRIT;
 
 import cardistry.core.Rng;
 import cardistry.model.Element;
@@ -36,6 +40,7 @@ public final class EnemyRegistry {
     static final String INTOX = "intox";
     static final String FONS = "fons";
     static final String BURN = "brulure";
+    static final String HYPNOTIZED = "hypnotise";
 
     public static final String CADDIE = "caddie-enerve";
     public static final String CHOOMAH = "choomah";
@@ -49,11 +54,17 @@ public final class EnemyRegistry {
     public static final String PENEU = "le-peneu";
     public static final String TREX = "t-rex-defonce";
     public static final String ETUDIANT = "etudiant-post-examen";
+    public static final String GOUROU = "gourou-du-sat";
+    public static final String NG = "ng";
+    public static final String HYPERCUBE = "hypercube-misogyne";
+    public static final String GOBELIN = "gobelin";
+    public static final String ENGEANCE = "engeance-des-cookies";
 
     /** Communs tirés pour un combat (Clarence à part) ; les Choomah comptent pour un. */
-    public static final List<String> COMMONS = List.of(CADDIE, CHOOMAH, CAME, PARESSEUX, SEAU);
+    public static final List<String> COMMONS = List.of(CADDIE, CHOOMAH, CAME, PARESSEUX, SEAU, GOUROU, NG, HYPERCUBE,
+            GOBELIN);
     public static final List<String> CHOOMAH_VARIANTS = List.of(CHOOMAH, CHOOMAH_PRESSE, CHOOMAH_COSTAUD);
-    public static final List<String> ELITES = List.of(VAFI, PENEU, TREX, ETUDIANT);
+    public static final List<String> ELITES = List.of(VAFI, PENEU, TREX, ETUDIANT, ENGEANCE);
 
     private interface Definition {
         Enemy.Builder create();
@@ -124,6 +135,11 @@ public final class EnemyRegistry {
                 "Bras trop courts : 30 % de rater ; quand il rate, fringale (il se soigne)",
                 new Hit(13, 1, 0, 0.30, 8))), 0);
         elite(all, ETUDIANT, "Étudiant post-examen", WATER, 60, etudiant(), 0);
+        common(all, GOUROU, "Gourou du Sat", SPIRIT, 24, gourou());
+        common(all, NG, "NG", ALGEBRAIC, 26, ng());
+        common(all, HYPERCUBE, "Hypercube misogyne", GEOMETRIC, 25, hypercube());
+        common(all, GOBELIN, "Gobelin", NATURE, 22, gobelin());
+        elite(all, ENGEANCE, "Engeance des cookies", GLITCH, 60, engeance(), 0);
         boss(all, 1, FIRE, 130, 10, 22);
         boss(all, 2, WATER, 200, 10, 22);
         boss(all, 3, NATURE, 280, 10, 22);
@@ -216,6 +232,58 @@ public final class EnemyRegistry {
                 return pause;
             }
             return (self.actions() + 1) % 3 == 0 ? series : hit;
+        };
+    }
+
+    /** Gourou du Sat (spirituel) : Coup d'encens ; tous les 3 tours, Regard fixe (t'hypnotise 1 tour). */
+    private static EnemyBehavior gourou() {
+        EnemyMove incense = EnemyMove.of("coup-d-encens", "Coup d'encens", "Coup d'encens", Hit.of(4));
+        EnemyMove stare = EnemyMove.of("regard-fixe", "Regard fixe",
+                "Il te fixe : tu es hypnotisé, son prochain coup fait ×2",
+                new MoveEffect.Inflict(HYPNOTIZED, 1, 1, false));
+        return EnemyBehavior.every(3, stare, incense);
+    }
+
+    /** NG (algébrique) : Démonstration ; tous les 3 tours, Contre-exemple (une carte devient « Exercice 3b »). */
+    private static EnemyBehavior ng() {
+        EnemyMove proof = EnemyMove.of("demonstration", "Démonstration", "Démonstration", Hit.of(5));
+        EnemyMove counter = EnemyMove.of("contre-exemple", "Contre-exemple",
+                "Une carte de ta main devient « Exercice 3b » (injouable pendant ce combat)",
+                new MoveEffect.CurseCard("Exercice 3b"));
+        return EnemyBehavior.every(3, counter, proof);
+    }
+
+    /** Hypercube misogyne (géométrique) : Tunnel topologique ; tous les 3 tours, Célibat forcé (2 coups). */
+    private static EnemyBehavior hypercube() {
+        EnemyMove tunnel = EnemyMove.of("tunnel-topologique", "Tunnel topologique", "Tunnel topologique", Hit.of(5));
+        EnemyMove celibacy = EnemyMove.of("celibat-force", "Célibat forcé", "Ouin ouin : deux coups", Hit.of(4, 2));
+        return EnemyBehavior.every(3, celibacy, tunnel);
+    }
+
+    /** Gobelin (plante) : « 67 », 6 ou 7 dégâts (six seveeen). */
+    private static EnemyBehavior gobelin() {
+        return EnemyBehavior.always(EnemyMove.of(SIX_SEVEN, "67", "Six seveeen ! 6 ou 7 dégâts",
+                new MoveEffect.Gamble(0.5, Hit.of(6), Hit.of(7))));
+    }
+
+    /** Identifiant de l'attaque « 67 » du Gobelin (animation et texte flottant). */
+    public static final String SIX_SEVEN = "six-seven";
+
+    /**
+     * Engeance des cookies (GLITCH, défoncée au space cookie) : Piège pâtissier ; tous les 3 tours,
+     * Green out (t'endort 1 tour) ; une fois sous 50 % PV, Méditation triptyque (change d'élément).
+     */
+    private static EnemyBehavior engeance() {
+        EnemyMove trap = EnemyMove.of("piege-patissier", "Piège pâtissier", "Piège pâtissier", Hit.of(9));
+        EnemyMove greenOut = EnemyMove.of("green-out", "Green out", "Tu t'endors (Fons 1 tour)",
+                new MoveEffect.Inflict(FONS, 1, 1, false));
+        EnemyMove meditation = EnemyMove.of("meditation-triptyque", "Méditation triptyque",
+                "Change d'élément jusqu'à la fin du combat", new MoveEffect.ChangeElement());
+        return self -> {
+            if (self.hpRatio() < 0.5 && self.uses(meditation.id()) < 1) {
+                return meditation;
+            }
+            return (self.actions() + 1) % 3 == 0 ? greenOut : trap;
         };
     }
 

@@ -355,7 +355,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.NodeEntered e -> {
                 view.log("Étage " + e.floor() + " : " + e.kind(), Palette.INFO);
             }
-            case GameEvent.EnemyMoveUsed e -> view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
+            case GameEvent.EnemyMoveUsed e -> {
+                view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
+                if (e.move().id().equals(cardistry.model.enemy.EnemyRegistry.SIX_SEVEN)) {
+                    view.floating.add(new ViewState.Floating("SIX SEVEEEN !", Palette.ACCENT, true, 0));
+                }
+            }
             case GameEvent.EnemyDodged e -> {
                 view.log(cardistry.ui.IntentText.journal(e), Palette.WARNING);
                 view.floating.clear();

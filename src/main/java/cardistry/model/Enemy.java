@@ -22,7 +22,8 @@ public class Enemy extends Combatant {
 
     private final String id;
     private final String name;
-    private final Element element;
+    /** Peut changer en cours de combat (Méditation triptyque de l'Engeance des cookies). */
+    private Element element;
     private final double maxHp;
     private final EnemyRank rank;
     private final double damageScale;
@@ -80,6 +81,11 @@ public class Enemy extends Combatant {
 
     public Element element() {
         return element;
+    }
+
+    /** Change d'élément jusqu'à la fin du combat. */
+    public void changeElement(Element value) {
+        element = value;
     }
 
     public EnemyRank rank() {

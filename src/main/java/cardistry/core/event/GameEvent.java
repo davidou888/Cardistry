@@ -238,6 +238,11 @@ public sealed interface GameEvent {
     record EffectActivated(TemporaryEffect effect) implements GameEvent {
     }
 
+    /** L'adversaire change d'élément jusqu'à la fin du combat. */
+    record EnemyElementChanged(Enemy enemy, cardistry.model.Element previous, cardistry.model.Element current)
+            implements GameEvent {
+    }
+
     /** Un effet se termine (durée, charges épuisées ou fin de combat). */
     record EffectEnded(TemporaryEffect effect) implements GameEvent {
     }

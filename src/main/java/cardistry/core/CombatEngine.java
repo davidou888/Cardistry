@@ -1491,6 +1491,14 @@ public final class CombatEngine {
                 double healed = enemy.healSelf(heal.amount() * enemy.damageScale());
                 bus.publish(new GameEvent.EnemyHealed(enemy, healed));
             }
+            case MoveEffect.ChangeElement change -> {
+                Element previous = enemy.element();
+                List<Element> others = Element.PLAYABLE.stream().filter(e -> e != previous && e != Element.GLITCH)
+                        .toList();
+                Element next = rng.pick(others);
+                enemy.changeElement(next);
+                bus.publish(new GameEvent.EnemyElementChanged(enemy, previous, next));
+            }
             case MoveEffect.Inflict inflict -> {
                 if (!inflict.afterHit() || run.landed) {
                     tryStatus(StatusTarget.PLAYER, StatusType.byId(inflict.status()), inflict.chance(),

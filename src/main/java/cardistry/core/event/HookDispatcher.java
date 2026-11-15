@@ -57,6 +57,9 @@ public final class HookDispatcher {
                 // Pas de hook pour l'instant.
             }
             case GameEvent.StatusApplied e -> hook.onStatusApplied(e, ctx);
+            case GameEvent.EnemyElementChanged e -> {
+                // Concerne seulement l'UI.
+            }
             case GameEvent.StatusRefused e -> {
                 // Pas de hook pour l'instant.
             }
