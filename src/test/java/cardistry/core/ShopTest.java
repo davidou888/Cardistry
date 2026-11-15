@@ -87,17 +87,19 @@ class ShopTest {
 
     @Test
     void cartesMoinsCheresQueLesObjetsDeMemeRarete() {
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)));
-        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)));
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new HealCard("Potion", NATURE, 10, cardistry.items.Rarity.COMMON)));
-        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON)));
-        assertEquals(Rarity.RARE, ShopPrices.cardRarity(new HealCard("Grande potion", NATURE, 20, cardistry.items.Rarity.COMMON)));
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON)));
-        assertEquals(30, ShopPrices.price(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)));
-        assertEquals(50, ShopPrices.price(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)));
-        assertEquals(80, ShopPrices.price(new HealCard("Grande potion", NATURE, 20, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(CardPool.bouleDeFeu()));
+        assertEquals(Rarity.RARE, ShopPrices.cardRarity(CardPool.pyromane()));
+        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new cardistry.model.card.DeadCard()));
+        // 60 % du prix d'un objet de même rareté, arrondi à 5 : 30 / 50 / 80 / 120.
+        assertEquals(30, ShopPrices.price(CardPool.bouleDeFeu()));
+        assertEquals(50, ShopPrices.price(CardPool.moindreCarre()));
+        assertEquals(80, ShopPrices.price(CardPool.pyromane()));
+        assertEquals(120, ShopPrices.price(CardPool.professeurDOr()));
+        assertEquals(30, ShopPrices.price(new SpellCard("Gros sort commun", FIRE, 80, Rarity.COMMON)),
+                "le prix suit la rareté, pas les dégâts");
         for (Card card : new CardPool().cards()) {
-            assertTrue(ShopPrices.price(card) < ShopPrices.cardRarity(card).price(), card.name());
+            assertEquals(card.rarity(), ShopPrices.cardRarity(card), card.name());
+            assertTrue(ShopPrices.price(card) < card.rarity().price(), card.name());
         }
     }
 

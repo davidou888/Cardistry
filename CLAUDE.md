@@ -62,7 +62,6 @@ Une entrée dans `HeroRegistry` (`new Hero(id, nom, capacité, description, modi
 - Les états à adversaires fixés (tests) n'ont pas de deck : leur pioche tire dans le pool, sans fin (`GameState.usesDeck()`).
 - `CardPool` (model) dépend de `core.Rng` ; `core` et `items` dépendent l'un de l'autre (inventaire dans `GameState`, effets via `EffectContext`). Depuis le plan V2, `model.card` dépend aussi de `core` (`CardPower` / `DamageRule` reçoivent un `EffectContext`, `TerrainCard` porte des `StatModifier`), et `model.enemy.EnemyTerrains` de `core.stats`.
 - `MoveEffect.Inflict` désigne un statut par son identifiant (texte), pour ne pas faire dépendre `model.enemy` de `core.status` ; `EnemyStatusTest` vérifie chaque identifiant.
-- Le shop prend encore la rareté des cartes d'une règle provisoire (dégâts / PV), pas de `Card.rarity()`.
 
 ## Architecture cible
 

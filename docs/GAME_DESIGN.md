@@ -450,9 +450,7 @@ Code : `CombatEngine.openShop` / `shopAction`, `core.Shop`, `core.shop` (`ShopPr
   **2 objets**, **2 trinkets** (jamais un trinket déjà équipé, jamais un secret). La rareté des articles
   n'est **pas** doublée par CLAUDE.md (au shop, plus rare = plus cher, ce n'est pas un avantage).
 - **Prix** (Choomies) : objets et trinkets selon la rareté, 50 / 80 / 130 / 200. Cartes : **60 %** du prix
-  d'un objet de même rareté, arrondi à 5 → **30 / 50 / 80 / 120**. Rareté d'une carte *(provisoire)* :
-  sort de 15+ ou soin de 15 = Peu commun, soin de 20+ = Rare, le reste (sorts et soins de base,
-  terrains) = Commun.
+  d'un objet de même rareté, arrondi à 5 → **30 / 50 / 80 / 120**, selon la **rareté de la carte**.
 - **Retrait d'une carte** : 75, +25 à chaque retrait de la **partie** (75, 100, 125…) ; jamais sous 5 cartes ;
   autant de fois qu'on veut tant qu'on peut payer.
 - **Reroll** : 20, +10 à chaque reroll dans **ce** shop (le prix repart à 20 au shop suivant) ; renouvelle les
@@ -495,16 +493,15 @@ Reste : transitions d'écran ; vrais sons des statuts.
 - Provisoire : chiffres des paliers d'Ivresse (+10 / +25 / +50 %) et de la clope (+5 PV, sans limite par tour) à ajuster en jouant.
 - **[À DÉCIDER]** Sprites des trois personnages (placeholder commun en attendant) et affichage de l'alien de Sassy.
 - **[À DÉCIDER]** Les vrais événements (les 3 actuels sont des placeholders).
-- Provisoire : rareté des cartes au shop (voir « Shop »).
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Règles « qui bat qui » de Spirituel / Algébrique / Géométrique : le triangle actuel est un premier jet.
 - **[À DÉCIDER]** Ennemis des nouveaux éléments : aucun adversaire n'est Spirituel / Algébrique / Géométrique pour l'instant.
-- **[À DÉCIDER]** Prix des cartes au shop : ils suivent encore la règle provisoire (dégâts / PV), pas la rareté des cartes.
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
+- ~~Qui bat qui des nouveaux éléments~~ → Géométrique > Algébrique > Spirituel > Géométrique, GLITCH bat tout (règle du code, `model.Element`).
+- ~~Prix des cartes au shop~~ → selon la rareté de la carte.
 - ~~Plan V2~~ → statuts, pouvoirs, terrains à effet, terrains des adversaires, nouvelles cartes (voir ces sections). Moindre carré : tirage en ta faveur (doublé par CLAUDE.md). Petite taffe : reste Commune. Fractale : multiplicateur total arrondi à l'entier **supérieur**. Espace : le rejeu garde la chance normale des statuts. Hypnose comptée en tours de celui qui frappe ; un statut ne décompte pas à la fin du tour où il est posé ; chances doublées seulement contre l'adversaire ; immunité de la Taffe = coups adverses ; main au-delà du max : on garde ses cartes.
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
 - ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.

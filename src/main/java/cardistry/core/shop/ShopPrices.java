@@ -31,17 +31,9 @@ public final class ShopPrices {
         return collectible.rarity().price();
     }
 
-    /**
-     * Rareté d'une carte : sort de 15+ ou soin de 15 = Peu commun ; soin de 20+ = Rare ; sorts et
-     * soins de base, terrains = Commun.
-     */
+    /** Rareté d'une carte au shop : la sienne ({@link Card#rarity()}) ; une carte sans rareté compte comme Commune. */
     public static Rarity cardRarity(Card card) {
-        return switch (card) {
-            case SpellCard spell -> spell.damage() >= 15 ? Rarity.UNCOMMON : Rarity.COMMON;
-            case HealCard heal -> heal.amount() >= 20 ? Rarity.RARE : heal.amount() >= 15 ? Rarity.UNCOMMON : Rarity.COMMON;
-            case TerrainCard terrain -> Rarity.COMMON;
-            case DeadCard dead -> Rarity.COMMON;
-        };
+        return card.rarity() != null ? card.rarity() : Rarity.COMMON;
     }
 
     public static int price(Card card) {
