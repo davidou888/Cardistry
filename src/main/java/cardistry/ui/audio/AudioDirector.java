@@ -105,6 +105,7 @@ public final class AudioDirector implements Consumer<GameEvent> {
             case GameEvent.LevelStarted e -> "sfx.level";
             case GameEvent.TurnUndone e -> "sfx.undo";
             case GameEvent.RestTaken e -> "sfx.rest";
+            case GameEvent.StatusApplied e -> "sfx.status." + e.type().id();
             default -> null;
         };
         return Optional.ofNullable(name);

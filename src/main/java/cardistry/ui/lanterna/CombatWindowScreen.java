@@ -161,12 +161,16 @@ final class CombatWindowScreen {
         TextColor barColor = view.playerFlash != null ? view.playerFlash
                 : overMax ? Palette.ACCENT : Palette.health(hp / state.maxHp());
         String value = num(Math.max(0, hp)) + "/" + num(state.maxHp());
-        int barWidth = hpBarWidth(l, name.length(), value.length());
+        List<cardistry.core.status.Status> statuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER).all();
+        int badges = StatusBadges.width(p, statuses);
+        int barWidth = hpBarWidth(l, name.length(), value.length() + (badges > 0 ? badges + 1 : 0));
         int col = l.playerCol();
         p.text(col, l.hpRow(), name, Palette.TEXT, true);
         col += name.length() + 1;
         p.text(col, l.hpRow(), Painter.bar(hp, state.maxHp(), barWidth), barColor, view.playerFlash != null || overMax);
         p.text(col + barWidth + 1, l.hpRow(), value, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
+        int badgeCol = col + barWidth + 2 + value.length();
+        StatusBadges.draw(p, badgeCol, l.hpRow(), statuses, Math.max(0, 2 + l.half() - badgeCol));
 
         // À côté du sprite : Ivresse, Gueule de bois, effets en cours.
         int statusCol = l.playerCol() + l.spriteCols() + 2;
@@ -233,11 +237,11 @@ final class CombatWindowScreen {
                         view.enemyFlash, view.enemyDim ? 0.5f : 1f);
             }
             // Sous le sprite, en miroir du joueur : « 21/28 ████████ CADDIE ÉNERVÉ ».
-            enemyHp(p, l, l.hpRow(), enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
+            enemyHp(p, state, l, l.hpRow(), enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
             return;
         }
         // Pas d'image : PV sous l'intent, puis le sprite ASCII (trop large pour la zone carrée).
-        enemyHp(p, l, l.top() + 1, enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
+        enemyHp(p, state, l, l.top() + 1, enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
         if (view.enemyHidden) {
             return;
         }
@@ -255,20 +259,33 @@ final class CombatWindowScreen {
         return full.length() <= l.half() - 2 - value.length() - 6 - 2 ? full : name;
     }
 
-    /** « 21/28 ████████ NOM », aligné à droite sur la ligne {@code row}. */
-    private static void enemyHp(Painter p, Layout l, int row, String name, String value, double hp, double max,
-            TextColor color) {
+    /** « [statuts] 21/28 ████████ NOM », aligné à droite sur la ligne {@code row}. */
+    private static void enemyHp(Painter p, GameState state, Layout l, int row, String name, String value, double hp,
+            double max, TextColor color) {
         int right = p.cols() - 3;
-        String shown = Painter.fit(name, Math.max(4, l.half() - 2 - value.length() - 6 - 2));
-        int barWidth = hpBarWidth(l, shown.length(), value.length());
+        List<cardistry.core.status.Status> statuses = state.statuses(cardistry.core.status.StatusTarget.ENEMY).all();
+        int badges = StatusBadges.width(p, statuses);
+        int extra = badges > 0 ? badges + 1 : 0;
+        String shown = Painter.fit(name, Math.max(4, l.half() - 2 - value.length() - extra - 6 - 2));
+        int barWidth = hpBarWidth(l, shown.length(), value.length() + extra);
         p.text(right - shown.length(), row, shown, color, true);
         int barCol = right - shown.length() - 1 - barWidth;
         p.text(barCol, row, Painter.bar(hp, max, barWidth), Palette.DAMAGE);
-        p.text(barCol - 1 - value.length(), row, value, Palette.TEXT);
+        int valueCol = barCol - 1 - value.length();
+        p.text(valueCol, row, value, Palette.TEXT);
+        if (badges > 0) {
+            int room = Math.max(0, valueCol - 1 - (p.cols() - l.half() - 2));
+            int width = Math.min(badges, room);
+            StatusBadges.draw(p, valueCol - 1 - width, row, statuses, width);
+        }
     }
 
-    /** Icône de l'attaque annoncée : épée si elle frappe, « ! » sinon. */
-    static String intentIcon(Enemy enemy) {
+    /** Icône de l'attaque annoncée : épée si elle frappe, « ! » sinon ; « Zz » s'il dort (Fons). */
+    static String intentIcon(GameState state, Enemy enemy) {
+        if (state.currentEnemy() == enemy
+                && state.statuses(cardistry.core.status.StatusTarget.ENEMY).has(cardistry.core.status.StatusType.FONS)) {
+            return "status/" + cardistry.core.status.StatusType.FONS.id() + ".png";
+        }
         boolean hits = enemy.peekIntent().effects().stream().anyMatch(e -> e instanceof MoveEffect.Hit);
         return hits ? "ui/intent-attack.png" : "ui/intent-special.png";
     }
@@ -279,7 +296,7 @@ final class CombatWindowScreen {
         String note = mult != 1.0 ? " (×" + num(mult) + ")" : "";
         String text = Painter.fit(cardistry.ui.IntentText.intent(state, enemy), Math.max(1, l.half() - 3 - note.length()));
         int col = p.cols() - 3 - text.length() - note.length();
-        p.image(col - 3, l.top(), 2, 1, intentIcon(enemy), null, 1f);
+        p.image(col - 3, l.top(), 2, 1, intentIcon(state, enemy), null, 1f);
         p.text(col, l.top(), text, Palette.TEXT);
         if (!note.isEmpty()) {
             p.text(col + text.length(), l.top(), note, mult > 1.0 ? Palette.DAMAGE : Palette.HEAL);

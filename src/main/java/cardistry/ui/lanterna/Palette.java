@@ -63,6 +63,16 @@ final class Palette {
         };
     }
 
+    static TextColor status(cardistry.core.status.StatusType type) {
+        return switch (type) {
+            case INTOX -> TextColor.ANSI.GREEN;
+            case FONS -> TextColor.ANSI.CYAN_BRIGHT;
+            case HYPNOTIZED -> TextColor.ANSI.MAGENTA_BRIGHT;
+            case BONDAGE -> TextColor.ANSI.YELLOW;
+            case BURN -> TextColor.ANSI.RED_BRIGHT;
+        };
+    }
+
     static TextColor rarity(Rarity rarity) {
         return switch (rarity) {
             case COMMON -> TextColor.ANSI.WHITE_BRIGHT;

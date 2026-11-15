@@ -63,7 +63,12 @@ class AudioCoreTest {
         Matcher m = Pattern.compile("\"(sfx\\.[a-z.\\-]+)\"").matcher(
                 Files.readString(Path.of("src/main/java/cardistry/ui/audio/AudioDirector.java")));
         while (m.find()) {
-            used.add(m.group(1));
+            if (!m.group(1).endsWith(".")) { // préfixe (« sfx.status. » + id) : vérifié ci-dessous
+                used.add(m.group(1));
+            }
+        }
+        for (cardistry.core.status.StatusType type : cardistry.core.status.StatusType.values()) {
+            used.add("sfx.status." + type.id());
         }
         for (UiSound sound : UiSound.values()) {
             used.add(sound.tableName());

@@ -66,6 +66,11 @@ class WindowScreenshotTest {
     }
 
     private static void combatScreenshot(int cols, int rows, String name, boolean journal) throws IOException {
+        combatScreenshot(cols, rows, name, journal, false);
+    }
+
+    private static void combatScreenshot(int cols, int rows, String name, boolean journal, boolean statuses)
+            throws IOException {
         DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(cols, rows));
         ImageLayer layer = new ImageLayer();
         LanternaUi ui = new LanternaUi(terminal, true, false, layer);
@@ -78,6 +83,15 @@ class WindowScreenshotTest {
         engine.give(cardistry.items.ItemRegistry.items().get(3));
         cardistry.items.ItemRegistry.trinkets().stream().limit(3).forEach(engine::equip);
         engine.startCombat(EnemyRegistry.create(EnemyRegistry.CADDIE, 1), false);
+        if (statuses) {
+            var enemyStatuses = state.statuses(cardistry.core.status.StatusTarget.ENEMY);
+            enemyStatuses.apply(cardistry.core.status.StatusType.INTOX, 3, cardistry.core.status.StatusTarget.PLAYER);
+            enemyStatuses.apply(cardistry.core.status.StatusType.FONS, 2, cardistry.core.status.StatusTarget.PLAYER);
+            enemyStatuses.apply(cardistry.core.status.StatusType.HYPNOTIZED, 1, cardistry.core.status.StatusTarget.PLAYER);
+            var playerStatuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER);
+            playerStatuses.apply(cardistry.core.status.StatusType.BURN, 3, cardistry.core.status.StatusTarget.ENEMY);
+            playerStatuses.apply(cardistry.core.status.StatusType.BONDAGE, 2, cardistry.core.status.StatusTarget.ENEMY);
+        }
         ui.onEvent(new GameEvent.GameStarted(4));
         if (journal) {
             terminal.addInput(new com.googlecode.lanterna.input.KeyStroke('j', false, false));
@@ -94,6 +108,8 @@ class WindowScreenshotTest {
         combatScreenshot(100, 32, "86-fenetre-combat-100x32", false);
         combatScreenshot(80, 24, "87-fenetre-combat-80x24", false);
         combatScreenshot(100, 32, "88-fenetre-combat-journal", true);
+        combatScreenshot(100, 32, "89-fenetre-combat-statuts-100x32", false, true);
+        combatScreenshot(80, 24, "89-fenetre-combat-statuts-80x24", false, true);
         assertTrue(Files.exists(Path.of("build/screens/88-fenetre-combat-journal.png")));
     }
 

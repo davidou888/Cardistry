@@ -43,6 +43,13 @@ sfx.rejected    = sfx/rejected.wav ; volume=0.5
 sfx.badoing     = sfx/badoing.wav
 sfx.choomah     = sfx/choomah-1.wav, sfx/choomah-2.wav, sfx/choomah-3.wav ; volume=0.7
 
+# --- Statuts (posés sur le joueur ou l'adversaire) : sons existants en attendant les vrais ---
+sfx.status.intox     = sfx/card-plant.wav
+sfx.status.fons      = sfx/rest.wav
+sfx.status.hypnotise = sfx/secret.wav ; volume=0.7
+sfx.status.bondage   = sfx/card-plant.wav
+sfx.status.brulure   = sfx/card-fire.wav
+
 # --- Clopes, boissons, objets ---
 sfx.smoke       = sfx/smoke.wav
 sfx.smoke.googz = sfx/smoke-googz.wav

@@ -200,6 +200,12 @@ public final class ArtSheet {
             cardEntries.add(new Entry(card.name(), id, "cards/" + id + ".png", element(card.element())));
         }
         sections.put("Cartes (24×24) : sorts, soins, terrains, cartes mortes", cardEntries);
+        List<Entry> statuses = new ArrayList<>();
+        for (cardistry.core.status.StatusType type : cardistry.core.status.StatusType.values()) {
+            statuses.add(new Entry(type.displayName(), type.id(), "status/" + type.id() + ".png",
+                    color(TextColor.ANSI.BLACK_BRIGHT)));
+        }
+        sections.put("Statuts (8×8)", statuses);
         return sections;
     }
 

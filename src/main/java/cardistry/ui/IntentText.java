@@ -20,6 +20,13 @@ public final class IntentText {
      * « Charge de parking : 12 ». Pour un adversaire qui crie (Choomah), le nom est déjà un cri.
      */
     public static String intent(GameState state, Enemy enemy) {
+        if (state.hasEnemy() && state.currentEnemy() == enemy) {
+            java.util.Optional<cardistry.core.status.Status> fons = state.statuses(cardistry.core.status.StatusTarget.ENEMY)
+                    .get(cardistry.core.status.StatusType.FONS);
+            if (fons.isPresent()) {
+                return "Endormi (" + StatusText.turns(fons.get().turnsLeft()) + ")";
+            }
+        }
         EnemyMove move = enemy.peekIntent();
         String effects = effects(state, move);
         if (enemy.voice() == Enemy.Voice.SCREAM) {

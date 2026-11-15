@@ -209,6 +209,9 @@ public final class TextRenderer implements Renderer {
             }
             default -> {
                 String line = cardistry.ui.IntentText.journal(event);
+                if (line == null && lastState.hasEnemy()) {
+                    line = cardistry.ui.StatusText.journal(lastState, event);
+                }
                 if (line != null) {
                     console.println("→ " + line);
                 }
@@ -275,11 +278,19 @@ public final class TextRenderer implements Renderer {
                 .map(g -> " · " + g.label() + " " + g.value() + "/" + g.max()).orElse("");
         console.println("Clopes : " + state.cigarettes() + "/" + state.cigaretteMax() + gauge
                 + " · Choomies : " + state.choomies());
+        var playerStatuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER).all();
+        if (!playerStatuses.isEmpty()) {
+            console.println("Statuts : " + cardistry.ui.StatusText.describeAll(playerStatuses));
+        }
         console.pause(1);
         console.println();
         console.println("ADVERSAIRE :");
         console.println(enemyName(enemy) + ", de type " + Ansi.element(enemy.element())
                 + ", il lui reste " + num(enemy.hp()) + " points de vie");
+        var enemyStatuses = state.statuses(cardistry.core.status.StatusTarget.ENEMY).all();
+        if (!enemyStatuses.isEmpty()) {
+            console.println("Statuts : " + cardistry.ui.StatusText.describeAll(enemyStatuses));
+        }
         console.println("Prochain tour : " + cardistry.ui.IntentText.intent(state, enemy)
                 + mult(state.enemyAttackMultiplier()));
         console.pause(0.7);

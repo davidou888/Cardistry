@@ -74,7 +74,8 @@ final class CombatScreen {
         p.text(3 + enemy.name().length(), 2, "· " + enemy.element().displayName(), Palette.element(enemy.element()));
 
         double hp = view.enemyHpShown != null ? view.enemyHpShown : enemy.hp();
-        hpLine(p, 3, hp, enemy.maxHp(), Palette.DAMAGE, null);
+        hpLine(p, 3, hp, enemy.maxHp(), Palette.DAMAGE, null,
+                state.statuses(cardistry.core.status.StatusTarget.ENEMY).all());
 
         double mult = state.enemyAttackMultiplier();
         int width = p.cols() - SPRITE_WIDTH - 3 - 2;
@@ -196,7 +197,8 @@ final class CombatScreen {
         p.text(2, 7, Format.playerLabel(state), Palette.TEXT, true);
         drawDrunkennessAndCurses(p, state);
         double hp = view.playerHpShown != null ? view.playerHpShown : state.player().hp();
-        hpLine(p, 8, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash);
+        hpLine(p, 8, hp, state.maxHp(), Palette.health(hp / state.maxHp()), view.playerFlash,
+                state.statuses(cardistry.core.status.StatusTarget.PLAYER).all());
         drawItems(p, state);
         drawTrinkets(p, state);
     }
@@ -289,14 +291,19 @@ final class CombatScreen {
     }
 
     /** Barre et « PV/max » ; au-dessus du max (Ross), barre et PV en doré. */
-    private static void hpLine(Painter p, int row, double hp, double max, TextColor barColor, TextColor flash) {
+    /** « PV ████████ 82/100 Int3 Fon1 » : barre, valeur, puis les statuts. */
+    private static void hpLine(Painter p, int row, double hp, double max, TextColor barColor, TextColor flash,
+            List<cardistry.core.status.Status> statuses) {
         boolean overMax = hp > max;
         p.text(2, row, "PV", Palette.DIM);
         TextColor color = flash != null ? flash : overMax ? Palette.ACCENT : barColor;
         p.text(6, row, Painter.bar(hp, max, BAR_WIDTH), color, flash != null || overMax);
         String current = num(Math.max(0, hp));
         p.text(7 + BAR_WIDTH, row, current, overMax ? Palette.ACCENT : Palette.TEXT, overMax);
-        p.text(7 + BAR_WIDTH + current.length(), row, "/" + num(max), Palette.TEXT);
+        String maxText = "/" + num(max);
+        p.text(7 + BAR_WIDTH + current.length(), row, maxText, Palette.TEXT);
+        int col = 8 + BAR_WIDTH + current.length() + maxText.length();
+        StatusBadges.draw(p, col, row, statuses, Math.max(0, p.cols() - SPRITE_WIDTH - 3 - col));
     }
 
     // --- Main ---

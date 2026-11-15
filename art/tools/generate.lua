@@ -9,7 +9,7 @@
 -- (idle, attack, hurt, death) déjà taguée n'est pas touchée. Un fichier sans rien à ajouter n'est
 -- même pas réenregistré.
 --
--- Sources des ébauches : items.txt et trinkets.txt (grilles de lettres), cards.lua, enemies.lua et
+-- Sources des ébauches : items.txt, trinkets.txt et statuses.txt (grilles de lettres), cards.lua, enemies.lua et
 -- npcs.lua (dessin par formes).
 
 local root = app.params["root"] or "."
@@ -254,6 +254,7 @@ end
 
 build(art .. "items.aseprite", 16, readGrids(tools .. "items.txt", 16), 0.1)
 build(art .. "trinkets.aseprite", 16, readGrids(tools .. "trinkets.txt", 16), 0.1)
+build(art .. "statuses.aseprite", 8, readGrids(tools .. "statuses.txt", 8), 0.1)
 
 -- Cartes : cards.lua renvoie une liste de { id, draw(canvas) }.
 local cards = {}

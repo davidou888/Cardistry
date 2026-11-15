@@ -1,0 +1,52 @@
+# Icônes de statut, 8×8 (affichées à côté des barres de PV). Lettres de la palette commune
+# (voir generate.lua) ; « . » = transparent. Une grille par statut, « == id » = StatusType.id().
+
+== intox
+...gg...
+..gGGg..
+..gGGg..
+.gGGGGg.
+gGG6GGGg
+gGGGGGGg
+.gGGGGg.
+..gggg..
+
+== fons
+....CCCC
+......C.
+.....C..
+....CCCC
+CCC.....
+..C.....
+.C......
+CCC.....
+
+== hypnotise
+.MMMMMM.
+M......M
+M.MMMM.M
+M.M..M.M
+M.M.MM.M
+M.M....M
+M.MMMMMM
+M.......
+
+== bondage
+.yy..yy.
+y..yy..y
+y..yy..y
+.yy..yy.
+.yy..yy.
+y..yy..y
+y..yy..y
+.yy..yy.
+
+== brulure
+...R....
+..RR....
+..RoR...
+.RoYR.R.
+.RoYoRR.
+RoYYYoR.
+RoYYYYoR
+.RRRRRR.

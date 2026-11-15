@@ -69,7 +69,8 @@ tasks.test {
 // ./gradlew planche     : art/planche.png (icônes) et art/planche-ennemis.png (frames des adversaires)
 
 /** Fichier source (sans extension) → dossier de sortie dans images/. */
-val artExports = mapOf("map" to "map", "items" to "items", "trinkets" to "items", "cards" to "cards")
+val artExports = mapOf("map" to "map", "items" to "items", "trinkets" to "items", "cards" to "cards",
+        "statuses" to "status")
 
 /** Chemin d'Aseprite : variable ASEPRITE, sinon « aseprite » dans le PATH ; null s'il est absent. */
 fun findAseprite(): String? {

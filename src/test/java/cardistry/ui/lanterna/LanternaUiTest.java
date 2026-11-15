@@ -169,6 +169,24 @@ class LanternaUiTest {
     }
 
     @Test
+    void statutsACoteDesPvEtAdversaireEndormi() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)),
+                new Enemy("Mannequin", Element.FIRE, 20, 5), new Enemy("Bouée", Element.WATER, 30, 10));
+        var enemyStatuses = state.statuses(cardistry.core.status.StatusTarget.ENEMY);
+        enemyStatuses.apply(cardistry.core.status.StatusType.INTOX, 3, cardistry.core.status.StatusTarget.PLAYER);
+        enemyStatuses.apply(cardistry.core.status.StatusType.FONS, 2, cardistry.core.status.StatusTarget.PLAYER);
+        state.statuses(cardistry.core.status.StatusTarget.PLAYER)
+                .apply(cardistry.core.status.StatusType.BURN, 3, cardistry.core.status.StatusTarget.ENEMY);
+        ui.onEvent(new GameEvent.GameStarted(42));
+        ui.showStatus(state);
+        String text = dump("03b-combat-statuts");
+        assertTrue(text.contains("Int3 Fon2"), text);
+        assertTrue(text.contains("Brû3"), text);
+        assertTrue(text.contains("Prochain : Endormi (2 tours)"), text);
+    }
+
+    @Test
     void flechesPuisEntreeJoueLaCarteSelectionnee() throws IOException {
         open(80, 24);
         GameState state = combat(List.of(
@@ -1258,7 +1276,7 @@ class LanternaUiTest {
         assertTrue(text.contains("J journal"));
         assertTrue(lines.get(2).contains(cardistry.ui.IntentText.intent(state, state.currentEnemy())),
                 "intent au-dessus de l'adversaire");
-        assertEquals("ui/intent-attack.png", CombatWindowScreen.intentIcon(state.currentEnemy()));
+        assertEquals("ui/intent-attack.png", CombatWindowScreen.intentIcon(state, state.currentEnemy()));
         assertEquals(2, placed("ui/intent-attack.png").row());
     }
 
@@ -1424,6 +1442,12 @@ class LanternaUiTest {
             assertTrue(cardistry.ui.window.Images.mapNode(type).isPresent(), "nœud sans icône : " + type);
         }
         assertEquals(16, cardistry.ui.window.Images.get("items/mate.png").orElseThrow().getWidth());
+        for (cardistry.core.status.StatusType type : cardistry.core.status.StatusType.values()) {
+            java.awt.image.BufferedImage image = cardistry.ui.window.Images.get("status/" + type.id() + ".png")
+                    .orElseThrow(() -> new AssertionError("statut sans icône : " + type.id()));
+            assertEquals(8, image.getWidth());
+            assertEquals(8, image.getHeight());
+        }
         for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
             String sprite = cardistry.model.enemy.EnemyRegistry.create(id, 1).spriteId();
             java.awt.image.BufferedImage image = cardistry.ui.window.Images.enemy(sprite, "idle", 0)

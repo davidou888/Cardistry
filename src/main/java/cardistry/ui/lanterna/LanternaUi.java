@@ -356,6 +356,23 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 view.resetEffects();
                 render();
             }
+            case GameEvent.StatusApplied e -> {
+                if (state != null && state.hasEnemy()) {
+                    view.log(cardistry.ui.StatusText.journal(state, e), Palette.status(e.type()));
+                }
+                render();
+            }
+            case GameEvent.StatusRefused e -> {
+                if (state != null && state.hasEnemy()) {
+                    view.log(cardistry.ui.StatusText.journal(state, e), Palette.DIM);
+                }
+            }
+            case GameEvent.StatusEnded e -> {
+                if (state != null && state.hasEnemy()) {
+                    view.log(cardistry.ui.StatusText.journal(state, e), Palette.DIM);
+                }
+                render();
+            }
             default -> {
                 String line = cardistry.ui.IntentText.journal(event);
                 if (line != null) {
