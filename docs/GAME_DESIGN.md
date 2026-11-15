@@ -61,6 +61,11 @@ dégâts suivent le niveau). Valeurs ci-dessous au niveau 1.
 | Élite | Le Peneu | Neutre | 90 | Rebond (passif) : renvoie 20 % des dégâts reçus, brut, sans jamais tuer ; Crevaison 6, +2 à chaque utilisation |
 | Élite | T-Rex défoncé | Plante | 65 | Morsure 13 ; bras trop courts : 30 % de rater, et il se soigne de 8 quand il rate (fringale) |
 | Élite | Étudiant post-examen | Eau | 60 | Larmes : 6, +3 par carte de moins que 5 dans ta main ; sous 50 % PV, Crise de nerfs : deux attaques par tour |
+| Commun | Gourou du Sat | Spirituel | 24 | Coup d'encens 4 ; tous les 3 tours, Regard fixe : t'hypnotise 1 tour (son coup suivant ×2) |
+| Commun | NG | Algébrique | 26 | Démonstration 5 ; tous les 3 tours, Contre-exemple : une carte de ta main devient « Exercice 3b » |
+| Commun | Hypercube misogyne | Géométrique | 25 | Tunnel topologique 5 ; tous les 3 tours, Célibat forcé (« ouin ouin ») 2 × 4 |
+| Commun | Gobelin | Plante | 22 | « 67 » (six seveeen) : 6 ou 7, chaque tour ; animation des deux mains et « SIX SEVEEEN ! » à l'écran |
+| Élite | Engeance des cookies | GLITCH | 60 | Défoncée au space cookie. Piège pâtissier 9 ; tous les 3 tours, Green out : t'endort (Fons 1 tour) ; une fois sous 50 % PV, Méditation triptyque : passe à un autre élément (tiré au hasard, ni neutre ni GLITCH) jusqu'à la fin du combat |
 | Boss | Boss du niveau 1 / 2 / 3 (**noms à venir**) | Feu / Eau / Plante | 130 / 200 / 280 | Coup 10 ; toutes les 4 attaques, Grosse attaque 22 |
 
 Statuts infligés (tirages de l'adversaire, pas doublés par CLAUDE.md) :
@@ -71,6 +76,11 @@ Statuts infligés (tirages de l'adversaire, pas doublés par CLAUDE.md) :
 | Choomah (et variantes) | Vol à la tire | Intox |
 | Vafi | Série d'algèbre | Fons 1 tour (on s'endort en cours) |
 | Paresseux | « Badoing, badoing ! » | 25 % de Fons 1 tour |
+| Gourou du Sat | Regard fixe | Hypnotisé 1 tour (son coup suivant ×2) |
+| Engeance des cookies | Green out | Fons 1 tour |
+
+Pour l'instant, tous les adversaires peuvent être rencontrés à chaque niveau. **Prévu** : un système de niveaux
+avec un type d'adversaires par niveau.
 
 Règles communes :
 - L'intent est choisi au début du combat et après chaque attaque. Un adversaire en Fons annonce « Endormi » et garde son attaque pour son réveil. Un tour sauté (Pétou ancestral) garde
@@ -418,6 +428,11 @@ son élément attaque à ×1.25. Boss provisoires : départ sur le Dojo.
 | Vafi | Amphi d'examen | feu | −20 % dégâts des sorts |
 | Seau de fuite | Toit qui fuit | eau | −20 % soins |
 | Étudiant post-examen | Biblio à 3h du mat | eau | −1 taille de main |
+| Gourou du Sat | Salle de méditation | spirituel | −15 % dégâts des sorts |
+| NG | Salle d'exercices | algébrique | −1 taille de main |
+| Hypercube misogyne | Cabinet psy scintillant | géométrique | adversaire +15 % dégâts |
+| Gobelin | Clairière d'adolescent de base | plante | −1 taille de main *(provisoire)* |
+| Engeance des cookies | Le canapé | neutre | aucun |
 
 ## Choomies (monnaie)
 - **15 Choomies** au début de la partie. Gagnés à chaque victoire : commun 12-18, élite 30-40, boss 80-100
@@ -496,12 +511,13 @@ Reste : transitions d'écran ; vrais sons des statuts.
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
-- **[À DÉCIDER]** Ennemis des nouveaux éléments : aucun adversaire n'est Spirituel / Algébrique / Géométrique pour l'instant.
+- Provisoire : PV du Gobelin (22) et malus de sa Clairière (−1 taille de main).
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
 - ~~Qui bat qui des nouveaux éléments~~ → Géométrique > Algébrique > Spirituel > Géométrique, GLITCH bat tout (règle du code, `model.Element`).
 - ~~Prix des cartes au shop~~ → selon la rareté de la carte.
+- ~~Ennemis des nouveaux éléments~~ → Gourou du Sat (spirituel), NG (algébrique), Hypercube misogyne (géométrique), plus le Gobelin (plante) et l'élite Engeance des cookies (GLITCH).
 - ~~Plan V2~~ → statuts, pouvoirs, terrains à effet, terrains des adversaires, nouvelles cartes (voir ces sections). Moindre carré : tirage en ta faveur (doublé par CLAUDE.md). Petite taffe : reste Commune. Fractale : multiplicateur total arrondi à l'entier **supérieur**. Espace : le rejeu garde la chance normale des statuts. Hypnose comptée en tours de celui qui frappe ; un statut ne décompte pas à la fin du tour où il est posé ; chances doublées seulement contre l'adversaire ; immunité de la Taffe = coups adverses ; main au-delà du max : on garde ses cartes.
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
 - ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.
