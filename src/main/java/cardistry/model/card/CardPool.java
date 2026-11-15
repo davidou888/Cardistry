@@ -83,7 +83,7 @@ public class CardPool {
         cards.add(new TerrainCard("Atlantis", WATER, RARE).withBonuses("attaques eau +20 %",
                 percent(StatType.WATER_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         //LEGENDARY
-        cards.add(new TerrainCard("EPFL", FIRE, LEGENDARY));
+        cards.add(epfl());
         
         
         
@@ -138,6 +138,28 @@ public class CardPool {
     public static final double DOJO_DAMAGE_BONUS = 0.10;
     /** Bonus d'Amazonie, Enfer, Atlantis à leur élément. */
     public static final double ELEMENT_TERRAIN_BONUS = 0.20;
+
+    /** Tours passés à l'EPFL avant le retour automatique au Dojo. */
+    public static final int EPFL_TURNS = 3;
+
+    /**
+     * EPFL : pendant {@link #EPFL_TURNS} tours, toutes les valeurs du joueur sont doublées (dégâts,
+     * soins, réduction de dégâts, PV max ; PV actuels ×2 à l'arrivée, ÷2 au départ). Pas la taille de
+     * main, les Choomies ni les clopes.
+     */
+    public static TerrainCard epfl() {
+        java.util.List<cardistry.core.stats.StatModifier> doubled = new java.util.ArrayList<>();
+        for (StatType stat : StatType.allDamageMultipliers()) {
+            doubled.add(cardistry.core.stats.StatModifier.multiply(stat, 2, ""));
+        }
+        for (StatType stat : java.util.List.of(StatType.HEAL_EFFICIENCY, StatType.DAMAGE_REDUCTION, StatType.MAX_HP)) {
+            doubled.add(cardistry.core.stats.StatModifier.multiply(stat, 2, ""));
+        }
+        return new TerrainCard("EPFL", FIRE, LEGENDARY)
+                .withBonuses("", doubled)
+                .withEffect(TerrainCard.Effect.EPFL, "pendant " + EPFL_TURNS + " tours, tout est doublé : dégâts,"
+                        + " soins, réduction, PV (÷2 en partant) ; puis retour au Dojo");
+    }
 
     /** Dojo : terrain de départ, +10 % de dégâts. */
     public static TerrainCard dojo() {

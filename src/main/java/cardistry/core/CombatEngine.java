@@ -149,6 +149,7 @@ public final class CombatEngine {
         if (isOver() || resolveEnemyDeath()) {
             return false;
         }
+        tickEpfl();
         startOfTurnStatuses(StatusTarget.PLAYER);
         if (isOver()) {
             return false;
@@ -163,7 +164,7 @@ public final class CombatEngine {
             return !isOver();
         }
         bus.publish(new GameEvent.PlayerTurnSkipped(skipCauses));
-        endOfTurnStatuses(StatusTarget.PLAYER);
+        endPlayerTurn();
         enemyTurn();
         if (!state.isLost()) {
             resolveEnemyDeath();
@@ -299,7 +300,7 @@ public final class CombatEngine {
         if (!endsTurn) {
             return ActionResult.FREE_ACTION;
         }
-        endOfTurnStatuses(StatusTarget.PLAYER);
+        endPlayerTurn();
         enemyTurn();
         if (state.isLost()) {
             return ActionResult.TURN_ENDED;
@@ -382,6 +383,9 @@ public final class CombatEngine {
 
     /** Fin du combat : l'Ivresse retombe, les malédictions du combat s'arrêtent. */
     private void endCombat() {
+        if (state.terrain().effect() == TerrainCard.Effect.EPFL) {
+            changeTerrain(CardPool.dojo()); // PV ÷2 avant la fin du combat
+        }
         for (TemporaryEffect effect : List.copyOf(state.effects())) {
             if (!effect.keepsAcrossCombats()) {
                 endEffect(effect);
@@ -526,6 +530,38 @@ public final class CombatEngine {
         }
     }
 
+    /** Départ de l'EPFL : PV actuels ÷2 (arrondis), minuteur annulé ; les bonus partent avec le terrain. */
+    private void leaveEpfl() {
+        Player player = state.player();
+        int before = player.hp();
+        int after = Combatant.round(before / 2.0);
+        player.takeDamage(before - after);
+        state.setEpflTurnsLeft(0);
+        bus.publish(new GameEvent.AbilityTriggered("Tu quittes l'EPFL : PV ÷2 (" + before + " → " + after + ")"));
+    }
+
+    /** Début du tour du joueur : après ses {@link CardPool#EPFL_TURNS} tours à l'EPFL, retour au Dojo. */
+    private void tickEpfl() {
+        if (state.terrain().effect() == TerrainCard.Effect.EPFL && state.epflTurnsLeft() <= 0) {
+            changeTerrain(CardPool.dojo());
+        }
+    }
+
+    /** Arrivé à l'EPFL pendant le tour en cours : ce tour-là ne compte pas. */
+    private boolean epflArrivedThisTurn;
+
+    /** Fin du tour du joueur : ses statuts décomptent, et un tour d'EPFL de moins. */
+    private void endPlayerTurn() {
+        endOfTurnStatuses(StatusTarget.PLAYER);
+        if (state.terrain().effect() == TerrainCard.Effect.EPFL) {
+            if (epflArrivedThisTurn) {
+                epflArrivedThisTurn = false;
+            } else {
+                state.setEpflTurnsLeft(state.epflTurnsLeft() - 1);
+            }
+        }
+    }
+
     /** Source des bonus du terrain en jeu (retirés quand il change, puis en fin de combat). */
     static final String TERRAIN_SOURCE = "terrain";
 
@@ -552,8 +588,23 @@ public final class CombatEngine {
     /** Change de terrain (ses bonus suivent) ; un nouveau terrain eau éteint toutes les Brûlures. */
     private void changeTerrain(TerrainCard terrain) {
         TerrainCard previous = state.terrain();
+        boolean leavingEpfl = previous.effect() == TerrainCard.Effect.EPFL && terrain.effect() != TerrainCard.Effect.EPFL;
+        boolean enteringEpfl = previous.effect() != TerrainCard.Effect.EPFL && terrain.effect() == TerrainCard.Effect.EPFL;
+        if (leavingEpfl) {
+            leaveEpfl();
+        }
         state.setTerrain(terrain);
         applyTerrainBonuses();
+        if (terrain.effect() == TerrainCard.Effect.EPFL) {
+            state.setEpflTurnsLeft(CardPool.EPFL_TURNS);
+            epflArrivedThisTurn = true;
+            if (enteringEpfl) {
+                Player player = state.player();
+                player.heal(Math.max(0, player.hp())); // PV actuels ×2 (pas un soin)
+                bus.publish(new GameEvent.AbilityTriggered("EPFL : tout est doublé pendant " + CardPool.EPFL_TURNS
+                        + " tours (PV " + player.hp() + "/" + Combatant.round(state.maxHp()) + ")"));
+            }
+        }
         if (terrain.effect() != TerrainCard.Effect.REPLAY) {
             state.takeEchoes(); // quitter l'Espace : plus rien à rejouer
         }

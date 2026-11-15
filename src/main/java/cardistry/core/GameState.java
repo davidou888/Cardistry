@@ -72,6 +72,7 @@ public final class GameState {
     private final List<TemporaryEffect> effects = new ArrayList<>();
     /** Cartes jouées sur l'Espace de dimension n, rejouées à 50 % au prochain tour du joueur. */
     private final List<Card> echoes = new ArrayList<>();
+    private int epflTurnsLeft = 0;
     private final cardistry.core.status.Statuses playerStatuses = new cardistry.core.status.Statuses();
     private final cardistry.core.status.Statuses enemyStatuses = new cardistry.core.status.Statuses();
     private boolean undoUsedThisCombat = false;
@@ -285,6 +286,15 @@ public final class GameState {
     void setLocation(int level, int floor) {
         this.level = level;
         this.floor = floor;
+    }
+
+    /** Tours d'EPFL restants avant le retour au Dojo (0 hors de l'EPFL). */
+    public int epflTurnsLeft() {
+        return epflTurnsLeft;
+    }
+
+    void setEpflTurnsLeft(int turns) {
+        epflTurnsLeft = turns;
     }
 
     /** Cartes à rejouer au prochain tour (Espace de dimension n). */

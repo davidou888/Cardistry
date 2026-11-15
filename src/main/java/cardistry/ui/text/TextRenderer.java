@@ -299,6 +299,9 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println("TERRAIN ACTUEL :");
         console.println(describe(state.terrain()));
+        if (state.terrain().effect() == cardistry.model.card.TerrainCard.Effect.EPFL) {
+            console.println("EPFL : " + cardistry.ui.StatusText.turns(Math.max(1, state.epflTurnsLeft())) + " avant le retour au Dojo");
+        }
         console.println();
         if (state.drunkenness() > 0) {
             console.println(cardistry.ui.Format.drunkenness(state));

@@ -23,7 +23,12 @@ public final class TerrainCard extends Card {
         /** Fractale : tous les multiplicateurs (joueur et adversaire) arrondis à l'entier supérieur. */
         CEILING,
         /** Espace de dimension n : chaque carte jouée est rejouée une fois à 50 % au tour suivant. */
-        REPLAY
+        REPLAY,
+        /**
+         * EPFL : pendant 3 tours, valeurs du joueur doublées (ses bonus ×2), PV actuels ×2 à
+         * l'arrivée et ÷2 au départ ; puis retour au Dojo.
+         */
+        EPFL
     }
 
     private List<StatModifier> bonuses = List.of();

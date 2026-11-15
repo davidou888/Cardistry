@@ -99,4 +99,14 @@ public final class Format {
             case cardistry.model.card.DeadCard dead -> "injouable";
         };
     }
+
+    /** « EPFL (feu) », plus les tours restants à l'EPFL : « EPFL (feu) · 2 tours ». */
+    public static String terrainLabel(cardistry.core.GameState state) {
+        cardistry.model.card.TerrainCard terrain = state.terrain();
+        String label = terrain.name() + " (" + terrain.element().displayName() + ")";
+        if (terrain.effect() == cardistry.model.card.TerrainCard.Effect.EPFL) {
+            label += " · " + StatusText.turns(Math.max(1, state.epflTurnsLeft())); // tour en cours compris
+        }
+        return label;
+    }
 }

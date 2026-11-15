@@ -192,7 +192,7 @@ final class CombatScreen {
         TerrainCard terrain = state.terrain();
         p.text(2, 6, "Terrain", Palette.DIM);
         TextColor terrainColor = view.terrainFlash != null ? view.terrainFlash : Palette.element(terrain.element());
-        p.text(11, 6, terrain.name() + " (" + terrain.element().displayName() + ")", terrainColor, true);
+        p.text(11, 6, Format.terrainLabel(state), terrainColor, true);
 
         p.text(2, 7, Format.playerLabel(state), Palette.TEXT, true);
         drawDrunkennessAndCurses(p, state);

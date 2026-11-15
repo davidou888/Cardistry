@@ -135,7 +135,7 @@ final class CombatWindowScreen {
     private static void drawHeader(Painter p, GameState state, ViewState view) {
         p.text(2, 1, Format.location(state), Palette.DIM);
         TerrainCard terrain = state.terrain();
-        String name = terrain.name() + " (" + terrain.element().displayName() + ")";
+        String name = Format.terrainLabel(state);
         int col = p.cols() - 2 - name.length();
         p.text(col - 10, 1, "Terrain : ", Palette.DIM);
         p.text(col, 1, name, view.terrainFlash != null ? view.terrainFlash : Palette.element(terrain.element()), true);
