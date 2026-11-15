@@ -80,4 +80,22 @@ public interface EffectContext {
     /** Ajoute une carte au deck de la run (sans deck : rien). */
     default void addCardToDeck(cardistry.model.card.Card card) {
     }
+
+    /**
+     * Tente d'infliger {@code type} à {@code target} pour sa durée par défaut, avec une chance de
+     * {@code probability} (1 = sûr). Infligé à l'adversaire, c'est un tirage en faveur du joueur
+     * (doublé par CLAUDE.md) ; infligé au joueur, non.
+     *
+     * @return {@code true} si le statut a été posé (ou sa durée remise au max)
+     */
+    default boolean applyStatus(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type,
+            double probability) {
+        return false;
+    }
+
+    /** Comme {@link #applyStatus(cardistry.core.status.StatusTarget, cardistry.core.status.StatusType, double)}, pour {@code turns} tours. */
+    default boolean applyStatus(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type,
+            double probability, int turns) {
+        return false;
+    }
 }

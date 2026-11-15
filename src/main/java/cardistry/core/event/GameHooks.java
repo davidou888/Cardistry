@@ -98,4 +98,8 @@ public interface GameHooks {
 
     default void onGameLost(GameEvent.GameLost event, EffectContext ctx) {
     }
+
+    /** Un statut vient d'être posé (sur le joueur ou l'adversaire). */
+    default void onStatusApplied(GameEvent.StatusApplied event, EffectContext ctx) {
+    }
 }

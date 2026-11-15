@@ -69,6 +69,8 @@ public final class GameState {
     private List<ActiveSetTier> activeSetTiers = List.of();
     private final List<SetChange> pendingSetChanges = new ArrayList<>();
     private final List<TemporaryEffect> effects = new ArrayList<>();
+    private final cardistry.core.status.Statuses playerStatuses = new cardistry.core.status.Statuses();
+    private final cardistry.core.status.Statuses enemyStatuses = new cardistry.core.status.Statuses();
     private boolean undoUsedThisCombat = false;
     /** Personnage joué ; {@code null} = aucun (tests, scénarios sans capacité). */
     private cardistry.hero.Hero hero;
@@ -625,6 +627,16 @@ public final class GameState {
 
     void advanceEnemy() {
         currentEnemyIndex++;
+    }
+
+    /** Statuts du joueur ({@link cardistry.core.status.StatusTarget#PLAYER}) ou de l'adversaire actuel. */
+    public cardistry.core.status.Statuses statuses(cardistry.core.status.StatusTarget target) {
+        return target == cardistry.core.status.StatusTarget.PLAYER ? playerStatuses : enemyStatuses;
+    }
+
+    /** Le combattant {@code target} : le joueur ou l'adversaire actuel. */
+    public cardistry.model.Combatant combatant(cardistry.core.status.StatusTarget target) {
+        return target == cardistry.core.status.StatusTarget.PLAYER ? player : currentEnemy();
     }
 
     /** Partie ouverte : nouvel adversaire, qui devient l'adversaire actuel. */

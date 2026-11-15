@@ -50,6 +50,13 @@ public final class HookDispatcher {
             case GameEvent.EffectEnded e -> {
                 // Pas de hook pour l'instant.
             }
+            case GameEvent.StatusApplied e -> hook.onStatusApplied(e, ctx);
+            case GameEvent.StatusRefused e -> {
+                // Pas de hook pour l'instant.
+            }
+            case GameEvent.StatusEnded e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.CigaretteSmoked e -> hook.onCigaretteSmoked(e, ctx);
             case GameEvent.CigarettesChanged e -> hook.onCigarettesChanged(e, ctx);
             case GameEvent.CigaretteRolled e -> {

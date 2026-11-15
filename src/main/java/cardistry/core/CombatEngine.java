@@ -10,6 +10,10 @@ import cardistry.items.Item;
 import cardistry.items.LootTable;
 import cardistry.items.Tag;
 import cardistry.items.Trinket;
+import cardistry.core.status.Status;
+import cardistry.core.status.StatusTarget;
+import cardistry.core.status.StatusType;
+import cardistry.core.status.Statuses;
 import cardistry.model.Combatant;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
@@ -140,13 +144,21 @@ public final class CombatEngine {
         if (isOver() || resolveEnemyDeath()) {
             return false;
         }
+        startOfTurnStatuses(StatusTarget.PLAYER);
+        if (isOver()) {
+            return false;
+        }
         List<String> skipCauses = skipCauses();
         if (skipCauses.isEmpty()) {
             bus.publish(new GameEvent.PlayerTurnStarted(state.turn()));
             return !isOver();
         }
         bus.publish(new GameEvent.PlayerTurnSkipped(skipCauses));
+        endOfTurnStatuses(StatusTarget.PLAYER);
         enemyTurn();
+        if (!state.isLost()) {
+            resolveEnemyDeath();
+        }
         return false;
     }
 
@@ -268,6 +280,7 @@ public final class CombatEngine {
         if (!endsTurn) {
             return ActionResult.FREE_ACTION;
         }
+        endOfTurnStatuses(StatusTarget.PLAYER);
         enemyTurn();
         if (state.isLost()) {
             return ActionResult.TURN_ENDED;
@@ -360,6 +373,63 @@ public final class CombatEngine {
         }
         for (Curse curse : state.endActiveCurses()) {
             bus.publish(new GameEvent.CurseEnded(curse));
+        }
+        for (StatusTarget target : StatusTarget.values()) {
+            for (Status status : state.statuses(target).clear()) {
+                bus.publish(new GameEvent.StatusEnded(target, status.type()));
+            }
+        }
+    }
+
+    // --- Statuts ---
+
+    /**
+     * Pose {@code type} sur {@code target} pour {@code turns} tours (de la cible), selon la règle de
+     * réapplication du statut.
+     *
+     * @return {@code true} s'il a été posé ou rafraîchi
+     */
+    private boolean applyStatus(StatusTarget target, StatusType type, int turns, StatusTarget inflictedBy) {
+        if (!state.hasEnemy() || !state.combatant(target).isAlive()) {
+            return false;
+        }
+        Statuses.Outcome outcome = state.statuses(target).apply(type, turns, inflictedBy);
+        if (outcome == Statuses.Outcome.REFUSED) {
+            bus.publish(new GameEvent.StatusRefused(target, type, type.displayName() + " déjà actif"));
+            return false;
+        }
+        bus.publish(new GameEvent.StatusApplied(target, type, state.statuses(target).get(type).orElseThrow().turnsLeft(),
+                outcome == Statuses.Outcome.REFRESHED));
+        return true;
+    }
+
+    /** Début du tour de {@code target} : effets par tour de ses statuts. */
+    private void startOfTurnStatuses(StatusTarget target) {
+        for (Status status : List.copyOf(state.statuses(target).all())) {
+            if (!state.combatant(target).isAlive() || state.isLost()) {
+                return;
+            }
+            switch (status.type()) {
+                case INTOX -> statusDamage(target, StatusType.INTOX_DAMAGE);
+            }
+        }
+    }
+
+    /** Fin du tour de {@code target} : ses statuts perdent un tour. */
+    private void endOfTurnStatuses(StatusTarget target) {
+        for (Status ended : state.statuses(target).countDown()) {
+            bus.publish(new GameEvent.StatusEnded(target, ended.type()));
+        }
+    }
+
+    /** Dégâts d'un statut : bruts (aucun multiplicateur, aucune réduction, pas de Rebond). */
+    private void statusDamage(StatusTarget target, double amount) {
+        Combatant victim = state.combatant(target);
+        boolean wasAlive = victim.isAlive();
+        double dealt = victim.takeDamage(amount);
+        bus.publish(new GameEvent.DamageDealt(victim, dealt, 1.0, GameEvent.DamageDealt.Source.STATUS));
+        if (target == StatusTarget.PLAYER && wasAlive && !victim.isAlive()) {
+            bus.publish(new GameEvent.GameLost());
         }
     }
 
@@ -1064,7 +1134,20 @@ public final class CombatEngine {
      * Tour de l'adversaire : il exécute l'attaque annoncée, puis annonce la suivante. Un tour sauté
      * (Pétou ancestral) garde l'intent et n'avance pas ses compteurs.
      */
+    /** Tour de l'adversaire : ses statuts (début), son action, puis le décompte de ses statuts (fin). */
     private void enemyTurn() {
+        Enemy enemy = state.currentEnemy();
+        startOfTurnStatuses(StatusTarget.ENEMY);
+        if (!enemy.isAlive()) {
+            return; // mort de ses statuts : le combat se résout chez l'appelant
+        }
+        enemyAct();
+        if (enemy.isAlive() && state.player().isAlive()) {
+            endOfTurnStatuses(StatusTarget.ENEMY);
+        }
+    }
+
+    private void enemyAct() {
         Enemy enemy = state.currentEnemy();
         Optional<TemporaryEffect> skip = state.effects().stream()
                 .filter(e -> e.isActive() && e.skipsEnemyTurn()).findFirst();
@@ -1336,6 +1419,22 @@ public final class CombatEngine {
         @Override
         public void addEffect(TemporaryEffect effect) {
             CombatEngine.this.addEffect(effect);
+        }
+
+        @Override
+        public boolean applyStatus(StatusTarget target, StatusType type, double probability) {
+            return applyStatus(target, type, probability, type.defaultTurns());
+        }
+
+        @Override
+        public boolean applyStatus(StatusTarget target, StatusType type, double probability, int turns) {
+            if (!state.hasEnemy()) {
+                return false;
+            }
+            boolean lands = probability >= 1 || (target == StatusTarget.ENEMY
+                    ? Luck.chance(state, rng, probability)
+                    : rng.nextDouble() < probability);
+            return lands && CombatEngine.this.applyStatus(target, type, turns, target.other());
         }
 
         @Override

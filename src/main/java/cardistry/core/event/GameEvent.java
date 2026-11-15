@@ -73,7 +73,9 @@ public sealed interface GameEvent {
             /** Attaque de l'adversaire. */
             ENEMY_ATTACK,
             /** Dégâts renvoyés par l'adversaire (Rebond du Peneu). */
-            REFLECTED
+            REFLECTED,
+            /** Statut (Intox…) au début du tour de la cible. */
+            STATUS
         }
     }
 
@@ -230,6 +232,21 @@ public sealed interface GameEvent {
 
     /** Un effet se termine (durée, charges épuisées ou fin de combat). */
     record EffectEnded(TemporaryEffect effect) implements GameEvent {
+    }
+
+    /** Un statut est posé sur {@code target} ({@code refreshed} : il l'était déjà, durée remise au max). */
+    record StatusApplied(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type, int turns,
+            boolean refreshed) implements GameEvent {
+    }
+
+    /** Un statut n'a pas pu être posé ({@code reason} : affichée au joueur). */
+    record StatusRefused(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type,
+            String reason) implements GameEvent {
+    }
+
+    /** Un statut se termine (durée écoulée, retiré, ou fin du combat). */
+    record StatusEnded(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type)
+            implements GameEvent {
     }
 
     /** Le joueur saute ce tour ; {@code causes} = noms des effets responsables. */
