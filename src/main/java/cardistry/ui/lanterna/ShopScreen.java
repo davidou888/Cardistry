@@ -214,8 +214,8 @@ final class ShopScreen {
     /** Ligne de détail de l'article sélectionné. */
     static String describe(ShopOffer offer) {
         return switch (offer) {
-            case ShopOffer.CardOffer card -> "Carte " + card.card().name() + " (" + Format.cardKind(card.card())
-                    + ") : ajoutée à ton deck · " + card.price() + " Choomies";
+            case ShopOffer.CardOffer card -> cardistry.ui.CardText.summary(card.card()) + " · " + card.price()
+                    + " Choomies";
             case ShopOffer.CollectibleOffer c -> c.collectible().kindName() + " " + c.collectible().rarity().displayName()
                     + " : " + c.collectible().description() + " · " + c.price() + " Choomies";
         };

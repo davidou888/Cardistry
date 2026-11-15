@@ -941,6 +941,8 @@ class LanternaUiTest {
         assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));
         String text = dump("61-recompense-carte");
         assertTrue(text.contains("Ajoute une carte à ton deck"), text);
+        // Hors combat : valeurs de base, pas contre l'adversaire qu'on vient de battre.
+        assertTrue(text.contains("Potion · soin plante · Commun : +10 PV"), text);
         assertTrue(text.contains("Deck 12 cartes"), text);
         type("s");
         assertEquals(-1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));

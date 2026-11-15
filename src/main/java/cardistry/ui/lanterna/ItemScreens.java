@@ -78,7 +78,8 @@ final class ItemScreens {
             boolean isSelected = i == selected;
             card(p, left + i * (width + 2), isSelected ? 5 : 6, width, i + 1, options.get(i), isSelected);
         }
-        p.text(2, 14, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
+        // Hors combat : valeurs de base (pas contre l'adversaire qu'on vient de battre).
+        p.text(2, 14, Painter.fit(cardistry.ui.CardText.summary(options.get(selected)), p.cols() - 4), Palette.TEXT);
     }
 
     /** Carte à choisir : illustrée dans la fenêtre (comme en combat), en texte dans le terminal. */
