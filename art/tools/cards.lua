@@ -205,6 +205,57 @@ return {
     c:disc(22, 4, 2, "Y"); c:px(22, 4, "6")
     c:px(20, 1, "o"); c:px(23, 1, "o"); c:px(23, 7, "o")
   end },
+  -- ---- sorts du plan V2, lot 1
+  { id = "cayouuu", draw = function(c)
+    -- un grand cri : bouche ouverte et ondes sonores
+    c:disc(9, 12, 7, "s"); c:disc(9, 12, 6, "s")
+    c:ellipse(10, 15, 4, 3, "d"); c:ellipse(10, 15, 3, 2, "1"); c:hline(8, 12, 13, "6")
+    c:disc(6, 9, 1, "1"); c:disc(12, 9, 1, "1")
+    c:arc(15, 14, 3, 4, 300, 420, "4"); c:arc(15, 14, 5, 6, 300, 420, "4"); c:arc(15, 14, 7, 8, 310, 410, "3")
+  end },
+  { id = "pain-pita", draw = function(c)
+    -- pita en demi-lune, garnie (géométrique : facettes jaunes)
+    for y = 0, 9 do
+      local half = math.floor(math.sqrt(100 - y * y) + 0.5)
+      c:hline(12 - half, 12 + half, 18 - y, "y")
+    end
+    for y = 0, 7 do
+      local half = math.floor(math.sqrt(64 - y * y) + 0.5)
+      c:hline(12 - half, 12 + half, 18 - y, "Y")
+    end
+    c:hline(2, 22, 18, "n"); c:hline(3, 21, 19, "N")
+    c:tri(6, 17, 9, 12, 12, 17, "o"); c:tri(13, 17, 16, 11, 19, 17, "o")
+    c:hline(5, 19, 10, "G"); c:px(7, 9, "G"); c:px(15, 9, "G"); c:px(10, 10, "R"); c:px(16, 10, "R")
+  end },
+  { id = "matrix", draw = function(c)
+    -- pluie de chiffres et crochets de matrice (algébrique : cyan)
+    c:rect(0, 0, 24, 24, "0")
+    c:vline(2, 2, 21, "C"); c:hline(2, 4, 2, "C"); c:hline(2, 4, 21, "C")
+    c:vline(21, 2, 21, "C"); c:hline(19, 21, 2, "C"); c:hline(19, 21, 21, "C")
+    for _, col in ipairs({ 6, 10, 14, 17 }) do
+      for y = (col % 4), 20, 4 do c:px(col, y, "c"); c:px(col, y + 1, "C") end
+    end
+    c:rect(9, 9, 6, 6, "c"); c:frame(9, 9, 6, 6, "C"); c:px(11, 11, "6"); c:px(12, 12, "6")
+  end },
+  { id = "moindre-carre", draw = function(c)
+    -- nuage de points et droite de régression
+    c:rect(0, 0, 24, 24, "1")
+    c:vline(2, 2, 21, "3"); c:hline(2, 21, 21, "3")
+    for _, p in ipairs({ { 5, 17 }, { 7, 18 }, { 9, 14 }, { 11, 15 }, { 13, 11 }, { 15, 12 }, { 17, 8 }, { 19, 9 }, { 20, 5 } }) do
+      c:px(p[1], p[2], "6")
+    end
+    c:line(3, 20, 21, 4, "C")
+    c:px(11, 13, "M"); c:px(15, 10, "M")
+  end },
+  { id = "dist-player", draw = function(c)
+    -- distance entre deux points : règle et flèche (géométrique : jaune)
+    c:rect(0, 0, 24, 24, "1")
+    c:disc(4, 18, 2, "Y"); c:disc(19, 5, 2, "y")
+    c:line(5, 17, 18, 6, "Y")
+    c:tri(18, 6, 14, 6, 18, 10, "Y")
+    c:rect(2, 21, 20, 2, "y"); for x = 2, 21, 3 do c:vline(x, 20, 21, "N") end
+    c:px(7, 11, "6"); c:px(8, 11, "6")
+  end },
   -- ---- terrains (nouveaux)
   { id = "volcan", draw = function(c)
     c:rect(0, 20, 24, 4, "2")

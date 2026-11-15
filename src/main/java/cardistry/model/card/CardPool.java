@@ -48,10 +48,15 @@ public class CardPool {
         cards.add(petDeMamouz());
         cards.add(new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON));
         cards.add(new SpellCard("Lancer de manette", NEUTRAL, 12.0, COMMON));
+        cards.add(new SpellCard("CAYOUUU", NEUTRAL, 12, COMMON));
+        cards.add(new SpellCard("Pain pita", GEOMETRIC, 10, COMMON));
+        cards.add(matrix());
         //UNCOMMON
         cards.add(new SpellCard("Pluie de flammes", FIRE, 15.0, UNCOMMON));
         cards.add(new SpellCard("Tsunami", WATER, 15.0, UNCOMMON));
         cards.add(new SpellCard("Tempête d'épines", NATURE, 15.0, UNCOMMON));
+        cards.add(moindreCarre());
+        cards.add(distPlayer());
 
         //RARE
         //LEGENDARY
@@ -178,6 +183,37 @@ public class CardPool {
                 "15 % de tomber en Fons (+5 % de tes PV max par tour pendant la Fons)",
                 ctx -> ctx.applyStatus(StatusTarget.PLAYER, StatusType.FONS, PETITE_TAFFE_FONS, 0,
                         new StatusExtras(PETITE_TAFFE_HEAL_PER_TURN, false)));
+    }
+
+    /** Matrix : dégâts de base, doublés si les PV de l'adversaire finissent par 0 ou 1 (avant le coup). */
+    public static final double MATRIX_DAMAGE = 10;
+
+    /** Matrix : 10 dégâts, ×2 si les PV de l'adversaire finissent par 0 ou 1 (vérifié avant le coup). */
+    public static SpellCard matrix() {
+        return new SpellCard("Matrix", ALGEBRAIC, MATRIX_DAMAGE, COMMON).withDamageRule("10 / 20",
+                ctx -> {
+                    int lastDigit = Math.floorMod(ctx.enemyHp(), 10);
+                    return lastDigit == 0 || lastDigit == 1 ? 2 * MATRIX_DAMAGE : MATRIX_DAMAGE;
+                }).withPower("×2 si les PV de l'adversaire finissent par 0 ou 1", ctx -> { });
+    }
+
+    public static final int MOINDRE_CARRE_MIN = 1;
+    public static final int MOINDRE_CARRE_MAX = 40;
+
+    /** Moindre carré : dégâts tirés entre 1 et 40 (tirage en ta faveur : deux avec CLAUDE.md, le meilleur). */
+    public static SpellCard moindreCarre() {
+        return new SpellCard("Moindre carré", ALGEBRAIC, 0, UNCOMMON).withDamageRule(
+                MOINDRE_CARRE_MIN + "-" + MOINDRE_CARRE_MAX,
+                ctx -> ctx.favorable(() -> MOINDRE_CARRE_MIN + ctx.rng().nextInt(MOINDRE_CARRE_MAX - MOINDRE_CARRE_MIN + 1),
+                        Integer::compare));
+    }
+
+    public static final double DIST_PLAYER_DAMAGE = 10;
+
+    /** dist(PLAYER) : 10 dégâts + le nombre d'étages parcourus. */
+    public static SpellCard distPlayer() {
+        return new SpellCard("dist(PLAYER)", GEOMETRIC, DIST_PLAYER_DAMAGE, UNCOMMON).withDamageRule(
+                "10 + étages", ctx -> DIST_PLAYER_DAMAGE + ctx.floorsTraveled());
     }
 
     /** Tours passés à l'EPFL avant le retour automatique au Dojo. */
