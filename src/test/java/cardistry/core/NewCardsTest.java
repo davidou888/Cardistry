@@ -127,4 +127,76 @@ class NewCardsTest {
         play();
         assertEquals(42 - 15, enemy.hp());
     }
+
+    // --- Lot 2 ---
+
+    private static Card spell(double damage) {
+        return new cardistry.model.card.SpellCard("Coup", Element.NEUTRAL, damage, Rarity.COMMON);
+    }
+
+    @Test
+    void purificationDesChakraAucunDegatPuisAttaquesX2AuProchainTour() {
+        setUp(100, CardPool.purificationDesChakra(), spell(10), spell(10));
+        play();
+        assertEquals(100, enemy.hp());
+        engine.startTurn();
+        play();
+        assertEquals(80, enemy.hp(), "hypnotisé : ×2");
+        engine.startTurn();
+        play();
+        assertEquals(70, enemy.hp(), "un tour seulement");
+        assertEquals(Element.SPIRIT, CardPool.purificationDesChakra().element());
+        assertEquals(Rarity.RARE, CardPool.purificationDesChakra().rarity());
+    }
+
+    @Test
+    void professeurDOrTrenteCinqNonMultipliesPuisHypnoseCinqTours() {
+        Stats stats = new Stats();
+        stats.add(StatModifier.percent(StatType.SPIRIT_DAMAGE, 1.0, "test"));
+        Card[] hand = {CardPool.professeurDOr(), spell(1), spell(1), spell(1), spell(1), spell(1), spell(1)};
+        setUp(1000, 1, stats, hand);
+        play();
+        assertEquals(1000 - 35, enemy.hp(), "ni l'élément, ni les stats, ni sa propre hypnose");
+        int hp = enemy.hp();
+        for (int turn = 1; turn <= 5; turn++) {
+            engine.startTurn();
+            play();
+            assertEquals(hp - 2, enemy.hp(), "tour " + turn + " : ×2");
+            hp = enemy.hp();
+        }
+        engine.startTurn();
+        play();
+        assertEquals(hp - 1, enemy.hp(), "fini après 5 tours");
+        assertEquals(Rarity.LEGENDARY, CardPool.professeurDOr().rarity());
+    }
+
+    @Test
+    void pyromaneQuinzeOuTrenteSiLAdversaireBrule() {
+        setUp(100, CardPool.pyromane());
+        play();
+        assertEquals(85, enemy.hp());
+        setUp(100, CardPool.pyromane());
+        state.statuses(cardistry.core.status.StatusTarget.ENEMY).apply(cardistry.core.status.StatusType.BURN, 3,
+                cardistry.core.status.StatusTarget.PLAYER);
+        play();
+        assertEquals(100 - 30 - 4, enemy.hp(), "30, puis 4 de Brûlure au début de son tour");
+        assertEquals(Element.FIRE, CardPool.pyromane().element());
+        assertEquals(Rarity.RARE, CardPool.pyromane().rarity());
+    }
+
+    @Test
+    void somnifereEndortLAdversaireUnTour() {
+        enemy = new Enemy("Cible", Element.NEUTRAL, 100, 10);
+        state = new GameState(new Player(100), List.of(enemy), new TerrainCard("Neutre", Element.NEUTRAL,
+                Rarity.COMMON), List.of(CardPool.somnifere()), new Stats());
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(), new LootTable(List::of));
+        engine.startTurn();
+        play();
+        assertEquals(100, state.player().hp(), "endormi");
+        assertEquals(100, enemy.hp(), "aucun dégât");
+        engine.startTurn();
+        engine.submit(new Action.DrawCard());
+        assertEquals(90, state.player().hp(), "réveillé");
+        assertEquals(Rarity.UNCOMMON, CardPool.somnifere().rarity());
+    }
 }

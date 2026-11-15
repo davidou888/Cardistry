@@ -256,6 +256,36 @@ return {
     c:rect(2, 21, 20, 2, "y"); for x = 2, 21, 3 do c:vline(x, 20, 21, "N") end
     c:px(7, 11, "6"); c:px(8, 11, "6")
   end },
+  -- ---- sorts du plan V2, lot 2
+  { id = "purification-des-chakra", draw = function(c)
+    -- silhouette en méditation, sept chakras alignés (spirituel : magenta)
+    c:rect(0, 0, 24, 24, "1")
+    c:disc(12, 5, 3, "m"); c:tri(5, 21, 19, 21, 12, 8, "m"); c:ellipse(12, 20, 9, 2, "m")
+    local colors = { "R", "o", "Y", "G", "C", "B", "M" }
+    for i, l in ipairs(colors) do c:px(12, 21 - i * 2, l) end
+    c:arc(12, 12, 10, 10, 200, 340, "p")
+  end },
+  { id = "professeur-d-or", draw = function(c)
+    -- toque de diplômé dorée et pompon (légendaire)
+    c:tri(2, 10, 12, 5, 22, 10, "Y"); c:tri(2, 10, 12, 15, 22, 10, "y")
+    c:rect(7, 12, 10, 6, "y"); c:rect(7, 17, 10, 1, "N")
+    c:line(12, 10, 20, 13, "o"); c:vline(20, 13, 19, "o"); c:disc(20, 20, 1, "Y")
+    c:px(12, 10, "6"); c:px(6, 9, "6")
+  end },
+  { id = "pyromane", draw = function(c)
+    -- allumette géante qui flambe
+    c:line(4, 21, 15, 10, "n", 2)
+    flame(c, 16, 9, 3)
+    c:px(20, 3, "o"); c:px(22, 7, "R"); c:px(19, 1, "Y")
+  end },
+  { id = "somnifere", draw = function(c)
+    -- gélule et Zz (spirituel)
+    c:rect(0, 0, 24, 24, "1")
+    c:disc(7, 15, 4, "M"); c:disc(15, 15, 4, "6"); c:rect(7, 11, 8, 9, "M"); c:rect(11, 11, 4, 9, "6")
+    c:vline(11, 11, 19, "m")
+    c:hline(15, 19, 3, "C"); c:line(19, 3, 15, 7, "C"); c:hline(15, 19, 7, "C")
+    c:hline(20, 22, 9, "C"); c:line(22, 9, 20, 11, "C"); c:hline(20, 22, 11, "C")
+  end },
   -- ---- terrains (nouveaux)
   { id = "volcan", draw = function(c)
     c:rect(0, 20, 24, 4, "2")

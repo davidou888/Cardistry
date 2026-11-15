@@ -57,10 +57,14 @@ public class CardPool {
         cards.add(new SpellCard("Tempête d'épines", NATURE, 15.0, UNCOMMON));
         cards.add(moindreCarre());
         cards.add(distPlayer());
+        cards.add(somnifere());
 
         //RARE
+        cards.add(purificationDesChakra());
+        cards.add(pyromane());
         //LEGENDARY
         cards.add(new SpellCard("Big Lez Shotgun", NEUTRAL, 80, LEGENDARY));
+        cards.add(professeurDOr());
 
 
         
@@ -214,6 +218,39 @@ public class CardPool {
     public static SpellCard distPlayer() {
         return new SpellCard("dist(PLAYER)", GEOMETRIC, DIST_PLAYER_DAMAGE, UNCOMMON).withDamageRule(
                 "10 + étages", ctx -> DIST_PLAYER_DAMAGE + ctx.floorsTraveled());
+    }
+
+    /** Purification des Chakra : aucun dégât, l'adversaire est hypnotisé pour ton prochain tour. */
+    public static SpellCard purificationDesChakra() {
+        return new SpellCard("Purification des Chakra", SPIRIT, 0, RARE).withPower(
+                "hypnotise l'adversaire (tes attaques ×2 à ton prochain tour)",
+                ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.HYPNOTIZED, 1, 1));
+    }
+
+    public static final double PROFESSEUR_D_OR_DAMAGE = 35;
+    public static final int PROFESSEUR_D_OR_HYPNOSIS = 5;
+
+    /** Professeur d'or : 35 dégâts non multipliés, puis l'adversaire est hypnotisé 5 tours. */
+    public static SpellCard professeurDOr() {
+        return new SpellCard("Professeur d'or", SPIRIT, PROFESSEUR_D_OR_DAMAGE, LEGENDARY).unmultiplied().withPower(
+                "hypnotise l'adversaire pendant " + PROFESSEUR_D_OR_HYPNOSIS + " tours",
+                ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.HYPNOTIZED, 1, PROFESSEUR_D_OR_HYPNOSIS));
+    }
+
+    public static final double PYROMANE_DAMAGE = 15;
+
+    /** Pyromane : 15 dégâts feu, ×2 si l'adversaire brûle. */
+    public static SpellCard pyromane() {
+        return new SpellCard("Pyromane", FIRE, PYROMANE_DAMAGE, RARE).withDamageRule("15 / 30",
+                ctx -> ctx.state().statuses(StatusTarget.ENEMY).has(StatusType.BURN)
+                        ? 2 * PYROMANE_DAMAGE : PYROMANE_DAMAGE)
+                .withPower("×2 si l'adversaire brûle", ctx -> { });
+    }
+
+    /** Somnifère : aucun dégât, l'adversaire s'endort (Fons 1 tour). */
+    public static SpellCard somnifere() {
+        return new SpellCard("Somnifère", SPIRIT, 0, UNCOMMON).withPower("endort l'adversaire (Fons 1 tour)",
+                ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.FONS, 1, 1));
     }
 
     /** Tours passés à l'EPFL avant le retour automatique au Dojo. */
