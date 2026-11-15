@@ -67,6 +67,9 @@ public final class CombatEngine {
         this.bus = bus;
         this.loot = loot;
         bus.subscribe(this::dispatchToTrinkets);
+        if (!state.isOpenEnded()) {
+            applyTerrainBonuses(); // adversaires fixés : le premier combat est déjà en cours
+        }
     }
 
     public GameState state() {
@@ -257,7 +260,14 @@ public final class CombatEngine {
                 yield true;
             }
             case Action.PlayCard play -> {
+                boolean departure = state.hand().get(play.slot()) instanceof TerrainCard
+                        && state.terrain().effect() == TerrainCard.Effect.FREE_DEPARTURE;
+                String from = state.terrain().name();
                 playCard(play.slot());
+                if (departure) {
+                    freeDeparture(from);
+                    yield false;
+                }
                 yield true;
             }
             case Action.UseItem use -> {
@@ -335,6 +345,7 @@ public final class CombatEngine {
 
     /** Nouvelle main, compteur de tours du combat remis à zéro. */
     private void beginCombat() {
+        applyTerrainBonuses();
         state.resetCombatTurn();
         state.setUndoUsedThisCombat(false);
         state.clearHand();
@@ -380,6 +391,7 @@ public final class CombatEngine {
             bus.publish(new GameEvent.CurseEnded(curse));
         }
         state.playerStats().removeBySource(COMBAT_BONUS_SOURCE);
+        state.playerStats().removeBySource(TERRAIN_SOURCE);
         for (StatusTarget target : StatusTarget.values()) {
             for (Status status : state.statuses(target).clear()) {
                 bus.publish(new GameEvent.StatusEnded(target, status.type()));
@@ -509,10 +521,34 @@ public final class CombatEngine {
         }
     }
 
-    /** Un nouveau terrain eau éteint toutes les Brûlures. */
+    /** Source des bonus du terrain en jeu (retirés quand il change, puis en fin de combat). */
+    static final String TERRAIN_SOURCE = "terrain";
+
+    /** Bonus de stats du terrain en jeu : on retire ceux de l'ancien, puis on pose ceux du nouveau. */
+    private void applyTerrainBonuses() {
+        state.playerStats().removeBySource(TERRAIN_SOURCE);
+        for (cardistry.core.stats.StatModifier bonus : state.terrain().bonuses()) {
+            state.playerStats().add(new cardistry.core.stats.StatModifier(bonus.stat(), bonus.kind(), bonus.value(),
+                    TERRAIN_SOURCE));
+        }
+    }
+
+    /** Gare : quitter la Gare par une carte terrain ne coûte pas le tour et donne +1 clope. */
+    private void freeDeparture(String from) {
+        String message = "Départ de " + from + " : changement gratuit";
+        if (state.cigarettes() < state.cigaretteMax()) {
+            state.setCigarettes(state.cigarettes() + 1);
+            bus.publish(new GameEvent.CigarettesChanged(state.cigarettes(), state.cigaretteMax()));
+            message += ", +1 clope";
+        }
+        bus.publish(new GameEvent.AbilityTriggered(message));
+    }
+
+    /** Change de terrain (ses bonus suivent) ; un nouveau terrain eau éteint toutes les Brûlures. */
     private void changeTerrain(TerrainCard terrain) {
         TerrainCard previous = state.terrain();
         state.setTerrain(terrain);
+        applyTerrainBonuses();
         bus.publish(new GameEvent.TerrainChanged(previous, terrain));
         if (terrain.element() == Element.WATER) {
             for (StatusTarget owner : StatusTarget.values()) {

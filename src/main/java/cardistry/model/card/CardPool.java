@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cardistry.core.Rng;
+import cardistry.core.stats.StatType;
+import static cardistry.core.stats.StatModifier.percent;
 import static cardistry.items.Rarity.COMMON;
 import static cardistry.items.Rarity.LEGENDARY;
 import static cardistry.items.Rarity.RARE;
@@ -59,19 +61,24 @@ public class CardPool {
         cards.add(new TerrainCard("Marécage", WATER, COMMON));
         cards.add(new TerrainCard("Forêt", NATURE, COMMON));
         cards.add(new TerrainCard("Volcan", FIRE, COMMON));
-        cards.add(new TerrainCard("Dojo", NEUTRAL, COMMON));
-        cards.add(new TerrainCard("Migros", NEUTRAL, COMMON));
-        cards.add(new TerrainCard("Gare", NEUTRAL, COMMON));
+        cards.add(dojo());
+        cards.add(new TerrainCard("Migros", NEUTRAL, COMMON).withBonuses(
+                "si le combat se termine ici : +25 % de Choomies", percent(StatType.CHOOMIES_GAIN, 0.25, "")));
+        cards.add(new TerrainCard("Gare", NEUTRAL, COMMON).withEffect(TerrainCard.Effect.FREE_DEPARTURE,
+                "jouer un terrain depuis la Gare ne coûte pas le tour et donne +1 clope"));
 
         //UNCOMMON
-        cards.add(new TerrainCard("Amazonie", NATURE,UNCOMMON));
+        cards.add(new TerrainCard("Amazonie", NATURE, UNCOMMON).withBonuses("attaques plante +20 %",
+                percent(StatType.NATURE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, UNCOMMON));
         cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, UNCOMMON));
         cards.add(new TerrainCard("Fractale", GEOMETRIC, UNCOMMON));
 
         //RARE
-        cards.add(new TerrainCard("Enfer", FIRE, RARE));
-        cards.add(new TerrainCard("Atlantis", WATER, RARE));
+        cards.add(new TerrainCard("Enfer", FIRE, RARE).withBonuses("attaques feu +20 %",
+                percent(StatType.FIRE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
+        cards.add(new TerrainCard("Atlantis", WATER, RARE).withBonuses("attaques eau +20 %",
+                percent(StatType.WATER_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         //LEGENDARY
         cards.add(new TerrainCard("EPFL", FIRE, LEGENDARY));
         
@@ -121,7 +128,18 @@ public class CardPool {
 
     /** Terrain sur lequel commence la partie. */
     public static TerrainCard startingTerrain() {
-        return new TerrainCard("Dojo", NEUTRAL, COMMON);    
+        return dojo();
+    }
+
+    /** Bonus de dégâts du Dojo (tous éléments). */
+    public static final double DOJO_DAMAGE_BONUS = 0.10;
+    /** Bonus d'Amazonie, Enfer, Atlantis à leur élément. */
+    public static final double ELEMENT_TERRAIN_BONUS = 0.20;
+
+    /** Dojo : terrain de départ, +10 % de dégâts. */
+    public static TerrainCard dojo() {
+        return new TerrainCard("Dojo", NEUTRAL, COMMON).withBonuses("+10 % de dégâts",
+                StatType.allDamageMultipliers().stream().map(stat -> percent(stat, DOJO_DAMAGE_BONUS, "")).toList());
     }
 
     /** Tire une carte au hasard et en renvoie une copie. */

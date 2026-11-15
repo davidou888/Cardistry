@@ -410,7 +410,7 @@ final class CombatScreen {
                 double now = state.enemyAttackMultiplier();
                 double after = ElementRules.terrainAttackMultiplier(t.element(), enemy.element());
                 yield head + "terrain " + t.element().displayName() + " : attaque de " + enemy.name()
-                        + " ×" + num(now) + " → ×" + num(after);
+                        + " ×" + num(now) + " → ×" + num(after) + t.effectText().map(e -> " · " + e).orElse("");
             }
         };
     }
