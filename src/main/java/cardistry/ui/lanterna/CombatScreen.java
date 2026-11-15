@@ -35,7 +35,7 @@ import java.util.List;
  */
 final class CombatScreen {
 
-    static final String HELP = "←/→ Entrée · 1-7 · P piocher · W/E/R objets · I inventaire · Q quitter";
+    static final String HELP = "←/→ Entrée · 1-7 · P piocher · W/E/R objets · I · D deck · Q quitter";
     /** Aide avec le trinket Ctrl+Z équipé. */
     static final String HELP_UNDO = "←/→ 1-7 · P pioche · W/E/R objets · I inv. · Ctrl+Z annuler · Q quitter";
     private static final int SPRITE_WIDTH = 30;

@@ -54,4 +54,66 @@ public final class CardText {
         return card.name() + " · " + kind(card) + rarity + (value.isEmpty() ? "" : " : " + value)
                 + (extra.isEmpty() ? "" : " · " + extra);
     }
+
+    /** Une carte du deck et son nombre d'exemplaires. */
+    public record DeckEntry(Card card, int count) {
+    }
+
+    /** Un groupe du deck : « Sorts (6) » et ses cartes. */
+    public record DeckGroup(String title, java.util.List<DeckEntry> entries) {
+    }
+
+    /**
+     * Le deck regroupé par type (sorts, soins, terrains, cartes mortes), puis par rareté et par nom ;
+     * les exemplaires d'une même carte sont réunis (×N).
+     */
+    public static java.util.List<DeckGroup> deckGroups(java.util.List<Card> deck) {
+        java.util.List<DeckGroup> groups = new java.util.ArrayList<>();
+        String[] titles = {"Sorts", "Soins", "Terrains", "Cartes mortes"};
+        for (int type = 0; type < titles.length; type++) {
+            java.util.Map<String, DeckEntry> byName = new java.util.LinkedHashMap<>();
+            int total = 0;
+            for (Card card : deck) {
+                if (typeOrder(card) == type) {
+                    byName.merge(card.name(), new DeckEntry(card, 1), (a, b) -> new DeckEntry(a.card(), a.count() + 1));
+                    total++;
+                }
+            }
+            if (byName.isEmpty()) {
+                continue;
+            }
+            java.util.List<DeckEntry> entries = new java.util.ArrayList<>(byName.values());
+            entries.sort(java.util.Comparator.comparing((DeckEntry e) -> e.card().rarity() == null ? 0
+                    : e.card().rarity().ordinal()).thenComparing(e -> e.card().name()));
+            groups.add(new DeckGroup(titles[type] + " (" + total + ")", entries));
+        }
+        return groups;
+    }
+
+    private static int typeOrder(Card card) {
+        return switch (card) {
+            case SpellCard s -> 0;
+            case HealCard h -> 1;
+            case TerrainCard t -> 2;
+            case DeadCard d -> 3;
+        };
+    }
+
+    /** « ×2 Boule de feu · sort feu · Commun : 10 dégâts · ★ … » (sans « ×1 »). */
+    public static String deckLine(DeckEntry entry) {
+        return (entry.count() > 1 ? "×" + entry.count() + " " : "") + summary(entry.card());
+    }
+
+    /** Le deck en lignes de texte (mode texte). */
+    public static java.util.List<String> deckLines(java.util.List<Card> deck) {
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        lines.add("Ton deck : " + deck.size() + " cartes");
+        for (DeckGroup group : deckGroups(deck)) {
+            lines.add(group.title() + " :");
+            for (DeckEntry entry : group.entries()) {
+                lines.add("  " + deckLine(entry));
+            }
+        }
+        return lines;
+    }
 }

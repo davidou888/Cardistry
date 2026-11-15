@@ -44,8 +44,8 @@ import java.util.List;
  */
 final class CombatWindowScreen {
 
-    static final String HELP = "←/→ · 1-7 jouer · P pioche · W/E/R objets · F/G clopes · J journal · I · Q";
-    static final String HELP_UNDO = "←/→ 1-7 · P pioche · W/E/R objets · F/G clopes · J journal · Ctrl+Z · Q";
+    static final String HELP = "←/→ 1-7 · P pioche · W/E/R · F/G clopes · J journal · I · D deck · Q";
+    static final String HELP_UNDO = "←/→ 1-7 · P pioche · W/E/R · F/G clopes · J journal · D deck · Ctrl+Z · Q";
     static final String PLAYER_IMAGE = "player/player.png";
     /** Largeur d'un emplacement d'icône (objet, trinket, paquet), sur 2 lignes. */
     static final int SLOT_COLS = 4;

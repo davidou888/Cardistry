@@ -33,7 +33,11 @@ import java.util.List;
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS, HERO }
+        PAUSE, OPTIONS, HERO, DECK }
+
+    /** Pages où D n'ouvre pas le deck (pas encore de partie, menus, visionneuse). */
+    private static final java.util.Set<Page> NO_DECK_PAGES = java.util.EnumSet.of(Page.TITLE, Page.HERO, Page.RULES,
+            Page.SPRITES, Page.PAUSE, Page.OPTIONS, Page.DECK);
 
     private static final int FRAME_MS = 45;
     private static final int POLL_MS = 15;
@@ -1093,6 +1097,41 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         return choice;
     }
 
+    private int deckScroll = 0;
+    private boolean deckPiles = false;
+
+    /** D ouvre le deck pendant une partie (pas au titre, dans les menus, ni pendant la confirmation de quitter). */
+    private boolean opensDeck(KeyStroke key) {
+        return key.getKeyType() == KeyType.Character && Character.toLowerCase(key.getCharacter()) == 'd'
+                && !key.isCtrlDown() && !key.isAltDown() && state != null && state.usesDeck()
+                && !NO_DECK_PAGES.contains(page) && !view.confirmingQuit;
+    }
+
+    /** Écran du deck jusqu'à D, Échap ou Entrée ; ↑/↓ font défiler. */
+    private void showDeck() {
+        Page previous = page;
+        page = Page.DECK;
+        deckScroll = 0;
+        deckPiles = previous == Page.COMBAT || previous == Page.CARD_CHOICE;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            boolean close = key.getKeyType() == KeyType.Escape || key.getKeyType() == KeyType.Enter
+                    || key.getKeyType() == KeyType.Character && Character.toLowerCase(key.getCharacter()) == 'd';
+            if (close) {
+                break;
+            }
+            if (key.getKeyType() == KeyType.ArrowDown || key.getKeyType() == KeyType.ArrowUp) {
+                int max = DeckScreen.maxScroll(new Painter(screen.newTextGraphics(), screen.getTerminalSize(), ascii,
+                        images), state);
+                deckScroll = Math.max(0, Math.min(max, deckScroll + (key.getKeyType() == KeyType.ArrowDown ? 1 : -1)));
+            }
+            render();
+        }
+        page = previous;
+        render();
+    }
+
     private void showInventory() {
         Page previous = page;
         page = Page.INVENTORY;
@@ -1508,6 +1547,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
+                    case DECK -> DeckScreen.draw(painter, state, deckScroll, deckPiles, seed);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
                                     : spriteFrame, spriteFlash, spriteHidden);
@@ -1542,6 +1582,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         throw new QuitGameException();
                     }
                     keySound(key);
+                    if (opensDeck(key)) {
+                        showDeck(); // n'importe où : le deck, puis retour à l'écran en cours
+                        continue;
+                    }
                     return key;
                 }
                 if (screen.doResizeIfNecessary() != null) {

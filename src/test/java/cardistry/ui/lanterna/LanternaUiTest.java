@@ -923,6 +923,96 @@ class LanternaUiTest {
     }
 
     @Test
+    void toucheDOuvreLeDeckEnCombat() throws Exception {
+        open(80, 24);
+        GameState state = deckState();
+        ui.showStatus(state);
+        Action[] result = new Action[1];
+        Thread player = new Thread(() -> result[0] = ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("d");
+        waitFor(() -> screen().contains(DeckScreen.HELP));
+        String text = dump("64-deck");
+        type("d"); // ferme le deck
+        type("p"); // puis pioche : on était bien revenu au combat
+        player.join(TIMEOUT.toMillis());
+        assertTrue(result[0] instanceof Action.DrawCard);
+        assertTrue(text.contains("Ton deck"), text);
+        assertTrue(text.contains("12 cartes · Pioche 7 · Défausse 0"), text);
+        assertTrue(text.contains("Sorts (6)"), text);
+        assertTrue(text.contains("×3 Potion · soin plante · Commun : +10 PV"), text);
+        assertTrue(text.contains("Boule de feu · sort feu · Commun : 10 dégâts · ★ 10 % d'infliger Brûlure"), text);
+    }
+
+    @Test
+    void toucheDOuvreLeDeckSurLaCarte() throws Exception {
+        open(80, 24);
+        cardistry.run.map.MapView view = mapView();
+        int[] chosen = new int[1];
+        Thread player = new Thread(() -> chosen[0] = ui.chooseNode(view));
+        player.setDaemon(true);
+        player.start();
+        type("D");
+        waitFor(() -> screen().contains(DeckScreen.HELP));
+        String text = screen();
+        press(KeyType.Escape);
+        press(KeyType.Enter); // va au premier nœud : retour à la carte
+        player.join(TIMEOUT.toMillis());
+        assertEquals(0, chosen[0]);
+        assertTrue(text.contains("Sorts (6)") && !text.contains("Pioche"), text);
+    }
+
+    @Test
+    void unGrosDeckDefileAvecLesFleches() throws Exception {
+        open(80, 24);
+        GameState state = GameState.newGame();
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(state, new cardistry.model.card.CardPool(),
+                new cardistry.core.Rng(1), new EventBus());
+        engine.start();
+        new cardistry.model.card.CardPool().cards().forEach(c -> engine.addCardToDeck(c.copy()));
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CAME, 1), false);
+        ui.showStatus(state);
+        Thread player = new Thread(() -> ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("d");
+        waitFor(() -> screen().contains(DeckScreen.HELP) && screen().contains("▼") && screen().contains("Sorts ("));
+        assertFalse(screen().contains("▲"), screen());
+        for (int i = 0; i < 60; i++) {
+            press(KeyType.ArrowDown);
+        }
+        waitFor(() -> screen().contains("EPFL · terrain feu") && screen().contains("▲"));
+        String bottom = dump("65-deck-defile");
+        assertFalse(bottom.contains("▼"), bottom);
+        type("d");
+        type("p");
+        player.join(TIMEOUT.toMillis());
+        assertTrue(bottom.contains("Terrains"), bottom);
+    }
+
+    @Test
+    void deckDansLaFenetreAvecMiniatures() throws Exception {
+        openWithImages(100, 32);
+        GameState state = deckState();
+        ui.showStatus(state);
+        Thread player = new Thread(() -> ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("d");
+        waitFor(() -> screen().contains(DeckScreen.HELP) && screen().contains("Volcan"));
+        Thread.sleep(100);
+        cardistry.ui.window.ImageLayer.Frame frame = layer.frame();
+        java.awt.image.BufferedImage png = new cardistry.ui.window.GridRenderer(new cardistry.ui.window.CellFonts(2))
+                .render(terminal, frame.images(), frame.marks(), false);
+        javax.imageio.ImageIO.write(png, "png", Path.of("build", "screens", "66-fenetre-deck.png").toFile());
+        assertTrue(frame.images().stream().anyMatch(i -> i.path().equals("cards/boule-de-feu.png")));
+        type("d");
+        type("p");
+        player.join(TIMEOUT.toMillis());
+    }
+
+    @Test
     void piocheEtDefausseAffichees() throws IOException {
         open(80, 24);
         ui.showStatus(deckState());

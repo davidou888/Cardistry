@@ -105,8 +105,9 @@ public final class ConsoleInput implements Input {
     @Override
     public Action nextAction(GameState state) {
         while (true) {
+            current = state;
             console.print("Que veux-tu jouer ? ");
-            String line = console.readLine().trim();
+            String line = read("Que veux-tu jouer ? ");
             if (line.equalsIgnoreCase(UNDO) && state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
                 return new Action.Undo();
             }
@@ -132,6 +133,7 @@ public final class ConsoleInput implements Input {
     /** 1..n = prendre, 0 = refuser ; si l'inventaire est plein, demande quoi remplacer. */
     @Override
     public RewardChoice chooseReward(GameState state, List<Collectible> options) {
+        current = state;
         while (true) {
             int choice = readNumber("Ton choix (0 pour refuser) ? ", 0, options.size());
             if (choice == 0) {
@@ -157,6 +159,7 @@ public final class ConsoleInput implements Input {
     /** 1..n : nœud de la carte (la liste est affichée par le rendu de la carte). */
     @Override
     public int chooseNode(cardistry.run.map.MapView view) {
+        current = view.state();
         if (view.choices().size() == 1) {
             console.println("(Appuie sur Entrée pour y aller)");
             console.readLine();
@@ -168,11 +171,13 @@ public final class ConsoleInput implements Input {
     /** 1..n = ajouter la carte, 0 = passer (la liste est affichée par le rendu). */
     @Override
     public int chooseCardReward(GameState state, List<cardistry.model.card.Card> options) {
+        current = state;
         return readNumber("Carte à ajouter (0 pour passer) ? ", 0, options.size()) - 1;
     }
 
     @Override
     public int chooseCardToRemove(GameState state) {
+        current = state;
         console.println("Ton deck :");
         for (int i = 0; i < state.deck().size(); i++) {
             console.println("[" + (i + 1) + "] " + TextRenderer.describe(state.deck().get(i)));
@@ -187,9 +192,10 @@ public final class ConsoleInput implements Input {
     @Override
     public cardistry.core.shop.ShopAction chooseShopAction(GameState state, cardistry.core.Shop shop, int removalPrice) {
         while (true) {
+            current = state;
             printShop(state, shop, removalPrice);
             console.print("Ton choix ? ");
-            String line = console.readLine().trim().toLowerCase(java.util.Locale.ROOT);
+            String line = read("Ton choix ? ").toLowerCase(java.util.Locale.ROOT);
             if (line.equals("0")) {
                 return new cardistry.core.shop.ShopAction.Leave();
             }
@@ -266,6 +272,7 @@ public final class ConsoleInput implements Input {
     /** Événement : le texte, les choix numérotés (indisponibles marqués), puis le numéro choisi. */
     @Override
     public int chooseStory(GameState state, cardistry.story.Story story) {
+        current = state;
         console.println();
         console.println(Ansi.yellow("? " + story.title() + " ?"));
         console.println(story.text());
@@ -286,6 +293,7 @@ public final class ConsoleInput implements Input {
 
     @Override
     public cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
+        current = state;
         console.println();
         console.println(Ansi.yellow("Sieste") + " : une pause avant le boss. Choisis :");
         for (int i = 0; i < options.size(); i++) {
@@ -298,6 +306,7 @@ public final class ConsoleInput implements Input {
 
     @Override
     public int chooseDrawnCard(GameState state, List<cardistry.model.card.Card> options) {
+        current = state;
         console.println();
         console.println("Pioche : choisis la carte à garder (les autres sont défaussées).");
         if (!metaPhraseShown) {
@@ -312,6 +321,7 @@ public final class ConsoleInput implements Input {
 
     @Override
     public int chooseTrinketToDiscard(GameState state) {
+        current = state;
         console.println("Tu as " + state.trinkets().size() + " trinkets pour " + state.trinketSlots()
                 + " emplacements : choisis-en un à jeter.");
         for (int i = 0; i < state.trinkets().size(); i++) {
@@ -321,11 +331,32 @@ public final class ConsoleInput implements Input {
         return readNumber("Trinket à jeter ? ", 1, state.trinkets().size()) - 1;
     }
 
+    /** Dernier état reçu : la commande « d » affiche son deck, à n'importe quelle saisie. */
+    private GameState current;
+
+    /** Ligne saisie ; « d » affiche le deck (pendant une partie) puis redemande. */
+    private String read(String prompt) {
+        while (true) {
+            String line = console.readLine().trim();
+            if (line.equalsIgnoreCase(DECK_COMMAND) && current != null && current.usesDeck()) {
+                for (String deckLine : cardistry.ui.CardText.deckLines(current.deck())) {
+                    console.println(deckLine);
+                }
+                console.print(prompt);
+                continue;
+            }
+            return line;
+        }
+    }
+
+    /** Commande du mode texte qui affiche le deck. */
+    static final String DECK_COMMAND = "d";
+
     private int readNumber(String prompt, int min, int max) {
         while (true) {
             console.print(prompt);
             try {
-                int value = Integer.parseInt(console.readLine().trim());
+                int value = Integer.parseInt(read(prompt));
                 if (value >= min && value <= max) {
                     return value;
                 }
