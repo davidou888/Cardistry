@@ -17,6 +17,20 @@ public final class CardText {
     private CardText() {
     }
 
+    /** Lettre de rareté affichée sur la carte : C, P, R, L, S ; vide sans rareté (carte morte). */
+    public static String rarityLetter(Card card) {
+        if (card.rarity() == null) {
+            return "";
+        }
+        return switch (card.rarity()) {
+            case COMMON -> "C";
+            case UNCOMMON -> "P";
+            case RARE -> "R";
+            case LEGENDARY -> "L";
+            case SECRET -> "S";
+        };
+    }
+
     /** « sort feu », « soin plante », « terrain eau », « injouable ». */
     public static String kind(Card card) {
         return switch (card) {

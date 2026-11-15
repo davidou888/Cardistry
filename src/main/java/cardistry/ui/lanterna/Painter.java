@@ -233,4 +233,18 @@ final class Painter {
         }
         return shown;
     }
+
+    /**
+     * Coin haut droit d'une carte : lettre de rareté à la couleur de la rareté, et ★ juste à sa gauche
+     * si la carte a un pouvoir.
+     */
+    void cardCorner(int col, int row, int width, cardistry.model.card.Card card) {
+        String letter = cardistry.ui.CardText.rarityLetter(card);
+        if (!letter.isEmpty()) {
+            text(col + width - 2, row, letter, Palette.rarity(card.rarity()), true);
+        }
+        if (card.power().isPresent()) {
+            text(col + width - (letter.isEmpty() ? 2 : 3), row, "★", Palette.ACCENT, true);
+        }
+    }
 }

@@ -134,4 +134,20 @@ class LongTextTest {
                     "69-fenetre-recompense-longue-" + size[0] + "x" + size[1] + ".png").toFile());
         }
     }
+
+    @Test
+    void chaqueCarteAfficheSaRareteEnCoin() {
+        assertEquals("C", cardistry.ui.CardText.rarityLetter(CardPool.bouleDeFeu()));
+        assertEquals("P", cardistry.ui.CardText.rarityLetter(CardPool.moindreCarre()));
+        assertEquals("R", cardistry.ui.CardText.rarityLetter(CardPool.pyromane()));
+        assertEquals("L", cardistry.ui.CardText.rarityLetter(CardPool.professeurDOr()));
+        assertEquals("", cardistry.ui.CardText.rarityLetter(new cardistry.model.card.DeadCard()));
+        GameState state = new GameState(new Player(100), List.of(new Enemy("Mannequin", Element.NATURE, 50, 5)),
+                CardPool.dojo(), List.of(CardPool.bouleDeFeu(), CardPool.pyromane(), CardPool.professeurDOr(),
+                        new cardistry.model.card.SpellCard("Nu", Element.FIRE, 10, cardistry.items.Rarity.UNCOMMON)),
+                new Stats());
+        String screen = render(80, 24, p -> CombatScreen.draw(p, state, new ViewState(), 1));
+        assertTrue(screen.contains("★C╗") || screen.contains("★C┐"), screen);
+        assertTrue(screen.contains("★R┐") && screen.contains("★L┐") && screen.contains("─P┐"), screen);
+    }
 }

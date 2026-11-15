@@ -153,14 +153,13 @@ comme un trinket qu'on ne peut ni perdre ni remplacer. Code : `hero.HeroRegistry
 
 | Personnage | PV | Capacité | Effet |
 |---|---|---|---|
-| **Louis** | 100 | MAN | Le premier sort de chaque combat inflige +50 % de dégâts (×1.5). Le malus de Gueule de bois est doublé : −2 taille de main par point d'intensité. |
+| **Louis** | 100 | MAN | +50 % de dégâts, tout le temps (tous éléments, additionné aux autres pourcentages, comme CMS). Aucun malus. |
 | **Dave** | 100 | Full skill Mr. Le Juge | Un sort du même élément que le terrain **et** qui bat l'élément de l'adversaire (ex. Boule de feu à l'EPFL contre un adversaire plante) soigne des PV enlevés à l'adversaire. |
+| **Frederic BLC** | 100 | Aucune | Aucune compétence, rien de spécial. |
 | **Sassy** | 130 | wadayatalkinabit | À chaque début de tour, son alien inflige 4 dégâts bruts à l'adversaire, en plus de l'action du joueur. 10 % de chance que l'alien rate son tour et fume un joint à la place (aucun effet, pour le lore). |
 
 Choix d'implémentation :
-- Louis : MAN est un effet « prochain sort ×1.5 » posé au début de chaque combat. Il se consomme au premier
-  sort joué, même esquivé ; avec un Shot de Jäger, un seul bonus par sort (MAN d'abord). Une clope retire
-  toujours 1 d'intensité, donc annule −2 d'un coup.
+- Louis : MAN = +50 % sur les stats de dégâts de tous les éléments (bonus permanent du personnage).
 - Dave : le soin vaut les PV **réellement** enlevés (pas les dégâts en trop sur un adversaire achevé) ; rien
   si le sort est esquivé. *Provisoire : c'est un soin comme les autres (efficacité des soins, Ross, plafond
   des PV max).*
@@ -182,7 +181,7 @@ Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
-La couleur de rareté est la même partout : texte en terminal ; dans la fenêtre, cadre de l'icône en combat, dans les récompenses et au shop. La couleur d'élément (voir « Boucle de jeu ») est réservée aux cadres de cartes. Les cartes ont aussi une rareté.
+La couleur de rareté est la même partout : texte en terminal ; dans la fenêtre, cadre de l'icône en combat, dans les récompenses et au shop. La couleur d'élément (voir « Boucle de jeu ») est réservée aux cadres de cartes. Les cartes ont aussi une rareté : une lettre à sa couleur dans le coin haut droit de la carte (**C** Commun, **P** Peu commun, **R** Rare, **L** Légendaire, **S** Secret), ★ à côté si la carte a un pouvoir.
 
 | Rareté | Couleur | Poids drop (indicatif) | Prix shop (indicatif) |
 |---|---|---|---|

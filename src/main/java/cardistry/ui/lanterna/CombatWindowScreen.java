@@ -371,9 +371,7 @@ final class CombatWindowScreen {
             p.text(col + 1, r, " ".repeat(width - 2), Palette.TEXT, false, back);
         }
         p.text(col + 1, row, String.valueOf(number), selected ? Palette.ACCENT : Palette.TEXT, true);
-        if (card.power().isPresent()) {
-            p.text(col + width - 2, row, "★", Palette.ACCENT, true); // pouvoir : détail sous la main
-        }
+        p.cardCorner(col, row, width, card); // rareté, et ★ si pouvoir
 
         int artRows = height >= 8 ? 3 : 2;
         int artCols = artRows * 2;

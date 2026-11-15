@@ -345,9 +345,7 @@ final class CombatScreen {
         }
         String element = card.element() == null ? "null" : card.element().displayName();
         p.text(col + 1, row + 3, Painter.fit(element, inner), Palette.element(card.element()));
-        if (card.power().isPresent()) {
-            p.text(col + width - 2, row, "★", Palette.ACCENT, true);
-        }
+        p.cardCorner(col, row, width, card); // rareté, et ★ si pouvoir
         String value = switch (card) {
             case SpellCard s -> s.damageLabel().orElse(num(s.damage())) + " dgt";
             case HealCard h -> h.amount() > 0 ? "+" + num(h.amount()) + " PV" : "soin";
