@@ -33,6 +33,7 @@ public final class CardText {
             case SpellCard s when s.damage() <= 0 && !s.hasDamageRule() -> "aucun dégât";
             case SpellCard s -> s.damageLabel().orElse(num(s.damage())) + " dégâts"
                     + (s.isUnmultiplied() ? " (non multipliés)" : "");
+            case HealCard h when h.amount() <= 0 -> "";
             case HealCard h -> "+" + num(h.amount()) + " PV";
             case TerrainCard t -> "";
             case DeadCard d -> "jusqu'à la fin du combat";

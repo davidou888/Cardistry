@@ -112,6 +112,10 @@ public class CardPool {
         cards.add(new HealCard("Verre d'eau", WATER, 10, COMMON));
         cards.add(new HealCard("Sparadrap", NEUTRAL, 12, COMMON));
         cards.add(soupeDeMamie());
+        cards.add(stinginRoger());
+        cards.add(new HealCard("Seau d'eau", WATER, 20, UNCOMMON));
+        cards.add(berceuseInconnue());
+        cards.add(taffeDeFoufouBatard());
         //UNCOMMON
         cards.add(new HealCard("Grande potion", NATURE, 20.0, UNCOMMON));
         //RARE
@@ -282,6 +286,38 @@ public class CardPool {
     public static HealCard soupeDeMamie() {
         return new HealCard("Soupe de mamie", NEUTRAL, 10, COMMON).withPower("retire l'Intox",
                 ctx -> ctx.removeStatus(StatusTarget.PLAYER, StatusType.INTOX));
+    }
+
+    public static final double STINGIN_ROGER_COST = 5;
+    public static final double STINGIN_ROGER_BONUS = 0.10;
+
+    /** Stingin' Roger : −5 PV, +10 % de dégâts pour tout le combat (cumulable). */
+    public static HealCard stinginRoger() {
+        return new HealCard("Stingin' Roger", FIRE, 0, COMMON).withPower(
+                "−5 PV, +10 % de dégâts pour tout le combat (cumulable)", ctx -> {
+                    ctx.damagePlayer(STINGIN_ROGER_COST);
+                    ctx.addCombatDamageBonus(STINGIN_ROGER_BONUS);
+                });
+    }
+
+    /** Berceuse inconnue : retire tous tes statuts négatifs (pas la Gueule de bois ni l'Ivresse). */
+    public static HealCard berceuseInconnue() {
+        return new HealCard("Berceuse inconnue", SPIRIT, 0, UNCOMMON).withPower(
+                "retire tous tes statuts négatifs (Intox, Fons, Bondage, Brûlure)", ctx -> ctx.purgeNegativeStatuses());
+    }
+
+    public static final int TAFFE_FOUFOU_TURNS = 3;
+    public static final double TAFFE_FOUFOU_HEAL_PER_TURN = 0.08;
+
+    /**
+     * Taffe de foufou bâtard : Fons 3 tours ; pendant cette Fons, immunisé aux coups adverses et +8 %
+     * des PV max par tour (les statuts infligés par les adversaires passent toujours).
+     */
+    public static HealCard taffeDeFoufouBatard() {
+        return new HealCard("Taffe de foufou bâtard", FIRE, 0, RARE).withPower(
+                "Fons " + TAFFE_FOUFOU_TURNS + " tours : immunisé aux coups, +8 % de tes PV max par tour",
+                ctx -> ctx.applyStatus(StatusTarget.PLAYER, StatusType.FONS, 1, TAFFE_FOUFOU_TURNS,
+                        new StatusExtras(TAFFE_FOUFOU_HEAL_PER_TURN, true)));
     }
 
     /** Tours passés à l'EPFL avant le retour automatique au Dojo. */

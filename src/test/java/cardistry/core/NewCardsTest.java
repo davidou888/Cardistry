@@ -286,4 +286,88 @@ class NewCardsTest {
             assertEquals(Rarity.COMMON, card(name).rarity(), name);
         }
     }
+
+    // --- Lot 4 ---
+
+    @Test
+    void stinginRogerMoinsCinqPvEtDixPourcentDeDegatsCumulables() {
+        setUpFire(0, CardPool.stinginRoger(), CardPool.stinginRoger(), spell(10));
+        play();
+        assertEquals(95, state.player().hp());
+        engine.startTurn();
+        play();
+        assertEquals(90, state.player().hp());
+        assertEquals(1.2, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9);
+        engine.startTurn();
+        play();
+        assertEquals(100 - 12, enemy.hp());
+        assertEquals(Element.FIRE, CardPool.stinginRoger().element());
+        assertEquals(Rarity.COMMON, CardPool.stinginRoger().rarity());
+    }
+
+    @Test
+    void seauDEauVingtPv() {
+        setUpFire(0, card("Seau d'eau"));
+        state.player().takeDamage(50);
+        play();
+        assertEquals(70, state.player().hp());
+        assertEquals(Rarity.UNCOMMON, card("Seau d'eau").rarity());
+    }
+
+    @Test
+    void berceuseInconnueRetireLesStatutsNegatifsSeulement() {
+        setUpFire(0, CardPool.berceuseInconnue());
+        var statuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER);
+        for (var type : List.of(cardistry.core.status.StatusType.INTOX, cardistry.core.status.StatusType.FONS,
+                cardistry.core.status.StatusType.BONDAGE, cardistry.core.status.StatusType.BURN,
+                cardistry.core.status.StatusType.HYPNOTIZED)) {
+            statuses.apply(type, 3, cardistry.core.status.StatusTarget.ENEMY);
+        }
+        play();
+        assertEquals(List.of(cardistry.core.status.StatusType.HYPNOTIZED),
+                statuses.all().stream().map(cardistry.core.status.Status::type).toList());
+        assertEquals(Element.SPIRIT, CardPool.berceuseInconnue().element());
+        assertEquals(Rarity.UNCOMMON, CardPool.berceuseInconnue().rarity());
+    }
+
+    @Test
+    void taffeDeFoufouBatardTroisToursImmuniseEtHuitPourcentParTour() {
+        setUpFire(10, CardPool.taffeDeFoufouBatard());
+        state.player().takeDamage(50);
+        play(); // l'adversaire frappe : immunisé
+        assertEquals(50, state.player().hp());
+        List<Integer> hp = new java.util.ArrayList<>();
+        for (int turn = 1; turn <= 3; turn++) {
+            assertTrue(!engine.startTurn(), "tour " + turn + " sauté");
+            hp.add(state.player().hp());
+        }
+        assertEquals(List.of(58, 66, 64), hp, "+8 par tour ; après le 3e tour, la Fons finit et le coup passe");
+        assertTrue(engine.startTurn(), "réveillé");
+        assertEquals(Rarity.RARE, CardPool.taffeDeFoufouBatard().rarity());
+    }
+
+    @Test
+    void taffeDeFoufouBatardLesStatutsAdversesPassentToujours() {
+        setUpFire(0, CardPool.taffeDeFoufouBatard());
+        state.player().takeDamage(50);
+        play();
+        state.statuses(cardistry.core.status.StatusTarget.PLAYER)
+                .apply(cardistry.core.status.StatusType.INTOX, 3, cardistry.core.status.StatusTarget.ENEMY);
+        engine.startTurn(); // Intox −5 malgré l'immunité aux coups, puis +8 de la Fons
+        assertEquals(50 - 5 + 8, state.player().hp());
+    }
+
+    @Test
+    void unSoinSansPvNeSoignePas() {
+        java.util.List<cardistry.core.event.GameEvent> events = new java.util.ArrayList<>();
+        enemy = new Enemy("Cible", Element.NEUTRAL, 100, 0);
+        state = new GameState(new Player(100), List.of(enemy), new TerrainCard("Braise", Element.FIRE, Rarity.COMMON),
+                List.of(CardPool.berceuseInconnue()), new Stats());
+        EventBus bus = new EventBus();
+        bus.subscribe(events::add);
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
+        engine.startTurn();
+        play();
+        assertTrue(events.stream().noneMatch(e -> e instanceof cardistry.core.event.GameEvent.Healed));
+    }
 }

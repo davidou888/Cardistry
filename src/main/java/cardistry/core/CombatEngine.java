@@ -1296,8 +1296,10 @@ public final class CombatEngine {
                 }
             }
             case HealCard heal -> {
-                double mult = state.healMultiplier(heal);
-                healPlayer(heal.amount() * mult * factor, mult);
+                if (heal.amount() > 0) { // un « soin » à 0 n'agit que par son pouvoir
+                    double mult = state.healMultiplier(heal);
+                    healPlayer(heal.amount() * mult * factor, mult);
+                }
             }
             case TerrainCard terrain -> changeTerrain(terrain);
             case DeadCard dead -> throw new AssertionError("refusée par validate");

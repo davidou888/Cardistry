@@ -455,7 +455,7 @@ public final class TextRenderer implements Renderer {
         return switch (card) {
             case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : "
                     + s.damageLabel().orElse(num(s.damage())) + " dégâts" + (s.isUnmultiplied() ? " (non multipliés)" : "");
-            case HealCard h -> "Soin " + cardName(h) + " (" + type + ") : " + num(h.amount()) + " PV";
+            case HealCard h -> "Soin " + cardName(h) + " (" + type + ")" + (h.amount() > 0 ? " : " + num(h.amount()) + " PV" : "");
             case TerrainCard t -> "Terrain " + cardName(t) + " (" + type + ")" + t.effectText().map(e -> " : " + e).orElse("");
             case DeadCard d -> cardName(d) + " : injouable jusqu'à la fin du combat";
         };

@@ -350,7 +350,7 @@ final class CombatScreen {
         }
         String value = switch (card) {
             case SpellCard s -> s.damageLabel().orElse(num(s.damage())) + " dgt";
-            case HealCard h -> "+" + num(h.amount()) + " PV";
+            case HealCard h -> h.amount() > 0 ? "+" + num(h.amount()) + " PV" : "soin";
             case TerrainCard t -> "terrain";
             case DeadCard d -> "bloquée";
         };
@@ -397,6 +397,7 @@ final class CombatScreen {
                         + (mult != 1.0 ? " ×" + num(mult) : "") + " = " + num(cardistry.model.Combatant.round(s.damage() * mult))
                         + " dégâts à " + enemy.name();
             }
+            case HealCard h when h.amount() <= 0 -> head + "soin " + h.element().displayName() + " : aucun soin direct";
             case HealCard h -> {
                 double mult = state.healMultiplier(h);
                 double missing = Math.max(0, state.maxHp() - state.player().hp());

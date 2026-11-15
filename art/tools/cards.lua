@@ -323,6 +323,37 @@ return {
     c:px(9, 14, "G"); c:px(14, 13, "G"); c:px(12, 15, "R")
     c:arc(9, 7, 2, 3, 90, 270, "4"); c:arc(15, 6, 2, 3, 270, 450, "4")
   end },
+  -- ---- plan V2, lot 4
+  { id = "stingin-roger", draw = function(c)
+    -- flacon de sauce piquante, flamme au goulot
+    c:rect(8, 9, 8, 13, "r"); c:rect(9, 10, 6, 11, "R")
+    c:rect(10, 5, 4, 4, "d"); c:rect(10, 3, 4, 2, "4")
+    c:rect(9, 13, 6, 4, "6"); c:px(11, 14, "R"); c:px(12, 15, "R")
+    flame(c, 12, 2, 2)
+    c:px(18, 6, "o"); c:px(5, 8, "o")
+  end },
+  { id = "seau-d-eau", draw = function(c)
+    -- seau plein d'eau
+    c:arc(12, 8, 8, 6, 180, 360, "3")
+    for y = 0, 11 do c:hline(4 + y // 3, 20 - y // 3, 9 + y, "4") end
+    for y = 0, 3 do c:hline(5, 19, 9 + y, y == 0 and "C" or "b") end
+    c:hline(4, 20, 9, "3"); c:px(9, 11, "C"); c:px(15, 12, "C")
+    c:px(21, 15, "B"); c:px(22, 18, "B")
+  end },
+  { id = "berceuse-inconnue", draw = function(c)
+    -- lune et notes de musique (spirituel)
+    c:rect(0, 0, 24, 24, "1")
+    c:disc(7, 7, 5, "Y"); c:disc(9, 6, 5, "1")
+    c:vline(15, 8, 17, "M"); c:disc(13, 17, 2, "M"); c:hline(15, 19, 8, "M"); c:vline(19, 8, 15, "M")
+    c:disc(17, 15, 2, "M")
+    c:px(4, 18, "6"); c:px(21, 3, "6"); c:px(10, 21, "p")
+  end },
+  { id = "taffe-de-foufou-batard", draw = function(c)
+    -- grosse taffe et volutes étoilées
+    c:line(3, 20, 15, 12, "6", 2); c:line(15, 12, 17, 11, "o", 2); c:px(18, 10, "R")
+    c:arc(18, 6, 3, 3, 90, 360, "4"); c:arc(15, 3, 2, 2, 180, 420, "3")
+    c:px(21, 2, "Y"); c:px(10, 5, "M"); c:px(22, 9, "C"); c:px(6, 11, "Y")
+  end },
   -- ---- terrains (nouveaux)
   { id = "volcan", draw = function(c)
     c:rect(0, 20, 24, 4, "2")

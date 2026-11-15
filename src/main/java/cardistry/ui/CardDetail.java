@@ -95,6 +95,8 @@ public final class CardDetail {
                                 + " dégâts à " + enemy.name();
                 lines.add(new Line("Total : " + total, Kind.TOTAL));
             }
+            case HealCard h when h.amount() <= 0 -> lines.add(new Line("Aucun soin direct : son pouvoir agit",
+                    Kind.TOTAL));
             case HealCard h -> {
                 double terrain = ElementRules.healMultiplier(h.element(), state.terrain().element());
                 lines.add(new Line("Terrain " + state.terrain().name() + " : ×" + num(terrain), Kind.TEXT));

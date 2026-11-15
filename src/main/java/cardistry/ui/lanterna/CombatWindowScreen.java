@@ -347,7 +347,7 @@ final class CombatWindowScreen {
     static String value(Card card) {
         return switch (card) {
             case SpellCard s -> s.damageLabel().orElse(num(s.damage()));
-            case HealCard h -> "+" + num(h.amount());
+            case HealCard h -> h.amount() > 0 ? "+" + num(h.amount()) : "";
             case TerrainCard t -> "";
             case DeadCard d -> "";
         };
