@@ -123,7 +123,7 @@ public final class ConsoleInput implements Input {
                 int choice = Integer.parseInt(line);
                 return choice == 0 ? new Action.DrawCard() : new Action.PlayCard(choice - 1);
             } catch (NumberFormatException e) {
-                console.println("Entre un nombre entre 0 et " + state.handSize()
+                console.println("Entre un nombre entre 0 et " + Math.max(state.handSize(), state.hand().size())
                         + (state.items().isEmpty() ? "" : ", ou la lettre d'un objet"));
             }
         }

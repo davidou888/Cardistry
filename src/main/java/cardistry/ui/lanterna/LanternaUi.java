@@ -210,6 +210,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 view.journalScroll = 0;
                 view.log((e.total() > 0 ? "Combat " + e.number() + "/" + e.total() : "Combat") + " : "
                         + e.enemy().name(), Palette.WARNING);
+                e.enemy().terrain().ifPresent(t -> view.log("Chez lui : " + t.name()
+                        + t.effectText().map(text -> " (" + text + ")").orElse(""), Palette.element(t.element())));
                 if (e.number() > 1) {
                     animateEnemyArrival();
                 }

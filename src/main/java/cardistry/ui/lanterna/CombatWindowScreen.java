@@ -306,7 +306,7 @@ final class CombatWindowScreen {
     // --- Main ---
 
     private static void drawHand(Painter p, GameState state, ViewState view, Layout l) {
-        int slots = state.handSize();
+        int slots = Math.max(state.handSize(), state.hand().size()); // main au-delà du max : rien de caché
         int width = Math.min(MAX_CARD_WIDTH, (p.cols() - 4 - (slots - 1)) / slots);
         int total = slots * width + (slots - 1);
         int left = 2 + Math.max(0, (p.cols() - 4 - total) / 2);

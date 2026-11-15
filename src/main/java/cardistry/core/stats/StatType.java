@@ -8,7 +8,7 @@ import cardistry.model.Element;
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
  * {@link #NATURE_DAMAGE} et les dégâts des autres éléments, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
- * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #HANGOVER_SEVERITY}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
+ * {@link #DAMAGE_REDUCTION}, {@link #DAMAGE_TAKEN}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #HANGOVER_SEVERITY}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
  */
 public enum StatType {
     /** Valeur de base provisoire : à fixer (voir GAME_DESIGN.md). */
@@ -47,6 +47,8 @@ public enum StatType {
     GLITCH_HEAL(1.0),
     /** Dégâts retirés à chaque attaque adverse subie (jamais sous 0). */
     DAMAGE_REDUCTION(0),
+    /** Dégâts subis en plus à chaque coup adverse (Bord d'autoroute). */
+    DAMAGE_TAKEN(0),
     /** Multiplicateur des dégâts infligés par l'adversaire. */
     ENEMY_DAMAGE(1.0),
     /** Ivresse à partir de laquelle on attrape une Gueule de bois. */

@@ -1,0 +1,83 @@
+package cardistry.model.enemy;
+
+import static cardistry.core.stats.StatModifier.flat;
+import static cardistry.core.stats.StatModifier.percent;
+import static cardistry.items.Rarity.COMMON;
+import static cardistry.model.Element.FIRE;
+import static cardistry.model.Element.NATURE;
+import static cardistry.model.Element.NEUTRAL;
+import static cardistry.model.Element.WATER;
+
+import cardistry.core.stats.StatModifier;
+import cardistry.core.stats.StatType;
+import cardistry.model.Element;
+import cardistry.model.card.CardPool;
+import cardistry.model.card.TerrainCard;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+/**
+ * Terrains des adversaires : chaque combat commence chez l'adversaire. Ces terrains ne sont
+ * <b>jamais</b> dans le pool (ni récompense, ni shop) ; leurs malus touchent le joueur tant qu'il y
+ * reste, et jouer une carte terrain, c'est « sortir de chez l'ennemi ». Les boss reçoivent le Dojo
+ * en attendant les leurs.
+ */
+public final class EnemyTerrains {
+
+    public static final double HEAL_MALUS = -0.20;
+    public static final double CANOPY_SPELL_MALUS = -0.15;
+    public static final double EXAM_SPELL_MALUS = -0.20;
+    public static final double ENEMY_DAMAGE_BONUS = 0.15;
+    /** Bord d'autoroute : dégâts subis en plus à chaque coup. */
+    public static final double HIGHWAY_EXTRA_DAMAGE = 2;
+
+    private static final Map<String, Supplier<TerrainCard>> TERRAINS = Map.ofEntries(
+            Map.entry(EnemyRegistry.CADDIE, () -> terrain("Parking du Migros", NEUTRAL, "−1 taille de main",
+                    flat(StatType.HAND_SIZE, -1, ""))),
+            Map.entry(EnemyRegistry.CLARENCE, () -> new TerrainCard("Le canapé", NEUTRAL, COMMON)),
+            Map.entry(EnemyRegistry.PENEU, () -> terrain("Bord d'autoroute", NEUTRAL, "+2 dégâts subis par coup",
+                    flat(StatType.DAMAGE_TAKEN, HIGHWAY_EXTRA_DAMAGE, ""))),
+            Map.entry(EnemyRegistry.CHOOMAH, EnemyTerrains::bush),
+            Map.entry(EnemyRegistry.CHOOMAH_PRESSE, EnemyTerrains::bush),
+            Map.entry(EnemyRegistry.CHOOMAH_COSTAUD, EnemyTerrains::bush),
+            Map.entry(EnemyRegistry.PARESSEUX, () -> spellMalus("Canopée", NATURE, CANOPY_SPELL_MALUS)),
+            Map.entry(EnemyRegistry.TREX, () -> terrain("Jurassic Ecublens", NATURE, "l'adversaire fait +15 % de dégâts",
+                    percent(StatType.ENEMY_DAMAGE, ENEMY_DAMAGE_BONUS, ""))),
+            Map.entry(EnemyRegistry.CAME, () -> terrain("Passage sous-gare", FIRE, "l'adversaire fait +15 % de dégâts",
+                    percent(StatType.ENEMY_DAMAGE, ENEMY_DAMAGE_BONUS, ""))),
+            Map.entry(EnemyRegistry.VAFI, () -> spellMalus("Amphi d'examen", FIRE, EXAM_SPELL_MALUS)),
+            Map.entry(EnemyRegistry.SEAU, () -> terrain("Toit qui fuit", WATER, "−20 % de soins",
+                    percent(StatType.HEAL_EFFICIENCY, HEAL_MALUS, ""))),
+            Map.entry(EnemyRegistry.ETUDIANT, () -> terrain("Biblio à 3h du mat", WATER, "−1 taille de main",
+                    flat(StatType.HAND_SIZE, -1, ""))));
+
+    private EnemyTerrains() {
+    }
+
+    /** Terrain sur lequel commence le combat contre {@code enemyId} (le Dojo pour les boss). */
+    public static TerrainCard of(String enemyId) {
+        Supplier<TerrainCard> terrain = TERRAINS.get(enemyId);
+        return terrain != null ? terrain.get() : CardPool.dojo();
+    }
+
+    /** Adversaires qui ont leur propre terrain (les autres commencent sur le Dojo). */
+    public static java.util.Set<String> enemiesWithTerrain() {
+        return TERRAINS.keySet();
+    }
+
+    private static TerrainCard bush() {
+        return terrain("Buisson louche", NATURE, "−20 % de soins", percent(StatType.HEAL_EFFICIENCY, HEAL_MALUS, ""));
+    }
+
+    private static TerrainCard spellMalus(String name, Element element, double malus) {
+        List<StatModifier> modifiers = StatType.allDamageMultipliers().stream()
+                .map(stat -> percent(stat, malus, "")).toList();
+        return new TerrainCard(name, element, COMMON).withBonuses(
+                "−" + Math.round(-malus * 100) + " % de dégâts des sorts", modifiers);
+    }
+
+    private static TerrainCard terrain(String name, Element element, String text, StatModifier... modifiers) {
+        return new TerrainCard(name, element, COMMON).withBonuses(text, modifiers);
+    }
+}

@@ -321,7 +321,8 @@ public final class CombatEngine {
                 yield Optional.empty();
             }
             case Action.PlayCard play -> {
-                if (play.slot() < 0 || play.slot() >= state.handSize()) {
+                // Une main peut dépasser la taille max (taille réduite en cours de combat) : on garde ses cartes.
+                if (play.slot() < 0 || play.slot() >= Math.max(state.handSize(), state.hand().size())) {
                     yield Optional.of(Reason.INVALID_CHOICE);
                 }
                 if (play.slot() >= state.hand().size()) {
@@ -350,6 +351,7 @@ public final class CombatEngine {
 
     /** Nouvelle main, compteur de tours du combat remis à zéro. */
     private void beginCombat() {
+        state.currentEnemy().terrain().ifPresent(state::setTerrain); // chez l'adversaire
         applyTerrainBonuses();
         state.resetCombatTurn();
         state.setUndoUsedThisCombat(false);

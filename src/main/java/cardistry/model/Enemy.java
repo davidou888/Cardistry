@@ -31,6 +31,8 @@ public class Enemy extends Combatant {
     private final int choomiesReward;
     private final Voice voice;
     private final String spriteId;
+    /** Terrain sur lequel commence le combat ; {@code null} : celui du joueur reste. */
+    private final cardistry.model.card.TerrainCard terrain;
 
     private EnemyMove intent;
     private int actions = 0;
@@ -56,6 +58,7 @@ public class Enemy extends Combatant {
         this.choomiesReward = b.choomiesReward;
         this.voice = b.voice;
         this.spriteId = b.spriteId != null ? b.spriteId : b.id;
+        this.terrain = b.terrain;
     }
 
     public static Builder builder(String id, String name, Element element, EnemyRank rank) {
@@ -105,6 +108,11 @@ public class Enemy extends Combatant {
     /** Nom du fichier de sprite (sans extension). */
     public String spriteId() {
         return spriteId;
+    }
+
+    /** Terrain de l'adversaire (le combat commence dessus), s'il en a un. */
+    public java.util.Optional<cardistry.model.card.TerrainCard> terrain() {
+        return java.util.Optional.ofNullable(terrain).map(cardistry.model.card.TerrainCard::copy);
     }
 
     /** Attaque annoncée pour son prochain tour ; {@code null} avant le début du combat. */
@@ -173,6 +181,7 @@ public class Enemy extends Combatant {
         private int choomiesReward = -1;
         private Voice voice = Voice.NORMAL;
         private String spriteId;
+        private cardistry.model.card.TerrainCard terrain;
 
         private Builder(String id, String name, Element element, EnemyRank rank) {
             this.id = id;
@@ -216,6 +225,12 @@ public class Enemy extends Combatant {
 
         public Builder sprite(String value) {
             spriteId = value;
+            return this;
+        }
+
+        /** Le combat commence sur ce terrain (voir {@code EnemyTerrains}). */
+        public Builder terrain(cardistry.model.card.TerrainCard value) {
+            terrain = value;
             return this;
         }
 

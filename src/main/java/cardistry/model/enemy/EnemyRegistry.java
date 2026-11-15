@@ -78,7 +78,7 @@ public final class EnemyRegistry {
         int index = Math.max(0, Math.min(LEVELS, level) - 1);
         Enemy.Builder builder = definition.create();
         boolean boss = id.startsWith("boss-");
-        return builder.scale(boss ? 1.0 : HP_SCALE[index], DAMAGE_SCALE[index]).build();
+        return builder.scale(boss ? 1.0 : HP_SCALE[index], DAMAGE_SCALE[index]).terrain(EnemyTerrains.of(id)).build();
     }
 
     /** Identifiant du boss du niveau {@code level}. */

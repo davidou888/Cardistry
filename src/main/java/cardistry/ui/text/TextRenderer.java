@@ -85,6 +85,7 @@ public final class TextRenderer implements Renderer {
                 console.println(Ansi.yellow(e.total() > 0 ? "Combat " + e.number() + "/" + e.total() : "Combat")
                         + " : " + enemyName(e.enemy())
                         + " (" + Ansi.element(e.enemy().element()) + ", " + num(e.enemy().hp()) + " PV)");
+                e.enemy().terrain().ifPresent(t -> console.println("Tu es chez lui : " + describe(t)));
                 console.pause(1);
             }
             case GameEvent.HandDealt e -> console.println("Tu reçois une nouvelle main de " + e.cards().size() + " cartes.");
@@ -347,7 +348,7 @@ public final class TextRenderer implements Renderer {
         console.println(SEPARATOR);
         console.println("TES CARTES :");
         List<Card> hand = state.hand();
-        for (int i = 0; i < state.handSize(); i++) {
+        for (int i = 0; i < Math.max(state.handSize(), state.hand().size()); i++) {
             String line = i < hand.size() ? describe(hand.get(i)) : "(vide)";
             console.println("[" + (i + 1) + "] " + line);
         }

@@ -648,7 +648,8 @@ public final class GameState {
     /** Dégâts d'un coup de {@code declared} dégâts (niveau, terrain et réduction compris), arrondis à l'entier. */
     public double hitDamage(double declared) {
         return cardistry.model.Combatant.round(Math.max(0, declared * currentEnemy().damageScale()
-                * enemyAttackMultiplier() - playerStats.get(StatType.DAMAGE_REDUCTION)));
+                * enemyAttackMultiplier() - playerStats.get(StatType.DAMAGE_REDUCTION)
+                + playerStats.get(StatType.DAMAGE_TAKEN)));
     }
 
     /** Dégâts d'un coup de la prochaine attaque annoncée (0 si elle n'attaque pas). */
