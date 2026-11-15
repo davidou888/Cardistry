@@ -38,18 +38,18 @@ class DeckTest {
     private void setUp(List<Card> deck, CardPool pool, Supplier<List<Collectible>> loot, long seed) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = GameState.openRun(new Player(100), new TerrainCard("EPFL", FIRE), new Stats(), deck);
+        state = GameState.openRun(new Player(100), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), new Stats(), deck);
         engine = new CombatEngine(state, pool, new Rng(seed), bus, new LootTable(loot));
         engine.start();
     }
 
     private void setUp(List<Card> deck) {
-        setUp(deck, new CardPool(List.of(new TerrainCard("Pool", WATER))), List::of, 1);
+        setUp(deck, new CardPool(List.of(new TerrainCard("Pool", WATER, cardistry.items.Rarity.COMMON))), List::of, 1);
     }
 
     /** Sorts de 1 dégât numérotés : « S0 », « S1 »… */
     private static List<Card> numbered(int count) {
-        return IntStream.range(0, count).<Card>mapToObj(i -> new SpellCard("S" + i, FIRE, 1)).toList();
+        return IntStream.range(0, count).<Card>mapToObj(i -> new SpellCard("S" + i, FIRE, 1, cardistry.items.Rarity.COMMON)).toList();
     }
 
     private void fight(double hp) {
@@ -67,7 +67,9 @@ class DeckTest {
         assertEquals(6, deck.stream().filter(c -> c instanceof SpellCard).count());
         assertEquals(3, deck.stream().filter(c -> c instanceof HealCard).count());
         assertEquals(3, deck.stream().filter(c -> c instanceof TerrainCard).count());
-        assertFalse(names(deck).contains("EPFL"), "le terrain de départ est en jeu, pas dans le deck");
+        assertFalse(names(deck).contains("Dojo"), "le terrain de départ est en jeu, pas dans le deck");
+        assertTrue(deck.stream().filter(c -> c instanceof SpellCard)
+                .allMatch(c -> c.rarity() == cardistry.items.Rarity.COMMON), "sorts de départ communs");
     }
 
     @Test
@@ -129,7 +131,7 @@ class DeckTest {
 
     @Test
     void nouveauCombatNouvellePioche() {
-        setUp(numbered(12), new CardPool(List.of(new TerrainCard("Pool", WATER))), List::of, 1);
+        setUp(numbered(12), new CardPool(List.of(new TerrainCard("Pool", WATER, cardistry.items.Rarity.COMMON))), List::of, 1);
         fight(1);
         engine.startTurn();
         engine.submit(new Action.PlayCard(0)); // tue
@@ -221,7 +223,7 @@ class DeckTest {
     void sansDeckPasDeRecompenseDeCarte() {
         EventBus bus = new EventBus();
         GameState fixed = new GameState(new Player(100), List.of(new Enemy("A", NATURE, 1, 0), new Enemy("B", NATURE, 9, 0)),
-                new TerrainCard("EPFL", FIRE), List.of(new SpellCard("S", FIRE, 5)), new Stats());
+                new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new SpellCard("S", FIRE, 5, cardistry.items.Rarity.COMMON)), new Stats());
         CombatEngine fixedEngine = new CombatEngine(fixed, new CardPool(), new Rng(1), bus, new LootTable(List::of));
         fixedEngine.submit(new Action.PlayCard(0));
         assertFalse(fixedEngine.hasPendingCardReward());
@@ -238,7 +240,7 @@ class DeckTest {
         engine.resolveReward(RewardChoice.Take.into(0));
         assertEquals("Petit pétou", state.deck().get(state.deck().size() - 1).name());
         assertEquals(13, state.deck().size());
-        assertEquals(2.0, state.cardWeight(new HealCard("Petit pétou", FIRE, 15)));
+        assertEquals(2.0, state.cardWeight(new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON)));
     }
 
     @Test

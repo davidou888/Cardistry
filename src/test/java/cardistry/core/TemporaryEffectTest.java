@@ -43,7 +43,7 @@ class TemporaryEffectTest {
         bus.subscribe(events::add);
         first = new Enemy("Mannequin", FIRE, 100, 10);
         state = new GameState(new Player(100), List.of(first, new Enemy("Bouée", WATER, 100, 10)),
-                new TerrainCard("Forêt", NATURE), hand, new Stats());
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 
@@ -100,7 +100,7 @@ class TemporaryEffectTest {
 
     @Test
     void prochainSortMultiplieSeulementParUnSort() {
-        setUp(List.of(new HealCard("Potion", NATURE, 10), new SpellCard("Sort", FIRE, 20)));
+        setUp(List.of(new HealCard("Potion", NATURE, 10, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         addEffect(() -> TemporaryEffect.builder("shot", "Shot").summary("prochain sort ×2").charges(1)
                 .multipliesNextSpell(2).build());
         assertEquals(2.0, state.spellMultiplier((SpellCard) state.hand().get(1)), DELTA); // aperçu
@@ -115,7 +115,7 @@ class TemporaryEffectTest {
 
     @Test
     void deuxBoostsUnParSort() {
-        setUp(List.of(new SpellCard("Sort", FIRE, 10), new SpellCard("Sort", FIRE, 10), new SpellCard("Sort", FIRE, 10)));
+        setUp(List.of(new SpellCard("Sort", FIRE, 10, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 10, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 10, cardistry.items.Rarity.COMMON)));
         Supplier<TemporaryEffect> shot = () -> TemporaryEffect.builder("shot", "Shot").charges(1)
                 .multipliesNextSpell(2).build();
         addEffect(shot);

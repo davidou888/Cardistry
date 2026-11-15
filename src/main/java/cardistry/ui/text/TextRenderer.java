@@ -383,6 +383,11 @@ public final class TextRenderer implements Renderer {
         console.println("Il y a des " + Ansi.yellow("éléments") + " !");
         console.pause(0.7);
         for (Element winner : Element.PLAYABLE) {
+            if (winner.beatsEverything()) {
+                console.println(Ansi.element(winner, capitalize(winner.displayName())) + " bat tout !");
+                console.pause(0.7);
+                continue;
+            }
             for (Element loser : Element.PLAYABLE) {
                 if (winner.beats(loser)) {
                     console.println(Ansi.element(winner, capitalize(winner.displayName()))

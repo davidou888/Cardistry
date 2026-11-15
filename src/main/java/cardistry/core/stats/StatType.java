@@ -7,7 +7,7 @@ import cardistry.model.Element;
  *
  * <p>Branchées dans le moteur : {@link #MAX_HP} (PV de départ et plafond des soins), {@link #HAND_SIZE},
  * {@link #TRINKET_SLOTS}, {@link #ITEM_SLOTS}, {@link #FIRE_DAMAGE}, {@link #WATER_DAMAGE},
- * {@link #NATURE_DAMAGE}, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
+ * {@link #NATURE_DAMAGE} et les dégâts des autres éléments, {@link #HEAL_EFFICIENCY}, les soins par élément, {@link #CARDS_PER_DRAW},
  * {@link #DAMAGE_REDUCTION}, {@link #ENEMY_DAMAGE}, {@link #HANGOVER_THRESHOLD}, {@link #HANGOVER_SEVERITY}, {@link #LUCKY_ROLLS}, {@link #CHOOMIES_GAIN}.
  */
 public enum StatType {
@@ -29,12 +29,22 @@ public enum StatType {
     FIRE_DAMAGE(1.0),
     WATER_DAMAGE(1.0),
     NATURE_DAMAGE(1.0),
+    NEUTRAL_DAMAGE(1.0),
+    SPIRIT_DAMAGE(1.0),
+    ALGEBRAIC_DAMAGE(1.0),
+    GEOMETRIC_DAMAGE(1.0),
+    GLITCH_DAMAGE(1.0),
     /** Multiplicateur de tous les soins reçus (cartes, objets, trinkets). */
     HEAL_EFFICIENCY(1.0),
     /** Multiplicateur des cartes de soin de feu (en plus de {@link #HEAL_EFFICIENCY}). */
     FIRE_HEAL(1.0),
     WATER_HEAL(1.0),
     NATURE_HEAL(1.0),
+    NEUTRAL_HEAL(1.0),
+    SPIRIT_HEAL(1.0),
+    ALGEBRAIC_HEAL(1.0),
+    GEOMETRIC_HEAL(1.0),
+    GLITCH_HEAL(1.0),
     /** Dégâts retirés à chaque attaque adverse subie (jamais sous 0). */
     DAMAGE_REDUCTION(0),
     /** Multiplicateur des dégâts infligés par l'adversaire. */
@@ -68,7 +78,11 @@ public enum StatType {
             case FIRE -> FIRE_HEAL;
             case WATER -> WATER_HEAL;
             case NATURE -> NATURE_HEAL;
-            case NEUTRAL -> throw new IllegalArgumentException("Aucun soin neutre");
+            case NEUTRAL -> NEUTRAL_HEAL;
+            case SPIRIT -> SPIRIT_HEAL;
+            case ALGEBRAIC -> ALGEBRAIC_HEAL;
+            case GEOMETRIC -> GEOMETRIC_HEAL;
+            case GLITCH -> GLITCH_HEAL;
         };
     }
 
@@ -78,7 +92,19 @@ public enum StatType {
             case FIRE -> FIRE_DAMAGE;
             case WATER -> WATER_DAMAGE;
             case NATURE -> NATURE_DAMAGE;
-            case NEUTRAL -> throw new IllegalArgumentException("Aucun sort neutre");
+            case NEUTRAL -> NEUTRAL_DAMAGE;
+            case SPIRIT -> SPIRIT_DAMAGE;
+            case ALGEBRAIC -> ALGEBRAIC_DAMAGE;
+            case GEOMETRIC -> GEOMETRIC_DAMAGE;
+            case GLITCH -> GLITCH_DAMAGE;
         };
+    }
+
+    /**
+     * Les stats de dégâts de tous les éléments (neutre compris), pour les bonus « +X % de dégâts »
+     * qui touchent tous les sorts (Ivresse, P'tit Sat, sets).
+     */
+    public static java.util.List<StatType> allDamageMultipliers() {
+        return java.util.Arrays.stream(Element.values()).map(StatType::damageMultiplier).toList();
     }
 }

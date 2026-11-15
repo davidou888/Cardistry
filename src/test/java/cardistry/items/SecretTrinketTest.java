@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class SecretTrinketTest {
 
     private static final double DELTA = 1e-9;
-    private static final TerrainCard EPFL = new TerrainCard("EPFL", FIRE);
+    private static final TerrainCard EPFL = new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON);
 
     private final List<GameEvent> events = new ArrayList<>();
     private GameState state;
@@ -52,8 +52,8 @@ class SecretTrinketTest {
     }
 
     private static List<Card> hand() {
-        return List.of(new SpellCard("Boule de feu", FIRE, 10), new HealCard("Potion", FIRE, 10),
-                new SpellCard("Jet d'eau", cardistry.model.Element.WATER, 10));
+        return List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON), new HealCard("Potion", FIRE, 10, cardistry.items.Rarity.COMMON),
+                new SpellCard("Jet d'eau", cardistry.model.Element.WATER, 10, cardistry.items.Rarity.COMMON));
     }
 
     /** Première seed dont les deux premiers {@code nextDouble} vérifient les conditions. */
@@ -162,7 +162,7 @@ class SecretTrinketTest {
 
     @Test
     void noCardsEstInjouable() {
-        setUp(2, List.of(new DeadCard(), new SpellCard("Boule de feu", FIRE, 10)), 1);
+        setUp(2, List.of(new DeadCard(), new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)), 1);
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(0)));
         assertTrue(events.contains(new GameEvent.ActionRejected(GameEvent.ActionRejected.Reason.UNPLAYABLE_CARD)));
         assertEquals(2, state.hand().size());
@@ -186,7 +186,7 @@ class SecretTrinketTest {
         bus = new EventBus();
         state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 1, 1), new Enemy("B", FIRE, 100, 1)),
                 EPFL, List.of(), new Stats());
-        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10))), new Rng(1),
+        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON))), new Rng(1),
                 bus, new LootTable(List::of));
         engine.start();
         engine.equip(ItemRegistry.trinket(ItemRegistry.NULL_POINTER_EXCEPTION));

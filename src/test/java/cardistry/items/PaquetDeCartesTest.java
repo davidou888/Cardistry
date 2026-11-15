@@ -40,7 +40,7 @@ class PaquetDeCartesTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 100, 10), new Enemy("B", FIRE, 100, 10)),
-                new TerrainCard("Forêt", NATURE), hand, new Stats());
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, pool, new Rng(seed), bus, new LootTable(List::of));
         engine.setDecisions(new PlayerDecisions() {
             @Override
@@ -143,8 +143,8 @@ class PaquetDeCartesTest {
 
     @Test
     void georgeSeDeclencheApresLeChoixEtProtegeLaCarteChoisie() {
-        Card keep = new TerrainCard("Gardée", FIRE);
-        setUp(List.of(keep), new CardPool(List.of(new SpellCard("Neuve", WATER, 10))), 1, options -> 1);
+        Card keep = new TerrainCard("Gardée", FIRE, cardistry.items.Rarity.COMMON);
+        setUp(List.of(keep), new CardPool(List.of(new SpellCard("Neuve", WATER, 10, cardistry.items.Rarity.COMMON))), 1, options -> 1);
         equip("paquet-de-cartes");
         equip("george");
 
@@ -160,8 +160,8 @@ class PaquetDeCartesTest {
 
     @Test
     void grinderSAppliqueAuxPropositions() {
-        Card common = new SpellCard("Boule", FIRE, 10);
-        Card petou = new HealCard("Petit pétou", FIRE, 15);
+        Card common = new SpellCard("Boule", FIRE, 10, cardistry.items.Rarity.COMMON);
+        Card petou = new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON);
         setUp(List.of(), new CardPool(List.of(common, common, common, petou)), 5, options -> 0);
         equip("paquet-de-cartes");
         equip("grinder");

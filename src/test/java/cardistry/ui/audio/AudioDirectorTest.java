@@ -64,11 +64,11 @@ class AudioDirectorTest {
 
     @Test
     void cartesParType() {
-        assertEquals(Optional.of("sfx.card.fire"), fx(new GameEvent.CardPlayed(new SpellCard("a", FIRE, 1))));
-        assertEquals(Optional.of("sfx.card.water"), fx(new GameEvent.CardPlayed(new SpellCard("a", WATER, 1))));
-        assertEquals(Optional.of("sfx.card.plant"), fx(new GameEvent.CardPlayed(new SpellCard("a", NATURE, 1))));
-        assertEquals(Optional.of("sfx.card.heal"), fx(new GameEvent.CardPlayed(new HealCard("a", FIRE, 1))));
-        assertEquals(Optional.of("sfx.card.terrain"), fx(new GameEvent.CardPlayed(new TerrainCard("a", FIRE))));
+        assertEquals(Optional.of("sfx.card.fire"), fx(new GameEvent.CardPlayed(new SpellCard("a", FIRE, 1, cardistry.items.Rarity.COMMON))));
+        assertEquals(Optional.of("sfx.card.water"), fx(new GameEvent.CardPlayed(new SpellCard("a", WATER, 1, cardistry.items.Rarity.COMMON))));
+        assertEquals(Optional.of("sfx.card.plant"), fx(new GameEvent.CardPlayed(new SpellCard("a", NATURE, 1, cardistry.items.Rarity.COMMON))));
+        assertEquals(Optional.of("sfx.card.heal"), fx(new GameEvent.CardPlayed(new HealCard("a", FIRE, 1, cardistry.items.Rarity.COMMON))));
+        assertEquals(Optional.of("sfx.card.terrain"), fx(new GameEvent.CardPlayed(new TerrainCard("a", FIRE, cardistry.items.Rarity.COMMON))));
     }
 
     @Test
@@ -114,7 +114,7 @@ class AudioDirectorTest {
     @Test
     void musiqueSelonLaPhase() {
         GameState state = new GameState(new Player(100), List.of(EnemyRegistry.create(EnemyRegistry.VAFI, 1)),
-                new TerrainCard("EPFL", FIRE), List.of(), new cardistry.core.stats.Stats());
+                new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), new cardistry.core.stats.Stats());
         assertEquals(Optional.of(MusicContext.ELITE), AudioDirector.musicFor(Run.Phase.COMBAT, state));
         assertEquals(Optional.of(MusicContext.MAP), AudioDirector.musicFor(Run.Phase.MAP, state));
         assertEquals(Optional.empty(), AudioDirector.musicFor(Run.Phase.REWARD, state), "la musique du combat continue");
@@ -132,8 +132,8 @@ class AudioDirectorTest {
         AudioDirector director = new AudioDirector(audio);
         bus.subscribe(director);
         Run run = new Run(3, Set.of(), bus,
-                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         Renderer silent = new Renderer() {
             @Override
             public void onEvent(GameEvent event) {

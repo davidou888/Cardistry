@@ -33,8 +33,8 @@ class RunMapTest {
     private Run strongRun(long seed) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        Run run = new Run(seed, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        Run run = new Run(seed, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         run.start();
         return run;
     }
@@ -130,8 +130,8 @@ class RunMapTest {
     void siesteAvecRossDepasseLeMax() {
         EventBus bus = new EventBus();
         Run run = new Run(2, Set.of(), bus,
-                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         run.start();
         playUntil(run, r -> r.phase() == Run.Phase.REST && r.state().floor() == RunMap.REST_FLOOR);
         double before = run.state().player().hp();
@@ -304,7 +304,7 @@ class RunMapTest {
     void ctrlZRejoueLaCarte() {
         EventBus bus = new EventBus();
         Run run = new Run(5, Set.of(), bus, GameState::newGame,
-                () -> new CardPool(List.of(new cardistry.model.card.TerrainCard("Forêt", cardistry.model.Element.NATURE))));
+                () -> new CardPool(List.of(new cardistry.model.card.TerrainCard("Forêt", cardistry.model.Element.NATURE, cardistry.items.Rarity.COMMON))));
         run.addCode(Secret.CTRL_Z);
         run.start();
         run.chooseNode(1);
@@ -332,8 +332,8 @@ class RunMapTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         Run run = new Run(seed, Set.of(), bus,
-                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         if (undo) {
             run.addCode(Secret.CTRL_Z);
         }
@@ -423,8 +423,8 @@ class RunMapTest {
             }
         });
         Run run = new Run(6, Set.of(), bus,
-                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+                () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         run.start();
         int guard = 0;
         while (!run.isOver() && guard++ < 10_000) {

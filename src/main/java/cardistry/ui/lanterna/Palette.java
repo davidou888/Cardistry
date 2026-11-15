@@ -1,8 +1,9 @@
 package cardistry.ui.lanterna;
 
+import com.googlecode.lanterna.TextColor;
+
 import cardistry.items.Rarity;
 import cardistry.model.Element;
-import com.googlecode.lanterna.TextColor;
 
 /** Couleurs de l'interface. */
 final class Palette {
@@ -55,6 +56,10 @@ final class Palette {
             case WATER -> TextColor.ANSI.BLUE_BRIGHT;
             case NATURE -> TextColor.ANSI.GREEN_BRIGHT;
             case NEUTRAL -> TextColor.ANSI.WHITE;
+            case ALGEBRAIC -> TextColor.ANSI.CYAN_BRIGHT;
+            case GEOMETRIC -> TextColor.ANSI.YELLOW;
+            case SPIRIT -> TextColor.ANSI.MAGENTA_BRIGHT;
+            case GLITCH -> TextColor.ANSI.BLACK_BRIGHT;
         };
     }
 

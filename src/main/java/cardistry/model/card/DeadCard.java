@@ -14,7 +14,7 @@ public final class DeadCard extends Card {
     }
 
     public DeadCard(String name) {
-        super(name, null);
+        super(name, null, null);
     }
 
     @Override

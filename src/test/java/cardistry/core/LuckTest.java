@@ -24,7 +24,7 @@ class LuckTest {
             stats.add(StatModifier.flat(StatType.LUCKY_ROLLS, 1, "test"));
         }
         return new GameState(new Player(100), List.of(new Enemy("A", Element.FIRE, 10, 1)),
-                new TerrainCard("EPFL", Element.FIRE), List.of(), stats);
+                new TerrainCard("EPFL", Element.FIRE, cardistry.items.Rarity.COMMON), List.of(), stats);
     }
 
     @Test

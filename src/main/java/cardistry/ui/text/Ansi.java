@@ -13,6 +13,8 @@ public final class Ansi {
     public static final String BLUE = "\u001B[34m";
     /** Secrets. */
     public static final String MAGENTA = "\u001B[35m";
+    public static final String CYAN = "\u001B[36m";
+    public static final String GRAY = "\u001B[90m";
 
     private Ansi() {
     }
@@ -31,6 +33,10 @@ public final class Ansi {
             case WATER -> BLUE;
             case NATURE -> GREEN;
             case NEUTRAL -> "";
+            case ALGEBRAIC -> CYAN;
+            case GEOMETRIC -> YELLOW;
+            case SPIRIT -> MAGENTA;
+            case GLITCH -> GRAY;
         };
         return color + text + END_COLOR;
     }

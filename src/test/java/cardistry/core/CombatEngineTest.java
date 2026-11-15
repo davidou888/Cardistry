@@ -59,7 +59,7 @@ class CombatEngineTest {
         // Terrain ni du même élément, ni qui bat l'adversaire → ×1.
         for (var element : cardistry.model.Element.values()) {
             if (element != enemy.element() && !element.beats(enemy.element())) {
-                return new TerrainCard("Neutre", element);
+                return new TerrainCard("Neutre", element, cardistry.items.Rarity.COMMON);
             }
         }
         throw new AssertionError();
@@ -70,7 +70,7 @@ class CombatEngineTest {
     @Test
     void startPublieLaSeedEtLancePremierCombat() {
         Enemy hydra = hydra();
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("Ancienne", FIRE)), hydra, siren());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new TerrainCard("Ancienne", FIRE, cardistry.items.Rarity.COMMON)), hydra, siren());
 
         engine.start();
 
@@ -86,7 +86,7 @@ class CombatEngineTest {
 
     @Test
     void startTurnIncrementeLeTour() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), hydra());
         engine.startTurn();
         engine.startTurn();
         assertEquals(2, state.turn());
@@ -122,7 +122,7 @@ class CombatEngineTest {
     @Test
     void sortilegeAvantageInflige150Pourcent() {
         Enemy hydra = hydra();
-        SpellCard jet = new SpellCard("Jet d'eau", WATER, 10);
+        SpellCard jet = new SpellCard("Jet d'eau", WATER, 10, cardistry.items.Rarity.COMMON);
         setUp(neutralTerrainFor(hydra), List.of(jet), hydra);
 
         assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.PlayCard(0)));
@@ -135,7 +135,7 @@ class CombatEngineTest {
     @Test
     void sortilegeDesavantageInflige50Pourcent() {
         Enemy siren = siren();
-        setUp(neutralTerrainFor(siren), List.of(new SpellCard("Boule de feu", FIRE, 10)), siren);
+        setUp(neutralTerrainFor(siren), List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)), siren);
         engine.submit(new Action.PlayCard(0));
         assertEquals(25, siren.hp(), DELTA);
     }
@@ -143,7 +143,7 @@ class CombatEngineTest {
     @Test
     void sortilegeMemeElementInflige100Pourcent() {
         Enemy hydra = hydra();
-        setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Boule de feu", FIRE, 10)), hydra);
+        setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)), hydra);
         engine.submit(new Action.PlayCard(0));
         assertEquals(10, hydra.hp(), DELTA);
     }
@@ -151,8 +151,8 @@ class CombatEngineTest {
     @Test
     void soinBoosteSurTerrainDuMemeElement() {
         Enemy hydra = hydra();
-        HealCard heal = new HealCard("Petit pétou", FIRE, 10);
-        setUp(new TerrainCard("EPFL", FIRE), List.of(heal), hydra);
+        HealCard heal = new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON);
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(heal), hydra);
 
         state.player().takeDamage(50);
 
@@ -165,7 +165,7 @@ class CombatEngineTest {
 
     @Test
     void soinPlafonneAuxPvMax() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Petit pétou", FIRE, 10)), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON)), hydra());
         state.player().takeDamage(4);
 
         engine.submit(new Action.PlayCard(0));
@@ -176,7 +176,7 @@ class CombatEngineTest {
 
     @Test
     void pvMaxAmeliorablesParStat() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Petit pétou", FIRE, 10)), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON)), hydra());
         state.playerStats().add(StatModifier.flat(StatType.MAX_HP, 20, "amulette"));
 
         engine.submit(new Action.PlayCard(0));
@@ -188,8 +188,8 @@ class CombatEngineTest {
     @Test
     void terrainChangeLAttaqueAdverseDesCeTour() {
         Enemy hydra = hydra();
-        TerrainCard epfl = new TerrainCard("EPFL", FIRE);
-        TerrainCard swamp = new TerrainCard("Marécage", WATER);
+        TerrainCard epfl = new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON);
+        TerrainCard swamp = new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON);
         setUp(epfl, List.of(swamp), hydra);
 
         engine.submit(new Action.PlayCard(0));
@@ -202,10 +202,10 @@ class CombatEngineTest {
 
     @Test
     void jouerUneCarteLaRetireEtDecaleLaMain() {
-        Card a = new TerrainCard("A", FIRE);
-        Card b = new TerrainCard("B", WATER);
-        Card c = new TerrainCard("C", NATURE);
-        setUp(new TerrainCard("EPFL", FIRE), List.of(a, b, c), hydra());
+        Card a = new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON);
+        Card b = new TerrainCard("B", WATER, cardistry.items.Rarity.COMMON);
+        Card c = new TerrainCard("C", NATURE, cardistry.items.Rarity.COMMON);
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(a, b, c), hydra());
 
         engine.submit(new Action.PlayCard(0));
 
@@ -216,7 +216,7 @@ class CombatEngineTest {
 
     @Test
     void piocherAjouteUneCarteEtLAdversaireAttaque() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), hydra());
 
         assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.DrawCard()));
 
@@ -233,9 +233,9 @@ class CombatEngineTest {
     void piocherMainPleineEstRefuse() {
         List<Card> fullHand = new ArrayList<>();
         for (int i = 0; i < HAND_SIZE; i++) {
-            fullHand.add(new TerrainCard("T" + i, FIRE));
+            fullHand.add(new TerrainCard("T" + i, FIRE, cardistry.items.Rarity.COMMON));
         }
-        setUp(new TerrainCard("EPFL", FIRE), fullHand, hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), fullHand, hydra());
 
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.DrawCard()));
 
@@ -246,7 +246,7 @@ class CombatEngineTest {
 
     @Test
     void slotHorsDeLaMainEstRefuse() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("A", FIRE)), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON)), hydra());
 
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(-1)));
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(HAND_SIZE)));
@@ -258,7 +258,7 @@ class CombatEngineTest {
 
     @Test
     void slotVideEstRefuse() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new TerrainCard("A", FIRE)), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON)), hydra());
 
         assertEquals(ActionResult.REJECTED, engine.submit(new Action.PlayCard(1)));
 
@@ -272,8 +272,8 @@ class CombatEngineTest {
     void adversaireTueCombatSuivantNouvelleMainSansAttaque() {
         Enemy hydra = hydra();
         Enemy siren = siren();
-        SpellCard tsunami = new SpellCard("Tsunami", WATER, 15);
-        setUp(new TerrainCard("EPFL", FIRE), List.of(tsunami), hydra, siren);
+        SpellCard tsunami = new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON);
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(tsunami), hydra, siren);
         engine.startTurn();
         events.clear();
 
@@ -299,7 +299,7 @@ class CombatEngineTest {
     @Test
     void dernierAdversaireTueVictoire() {
         Enemy hydra = hydra();
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new SpellCard("Tsunami", WATER, 15)), hydra);
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)), hydra);
 
         engine.submit(new Action.PlayCard(0));
 
@@ -312,7 +312,7 @@ class CombatEngineTest {
     @Test
     void joueurAZeroPvDefaite() {
         Enemy brute = new Enemy("Brute", FIRE, 1000, 100);
-        setUp(new TerrainCard("EPFL", FIRE), List.of(), brute);
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), brute);
 
         engine.submit(new Action.DrawCard());
 
@@ -328,8 +328,8 @@ class CombatEngineTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(hydra(), siren(), new Enemy("Pantin", NATURE, 40, 15)),
-                new TerrainCard("EPFL", FIRE), List.of(), new cardistry.core.stats.Stats());
-        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40))), new Rng(1), bus, NO_LOOT);
+                new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), new cardistry.core.stats.Stats());
+        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule", FIRE, 40, cardistry.items.Rarity.COMMON))), new Rng(1), bus, NO_LOOT);
 
         engine.start();
         int turns = 0;
@@ -351,7 +351,7 @@ class CombatEngineTest {
     @Test
     void multiplicateurDeDegatsParElement() {
         Enemy hydra = hydra();
-        setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Jet d'eau", WATER, 10)), hydra);
+        setUp(neutralTerrainFor(hydra), List.of(new SpellCard("Jet d'eau", WATER, 10, cardistry.items.Rarity.COMMON)), hydra);
         state.playerStats().add(StatModifier.percent(StatType.WATER_DAMAGE, 0.25, "test"));
         state.playerStats().add(StatModifier.percent(StatType.FIRE_DAMAGE, 2, "autre élément"));
 
@@ -363,7 +363,7 @@ class CombatEngineTest {
 
     @Test
     void efficaciteDesSoins() {
-        setUp(new TerrainCard("EPFL", FIRE), List.of(new HealCard("Potion", NATURE, 10)), hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(new HealCard("Potion", NATURE, 10, cardistry.items.Rarity.COMMON)), hydra());
         state.player().takeDamage(50);
         state.playerStats().add(StatModifier.percent(StatType.HEAL_EFFICIENCY, 1, "test"));
 
@@ -377,9 +377,9 @@ class CombatEngineTest {
     void tailleDeMainSuitLaStat() {
         List<Card> fullHand = new ArrayList<>();
         for (int i = 0; i < HAND_SIZE; i++) {
-            fullHand.add(new TerrainCard("T" + i, FIRE));
+            fullHand.add(new TerrainCard("T" + i, FIRE, cardistry.items.Rarity.COMMON));
         }
-        setUp(new TerrainCard("EPFL", FIRE), fullHand, hydra());
+        setUp(new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), fullHand, hydra());
         state.playerStats().add(StatModifier.flat(StatType.HAND_SIZE, 1, "sac"));
 
         assertEquals(HAND_SIZE + 1, state.handSize());

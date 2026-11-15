@@ -37,7 +37,7 @@ class ItemContentTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         hydra = new Enemy("Mannequin", FIRE, 100, 10);
-        state = new GameState(new Player(100), List.of(hydra), new TerrainCard("EPFL", FIRE), hand, new Stats());
+        state = new GameState(new Player(100), List.of(hydra), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(seed), bus, new LootTable(List::of));
     }
 
@@ -151,7 +151,7 @@ class ItemContentTest {
     void cafffeeeeinnnnLimiteParLaMain() {
         List<Card> hand = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
-            hand.add(new TerrainCard("T" + i, FIRE));
+            hand.add(new TerrainCard("T" + i, FIRE, cardistry.items.Rarity.COMMON));
         }
         setUp(hand, 1);
         use("cafffeeeeinnnn");

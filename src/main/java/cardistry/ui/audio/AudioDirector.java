@@ -1,5 +1,8 @@
 package cardistry.ui.audio;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import cardistry.core.Curse;
 import cardistry.core.GameState;
 import cardistry.core.event.GameEvent;
@@ -9,8 +12,6 @@ import cardistry.model.card.HealCard;
 import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
 import cardistry.run.Run;
-import java.util.Optional;
-import java.util.function.Consumer;
 
 /**
  * Chef d'orchestre : écoute le bus d'événements (les effets) et l'interface (l'écran affiché → la
@@ -72,7 +73,7 @@ public final class AudioDirector implements Consumer<GameEvent> {
                 case SpellCard spell -> switch (spell.element()) {
                     case FIRE -> "sfx.card.fire";
                     case WATER -> "sfx.card.water";
-                    case NATURE, NEUTRAL -> "sfx.card.plant";
+                    case NATURE, NEUTRAL, ALGEBRAIC, GEOMETRIC,SPIRIT, GLITCH  -> "sfx.card.plant";
                 };
                 case HealCard heal -> "sfx.card.heal";
                 case TerrainCard terrain -> "sfx.card.terrain";

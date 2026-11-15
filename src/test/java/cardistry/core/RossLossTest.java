@@ -24,7 +24,7 @@ class RossLossTest {
     @Test
     void perdreRossGardeLesPvEnTropMaisReplafonne() {
         GameState state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 100, 10)),
-                new TerrainCard("Forêt", NATURE), List.of(), new Stats());
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(), new Stats());
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(), new LootTable(List::of));
         engine.equip(ItemRegistry.trinket("ross"));
         engine.give(ItemRegistry.item("spritz"));

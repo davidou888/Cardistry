@@ -45,7 +45,7 @@ class CigaretteTrinketTest {
     }
 
     private void setUp() {
-        setUp(new TerrainCard("Forêt", NATURE), List.of(), 1);
+        setUp(new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(), 1);
     }
 
     private void equip(String id) {
@@ -61,7 +61,7 @@ class CigaretteTrinketTest {
         }
     }
 
-    private static final TerrainCard EPFL = new TerrainCard("EPFL", FIRE);
+    private static final TerrainCard EPFL = new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON);
 
     // --- Googz ---
 
@@ -200,7 +200,7 @@ class CigaretteTrinketTest {
 
     @Test
     void rossDoubleLesSoinsEtDepasseLeMax() {
-        setUp(EPFL, List.of(new HealCard("Petit pétou", FIRE, 10)), 1);
+        setUp(EPFL, List.of(new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON)), 1);
         equip("ross");
         engine.submit(new Action.PlayCard(0));
         // 10 × 1.5 (terrain feu) × 2 = 30, sans plafond ; puis l'adversaire attaque (10 × 1.25)
@@ -225,7 +225,7 @@ class CigaretteTrinketTest {
 
     @Test
     void rossEtGrinderOrdreDeCalcul() {
-        setUp(EPFL, List.of(new HealCard("Petit pétou", FIRE, 10)), 1);
+        setUp(EPFL, List.of(new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON)), 1);
         state.player().takeDamage(90);
         equip("ross");
         equip("grinder");

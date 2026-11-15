@@ -181,9 +181,9 @@ class UnlockFileTest {
                     () -> new cardistry.core.GameState(new cardistry.model.Player(100),
                             List.of(new cardistry.model.Enemy("A", cardistry.model.Element.FIRE, 10, 1),
                                     new cardistry.model.Enemy("B", cardistry.model.Element.FIRE, 10, 1)),
-                            new cardistry.model.card.TerrainCard("EPFL", cardistry.model.Element.FIRE), List.of(), stats),
+                            new cardistry.model.card.TerrainCard("EPFL", cardistry.model.Element.FIRE, cardistry.items.Rarity.COMMON), List.of(), stats),
                     () -> new cardistry.model.card.CardPool(List.of(
-                            new cardistry.model.card.SpellCard("Boule de feu", cardistry.model.Element.FIRE, 10))));
+                            new cardistry.model.card.SpellCard("Boule de feu", cardistry.model.Element.FIRE, 10, cardistry.items.Rarity.COMMON))));
             UnlockTracker tracker = new UnlockTracker(run::state, store, bus);
             bus.subscribe(tracker);
             run.start();

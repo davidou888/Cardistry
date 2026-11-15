@@ -236,6 +236,10 @@ public final class ArtSheet {
             case WATER -> TextColor.ANSI.BLUE_BRIGHT;
             case NATURE -> TextColor.ANSI.GREEN_BRIGHT;
             case NEUTRAL -> TextColor.ANSI.WHITE;
+            case ALGEBRAIC -> TextColor.ANSI.CYAN_BRIGHT;
+            case GEOMETRIC -> TextColor.ANSI.YELLOW;
+            case SPIRIT -> TextColor.ANSI.MAGENTA_BRIGHT;
+            case GLITCH -> TextColor.ANSI.BLACK_BRIGHT;
         });
     }
 

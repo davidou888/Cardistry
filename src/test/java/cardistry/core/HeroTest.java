@@ -40,7 +40,7 @@ class HeroTest {
     private void setUp(Hero hero, long seed, Element terrain, List<Card> hand, Enemy... enemies) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("Terrain", terrain), hand, new Stats())
+        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("Terrain", terrain, cardistry.items.Rarity.COMMON), hand, new Stats())
                 .withHero(hero);
         engine = new CombatEngine(state, new CardPool(hand), new Rng(seed), bus, new LootTable(List::of)); // main = ce sort
         engine.start();
@@ -51,7 +51,7 @@ class HeroTest {
     }
 
     private static SpellCard spell(Element element, double damage) {
-        return new SpellCard("Sort", element, damage);
+        return new SpellCard("Sort", element, damage, cardistry.items.Rarity.COMMON);
     }
 
     private double damageToEnemy() {
@@ -234,7 +234,7 @@ class HeroTest {
     void sansPersonnageAucuneCapacite() {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = new GameState(new Player(100), List.of(enemy(NATURE, 500)), new TerrainCard("Terrain", FIRE),
+        state = new GameState(new Player(100), List.of(enemy(NATURE, 500)), new TerrainCard("Terrain", FIRE, cardistry.items.Rarity.COMMON),
                 List.of(spell(FIRE, 10)), new Stats());
         engine = new CombatEngine(state, new CardPool(List.of(spell(FIRE, 10))), new Rng(1), bus, new LootTable(List::of));
         engine.start();

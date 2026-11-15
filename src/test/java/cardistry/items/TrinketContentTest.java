@@ -42,10 +42,10 @@ class TrinketContentTest {
         bus.subscribe(events::add);
         enemy = new Enemy("Cible", enemyElement, 100, 10);
         TerrainCard neutral = switch (enemyElement) {
-            case FIRE -> new TerrainCard("Forêt", NATURE);
-            case WATER -> new TerrainCard("EPFL", FIRE);
-            case NATURE -> new TerrainCard("Marécage", WATER);
-            case NEUTRAL -> new TerrainCard("EPFL", FIRE);
+            case FIRE -> new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON);
+            case WATER -> new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON);
+            case NATURE -> new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON);
+            case NEUTRAL, SPIRIT, ALGEBRAIC, GEOMETRIC, GLITCH -> new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON);
         };
         state = new GameState(new Player(100), List.of(enemy, new Enemy("Suivant", FIRE, 100, 10)), neutral, hand,
                 new Stats());
@@ -70,7 +70,7 @@ class TrinketContentTest {
     }
 
     private void spellBoost(String id, cardistry.model.Element element, double expectedDamage) {
-        setUp(element, List.of(new SpellCard("Sort", element, 20)));
+        setUp(element, List.of(new SpellCard("Sort", element, 20, cardistry.items.Rarity.COMMON)));
         equip(id);
         engine.submit(new Action.PlayCard(0));
         assertEquals(expectedDamage, lastDamageToEnemy(), DELTA);
@@ -93,7 +93,7 @@ class TrinketContentTest {
 
     @Test
     void lesBonusDElementNeSAppliquentQuASonElement() {
-        setUp(WATER, List.of(new SpellCard("Sort", WATER, 20)));
+        setUp(WATER, List.of(new SpellCard("Sort", WATER, 20, cardistry.items.Rarity.COMMON)));
         equip("redistribution-des-briquets");
         engine.submit(new Action.PlayCard(0));
         assertEquals(20, lastDamageToEnemy(), DELTA);
@@ -116,7 +116,7 @@ class TrinketContentTest {
 
     @Test
     void grinderSoinsFeu() {
-        setUp(FIRE, List.of(new HealCard("Petit pétou", FIRE, 10)));
+        setUp(FIRE, List.of(new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(50);
         equip("grinder");
         engine.submit(new Action.PlayCard(0));
@@ -127,8 +127,8 @@ class TrinketContentTest {
     @Test
     void grinderPetitPetouDeuxFoisPlusFrequent() {
         setUp(FIRE, List.of());
-        Card pétou = new HealCard("Petit pétou", FIRE, 15);
-        Card other = new SpellCard("Boule de feu", FIRE, 10);
+        Card pétou = new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON);
+        Card other = new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON);
         equip("grinder");
         assertEquals(2.0, state.cardWeight(pétou), DELTA);
         assertEquals(1.0, state.cardWeight(other), DELTA);
@@ -144,7 +144,7 @@ class TrinketContentTest {
 
     @Test
     void cms() {
-        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("cms");
         engine.submit(new Action.PlayCard(0));
         assertEquals(30, lastDamageToEnemy(), DELTA);          // +50 %
@@ -170,7 +170,7 @@ class TrinketContentTest {
 
     @Test
     void m1ChangerDeTerrainRendCinqPv() {
-        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER)));
+        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(30);
         equip("m1");
         engine.submit(new Action.PlayCard(0));
@@ -181,7 +181,7 @@ class TrinketContentTest {
 
     @Test
     void mondeSnackSoigneAChaqueAdversaireVaincu() {
-        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100)));
+        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(30);
         equip("monde-snack");
         engine.submit(new Action.PlayCard(0));
@@ -190,7 +190,7 @@ class TrinketContentTest {
 
     @Test
     void planDuCampusUnTerrainInfligeCinqDegats() {
-        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER), new SpellCard("Sort", FIRE, 20)));
+        setUp(FIRE, List.of(new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("plan-du-campus");
         engine.submit(new Action.PlayCard(0));
         assertEquals(95, enemy.hp(), DELTA);
@@ -201,7 +201,7 @@ class TrinketContentTest {
 
     @Test
     void comprehensionAlgebriqueVingtPourcentDesSorts() {
-        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20), new TerrainCard("Marécage", WATER)));
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON), new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(50);
         equip("comprehension-algebrique");
         equip("plan-du-campus");
@@ -218,8 +218,8 @@ class TrinketContentTest {
 
     @Test
     void georgeRemplaceUneAutreCarteAChaquePioche() {
-        Card keep = new TerrainCard("Gardée", FIRE);
-        setUp(FIRE, List.of(keep), new CardPool(List.of(new SpellCard("Neuve", WATER, 10))));
+        Card keep = new TerrainCard("Gardée", FIRE, cardistry.items.Rarity.COMMON);
+        setUp(FIRE, List.of(keep), new CardPool(List.of(new SpellCard("Neuve", WATER, 10, cardistry.items.Rarity.COMMON))));
         equip("george");
 
         engine.submit(new Action.DrawCard());
@@ -242,7 +242,7 @@ class TrinketContentTest {
 
     @Test
     void georgeEtPhotocopieuseDeuxRemplacements() {
-        setUp(FIRE, List.of(new TerrainCard("A", FIRE), new TerrainCard("B", FIRE)));
+        setUp(FIRE, List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON), new TerrainCard("B", FIRE, cardistry.items.Rarity.COMMON)));
         equip("george");
         equip("photocopieuse");
         engine.submit(new Action.DrawCard());
@@ -271,7 +271,7 @@ class TrinketContentTest {
 
     @Test
     void ptitSatDixPourcentParPointDIvresse() {
-        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("ptit-sat");
         drink(2);
         engine.submit(new Action.PlayCard(0));
@@ -280,7 +280,7 @@ class TrinketContentTest {
 
     @Test
     void ptitSatRetombeAvecLIvresseEtSAdditionneALaCms() {
-        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100), new SpellCard("Sort", FIRE, 20)));
+        setUp(FIRE, List.of(new SpellCard("Coup fatal", WATER, 100, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("ptit-sat");
         equip("cms");
         drink(3);
@@ -304,7 +304,7 @@ class TrinketContentTest {
 
     @Test
     void cmsEtBriquetsSAdditionnent() {
-        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(FIRE, List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("cms");
         equip("redistribution-des-briquets");
         engine.submit(new Action.PlayCard(0));

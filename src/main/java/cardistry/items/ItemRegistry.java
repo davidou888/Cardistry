@@ -1,10 +1,9 @@
 package cardistry.items;
 
-import static cardistry.items.Rarity.COMMON;
-import static cardistry.items.Rarity.LEGENDARY;
-import static cardistry.items.Rarity.RARE;
-import static cardistry.items.Rarity.SECRET;
-import static cardistry.items.Rarity.UNCOMMON;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import cardistry.core.EffectContext;
 import cardistry.core.TemporaryEffect;
@@ -12,15 +11,16 @@ import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatModifier;
 import cardistry.core.stats.StatType;
+import static cardistry.items.Rarity.COMMON;
+import static cardistry.items.Rarity.LEGENDARY;
+import static cardistry.items.Rarity.RARE;
+import static cardistry.items.Rarity.SECRET;
+import static cardistry.items.Rarity.UNCOMMON;
 import cardistry.model.Element;
 import cardistry.model.Enemy;
 import cardistry.model.card.Card;
 import cardistry.model.card.DeadCard;
 import cardistry.model.card.TerrainCard;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Registre de tous les objets et trinkets. Pour ajouter du contenu : une entrée ici, un test,
@@ -123,7 +123,7 @@ public final class ItemRegistry {
                             @Override
                             public void onRewardTaken(GameEvent.RewardTaken event, EffectContext ctx) {
                                 if (event.taken().id().equals("grinder")) {
-                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15));
+                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, COMMON));
                                 }
                             }
 
@@ -131,7 +131,7 @@ public final class ItemRegistry {
                             public void onItemBought(GameEvent.ItemBought event, EffectContext ctx) {
                                 if (event.offer() instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c
                                         && c.collectible().id().equals("grinder")) {
-                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15));
+                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, COMMON));
                                 }
                             }
                         })
@@ -221,9 +221,9 @@ public final class ItemRegistry {
                                 ctx.state().playerStats().removeBySource(source);
                                 double bonus = 0.1 * event.drunkenness();
                                 if (bonus > 0) {
-                                    for (Element element : Element.PLAYABLE) {
+                                    for (StatType stat : StatType.allDamageMultipliers()) {
                                         ctx.state().playerStats().add(
-                                                StatModifier.percent(StatType.damageMultiplier(element), bonus, source));
+                                                StatModifier.percent(stat, bonus, source));
                                     }
                                 }
                             }

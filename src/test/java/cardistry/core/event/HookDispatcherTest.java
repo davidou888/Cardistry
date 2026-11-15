@@ -40,8 +40,8 @@ class HookDispatcherTest {
     void chaqueEvenementAppelleLeBonHook() {
         Enemy enemy = new Enemy("Mannequin", Element.FIRE, 20, 5);
         Player player = new Player(100);
-        SpellCard card = new SpellCard("Boule de feu", Element.FIRE, 10);
-        TerrainCard terrain = new TerrainCard("EPFL", Element.FIRE);
+        SpellCard card = new SpellCard("Boule de feu", Element.FIRE, 10, cardistry.items.Rarity.COMMON);
+        TerrainCard terrain = new TerrainCard("EPFL", Element.FIRE, cardistry.items.Rarity.COMMON);
         Recorder recorder = new Recorder();
 
         List.of(

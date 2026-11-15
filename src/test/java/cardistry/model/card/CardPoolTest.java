@@ -42,20 +42,20 @@ class CardPoolTest {
 
     @Test
     void copyConserveLesValeurs() {
-        SpellCard spell = new SpellCard("Boule de feu", Element.FIRE, 10);
+        SpellCard spell = new SpellCard("Boule de feu", Element.FIRE, 10, cardistry.items.Rarity.COMMON);
         SpellCard spellCopy = spell.copy();
         assertNotSame(spell, spellCopy);
         assertEquals("Boule de feu", spellCopy.name());
         assertEquals(Element.FIRE, spellCopy.element());
         assertEquals(10, spellCopy.damage());
 
-        HealCard heal = new HealCard("Potion", Element.NATURE, 20);
+        HealCard heal = new HealCard("Potion", Element.NATURE, 20, cardistry.items.Rarity.COMMON);
         HealCard healCopy = heal.copy();
         assertNotSame(heal, healCopy);
         assertEquals(20, healCopy.amount());
         assertEquals(Element.NATURE, healCopy.element());
 
-        TerrainCard terrain = new TerrainCard("Forêt", Element.NATURE);
+        TerrainCard terrain = new TerrainCard("Forêt", Element.NATURE, cardistry.items.Rarity.COMMON);
         TerrainCard terrainCopy = terrain.copy();
         assertNotSame(terrain, terrainCopy);
         assertEquals("Forêt", terrainCopy.name());

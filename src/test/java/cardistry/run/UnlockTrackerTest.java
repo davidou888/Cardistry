@@ -41,8 +41,8 @@ class UnlockTrackerTest {
         EventBus bus = new EventBus();
         Stats stats = new Stats();
         stats.setBase(StatType.STARTING_HAND, startingHand);
-        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("EPFL", FIRE), List.of(), stats);
-        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10))), new Rng(1),
+        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), stats);
+        engine = new CombatEngine(state, new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON))), new Rng(1),
                 bus, new LootTable(List::of));
         tracker = new UnlockTracker(() -> state, store, bus);
         bus.subscribe(tracker);
@@ -167,8 +167,8 @@ class UnlockTrackerTest {
     /** Partie sur la carte, sort surpuissant ; joue jusqu'au combat contre le boss du niveau {@code level}. */
     private cardistry.run.Run runToBoss(int level) {
         EventBus bus = new EventBus();
-        cardistry.run.Run run = new cardistry.run.Run(2, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000))),
-                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000))));
+        cardistry.run.Run run = new cardistry.run.Run(2, Set.of(), bus, () -> GameState.newGame(java.util.Collections.nCopies(12, new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))),
+                () -> new CardPool(List.of(new SpellCard("Météore", FIRE, 10_000, cardistry.items.Rarity.COMMON))));
         tracker = new UnlockTracker(run::state, store, bus);
         bus.subscribe(tracker);
         run.start();

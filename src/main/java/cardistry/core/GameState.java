@@ -743,8 +743,8 @@ public final class GameState {
         playerStats.removeBySource(DRUNK_SOURCE);
         double bonus = drunkTier().damageBonus();
         if (bonus > 0) {
-            for (cardistry.model.Element element : cardistry.model.Element.PLAYABLE) {
-                playerStats.add(StatModifier.percent(StatType.damageMultiplier(element), bonus, DRUNK_SOURCE));
+            for (StatType stat : StatType.allDamageMultipliers()) {
+                playerStats.add(StatModifier.percent(stat, bonus, DRUNK_SOURCE));
             }
         }
     }

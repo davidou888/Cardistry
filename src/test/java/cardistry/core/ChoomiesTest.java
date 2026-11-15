@@ -28,7 +28,7 @@ class ChoomiesTest {
     /** Choomies gagnés en tuant {@code enemy} d'un sort (seed {@code seed}). */
     private static int gain(Enemy enemy, long seed, Stats stats) {
         GameState state = new GameState(new Player(100), List.of(enemy, new Enemy("Suivant", FIRE, 10, 1)),
-                new TerrainCard("Forêt", NATURE), List.of(new SpellCard("Gros", FIRE, 1000)), stats);
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(new SpellCard("Gros", FIRE, 1000, cardistry.items.Rarity.COMMON)), stats);
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(seed), new EventBus(),
                 new LootTable(List::of));
         engine.submit(new Action.PlayCard(0));

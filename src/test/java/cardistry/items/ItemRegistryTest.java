@@ -50,8 +50,20 @@ class ItemRegistryTest {
         // Les homonymes carte / objet ne se confondent pas.
         assertTrue(ids.contains("carte:petit-petou"));
         assertTrue(ids.contains("objet:petit-petou"));
-        assertTrue(ids.contains("carte:caipirinha"));
         assertTrue(ids.contains("objet:caipirinha"));
+    }
+
+    /** Deux cartes du pool avec le même identifiant sont la même carte (doublon = poids), jamais deux cartes différentes. */
+    @Test
+    void memeIdentifiantMemeCarte() {
+        java.util.Map<String, cardistry.model.card.Card> byId = new java.util.HashMap<>();
+        for (cardistry.model.card.Card card : new cardistry.model.card.CardPool().cards()) {
+            cardistry.model.card.Card first = byId.putIfAbsent(card.qualifiedId(), card);
+            if (first != null) {
+                assertTrue(first.getClass() == card.getClass() && first.element() == card.element()
+                        && first.rarity() == card.rarity(), "deux cartes différentes : " + card.qualifiedId());
+            }
+        }
     }
 
     @Test

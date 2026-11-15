@@ -43,7 +43,7 @@ class EffectContentTest {
         bus.subscribe(events::add);
         first = new Enemy("Mannequin", FIRE, 100, 10);
         state = new GameState(new Player(100), List.of(first, new Enemy("Bouée", WATER, 100, 10)),
-                new TerrainCard("Forêt", NATURE), hand, new Stats());
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 
@@ -60,7 +60,7 @@ class EffectContentTest {
 
     @Test
     void shotDeJagerProchainSortX2EtUnPointDIvresse() {
-        setUp(List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         assertEquals(ActionResult.FREE_ACTION, use("shot-de-jager"));
         assertEquals(1, state.drunkenness());
         assertEquals("Shot de Jäger : prochain sort ×2", state.effects().get(0).describe());
@@ -72,7 +72,7 @@ class EffectContentTest {
 
     @Test
     void shotDeJagerPerduALaFinDuCombat() {
-        setUp(List.of(new SpellCard("Coup fatal", WATER, 1000)));
+        setUp(List.of(new SpellCard("Coup fatal", WATER, 1000, cardistry.items.Rarity.COMMON)));
         use("shot-de-jager");
         first.takeDamage(99);
         engine.give(ItemRegistry.item("gaz-du-bat-inf")); // tue l'adversaire sans jouer de sort
@@ -83,7 +83,7 @@ class EffectContentTest {
 
     @Test
     void shotDeJagerEtPtitSat() {
-        setUp(List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         engine.equip(ItemRegistry.trinket("ptit-sat"));
         use("shot-de-jager"); // Ivresse 1 → +10 % (Pompette) +10 % (Ptit Sat ?)
         engine.submit(new Action.PlayCard(0));
@@ -109,7 +109,7 @@ class EffectContentTest {
 
     @Test
     void moscowMulePerduALaFinDuCombatSIlNAPasServi() {
-        setUp(List.of(new SpellCard("Coup fatal", WATER, 1000)));
+        setUp(List.of(new SpellCard("Coup fatal", WATER, 1000, cardistry.items.Rarity.COMMON)));
         use("moscow-mule");
         engine.submit(new Action.PlayCard(0)); // tue le Mannequin : pas d'attaque, combat suivant
         assertTrue(state.effects().isEmpty());
@@ -139,7 +139,7 @@ class EffectContentTest {
 
     @Test
     void spaceCakeAuBoutDeTroisToursPendantDeuxTours() {
-        setUp(List.of(new SpellCard("Sort", FIRE, 20), new SpellCard("Sort", FIRE, 20), new SpellCard("Sort", FIRE, 20)));
+        setUp(List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON), new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(60);
         engine.startTurn();                         // tour 1 (T)
         use("space-cake");

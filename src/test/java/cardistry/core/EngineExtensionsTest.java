@@ -45,7 +45,7 @@ class EngineExtensionsTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         hydra = new Enemy("Mannequin", FIRE, 100, 10);
-        state = new GameState(new Player(100), List.of(hydra), new TerrainCard("Forêt", NATURE), hand, new Stats());
+        state = new GameState(new Player(100), List.of(hydra), new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, pool, new Rng(4), bus, new LootTable(List::of));
     }
 
@@ -92,7 +92,7 @@ class EngineExtensionsTest {
 
     @Test
     void soinParElementSAjouteALEfficacite() {
-        HealCard pétou = new HealCard("Petit pétou", FIRE, 10);
+        HealCard pétou = new HealCard("Petit pétou", FIRE, 10, cardistry.items.Rarity.COMMON);
         setUp(List.of(pétou));
         state.player().takeDamage(50);
         state.playerStats().add(percent(StatType.FIRE_HEAL, 0.5, "grinder"));
@@ -105,7 +105,7 @@ class EngineExtensionsTest {
 
     @Test
     void soinParElementNeTouchePasLesAutres() {
-        setUp(List.of(new HealCard("Potion", NATURE, 10)));
+        setUp(List.of(new HealCard("Potion", NATURE, 10, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(50);
         state.playerStats().add(percent(StatType.FIRE_HEAL, 0.5, "grinder"));
 
@@ -129,7 +129,7 @@ class EngineExtensionsTest {
     void cartesParPiocheLimiteesParLaMain() {
         List<Card> hand = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            hand.add(new TerrainCard("T" + i, FIRE));
+            hand.add(new TerrainCard("T" + i, FIRE, cardistry.items.Rarity.COMMON));
         }
         setUp(hand);
         state.playerStats().add(flat(StatType.CARDS_PER_DRAW, 1, "photocopieuse"));
@@ -148,8 +148,8 @@ class EngineExtensionsTest {
 
     @Test
     void poidsDePiocheModifiesParUnTrinket() {
-        Card common = new SpellCard("Boule", FIRE, 10);
-        Card rare = new HealCard("Petit pétou", FIRE, 15);
+        Card common = new SpellCard("Boule", FIRE, 10, cardistry.items.Rarity.COMMON);
+        Card rare = new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON);
         CardPool pool = new CardPool(List.of(common, common, common, rare));
         setUp(List.of(), pool);
         engine.equip(Trinket.builder("g", "G", Rarity.COMMON).cardWeight("Petit pétou", 2).build());
@@ -201,8 +201,8 @@ class EngineExtensionsTest {
 
     @Test
     void remplacerUneCarteDeLaMain() {
-        Card old = new TerrainCard("Vieille", FIRE);
-        setUp(List.of(new TerrainCard("A", FIRE), old), new CardPool(List.of(new SpellCard("Neuve", WATER, 10))));
+        Card old = new TerrainCard("Vieille", FIRE, cardistry.items.Rarity.COMMON);
+        setUp(List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON), old), new CardPool(List.of(new SpellCard("Neuve", WATER, 10, cardistry.items.Rarity.COMMON))));
 
         use(ctx -> ctx.replaceCardInHand(1));
 

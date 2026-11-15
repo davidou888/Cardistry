@@ -38,7 +38,7 @@ class CigaretteTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 20, 10), new Enemy("B", FIRE, 20, 10),
-                new Enemy("C", FIRE, 20, 10)), new TerrainCard("Forêt", NATURE), List.of(), new Stats());
+                new Enemy("C", FIRE, 20, 10)), new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(), new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 

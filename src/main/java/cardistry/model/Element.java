@@ -11,10 +11,14 @@ public enum Element {
     FIRE("feu"),
     WATER("eau"),
     NATURE("plante"),
-    NEUTRAL("neutre");
+    NEUTRAL("neutre"),
+    ALGEBRAIC("algebrique"),
+    SPIRIT("spirituel"),
+    GEOMETRIC("geometrique"),
+    GLITCH("error: null");
 
     /** Éléments des cartes, terrains et soins (tout sauf {@link #NEUTRAL}). */
-    public static final List<Element> PLAYABLE = List.of(FIRE, WATER, NATURE);
+    public static final List<Element> PLAYABLE = List.of(FIRE, WATER, NATURE, ALGEBRAIC, SPIRIT, GEOMETRIC, GLITCH);
 
     private final String displayName;
 
@@ -34,6 +38,15 @@ public enum Element {
             case NATURE -> other == WATER;
             case WATER -> other == FIRE;
             case NEUTRAL -> false;
+            case GEOMETRIC -> other == ALGEBRAIC;
+            case ALGEBRAIC -> other == SPIRIT;
+            case SPIRIT -> other == GEOMETRIC;
+            case GLITCH -> true; // bat tout, lui-même et le neutre compris
         };
+    }
+
+    /** {@code true} si cet élément bat tous les éléments, lui-même compris (GLITCH). */
+    public boolean beatsEverything() {
+        return java.util.Arrays.stream(values()).allMatch(this::beats);
     }
 }

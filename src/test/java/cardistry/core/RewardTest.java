@@ -51,8 +51,8 @@ class RewardTest {
         bus.subscribe(events::add);
         hydra = new Enemy("Mannequin", FIRE, 20, 5);
         siren = new Enemy("Bouée", WATER, 30, 10);
-        state = new GameState(new Player(100), List.of(hydra, siren), new TerrainCard("EPFL", FIRE),
-                List.of(new SpellCard("Tsunami", WATER, 15)), new Stats());
+        state = new GameState(new Player(100), List.of(hydra, siren), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON),
+                List.of(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)), new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(3), bus, new LootTable(() -> candidates));
         assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.PlayCard(0)));
     }
@@ -153,8 +153,8 @@ class RewardTest {
     void pasDeRecompenseApresLeDernierAdversaire() {
         EventBus bus = new EventBus();
         Enemy last = new Enemy("Mannequin", FIRE, 20, 5);
-        GameState solo = new GameState(new Player(100), List.of(last), new TerrainCard("EPFL", FIRE),
-                List.of(new SpellCard("Tsunami", WATER, 15)), new Stats());
+        GameState solo = new GameState(new Player(100), List.of(last), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON),
+                List.of(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)), new Stats());
         CombatEngine e = new CombatEngine(solo, new CardPool(), new Rng(3), bus, new LootTable(() -> List.of(item("a"))));
         e.submit(new Action.PlayCard(0));
         assertTrue(solo.isWon());

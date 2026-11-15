@@ -102,6 +102,9 @@ final class MenuScreens {
     private static String elementsLine() {
         StringBuilder line = new StringBuilder();
         for (Element winner : Element.PLAYABLE) {
+            if (winner.beatsEverything()) {
+                continue; // résumé à la fin : « X bat tout »
+            }
             for (Element loser : Element.PLAYABLE) {
                 if (winner.beats(loser)) {
                     if (!line.isEmpty()) {
@@ -110,6 +113,11 @@ final class MenuScreens {
                     line.append(Format.capitalize(winner.displayName())).append(" > ")
                             .append(Format.capitalize(loser.displayName()));
                 }
+            }
+        }
+        for (Element winner : Element.PLAYABLE) {
+            if (winner.beatsEverything()) {
+                line.append(" · ").append(Format.capitalize(winner.displayName())).append(" bat tout");
             }
         }
         return line.toString();

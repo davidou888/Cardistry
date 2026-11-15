@@ -116,9 +116,9 @@ public final class AnimationCheck {
         Enemy enemy = EnemyRegistry.create(id, 1);
         List<Card> hand = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            hand.add(new SpellCard("Tsunami", Element.WATER, 12));
+            hand.add(new SpellCard("Tsunami", Element.WATER, 12, cardistry.items.Rarity.COMMON));
         }
-        GameState state = new GameState(new Player(100), List.of(enemy), new TerrainCard("EPFL", Element.FIRE), hand,
+        GameState state = new GameState(new Player(100), List.of(enemy), new TerrainCard("EPFL", Element.FIRE, cardistry.items.Rarity.COMMON), hand,
                 new Stats());
         EventBus bus = new EventBus();
         // Avant l'interface : l'événement est noté, puis son animation se joue.

@@ -21,10 +21,9 @@ public final class SetBonuses {
         return StatModifier.flat(stat, value, "");
     }
 
-    /** +{@code value} sur les trois stats de dégâts élémentaires. */
+    /** +{@code value} sur les stats de dégâts de tous les éléments. */
     private static List<StatModifier> elementalDamage(double value) {
-        return List.of(percent(StatType.FIRE_DAMAGE, value), percent(StatType.WATER_DAMAGE, value),
-                percent(StatType.NATURE_DAMAGE, value));
+        return StatType.allDamageMultipliers().stream().map(stat -> percent(stat, value)).toList();
     }
 
     private static List<StatModifier> with(StatModifier first, List<StatModifier> rest) {

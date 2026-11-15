@@ -38,7 +38,7 @@ class SetBonusTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 100, 10), new Enemy("B", FIRE, 100, 10),
-                new Enemy("C", FIRE, 100, 10)), new TerrainCard("Forêt", NATURE), List.of(), new Stats());
+                new Enemy("C", FIRE, 100, 10)), new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(), new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 
@@ -198,7 +198,7 @@ class SetBonusTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         state = new GameState(new Player(100), List.of(new Enemy("A", FIRE, 20, 10), new Enemy("B", FIRE, 100, 10)),
-                new TerrainCard("Forêt", NATURE), List.of(new cardistry.model.card.SpellCard("x", cardistry.model.Element.WATER, 100)),
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(new cardistry.model.card.SpellCard("x", cardistry.model.Element.WATER, 100, cardistry.items.Rarity.COMMON)),
                 new Stats());
         Trinket incoming = tagged(Tag.PARTY);
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(() -> List.of(incoming)));

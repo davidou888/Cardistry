@@ -1,9 +1,11 @@
 package cardistry.story;
 
-import cardistry.model.Element;
-import cardistry.model.card.SpellCard;
 import java.util.List;
 import java.util.Optional;
+
+import static cardistry.items.Rarity.UNCOMMON;
+import cardistry.model.Element;
+import cardistry.model.card.SpellCard;
 
 /**
  * Registre des événements. Les trois actuels sont des <b>placeholders</b> : Louis fournira les vrais
@@ -55,7 +57,7 @@ public final class StoryRegistry {
                             ctx.say("C'est fort. Ça fait du bien... pour l'instant.");
                         }),
                         StoryChoice.of("Lui demander une astuce", "+1 Boule de feu dans ton deck", ctx -> {
-                            ctx.addCard(new SpellCard("Boule de feu", Element.FIRE, 10));
+                            ctx.addCard(new SpellCard("Boule de feu", Element.FIRE, 10, UNCOMMON));
                             ctx.say("Il griffonne un sort sur une serviette : Boule de feu rejoint ton deck.");
                         }),
                         StoryChoice.of("Refuser poliment", "", ctx -> ctx.say("Il hausse les épaules et s'en va."))));

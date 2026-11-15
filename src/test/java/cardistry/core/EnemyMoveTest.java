@@ -51,8 +51,8 @@ class EnemyMoveTest {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
         enemy = builder.build();
-        state = new GameState(new Player(100), List.of(enemy), new TerrainCard("Forêt", NATURE), hand, new Stats());
-        engine = new CombatEngine(state, new CardPool(List.of(new TerrainCard("Pioche", FIRE))), new Rng(3), bus,
+        state = new GameState(new Player(100), List.of(enemy), new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
+        engine = new CombatEngine(state, new CardPool(List.of(new TerrainCard("Pioche", FIRE, cardistry.items.Rarity.COMMON))), new Rng(3), bus,
                 new LootTable(List::of));
     }
 
@@ -144,7 +144,7 @@ class EnemyMoveTest {
     void degatsSelonLesCartesQuiManquent() {
         // 6 + 3 par carte sous 5 : main de 2 cartes → 6 + 9
         setUp(always(new MoveEffect.Hit(6, 1, 3, 0, 0)),
-                List.of(new TerrainCard("A", FIRE), new TerrainCard("B", FIRE)));
+                List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON), new TerrainCard("B", FIRE, cardistry.items.Rarity.COMMON)));
         assertEquals(15, state.enemyAttackDamage(), DELTA);
         endTurn();
         assertEquals(85, state.player().hp(), DELTA);
@@ -201,7 +201,7 @@ class EnemyMoveTest {
 
     @Test
     void taxePrendUneClopeSinonDeuxCoups() {
-        setUp(always(new MoveEffect.Tax(1, 5, 2)), List.of(new TerrainCard("A", FIRE)));
+        setUp(always(new MoveEffect.Tax(1, 5, 2)), List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON)));
         engine.submit(new Action.PlayCard(0));
         assertEquals(GameState.STARTING_CIGARETTES - 1, state.cigarettes());
         assertEquals(100, state.player().hp(), DELTA);
@@ -220,7 +220,7 @@ class EnemyMoveTest {
     @Test
     void esquiveLeProchainSort() {
         setUp(always(new MoveEffect.Gamble(1.0, new MoveEffect.Dodge(), MoveEffect.Hit.of(2, 2))),
-                List.of(new SpellCard("Boule", FIRE, 10), new SpellCard("Boule", FIRE, 10)));
+                List.of(new SpellCard("Boule", FIRE, 10, cardistry.items.Rarity.COMMON), new SpellCard("Boule", FIRE, 10, cardistry.items.Rarity.COMMON)));
         endTurn();
         assertTrue(enemy.dodgeReady());
         engine.submit(new Action.PlayCard(0));
@@ -240,7 +240,7 @@ class EnemyMoveTest {
     @Test
     void carteMaudite() {
         setUp(always(new MoveEffect.CurseCard("Exercice 3b")),
-                List.of(new TerrainCard("A", FIRE), new TerrainCard("B", FIRE)));
+                List.of(new TerrainCard("A", FIRE, cardistry.items.Rarity.COMMON), new TerrainCard("B", FIRE, cardistry.items.Rarity.COMMON)));
         endTurn();
         long dead = state.hand().stream().filter(c -> c instanceof DeadCard).count();
         assertEquals(1, dead);
@@ -261,8 +261,8 @@ class EnemyMoveTest {
     @Test
     void renvoiDeDegatsSansJamaisTuer() {
         setUp(Enemy.builder("peneu", "Peneu", NEUTRAL, EnemyRank.ELITE).hp(500).reflect(0.2)
-                .behavior(EnemyBehavior.always(NORMAL)), List.of(new SpellCard("Gros", FIRE, 100),
-                new SpellCard("Gros", FIRE, 100)));
+                .behavior(EnemyBehavior.always(NORMAL)), List.of(new SpellCard("Gros", FIRE, 100, cardistry.items.Rarity.COMMON),
+                new SpellCard("Gros", FIRE, 100, cardistry.items.Rarity.COMMON)));
         engine.submit(new Action.PlayCard(0));
         assertEquals(400, enemy.hp(), DELTA);
         assertEquals(100 - 20 - 5, state.player().hp(), DELTA);

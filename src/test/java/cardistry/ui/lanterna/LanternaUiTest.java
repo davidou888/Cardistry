@@ -98,7 +98,7 @@ class LanternaUiTest {
     }
 
     private static GameState combat(List<Card> hand, Enemy... enemies) {
-        return new GameState(new Player(100), List.of(enemies), new TerrainCard("EPFL", Element.FIRE), hand, new Stats());
+        return new GameState(new Player(100), List.of(enemies), new TerrainCard("EPFL", Element.FIRE, cardistry.items.Rarity.COMMON), hand, new Stats());
     }
 
     // --- Titre ---
@@ -144,10 +144,10 @@ class LanternaUiTest {
     void ecranDeCombat() throws IOException {
         open(80, 24);
         GameState state = combat(List.of(
-                new SpellCard("Jet d'eau", Element.WATER, 10),
-                new SpellCard("Pluie de flammes", Element.FIRE, 15),
-                new HealCard("Caïpirinha", Element.WATER, 10),
-                new TerrainCard("Marécage", Element.WATER)),
+                new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON),
+                new SpellCard("Pluie de flammes", Element.FIRE, 15, cardistry.items.Rarity.COMMON),
+                new HealCard("Caïpirinha", Element.WATER, 10, cardistry.items.Rarity.COMMON),
+                new TerrainCard("Marécage", Element.WATER, cardistry.items.Rarity.COMMON)),
                 new Enemy("Mannequin", Element.FIRE, 20, 5), new Enemy("Bouée", Element.WATER, 30, 10),
                 new Enemy("Pantin", Element.NATURE, 40, 15));
         ui.onEvent(new GameEvent.GameStarted(42));
@@ -172,8 +172,8 @@ class LanternaUiTest {
     void flechesPuisEntreeJoueLaCarteSelectionnee() throws IOException {
         open(80, 24);
         GameState state = combat(List.of(
-                new TerrainCard("A", Element.FIRE), new TerrainCard("B", Element.WATER),
-                new TerrainCard("C", Element.NATURE)), hydra());
+                new TerrainCard("A", Element.FIRE, cardistry.items.Rarity.COMMON), new TerrainCard("B", Element.WATER, cardistry.items.Rarity.COMMON),
+                new TerrainCard("C", Element.NATURE, cardistry.items.Rarity.COMMON)), hydra());
         press(KeyType.ArrowRight);
         press(KeyType.ArrowRight);
         press(KeyType.Enter);
@@ -184,7 +184,7 @@ class LanternaUiTest {
     @Test
     void flecheGaucheBoucle() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE), new TerrainCard("B", Element.WATER)), hydra());
+        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE, cardistry.items.Rarity.COMMON), new TerrainCard("B", Element.WATER, cardistry.items.Rarity.COMMON)), hydra());
         press(KeyType.ArrowLeft);
         press(KeyType.Enter);
 
@@ -194,7 +194,7 @@ class LanternaUiTest {
     @Test
     void chiffresEtPioche() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE)), hydra());
+        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE, cardistry.items.Rarity.COMMON)), hydra());
         type("3p0");
 
         assertEquals(new Action.PlayCard(2), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
@@ -205,7 +205,7 @@ class LanternaUiTest {
     @Test
     void quitterDemandeConfirmation() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE)), hydra());
+        GameState state = combat(List.of(new TerrainCard("A", Element.FIRE, cardistry.items.Rarity.COMMON)), hydra());
         type("qn1");
         assertEquals(new Action.PlayCard(0), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
 
@@ -226,7 +226,7 @@ class LanternaUiTest {
     @Test
     void grandTerminalAgranditLeJournal() throws IOException {
         open(120, 40);
-        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), hydra());
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)), hydra());
         ui.showStatus(state);
         for (int i = 1; i <= 15; i++) {
             ui.onEvent(new GameEvent.TurnStarted(i));
@@ -318,7 +318,7 @@ class LanternaUiTest {
 
     /** État avec inventaire : passe par le moteur pour équiper. */
     private static GameState withInventory(List<Item> items, List<Trinket> trinkets) {
-        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), hydra());
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)), hydra());
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus());
         items.forEach(engine::give);
         trinkets.forEach(engine::equip);
@@ -482,8 +482,8 @@ class LanternaUiTest {
         open(80, 24);
         Enemy first = hydra();
         GameState state = new GameState(new Player(100), List.of(first, new Enemy("Bouée", Element.WATER, 30, 10),
-                new Enemy("Pantin", Element.NATURE, 40, 15)), new TerrainCard("EPFL", Element.FIRE),
-                List.of(new SpellCard("Tsunami", Element.WATER, 100)), new Stats());
+                new Enemy("Pantin", Element.NATURE, 40, 15)), new TerrainCard("EPFL", Element.FIRE, cardistry.items.Rarity.COMMON),
+                List.of(new SpellCard("Tsunami", Element.WATER, 100, cardistry.items.Rarity.COMMON)), new Stats());
         CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(1), new EventBus(),
                 new cardistry.items.LootTable(List::of));
         for (int i = 0; i < 3; i++) {
@@ -507,7 +507,7 @@ class LanternaUiTest {
         open(80, 24);
         GameState state = withInventory(List.of(), List.of());
         ui.showStatus(state);
-        ui.onEvent(new GameEvent.CardPlayed(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15)));
+        ui.onEvent(new GameEvent.CardPlayed(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, cardistry.items.Rarity.COMMON)));
         ui.onEvent(new GameEvent.ItemUsed(ItemRegistry.item("petit-petou")));
         ui.showHand(state);
         String text = screen();
@@ -637,8 +637,8 @@ class LanternaUiTest {
     void ecranDePiocheAuChoix() throws Exception {
         open(80, 24);
         GameState state = withInventory(List.of(), List.of());
-        List<cardistry.model.card.Card> options = List.of(new SpellCard("Jet d'eau", Element.WATER, 10),
-                new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15), new TerrainCard("Forêt", Element.NATURE));
+        List<cardistry.model.card.Card> options = List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON),
+                new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, cardistry.items.Rarity.COMMON), new TerrainCard("Forêt", Element.NATURE, cardistry.items.Rarity.COMMON));
         int[] first = {-1};
         Thread player = new Thread(() -> first[0] = ui.chooseDrawnCard(state, options));
         player.setDaemon(true);
@@ -759,7 +759,7 @@ class LanternaUiTest {
     @Test
     void carteMorteAffichee() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new cardistry.model.card.DeadCard(), new SpellCard("Jet d'eau", Element.WATER, 10)),
+        GameState state = combat(List.of(new cardistry.model.card.DeadCard(), new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)),
                 hydra());
         ui.showHand(state);
         String text = dump("26-no-cards");
@@ -825,7 +825,7 @@ class LanternaUiTest {
     void spriteEnCouleurDansLeCombat() throws IOException {
         open(80, 24);
         Enemy caddie = cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1);
-        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), caddie);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)), caddie);
         ui.onEvent(new GameEvent.GameStarted(42));
         ui.showStatus(state);
         String text = dump("41-combat-caddie");
@@ -896,14 +896,14 @@ class LanternaUiTest {
     void recompenseDeCarte() throws IOException {
         open(80, 24);
         GameState state = deckState();
-        List<Card> options = List.of(new SpellCard("Tsunami", Element.WATER, 15), new HealCard("Potion", Element.NATURE, 10),
-                new TerrainCard("Forêt", Element.NATURE));
+        List<Card> options = List.of(new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON), new HealCard("Potion", Element.NATURE, 10, cardistry.items.Rarity.COMMON),
+                new TerrainCard("Forêt", Element.NATURE, cardistry.items.Rarity.COMMON));
         press(KeyType.ArrowRight);
         press(KeyType.Enter);
         assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));
         String text = dump("61-recompense-carte");
         assertTrue(text.contains("Ajoute une carte à ton deck"), text);
-        assertTrue(text.contains("Deck 12 cartes"));
+        assertTrue(text.contains("Deck 12 cartes"), text);
         type("s");
         assertEquals(-1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardReward(state, options)));
     }
@@ -928,13 +928,13 @@ class LanternaUiTest {
         assertEquals(1, (int) assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseCardToRemove(state)));
         String deck = dump("63-tri");
         assertTrue(deck.contains("Choisis la carte à retirer"), deck);
-        assertTrue(deck.contains("Boule de feu"));
+        assertTrue(deck.contains("Marécage"), deck);
     }
 
     @Test
     void resumeDuDeck() {
-        List<Card> deck = List.of(new SpellCard("Tsunami", Element.WATER, 15), new HealCard("Potion", Element.NATURE, 10),
-                new SpellCard("Tsunami", Element.WATER, 15));
+        List<Card> deck = List.of(new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON), new HealCard("Potion", Element.NATURE, 10, cardistry.items.Rarity.COMMON),
+                new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON));
         assertEquals("Tsunami ×2, Potion", ItemScreens.deckSummary(deck));
     }
 
@@ -1242,8 +1242,8 @@ class LanternaUiTest {
     @Test
     void combatFenetreJoueurAGaucheAdversaireADroite() throws IOException {
         openWithImages(80, 24);
-        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15),
-                new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Forêt", Element.NATURE)), withImage());
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON),
+                new HealCard("Potion", Element.NATURE, 10, cardistry.items.Rarity.COMMON), new TerrainCard("Forêt", Element.NATURE, cardistry.items.Rarity.COMMON)), withImage());
         ui.showStatus(state);
         String text = dump("84-fenetre-combat-texte");
         List<String> lines = text.lines().toList();
@@ -1266,9 +1266,9 @@ class LanternaUiTest {
     void cartesIllustreesAvecIconeDeTypeEtCouleurDElement() throws IOException {
         openWithImages(80, 24);
         // Cartes inconnues : pas de images/cards/<id>.png, donc l'illustration générique.
-        ui.showStatus(combat(List.of(new SpellCard("Sort test", Element.WATER, 15),
-                new HealCard("Soin test", Element.NATURE, 10), new TerrainCard("Terrain test", Element.NATURE),
-                new cardistry.model.card.DeadCard("Morte test"), new SpellCard("Tsunami", Element.WATER, 15)),
+        ui.showStatus(combat(List.of(new SpellCard("Sort test", Element.WATER, 15, cardistry.items.Rarity.COMMON),
+                new HealCard("Soin test", Element.NATURE, 10, cardistry.items.Rarity.COMMON), new TerrainCard("Terrain test", Element.NATURE, cardistry.items.Rarity.COMMON),
+                new cardistry.model.card.DeadCard("Morte test"), new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON)),
                 hydra()));
         List<cardistry.ui.window.ImageLayer.Placement> images = layer.snapshot();
         assertEquals(2, placed("cards/tsunami.png").rows(), "illustration de la carte quand elle existe");
@@ -1287,7 +1287,7 @@ class LanternaUiTest {
         String text = screen();
         assertTrue(text.contains("Tsunami") && text.contains("15") && text.contains("+10"), text);
         assertFalse(text.contains("-\n"), "pas de mot coupé par un tiret");
-        assertEquals("", CombatWindowScreen.value(new TerrainCard("Forêt", Element.NATURE)));
+        assertEquals("", CombatWindowScreen.value(new TerrainCard("Forêt", Element.NATURE, cardistry.items.Rarity.COMMON)));
         assertEquals("ui/type-dead.png", CombatWindowScreen.typeIcon(new cardistry.model.card.DeadCard()));
     }
 
@@ -1339,7 +1339,7 @@ class LanternaUiTest {
     @Test
     void journalFermePuisOuvertAvecJ() throws IOException {
         openWithImages(80, 24);
-        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15)), withImage());
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON)), withImage());
         ui.onEvent(new GameEvent.TurnStarted(1));
         ui.onEvent(new GameEvent.CardPlayed(state.hand().get(0)));
         type("j");
@@ -1363,7 +1363,7 @@ class LanternaUiTest {
     @Test
     void journalToucheJSansEffetEnTerminal() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15)), hydra());
+        GameState state = combat(List.of(new SpellCard("Tsunami", Element.WATER, 15, cardistry.items.Rarity.COMMON)), hydra());
         type("j");
         type("p");
         assertEquals(new Action.DrawCard(), assertTimeoutPreemptively(TIMEOUT, () -> ui.nextAction(state)));
@@ -1483,7 +1483,7 @@ class LanternaUiTest {
     void cartesIllustreesDansLesChoixDeCartes() {
         GameState state = withInventory(List.of(), List.of());
         List<cardistry.ui.window.ImageLayer.Placement> images = drawn(p -> ItemScreens.cardReward(p, state,
-                List.of(new HealCard("Potion", Element.NATURE, 10), new TerrainCard("Terrain test", Element.NATURE)),
+                List.of(new HealCard("Potion", Element.NATURE, 10, cardistry.items.Rarity.COMMON), new TerrainCard("Terrain test", Element.NATURE, cardistry.items.Rarity.COMMON)),
                 0, 1));
         assertEquals(1, images.stream().filter(i -> i.path().equals("cards/potion.png")).count());
         assertEquals(1, images.stream().filter(i -> i.path().equals("ui/type-heal.png")).count());
@@ -1578,7 +1578,7 @@ class LanternaUiTest {
     @Test
     void echapOuvreLaPauseEnCombatPuisReprendre() throws IOException {
         open(80, 24);
-        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10)), hydra());
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)), hydra());
         press(KeyType.Escape); // pause
         press(KeyType.Enter); // Reprendre
         type("p");
@@ -1625,7 +1625,7 @@ class LanternaUiTest {
         open(80, 24);
         List<cardistry.ui.audio.UiSound> played = new java.util.ArrayList<>();
         ui.setSounds(played::add);
-        GameState state = combat(List.of(new SpellCard("A", Element.WATER, 10), new SpellCard("B", Element.WATER, 10)),
+        GameState state = combat(List.of(new SpellCard("A", Element.WATER, 10, cardistry.items.Rarity.COMMON), new SpellCard("B", Element.WATER, 10, cardistry.items.Rarity.COMMON)),
                 hydra());
         press(KeyType.ArrowRight);
         press(KeyType.Escape);

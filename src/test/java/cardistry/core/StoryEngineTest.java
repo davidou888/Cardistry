@@ -43,7 +43,7 @@ class StoryEngineTest {
         open(story(StoryChoice.of("Payer", "", ctx -> {
             ctx.choomies(10);
             ctx.cigarettes(3);
-            ctx.addCard(new SpellCard("Boule de feu", FIRE, 10));
+            ctx.addCard(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON));
             ctx.say("Fait.");
         })));
         assertTrue(engine.story().isPresent());
@@ -52,7 +52,7 @@ class StoryEngineTest {
         assertTrue(engine.story().isEmpty());
         assertEquals(25, state.choomies());
         assertEquals(GameState.STARTING_CIGARETTES + 3, state.cigarettes());
-        assertEquals(13, state.deck().size());
+        assertEquals(cardistry.model.card.CardPool.startingDeck().size() + 1, state.deck().size());
         GameEvent.StoryResolved result = new GameEvent.StoryResolved("Test", "Payer", List.of("Fait."));
         assertTrue(events.contains(result));
         assertEquals(result, engine.lastStoryResult().orElseThrow());

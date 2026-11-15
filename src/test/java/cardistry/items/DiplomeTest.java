@@ -40,7 +40,7 @@ class DiplomeTest {
         bus.subscribe(events::add);
         first = new Enemy("A", FIRE, 100, 10);
         state = new GameState(new Player(100), List.of(first, new Enemy("B", FIRE, 100, 10)),
-                new TerrainCard("Forêt", NATURE), hand, new Stats());
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(() -> loot));
     }
 
@@ -103,7 +103,7 @@ class DiplomeTest {
 
     @Test
     void hooksDoublesM1PlanDuCampusLatte() {
-        setUp(List.of(new TerrainCard("Marécage", WATER), new TerrainCard("EPFL", FIRE)));
+        setUp(List.of(new TerrainCard("Marécage", WATER, cardistry.items.Rarity.COMMON), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON)));
         state.player().takeDamage(50);
         equip("diplome-epfl");
         equip("m1");
@@ -133,7 +133,7 @@ class DiplomeTest {
 
     @Test
     void cmsContrepartieDoubleeAussi() {
-        setUp(List.of(new SpellCard("Sort", FIRE, 20)));
+        setUp(List.of(new SpellCard("Sort", FIRE, 20, cardistry.items.Rarity.COMMON)));
         equip("diplome-epfl");
         equip("cms");
         engine.submit(new Action.PlayCard(0));
@@ -145,7 +145,7 @@ class DiplomeTest {
     /** Combat avec un sort fatal, le Diplôme + 5 trinkets, et une récompense trinket. */
     private Trinket setUpFullWithDiplome(java.util.function.IntSupplier discardChoice, List<Integer> asked) {
         Trinket incoming = tagged(Tag.META);
-        setUp(List.of(new SpellCard("Fatal", WATER, 1000)), List.of(incoming));
+        setUp(List.of(new SpellCard("Fatal", WATER, 1000, cardistry.items.Rarity.COMMON)), List.of(incoming));
         engine.setDecisions(new cardistry.core.PlayerDecisions() {
             @Override
             public int chooseDrawnCard(GameState s, List<Card> options) {

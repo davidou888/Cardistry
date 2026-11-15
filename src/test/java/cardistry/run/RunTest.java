@@ -43,12 +43,12 @@ class RunTest {
     /** Deux adversaires solides, pool varié : la partie dure. */
     private static GameState sturdy() {
         return new GameState(new Player(100), List.of(new Enemy("A", FIRE, 200, 7), new Enemy("B", WATER, 200, 7)),
-                new TerrainCard("EPFL", FIRE), List.of(), new Stats());
+                new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), new Stats());
     }
 
     private static CardPool pool() {
-        return new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10), new SpellCard("Tsunami", WATER, 15),
-                new HealCard("Potion", FIRE, 10), new TerrainCard("Forêt", cardistry.model.Element.NATURE)));
+        return new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON), new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON),
+                new HealCard("Potion", FIRE, 10, cardistry.items.Rarity.COMMON), new TerrainCard("Forêt", cardistry.model.Element.NATURE, cardistry.items.Rarity.COMMON)));
     }
 
     private Run run(long seed, Secret... codes) {
@@ -155,8 +155,8 @@ class RunTest {
     private Run twoCombats() {
         Run run = new Run(1, Set.of(), bus,
                 () -> new GameState(new Player(100), List.of(new Enemy("A", FIRE, 30, 1), new Enemy("B", FIRE, 200, 1)),
-                        new TerrainCard("EPFL", FIRE), List.of(), new Stats()),
-                () -> new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10))));
+                        new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), new Stats()),
+                () -> new CardPool(List.of(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON))));
         run.addCode(Secret.CTRL_Z);
         run.start();
         return run;
@@ -221,8 +221,8 @@ class RunTest {
         // Premier adversaire tué en un sort : le tour 2 est le premier du combat 2.
         Run run = new Run(1, Set.of(), bus,
                 () -> new GameState(new Player(100), List.of(new Enemy("A", FIRE, 1, 1), new Enemy("B", FIRE, 200, 1)),
-                        new TerrainCard("EPFL", FIRE), List.of(), new Stats()),
-                () -> new CardPool(List.of(new SpellCard("Jet d'eau", WATER, 10))));
+                        new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), List.of(), new Stats()),
+                () -> new CardPool(List.of(new SpellCard("Jet d'eau", WATER, 10, cardistry.items.Rarity.COMMON))));
         run.addCode(Secret.CTRL_Z);
         run.start();
         run.startTurn();

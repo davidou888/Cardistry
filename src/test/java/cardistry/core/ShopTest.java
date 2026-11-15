@@ -43,8 +43,8 @@ class ShopTest {
     private void setUp(long seed, int deckSize) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        List<Card> deck = IntStream.range(0, deckSize).<Card>mapToObj(i -> new SpellCard("S" + i, FIRE, 1)).toList();
-        state = GameState.openRun(new Player(100), new TerrainCard("EPFL", FIRE), new Stats(), deck);
+        List<Card> deck = IntStream.range(0, deckSize).<Card>mapToObj(i -> new SpellCard("S" + i, FIRE, 1, cardistry.items.Rarity.COMMON)).toList();
+        state = GameState.openRun(new Player(100), new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON), new Stats(), deck);
         engine = new CombatEngine(state, new CardPool(), new Rng(seed), bus, new LootTable(List::of));
         engine.start();
     }
@@ -87,15 +87,15 @@ class ShopTest {
 
     @Test
     void cartesMoinsCheresQueLesObjetsDeMemeRarete() {
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new SpellCard("Boule de feu", FIRE, 10)));
-        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new SpellCard("Tsunami", WATER, 15)));
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new HealCard("Potion", NATURE, 10)));
-        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new HealCard("Petit pétou", FIRE, 15)));
-        assertEquals(Rarity.RARE, ShopPrices.cardRarity(new HealCard("Grande potion", NATURE, 20)));
-        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new TerrainCard("Forêt", NATURE)));
-        assertEquals(30, ShopPrices.price(new SpellCard("Boule de feu", FIRE, 10)));
-        assertEquals(50, ShopPrices.price(new SpellCard("Tsunami", WATER, 15)));
-        assertEquals(80, ShopPrices.price(new HealCard("Grande potion", NATURE, 20)));
+        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new HealCard("Potion", NATURE, 10, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.UNCOMMON, ShopPrices.cardRarity(new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.RARE, ShopPrices.cardRarity(new HealCard("Grande potion", NATURE, 20, cardistry.items.Rarity.COMMON)));
+        assertEquals(Rarity.COMMON, ShopPrices.cardRarity(new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON)));
+        assertEquals(30, ShopPrices.price(new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON)));
+        assertEquals(50, ShopPrices.price(new SpellCard("Tsunami", WATER, 15, cardistry.items.Rarity.COMMON)));
+        assertEquals(80, ShopPrices.price(new HealCard("Grande potion", NATURE, 20, cardistry.items.Rarity.COMMON)));
         for (Card card : new CardPool().cards()) {
             assertTrue(ShopPrices.price(card) < ShopPrices.cardRarity(card).price(), card.name());
         }

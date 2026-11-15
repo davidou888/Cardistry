@@ -40,7 +40,7 @@ class InventoryTest {
     private void setUp(List<Card> hand, Enemy... enemies) {
         EventBus bus = new EventBus();
         bus.subscribe(events::add);
-        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("Forêt", cardistry.model.Element.NATURE),
+        state = new GameState(new Player(100), List.of(enemies), new TerrainCard("Forêt", cardistry.model.Element.NATURE, cardistry.items.Rarity.COMMON),
                 hand, new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
@@ -86,7 +86,7 @@ class InventoryTest {
 
     @Test
     void lesHooksDUnTrinketEquipeRecoiventLesEvenementsApresLEvenementEnCours() {
-        SpellCard spell = new SpellCard("Jet d'eau", WATER, 10);
+        SpellCard spell = new SpellCard("Jet d'eau", WATER, 10, cardistry.items.Rarity.COMMON);
         setUp(List.of(spell), hydra());
         state.player().takeDamage(50);
         engine.equip(Trinket.builder("sangsue", "Sangsue", Rarity.RARE)
@@ -160,7 +160,7 @@ class InventoryTest {
     void piocherParUnEffetRespecteLaTailleDeMain() {
         List<Card> hand = new ArrayList<>();
         for (int i = 0; i < 6; i++) {
-            hand.add(new TerrainCard("T" + i, FIRE));
+            hand.add(new TerrainCard("T" + i, FIRE, cardistry.items.Rarity.COMMON));
         }
         setUp(hand, hydra());
         engine.give(item("cafe", ctx -> ctx.drawCards(2)));

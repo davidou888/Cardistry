@@ -39,8 +39,8 @@ class DrunkennessTest {
         for (int i = 0; i < enemies; i++) {
             list.add(new Enemy("E" + i, FIRE, 20, 5));
         }
-        state = new GameState(new Player(100), list, new TerrainCard("EPFL", FIRE),
-                List.of(new SpellCard("Tsunami", WATER, 100)), new Stats());
+        state = new GameState(new Player(100), list, new TerrainCard("EPFL", FIRE, cardistry.items.Rarity.COMMON),
+                List.of(new SpellCard("Tsunami", WATER, 100, cardistry.items.Rarity.COMMON)), new Stats());
         engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
     }
 
@@ -189,5 +189,28 @@ class DrunkennessTest {
         engine.submit(new Action.UseItem(0));
         assertEquals(2, state.drunkenness());
         assertFalse(state.pendingCurses().contains(Curse.HANGOVER));
+    }
+
+    @Test
+    void sortNeutreBoosteParLIvresseSansCrash() {
+        EventBus bus = new EventBus();
+        bus.subscribe(events::add);
+        state = new GameState(new Player(100), List.of(new Enemy("E0", FIRE, 200, 5), new Enemy("E1", FIRE, 20, 5)),
+                new TerrainCard("Dojo", cardistry.model.Element.NEUTRAL, Rarity.COMMON),
+                List.of(new SpellCard("Pet de Mamouz", cardistry.model.Element.NEUTRAL, 10, Rarity.COMMON)),
+                new Stats());
+        engine = new CombatEngine(state, new CardPool(), new Rng(1), bus, new LootTable(List::of));
+        drinkTimes(1);
+        assertEquals(1.10, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9);
+        engine.submit(new Action.PlayCard(0));
+        assertEquals(200 - 11, state.currentEnemy().hp(), 1e-9);
+    }
+
+    @Test
+    void toutesLesStatsDeDegatsEtDeSoinExistent() {
+        for (cardistry.model.Element element : cardistry.model.Element.values()) {
+            assertEquals(1.0, new Stats().get(StatType.damageMultiplier(element)), 1e-9);
+            assertEquals(1.0, new Stats().get(StatType.healMultiplier(element)), 1e-9);
+        }
     }
 }

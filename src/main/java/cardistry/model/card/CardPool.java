@@ -1,12 +1,20 @@
 package cardistry.model.card;
 
-import static cardistry.model.Element.FIRE;
-import static cardistry.model.Element.NATURE;
-import static cardistry.model.Element.WATER;
-
-import cardistry.core.Rng;
 import java.util.ArrayList;
 import java.util.List;
+
+import cardistry.core.Rng;
+import static cardistry.items.Rarity.COMMON;
+import static cardistry.items.Rarity.LEGENDARY;
+import static cardistry.items.Rarity.RARE;
+import static cardistry.items.Rarity.UNCOMMON;
+import static cardistry.model.Element.ALGEBRAIC;
+import static cardistry.model.Element.FIRE;
+import static cardistry.model.Element.GEOMETRIC;
+import static cardistry.model.Element.NATURE;
+import static cardistry.model.Element.NEUTRAL;
+import static cardistry.model.Element.SPIRIT;
+import static cardistry.model.Element.WATER;
 
 /**
  * Registre des cartes : tirées pour les récompenses de cartes et les effets qui créent une carte
@@ -28,29 +36,60 @@ public class CardPool {
     /** Pool standard du jeu. */
     public CardPool() {
         // --- Sortilèges (nom, élément, dégâts) ---
-        cards.add(new SpellCard("Boule de feu", FIRE, 10.0));
-        cards.add(new SpellCard("Pluie de flammes", FIRE, 15.0));
-        cards.add(new SpellCard("Jet d'eau", WATER, 10.0));
-        cards.add(new SpellCard("Tsunami", WATER, 15.0));
-        cards.add(new SpellCard("Fouet de lianes", NATURE, 10.0));
-        cards.add(new SpellCard("Tempête d'épines", NATURE, 15.0));
-        cards.add(new SpellCard("Pluie de flammes", FIRE, 15.0));
-        cards.add(new SpellCard("Tsunami", WATER, 15.0));
-        cards.add(new SpellCard("Fouet de lianes", NATURE, 10.0));
+        //COMMON
+        cards.add(new SpellCard("Boule de feu", FIRE, 10.0, COMMON));
+        cards.add(new SpellCard("Jet d'eau", WATER, 10.0, COMMON));
+        cards.add(new SpellCard("Fouet de lianes", NATURE, 10.0, COMMON));
+        cards.add(new SpellCard("Pet de Mamouz", NEUTRAL, 10.0, COMMON));
+        cards.add(new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON));
+        cards.add(new SpellCard("Lancer de manette", NEUTRAL, 12.0, COMMON));
+        //UNCOMMON
+        cards.add(new SpellCard("Pluie de flammes", FIRE, 15.0, UNCOMMON));
+        cards.add(new SpellCard("Tsunami", WATER, 15.0, UNCOMMON));
+        cards.add(new SpellCard("Tempête d'épines", NATURE, 15.0, UNCOMMON));
 
+        //RARE
+        //LEGENDARY
+        cards.add(new SpellCard("Big Lez Shotgun", NEUTRAL, 80, LEGENDARY));
+
+
+        
         // --- Terrains (nom, élément) ---
-        cards.add(new TerrainCard("EPFL", FIRE));
-        cards.add(new TerrainCard("Marécage", WATER));
-        cards.add(new TerrainCard("Forêt", NATURE));
-        cards.add(new TerrainCard("Enfer", FIRE));
-        cards.add(new TerrainCard("Atlantis", WATER));
-        cards.add(new TerrainCard("Amazonie", NATURE));
+        // COMMON
+        cards.add(new TerrainCard("Marécage", WATER, COMMON));
+        cards.add(new TerrainCard("Forêt", NATURE, COMMON));
+        cards.add(new TerrainCard("Volcan", FIRE, COMMON));
+        cards.add(new TerrainCard("Dojo", NEUTRAL, COMMON));
+        cards.add(new TerrainCard("Migros", NEUTRAL, COMMON));
+        cards.add(new TerrainCard("Gare", NEUTRAL, COMMON));
+
+        //UNCOMMON
+        cards.add(new TerrainCard("Amazonie", NATURE,UNCOMMON));
+        cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, UNCOMMON));
+        cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, UNCOMMON));
+        cards.add(new TerrainCard("Fractale", GEOMETRIC, UNCOMMON));
+
+        //RARE
+        cards.add(new TerrainCard("Enfer", FIRE, RARE));
+        cards.add(new TerrainCard("Atlantis", WATER, RARE));
+        //LEGENDARY
+        cards.add(new TerrainCard("EPFL", FIRE, LEGENDARY));
+        
+        
+        
+        
+        
 
         // --- Soins (nom, élément, PV rendus) ---
-        cards.add(new HealCard("Potion", NATURE, 10.0));
-        cards.add(new HealCard("Caïpirinha", WATER, 10.0));
-        cards.add(new HealCard("Petit pétou", FIRE, 15.0));
-        cards.add(new HealCard("Grande potion", NATURE, 20.0));
+        //COMMON
+        cards.add(new HealCard("Potion", NATURE, 10.0, COMMON));
+        cards.add(new HealCard("Petit pétou", FIRE, 15.0, COMMON));
+        //UNCOMMON
+        cards.add(new HealCard("Grande potion", NATURE, 20.0, UNCOMMON));
+        //RARE
+        //LEGENDARY
+        
+        
     }
 
     /** Cartes du registre (avec leurs doublons), en lecture seule. */
@@ -64,23 +103,25 @@ public class CardPool {
      */
     public static List<Card> startingDeck() {
         return List.of(
-                new SpellCard("Boule de feu", FIRE, 10.0),
-                new SpellCard("Pluie de flammes", FIRE, 15.0),
-                new SpellCard("Jet d'eau", WATER, 10.0),
-                new SpellCard("Tsunami", WATER, 15.0),
-                new SpellCard("Fouet de lianes", NATURE, 10.0),
-                new SpellCard("Tempête d'épines", NATURE, 15.0),
-                new HealCard("Potion", NATURE, 10.0),
-                new HealCard("Caïpirinha", WATER, 10.0),
-                new HealCard("Petit pétou", FIRE, 15.0),
-                new TerrainCard("Enfer", FIRE),
-                new TerrainCard("Atlantis", WATER),
-                new TerrainCard("Amazonie", NATURE));
+            new SpellCard("Boule de feu", FIRE, 10.0, COMMON),
+            new SpellCard("Jet d'eau", WATER, 10.0, COMMON),
+            new SpellCard("Fouet de lianes", NATURE, 10.0, COMMON),
+            new SpellCard("Pet de Mamouz", NEUTRAL, 10.0, COMMON),
+            new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON),
+            new SpellCard("Lancer de manette", NEUTRAL, 12.0, COMMON),
+            new HealCard("Potion", NATURE, 10.0, COMMON),
+            new HealCard("Potion", NATURE, 10.0, COMMON),
+            new HealCard("Potion", NATURE, 10.0, COMMON),
+            new TerrainCard("Marécage", WATER, COMMON),
+            new TerrainCard("Forêt", NATURE, COMMON),
+            new TerrainCard("Volcan", FIRE, COMMON)
+
+        );
     }
 
     /** Terrain sur lequel commence la partie. */
     public static TerrainCard startingTerrain() {
-        return new TerrainCard("EPFL", FIRE);
+        return new TerrainCard("Dojo", NEUTRAL, COMMON);    
     }
 
     /** Tire une carte au hasard et en renvoie une copie. */
