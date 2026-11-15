@@ -265,7 +265,7 @@ class SecretTrinketTest {
         engine.equip(ItemRegistry.trinket(ItemRegistry.CLAUDE_MD));
         engine.submit(new Action.Smoke());
         assertTrue(events.contains(new GameEvent.CigaretteSmoked(true)), "avec CLAUDE.md");
-        assertEquals(50 + 22.5, state.player().hp(), DELTA); // Petit pétou : soin feu 15 × 1.5 sur EPFL
+        assertEquals(50 + 23, state.player().hp(), DELTA); // Petit pétou : soin feu 15 × 1.5 sur EPFL
     }
 
     @Test

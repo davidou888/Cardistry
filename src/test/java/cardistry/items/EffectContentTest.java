@@ -115,7 +115,7 @@ class EffectContentTest {
         assertTrue(state.effects().isEmpty());
         engine.submit(new Action.DrawCard());
         // La Bouée (eau) attaque bien : sur Forêt (nature bat eau), 10 × 0.75.
-        assertEquals(100 - 7.5, state.player().hp(), DELTA);
+        assertEquals(100 - 8, state.player().hp(), DELTA);
     }
 
     // --- Raclette ---
@@ -241,7 +241,7 @@ class EffectContentTest {
         assertTrue(state.effects().isEmpty());
 
         engine.submit(new Action.DrawCard()); // la Bouée attaque ensuite normalement (Forêt : ×0.75)
-        assertEquals(100 - 7.5, state.player().hp(), DELTA);
+        assertEquals(100 - 8, state.player().hp(), DELTA);
     }
 
     @Test
@@ -257,6 +257,6 @@ class EffectContentTest {
         assertEquals(100, state.player().hp(), DELTA);
         assertTrue(state.effects().isEmpty());
         engine.submit(new Action.RollCigarette());
-        assertEquals(100 - 7.5, state.player().hp(), DELTA);
+        assertEquals(100 - 8, state.player().hp(), DELTA);
     }
 }

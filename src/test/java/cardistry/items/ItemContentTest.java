@@ -117,7 +117,7 @@ class ItemContentTest {
         use("caipirinha");
         use("petit-petou");
         // Terrain EPFL (feu) : soin feu ×1.5 → 15 × 1.5 = 22.5
-        assertEquals(new GameEvent.Healed(state.player(), 22.5, 1.5), events.stream()
+        assertEquals(new GameEvent.Healed(state.player(), 23, 1.5), events.stream()
                 .filter(GameEvent.Healed.class::isInstance).reduce((a, b) -> b).orElseThrow());
         assertEquals(1, state.drunkenness());
     }
@@ -137,7 +137,7 @@ class ItemContentTest {
         engine.equip(ItemRegistry.trinket("grinder"));
         use("petit-petou");
         // 15 × 1.5 (terrain feu) × 1.5 (Grinder) = 33.75
-        assertEquals(100 - 60 + 33.75, state.player().hp(), DELTA);
+        assertEquals(100 - 60 + 34, state.player().hp(), DELTA);
     }
 
     @Test

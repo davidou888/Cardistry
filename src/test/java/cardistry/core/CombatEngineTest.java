@@ -160,7 +160,7 @@ class CombatEngineTest {
 
         assertTrue(events.contains(new GameEvent.Healed(state.player(), 15, 1.5)));
         // 50 + 15 de soin - 5 × 1.25 d'attaque (Mannequin sur terrain feu)
-        assertEquals(50 + 15 - 6.25, state.player().hp(), DELTA);
+        assertEquals(50 + 15 - 6, state.player().hp(), DELTA);
     }
 
     @Test
@@ -171,7 +171,7 @@ class CombatEngineTest {
         engine.submit(new Action.PlayCard(0));
 
         assertEquals(new GameEvent.Healed(state.player(), 4, 1.5), events.get(1));
-        assertEquals(100 - 6.25, state.player().hp(), DELTA);
+        assertEquals(100 - 6, state.player().hp(), DELTA);
     }
 
     @Test
@@ -196,8 +196,8 @@ class CombatEngineTest {
 
         assertSame(swamp, state.terrain());
         assertEquals(new GameEvent.TerrainChanged(epfl, swamp), events.get(1));
-        assertEquals(new GameEvent.DamageDealt(state.player(), 3.75, 0.75, GameEvent.DamageDealt.Source.ENEMY_ATTACK), events.get(4));
-        assertEquals(100 - 3.75, state.player().hp(), DELTA);
+        assertEquals(new GameEvent.DamageDealt(state.player(), 4, 0.75, GameEvent.DamageDealt.Source.ENEMY_ATTACK), events.get(4));
+        assertEquals(100 - 4, state.player().hp(), DELTA);
     }
 
     @Test
@@ -224,7 +224,7 @@ class CombatEngineTest {
         assertEquals(new GameEvent.CardDrawn(state.hand().get(0)), events.get(0));
         assertInstanceOf(GameEvent.EnemyMoveUsed.class, events.get(1));
         assertInstanceOf(GameEvent.EnemyAttacked.class, events.get(2));
-        assertEquals(100 - 6.25, state.player().hp(), DELTA);
+        assertEquals(100 - 6, state.player().hp(), DELTA);
     }
 
     // --- Actions refusées : rien ne change, pas d'attaque ---
@@ -281,7 +281,7 @@ class CombatEngineTest {
 
         assertEquals(List.of(
                 new GameEvent.CardPlayed(tsunami),
-                new GameEvent.DamageDealt(hydra, 22.5, 1.5, GameEvent.DamageDealt.Source.SPELL),
+                new GameEvent.DamageDealt(hydra, 23, 1.5, GameEvent.DamageDealt.Source.SPELL),
                 new GameEvent.SpellHit(tsunami, hydra, 20), // les 20 PV qu'il lui restait
                 new GameEvent.EnemyKilled(hydra),
                 new GameEvent.ChoomiesChanged(state.choomies(), state.choomies() - GameState.STARTING_CHOOMIES),
@@ -358,7 +358,7 @@ class CombatEngineTest {
         engine.submit(new Action.PlayCard(0));
 
         // 10 × 1.5 (eau bat feu) × 1.25 (stat eau)
-        assertEquals(new GameEvent.DamageDealt(hydra, 18.75, 1.875, GameEvent.DamageDealt.Source.SPELL), events.get(1));
+        assertEquals(new GameEvent.DamageDealt(hydra, 19, 1.875, GameEvent.DamageDealt.Source.SPELL), events.get(1));
     }
 
     @Test

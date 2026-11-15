@@ -53,8 +53,8 @@ class EnemyRegistryTest {
     @Test
     void scalingParNiveau() {
         assertEquals(28, create(CADDIE, 1).maxHp(), DELTA);
-        assertEquals(28 * 1.4, create(CADDIE, 2).maxHp(), DELTA);
-        assertEquals(28 * 1.9, create(CADDIE, 3).maxHp(), DELTA);
+        assertEquals(Math.round(28 * 1.4), create(CADDIE, 2).maxHp(), DELTA);
+        assertEquals(Math.round(28 * 1.9), create(CADDIE, 3).maxHp(), DELTA);
         assertEquals(1.0, create(CADDIE, 1).damageScale(), DELTA);
         assertEquals(1.25, create(CADDIE, 2).damageScale(), DELTA);
         assertEquals(1.5, create(CADDIE, 3).damageScale(), DELTA);

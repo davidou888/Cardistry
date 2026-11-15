@@ -72,7 +72,7 @@ class CigaretteTrinketTest {
         equip("googz");
         engine.submit(new Action.Smoke());
         assertTrue(events.contains(new GameEvent.CigaretteSmoked(true)));
-        assertEquals(50 + 22.5, state.player().hp(), DELTA); // soin feu sur EPFL : 15 × 1.5
+        assertEquals(50 + 23, state.player().hp(), DELTA); // soin feu sur EPFL : 15 × 1.5
     }
 
     @Test
@@ -120,7 +120,7 @@ class CigaretteTrinketTest {
         equip("grinder");
         engine.submit(new Action.Smoke());
         // 15 × 1.5 (terrain feu) × 1.5 (Grinder) = 33.75
-        assertEquals(40 + 33.75, state.player().hp(), DELTA);
+        assertEquals(40 + 34, state.player().hp(), DELTA);
     }
 
     @Test
@@ -205,7 +205,7 @@ class CigaretteTrinketTest {
         engine.submit(new Action.PlayCard(0));
         // 10 × 1.5 (terrain feu) × 2 = 30, sans plafond ; puis l'adversaire attaque (10 × 1.25)
         assertEquals(new GameEvent.Healed(state.player(), 30, 3.0), events.get(1));
-        assertEquals(100 + 30 - 12.5, state.player().hp(), DELTA);
+        assertEquals(100 + 30 - 13, state.player().hp(), DELTA);
         assertEquals(100, state.maxHp(), DELTA);
     }
 
@@ -236,7 +236,7 @@ class CigaretteTrinketTest {
         // (un ×2 additif aurait donné 10 × 1.5 × 2.65 × 1.5 = 59.625)
         GameEvent.Healed healed = (GameEvent.Healed) events.stream()
                 .filter(GameEvent.Healed.class::isInstance).findFirst().orElseThrow();
-        assertEquals(74.25, healed.amount(), DELTA);
+        assertEquals(74, healed.amount(), DELTA);
         assertEquals(7.425, healed.multiplier(), DELTA);
     }
 

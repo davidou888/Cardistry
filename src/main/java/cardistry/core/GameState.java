@@ -301,9 +301,9 @@ public final class GameState {
         return playerStats.getInt(StatType.HAND_SIZE);
     }
 
-    /** PV max du joueur (stat {@link StatType#MAX_HP}) : les soins ne vont pas au-delà. */
+    /** PV max du joueur (stat {@link StatType#MAX_HP}, arrondie à l'entier) : les soins ne vont pas au-delà. */
     public double maxHp() {
-        return playerStats.get(StatType.MAX_HP);
+        return cardistry.model.Combatant.round(playerStats.get(StatType.MAX_HP));
     }
 
     /** {@code true} si les soins peuvent dépasser les PV max (stat {@link StatType#UNCAPPED_HEALING}). */
@@ -581,10 +581,10 @@ public final class GameState {
                 * Math.max(0, cardistry.model.enemy.MoveEffect.Hit.FULL_HAND - hand.size()));
     }
 
-    /** Dégâts d'un coup de {@code declared} dégâts (avant niveau, terrain et réduction). */
+    /** Dégâts d'un coup de {@code declared} dégâts (niveau, terrain et réduction compris), arrondis à l'entier. */
     public double hitDamage(double declared) {
-        return Math.max(0, declared * currentEnemy().damageScale() * enemyAttackMultiplier()
-                - playerStats.get(StatType.DAMAGE_REDUCTION));
+        return cardistry.model.Combatant.round(Math.max(0, declared * currentEnemy().damageScale()
+                * enemyAttackMultiplier() - playerStats.get(StatType.DAMAGE_REDUCTION)));
     }
 
     /** Dégâts d'un coup de la prochaine attaque annoncée (0 si elle n'attaque pas). */

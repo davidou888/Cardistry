@@ -84,7 +84,7 @@ class EngineExtensionsTest {
         setUp(List.of());
         state.playerStats().add(percent(StatType.ENEMY_DAMAGE, 0.25, "test"));
         engine.submit(new Action.DrawCard());
-        assertEquals(new GameEvent.DamageDealt(state.player(), 12.5, 1.25, Source.ENEMY_ATTACK),
+        assertEquals(new GameEvent.DamageDealt(state.player(), 13, 1.25, Source.ENEMY_ATTACK),
                 events.get(events.size() - 2));
     }
 
@@ -188,8 +188,8 @@ class EngineExtensionsTest {
         use(ctx -> ctx.elementalDamage(20, WATER));
 
         // Eau bat feu ×1.5, stat eau ×1.25
-        assertEquals(new GameEvent.DamageDealt(hydra, 37.5, 1.875, Source.EFFECT), events.get(1));
-        assertEquals(62.5, hydra.hp(), DELTA);
+        assertEquals(new GameEvent.DamageDealt(hydra, 38, 1.875, Source.EFFECT), events.get(1));
+        assertEquals(62, hydra.hp(), DELTA);
     }
 
     @Test

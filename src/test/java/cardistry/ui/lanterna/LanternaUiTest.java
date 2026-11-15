@@ -156,7 +156,7 @@ class LanternaUiTest {
         String text = dump("03-combat");
         assertTrue(text.contains("MANNEQUIN"));
         assertTrue(text.contains("Combat 1/3"));
-        assertTrue(text.contains("Prochain : Attaque : 6.25 (×1.25)"));
+        assertTrue(text.contains("Prochain : Attaque : 6 (×1.25)"));
         assertTrue(text.contains("EPFL (feu)"));
         assertTrue(text.contains("100/100"));
         assertTrue(text.contains("Ta main 4/7"));

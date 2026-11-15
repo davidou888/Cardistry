@@ -148,7 +148,7 @@ class TrinketContentTest {
         equip("cms");
         engine.submit(new Action.PlayCard(0));
         assertEquals(30, lastDamageToEnemy(), DELTA);          // +50 %
-        assertEquals(100 - 12.5, state.player().hp(), DELTA);  // adversaire +25 %
+        assertEquals(100 - 13, state.player().hp(), DELTA);  // adversaire +25 %
     }
 
     // --- Trinkets à hooks ---
@@ -176,7 +176,7 @@ class TrinketContentTest {
         engine.submit(new Action.PlayCard(0));
         assertEquals(true, events.contains(new GameEvent.Healed(state.player(), 5, 1.0)));
         // Marécage (eau) bat l'adversaire feu : attaque ×0.75.
-        assertEquals(70 + 5 - 7.5, state.player().hp(), DELTA);
+        assertEquals(70 + 5 - 8, state.player().hp(), DELTA);
     }
 
     @Test

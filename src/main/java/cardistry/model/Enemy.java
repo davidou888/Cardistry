@@ -48,7 +48,7 @@ public class Enemy extends Combatant {
         this.id = b.id;
         this.name = b.name;
         this.element = b.element;
-        this.maxHp = b.hp * b.hpScale;
+        this.maxHp = round(b.hp * b.hpScale);
         this.rank = b.rank;
         this.damageScale = b.damageScale;
         this.behavior = Objects.requireNonNull(b.behavior, "comportement manquant");
@@ -156,9 +156,7 @@ public class Enemy extends Combatant {
 
     /** Se soigne sans dépasser ses PV max ; renvoie les PV rendus. */
     public double healSelf(double amount) {
-        double healed = Math.max(0, Math.min(amount, maxHp - hp()));
-        heal(healed);
-        return healed;
+        return heal(Math.max(0, Math.min(round(amount), maxHp - hp())));
     }
 
     public static final class Builder {

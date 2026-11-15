@@ -10,6 +10,7 @@ import cardistry.items.Item;
 import cardistry.items.LootTable;
 import cardistry.items.Tag;
 import cardistry.items.Trinket;
+import cardistry.model.Combatant;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
 import cardistry.model.Enemy;
@@ -1175,7 +1176,7 @@ public final class CombatEngine {
         }
         Player player = state.player();
         double mult = state.enemyAttackMultiplier();
-        double amount = state.hitDamage(hit);
+        double amount = Combatant.round(state.hitDamage(hit));
         bus.publish(new GameEvent.EnemyAttacked(enemy));
         player.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
@@ -1224,12 +1225,13 @@ public final class CombatEngine {
             bus.publish(new GameEvent.EnemyDodged(enemy));
             return 0;
         }
+        amount = Combatant.round(amount);
         double hpLost = Math.max(0, Math.min(amount, enemy.hp()));
         enemy.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(enemy, amount, mult, source));
         if (enemy.reflectRatio() > 0 && amount > 0) {
             Player player = state.player();
-            double reflected = Math.min(amount * enemy.reflectRatio(), Math.max(0, player.hp() - 1));
+            double reflected = Math.min(Combatant.round(amount * enemy.reflectRatio()), Math.max(0, player.hp() - 1));
             if (reflected > 0) {
                 player.takeDamage(reflected);
                 bus.publish(new GameEvent.DamageDealt(player, reflected, enemy.reflectRatio(),
@@ -1246,7 +1248,7 @@ public final class CombatEngine {
     private void healPlayer(double amount, double mult) {
         Player player = state.player();
         double missing = Math.max(0, state.maxHp() - player.hp());
-        double healed = state.healingUncapped() ? amount : Math.min(amount, missing);
+        double healed = Combatant.round(state.healingUncapped() ? amount : Math.min(amount, missing));
         player.heal(healed);
         bus.publish(new GameEvent.Healed(player, healed, mult));
     }
@@ -1302,6 +1304,7 @@ public final class CombatEngine {
         public void damagePlayer(double amount) {
             Player player = state.player();
             boolean wasAlive = player.isAlive();
+            amount = Combatant.round(amount);
             player.takeDamage(amount);
             bus.publish(new GameEvent.DamageDealt(player, amount, 1.0, GameEvent.DamageDealt.Source.EFFECT));
             if (wasAlive && !player.isAlive()) {
