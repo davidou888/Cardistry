@@ -73,7 +73,7 @@
 | Enfer | feu | Peu commun | attaques feu **+20 %** |
 | Atlantis | eau | Peu commun | attaques eau **+20 %** |
 | Désert kaléidoscopique | spirituel | Rare | l'hypnose fait **×4** au lieu de ×2 |
-| Espace de dimension n | algébrique | Rare | chaque carte jouée est **rejouée une fois à 50 %** au tour suivant, **seulement si on est encore sur l'Espace** (statuts réappliqués ; les probabilités sont retirées) |
+| Espace de dimension n | algébrique | Rare | chaque carte jouée est **rejouée une fois à 50 %** au tour suivant, **seulement si on est encore sur l'Espace** (statuts réappliqués avec leur chance normale : Boule de feu = 10 % au rejeu aussi) |
 | Fractale | géométrique | Rare | **tous** les multiplicateurs (joueur ET ennemi) sont arrondis à l'entier supérieur (×1.25 → ×2, ×0.5 → ×1) |
 | EPFL | feu | Légendaire | voir §5 |
 
