@@ -22,26 +22,35 @@ final class ItemScreens {
 
     /** Choix d'une récompense : les propositions côte à côte, la sélectionnée en double trait. */
     static void reward(Painter p, GameState state, List<Collectible> options, int selected, long seed) {
+        reward(p, state, options, selected, seed, 0);
+    }
+
+    /** {@code tick} : page des descriptions trop longues pour leur carte. */
+    static void reward(Painter p, GameState state, List<Collectible> options, int selected, long seed, int tick) {
         p.frame("Récompense", inventorySummary(state), "←/→ choisir · Entrée prendre · S refuser · Q quitter");
         p.centered(2, "Adversaire vaincu ! Choisis une récompense.", Palette.ACCENT, true);
-        drawCards(p, options, selected, 4);
+        drawCards(p, options, selected, 4, tick);
         Collectible chosen = options.get(selected);
         if (isFull(state, chosen)) {
-            p.centered(5 + CARD_HEIGHT, Painter.fit("Tes " + (chosen instanceof Trinket ? "trinkets" : "objets")
+            p.centered(5 + cardHeight(p), Painter.fit("Tes " + (chosen instanceof Trinket ? "trinkets" : "objets")
                     + " sont au complet : la prendre remplacera un de tes items.", p.cols() - 4), Palette.WARNING, false);
         }
     }
 
     /** Choix de l'item à remplacer quand l'inventaire est plein. */
     static void replace(Painter p, GameState state, Collectible incoming, int selected, long seed) {
+        replace(p, state, incoming, selected, seed, 0);
+    }
+
+    static void replace(Painter p, GameState state, Collectible incoming, int selected, long seed, int tick) {
         List<? extends Collectible> current = incoming instanceof Trinket ? state.trinkets() : state.items();
         p.frame("Remplacer", "Seed " + seed, "←/→ ou 1-" + current.size() + " choisir · Entrée remplacer · Échap revenir");
         p.centered(2, "Que remplace " + incoming.name() + " ?", Palette.ACCENT, true);
-        drawCards(p, List.copyOf(current), selected, 4);
+        drawCards(p, List.copyOf(current), selected, 4, tick);
         String hint = selected < 0 || selected >= current.size()
                 ? "Choisis d'abord ce que tu abandonnes (←/→ ou son numéro). Échap : tu gardes tout."
                 : "Entrée : " + incoming.name() + " prend la place de " + current.get(selected).name() + ".";
-        p.centered(5 + CARD_HEIGHT, Painter.fit(hint, p.cols() - 4), Palette.WARNING, false);
+        p.centered(5 + cardHeight(p), Painter.fit(hint, p.cols() - 4), Palette.WARNING, false);
     }
 
     static final String META_PHRASE = "Un jeu de cartes dans ton jeu de cartes.";
@@ -49,6 +58,11 @@ final class ItemScreens {
     /** Pioche au choix (Paquet de cartes) : les propositions côte à côte et l'effet de la sélectionnée. */
     static void cardChoice(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
             boolean showMeta, long seed) {
+        cardChoice(p, state, options, selected, showMeta, seed, 0);
+    }
+
+    static void cardChoice(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
+            boolean showMeta, long seed, int tick) {
         p.frame("Pioche", "Ta main " + state.hand().size() + "/" + state.handSize(),
                 "1-" + options.size() + " ou ←/→ + Entrée garder · les autres sont défaussées");
         p.centered(2, "Choisis la carte à garder", Palette.ACCENT, true);
@@ -62,12 +76,31 @@ final class ItemScreens {
             boolean isSelected = i == selected;
             card(p, left + i * (width + 2), isSelected ? 6 : 7, width, i + 1, options.get(i), isSelected);
         }
-        p.text(2, 15, Painter.fit(CombatScreen.describe(state, options.get(selected)), p.cols() - 4), Palette.TEXT);
+        detail(p, 15, CombatScreen.describe(state, options.get(selected)), tick);
+    }
+
+    /** Description sur plusieurs lignes à partir de {@code top}, jusqu'au bas du cadre ; au-delà, par pages. */
+    private static void detail(Painter p, int top, String text, int tick) {
+        int rows = Math.max(1, p.rows() - 1 - top);
+        List<String> lines = Painter.pagedLines(Format.wrap(text, p.cols() - 6), rows, tick);
+        for (int i = 0; i < lines.size(); i++) {
+            p.text(2, top + i, lines.get(i), Palette.TEXT);
+        }
+    }
+
+    /** Hauteur des cartes d'objets : grandit avec l'écran pour que les longues descriptions tiennent. */
+    static int cardHeight(Painter p) {
+        return Math.max(CARD_HEIGHT, p.rows() - 7);
     }
 
     /** Récompense de carte : 1 carte parmi les propositions à ajouter au deck, ou passer. */
     static void cardReward(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
             long seed) {
+        cardReward(p, state, options, selected, seed, 0);
+    }
+
+    static void cardReward(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
+            long seed, int tick) {
         p.frame("Nouvelle carte", "Deck " + state.deck().size() + " cartes · Seed " + seed,
                 "1-" + options.size() + " ou ←/→ + Entrée ajouter au deck · S passer");
         p.centered(2, "Ajoute une carte à ton deck", Palette.ACCENT, true);
@@ -79,7 +112,7 @@ final class ItemScreens {
             card(p, left + i * (width + 2), isSelected ? 5 : 6, width, i + 1, options.get(i), isSelected);
         }
         // Hors combat : valeurs de base (pas contre l'adversaire qu'on vient de battre).
-        p.text(2, 14, Painter.fit(cardistry.ui.CardText.summary(options.get(selected)), p.cols() - 4), Palette.TEXT);
+        detail(p, 14, cardistry.ui.CardText.summary(options.get(selected)), tick);
     }
 
     /** Carte à choisir : illustrée dans la fenêtre (comme en combat), en texte dans le terminal. */
@@ -222,21 +255,27 @@ final class ItemScreens {
         return row + lines.size();
     }
 
-    private static void drawCards(Painter p, List<Collectible> cards, int selected, int top) {
+    private static void drawCards(Painter p, List<Collectible> cards, int selected, int top, int tick) {
         int count = cards.size();
         int width = Math.min(MAX_CARD_WIDTH, (p.cols() - 4 - 2 * (count - 1)) / Math.max(1, count));
         int total = count * width + 2 * (count - 1);
         int left = Math.max(2, (p.cols() - total) / 2);
         for (int i = 0; i < count; i++) {
             boolean isSelected = i == selected;
-            drawCard(p, left + i * (width + 2), isSelected ? top - 1 : top, width, cards.get(i), isSelected);
+            drawCard(p, left + i * (width + 2), isSelected ? top - 1 : top, width, cards.get(i), isSelected,
+                    isSelected ? tick : 0);
         }
     }
 
-    private static void drawCard(Painter p, int col, int row, int width, Collectible c, boolean selected) {
+    /**
+     * Carte d'objet ou de trinket. La description passe avant la citation (montrée seulement si elle
+     * tient en entier) ; une description encore trop longue défile par pages ({@code tick}).
+     */
+    private static void drawCard(Painter p, int col, int row, int width, Collectible c, boolean selected, int tick) {
         int inner = width - 2;
-        p.box(col, row, width, CARD_HEIGHT, Palette.rarity(c.rarity()), selected);
-        int last = row + CARD_HEIGHT - 3; // dernière ligne de texte libre (la suivante = tags)
+        int height = cardHeight(p);
+        p.box(col, row, width, height, Palette.rarity(c.rarity()), selected);
+        int last = row + height - 3; // dernière ligne de texte libre (la suivante = tags)
         int r = row + 1;
         int nameEnd = row + 4;
         if (p.hasImages()) {
@@ -256,20 +295,20 @@ final class ItemScreens {
             }
         }
         r = Math.max(r, nameEnd);
-        for (String line : Format.wrap(c.description(), inner)) {
-            if (r <= last) {
-                p.text(col + 1, r++, line, Palette.TEXT);
-            }
+        List<String> description = Format.wrap(c.description(), inner);
+        for (String line : Painter.pagedLines(description, last - r + 1, tick)) {
+            p.text(col + 1, r++, line, Palette.TEXT);
         }
         if (!c.flavor().isEmpty()) {
-            r++;
-            for (String line : Format.wrap("« " + c.flavor() + " »", inner)) {
-                if (r <= last) {
+            List<String> flavor = Format.wrap("« " + c.flavor() + " »", inner);
+            if (r + flavor.size() <= last) { // la citation seulement si elle tient en entier
+                r++;
+                for (String line : flavor) {
                     p.text(col + 1, r++, line, Palette.DIM);
                 }
             }
         }
-        p.text(col + 1, row + CARD_HEIGHT - 2, Painter.fit(tags(c), inner), Palette.DIM);
+        p.text(col + 1, row + height - 2, Painter.fit(tags(c), inner), Palette.DIM);
     }
 
     /** « EPFL « Cursus » (3) ×2 : palier 3 · prochain 4 : +25 PV max et +15 % dégâts élémentaires ». */

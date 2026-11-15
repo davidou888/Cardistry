@@ -370,7 +370,7 @@ final class CombatScreen {
             return;
         }
         Card card = hand.get(Math.min(view.selected, hand.size() - 1));
-        p.text(2, 19, Painter.fit(describe(state, card), p.cols() - 4), Palette.TEXT);
+        p.text(2, 19, Painter.paged(describe(state, card), p.cols() - 4, view.pageTick), Palette.TEXT);
     }
 
     /** Effet de la carte si on la joue maintenant, multiplicateurs compris. */

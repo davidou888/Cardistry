@@ -201,4 +201,36 @@ final class Painter {
         }
         return width <= 1 ? text.substring(0, width) : text.substring(0, width - 1) + "…";
     }
+
+    /**
+     * Texte trop long pour une ligne : découpé en pages (sans couper de mot), la page {@code tick}
+     * (modulo leur nombre) est montrée, avec « … » quand il y a une suite ou un début. Tient dans une
+     * ligne : inchangé.
+     */
+    static String paged(String text, int width, int tick) {
+        if (text.length() <= width || width < 8) {
+            return fit(text, width);
+        }
+        java.util.List<String> pages = cardistry.ui.Format.wrap(text, width - 4);
+        int index = Math.floorMod(tick, pages.size());
+        return (index > 0 ? "… " : "") + pages.get(index) + (index < pages.size() - 1 ? " …" : "");
+    }
+
+    /**
+     * Lignes trop nombreuses pour {@code rows} lignes : la fenêtre {@code tick} (modulo) est montrée,
+     * la dernière ligne finissant par « … » s'il y a une suite.
+     */
+    static java.util.List<String> pagedLines(java.util.List<String> lines, int rows, int tick) {
+        if (lines.size() <= rows || rows < 2) {
+            return lines.subList(0, Math.min(lines.size(), Math.max(0, rows)));
+        }
+        int step = rows - 1; // une ligne de recouvrement : on suit la lecture
+        int pages = (lines.size() - 2) / step + 1;
+        int start = Math.floorMod(tick, pages) * step;
+        java.util.List<String> shown = new java.util.ArrayList<>(lines.subList(start, Math.min(lines.size(), start + rows)));
+        if (start + rows < lines.size()) {
+            shown.set(shown.size() - 1, shown.get(shown.size() - 1) + " …");
+        }
+        return shown;
+    }
 }

@@ -35,7 +35,11 @@ final class MenuScreens {
         }
         int row = top + banner.size() + 2;
         p.centered(row, "Un jeu de cartes élémentaire, au tour par tour", Palette.TEXT, false);
-        p.centered(row + 2, elementsLine(), Palette.DIM, false);
+        List<String> elements = elementCycles();
+        for (int i = 0; i < elements.size(); i++) {
+            p.centered(row + 2 + i, elements.get(i), Palette.DIM, false);
+        }
+        row += elements.size() - 1; // le menu descend d'autant
         StringBuilder menu = new StringBuilder();
         int selectedCol = 0;
         for (int i = 0; i < TITLE_ENTRIES.size(); i++) {
@@ -97,6 +101,43 @@ final class MenuScreens {
                 p.text(col + 2, row + 5 + k, lines.get(k), isSelected ? Palette.TEXT : Palette.DIM);
             }
         }
+    }
+
+    /**
+     * Les éléments en cycles, une ligne par cycle : « Feu > Plante > Eau > Feu », puis les éléments qui
+     * battent tout (« Error: null bat tout »).
+     */
+    static List<String> elementCycles() {
+        List<String> lines = new java.util.ArrayList<>();
+        java.util.Set<Element> seen = java.util.EnumSet.noneOf(Element.class);
+        for (Element start : Element.PLAYABLE) {
+            if (start.beatsEverything() || seen.contains(start)) {
+                continue;
+            }
+            StringBuilder line = new StringBuilder(Format.capitalize(start.displayName()));
+            Element current = start;
+            while (true) {
+                seen.add(current);
+                Element from = current;
+                java.util.Optional<Element> next = Element.PLAYABLE.stream()
+                        .filter(e -> e != from && !e.beatsEverything() && from.beats(e)).findFirst();
+                if (next.isEmpty()) {
+                    break;
+                }
+                line.append(" > ").append(Format.capitalize(next.get().displayName()));
+                current = next.get();
+                if (current == start) {
+                    break;
+                }
+            }
+            lines.add(line.toString());
+        }
+        for (Element element : Element.PLAYABLE) {
+            if (element.beatsEverything()) {
+                lines.add(Format.capitalize(element.displayName()) + " bat tout");
+            }
+        }
+        return lines;
     }
 
     private static String elementsLine() {

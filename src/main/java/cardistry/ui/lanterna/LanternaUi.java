@@ -1562,19 +1562,21 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         }
                     }
                     case INVENTORY -> ItemScreens.inventory(painter, state);
-                    case REWARD -> ItemScreens.reward(painter, state, rewardOptions, rewardSelected, seed);
-                    case REPLACE -> ItemScreens.replace(painter, state, replaceTarget, replaceSelected, seed);
+                    case REWARD -> ItemScreens.reward(painter, state, rewardOptions, rewardSelected, seed, view.pageTick);
+                    case REPLACE -> ItemScreens.replace(painter, state, replaceTarget, replaceSelected, seed,
+                            view.pageTick);
                     case STORY -> StoryScreen.choices(painter, state, story, storySelected, seed);
                     case STORY_RESULT -> StoryScreen.result(painter, state, storyResult, seed);
                     case PAUSE -> MenuScreens.pause(painter, menuSelected, seed);
                     case OPTIONS -> MenuScreens.options(painter, options.settings(), optionsSelected, seed);
                     case SHOP -> ShopScreen.draw(painter, state, shop, shopSelected, removalPrice, seed, view.toast,
-                            shopTick);
+                            shopTick, view.pageTick);
                     case DISCARD -> ItemScreens.discard(painter, state, discardSelected, seed);
                     case CARD_CHOICE -> ItemScreens.cardChoice(painter, state, cardOptions, cardSelected,
-                            showMetaPhrase, seed);
+                            showMetaPhrase, seed, view.pageTick);
                     case GAME_OVER -> MenuScreens.gameOver(painter, state, seed, unlockedSecrets);
-                    case CARD_REWARD -> ItemScreens.cardReward(painter, state, cardOptions, cardSelected, seed);
+                    case CARD_REWARD -> ItemScreens.cardReward(painter, state, cardOptions, cardSelected, seed,
+                            view.pageTick);
                     case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
@@ -1598,6 +1600,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         }
     }
 
+    /** Durée d'une page des textes trop longs. */
+    static final int PAGE_MS = 2500;
+    /** Pages dont les descriptions trop longues défilent par pages. */
+    private static final java.util.Set<Page> PAGED_PAGES = java.util.EnumSet.of(Page.COMBAT, Page.REWARD,
+            Page.CARD_REWARD, Page.CARD_CHOICE, Page.SHOP, Page.REPLACE);
+
     /** Durée d'un pas de la fumée du marchand. */
     static final int SMOKE_MS = 110;
     private int shopTick = 0;
@@ -1606,6 +1614,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private KeyStroke readKey() {
         long nextIdle = System.currentTimeMillis() + IDLE_MS;
         long nextSmoke = System.currentTimeMillis() + SMOKE_MS;
+        long nextPage = System.currentTimeMillis() + PAGE_MS;
         try {
             while (true) {
                 KeyStroke key = screen.pollInput();
@@ -1614,6 +1623,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         throw new QuitGameException();
                     }
                     keySound(key);
+                    view.pageTick = 0; // une touche : les textes longs reprennent au début
                     if (opensDeck(key)) {
                         showDeck(); // n'importe où : le deck, puis retour à l'écran en cours
                         continue;
@@ -1621,6 +1631,11 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     return key;
                 }
                 if (screen.doResizeIfNecessary() != null) {
+                    render();
+                }
+                if (!fast && PAGED_PAGES.contains(page) && System.currentTimeMillis() >= nextPage) {
+                    view.pageTick++; // descriptions trop longues : page suivante
+                    nextPage = System.currentTimeMillis() + PAGE_MS;
                     render();
                 }
                 if (!fast && idleAnimated() && System.currentTimeMillis() >= nextIdle) {

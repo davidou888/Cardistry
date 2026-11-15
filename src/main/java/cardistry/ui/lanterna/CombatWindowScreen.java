@@ -433,7 +433,8 @@ final class CombatWindowScreen {
             return;
         }
         Card card = hand.get(Math.min(view.selected, hand.size() - 1));
-        p.text(2, l.detailRow(), Painter.fit(CombatScreen.describe(state, card), p.cols() - 4), Palette.TEXT);
+        p.text(2, l.detailRow(), Painter.paged(CombatScreen.describe(state, card), p.cols() - 4, view.pageTick),
+                Palette.TEXT);
     }
 
     // --- Barre : objets, trinkets, clopes ---

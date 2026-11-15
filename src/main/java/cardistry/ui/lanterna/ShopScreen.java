@@ -119,6 +119,12 @@ final class ShopScreen {
     /** @param tick pas d'animation de la fumée (0 = image fixe) */
     static void draw(Painter p, GameState state, Shop shop, int selected, int removalPrice, long seed, String toast,
             int tick) {
+        draw(p, state, shop, selected, removalPrice, seed, toast, tick, 0);
+    }
+
+    /** {@code pageTick} : page de la description de l'article si elle ne tient pas sur une ligne. */
+    static void draw(Painter p, GameState state, Shop shop, int selected, int removalPrice, long seed, String toast,
+            int tick, int pageTick) {
         p.frame("Shop", state.choomies() + " Choomies · Seed " + seed, HELP);
         java.util.List<java.util.List<Integer>> rows = rows(shop);
         boolean merchant = showsMerchant(p);
@@ -165,7 +171,8 @@ final class ShopScreen {
         collectibles(p, state, shop, selected, "Trinkets", rows.get(2), row + step);
         int detail = Math.min(p.rows() - 6, row + 2 * step + gap);
         if (selected >= 0 && selected < shop.offers().size()) {
-            p.text(2, detail, Painter.fit(describe(shop.offers().get(selected)), p.cols() - 4), Palette.TEXT);
+            p.text(2, detail, Painter.paged(describe(shop.offers().get(selected)), p.cols() - 4, pageTick),
+                    Palette.TEXT);
         }
         if (toast != null) {
             p.text(2, p.rows() - 5, Painter.fit("★ " + toast, p.cols() - 4), Palette.ACCENT, true);

@@ -42,6 +42,8 @@ final class ViewState {
     int spriteFrame = 0;
     /** Frame idle en cours (avance toute seule pendant l'attente d'une touche). */
     int idleFrame = 0;
+    /** Page des textes trop longs (descriptions) : avance toutes les {@code PAGE_MS}, revient à 0 à chaque touche. */
+    int pageTick = 0;
 
     void log(String text, TextColor color) {
         log.add(new LogLine(text, color));
