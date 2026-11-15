@@ -125,9 +125,9 @@ class TrinketContentTest {
     }
 
     @Test
-    void grinderPetitPetouDeuxFoisPlusFrequent() {
+    void grinderPetiteTaffeDeuxFoisPlusFrequente() {
         setUp(FIRE, List.of());
-        Card pétou = new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON);
+        Card pétou = new HealCard("Petite taffe", FIRE, 15, cardistry.items.Rarity.COMMON);
         Card other = new SpellCard("Boule de feu", FIRE, 10, cardistry.items.Rarity.COMMON);
         equip("grinder");
         assertEquals(2.0, state.cardWeight(pétou), DELTA);

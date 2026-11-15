@@ -114,16 +114,16 @@ public final class ItemRegistry {
                         })
                         .build(),
                 Trinket.builder("grinder", "Grinder", UNCOMMON)
-                        .description("Soins de type feu +50 % ; +1 Petit pétou dans ton deck à l'obtention ;"
-                                + " Petit pétou deux fois plus fréquent dans les récompenses")
+                        .description("Soins de type feu +50 % ; +1 Petite taffe dans ton deck à l'obtention ;"
+                                + " Petite taffe deux fois plus fréquente dans les récompenses")
                         .tags(Tag.HEAL, Tag.PARTY)
                         .percent(StatType.FIRE_HEAL, 0.5)
-                        .cardWeight("Petit pétou", 2)
+                        .cardWeight("Petite taffe", 2)
                         .hooks(new GameHooks() {
                             @Override
                             public void onRewardTaken(GameEvent.RewardTaken event, EffectContext ctx) {
                                 if (event.taken().id().equals("grinder")) {
-                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, COMMON));
+                                    ctx.addCardToDeck(cardistry.model.card.CardPool.petiteTaffe());
                                 }
                             }
 
@@ -131,7 +131,7 @@ public final class ItemRegistry {
                             public void onItemBought(GameEvent.ItemBought event, EffectContext ctx) {
                                 if (event.offer() instanceof cardistry.core.shop.ShopOffer.CollectibleOffer c
                                         && c.collectible().id().equals("grinder")) {
-                                    ctx.addCardToDeck(new cardistry.model.card.HealCard("Petit pétou", Element.FIRE, 15, COMMON));
+                                    ctx.addCardToDeck(cardistry.model.card.CardPool.petiteTaffe());
                                 }
                             }
                         })

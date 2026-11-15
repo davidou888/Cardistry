@@ -161,7 +161,7 @@ class PaquetDeCartesTest {
     @Test
     void grinderSAppliqueAuxPropositions() {
         Card common = new SpellCard("Boule", FIRE, 10, cardistry.items.Rarity.COMMON);
-        Card petou = new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON);
+        Card petou = new HealCard("Petite taffe", FIRE, 15, cardistry.items.Rarity.COMMON);
         setUp(List.of(), new CardPool(List.of(common, common, common, petou)), 5, options -> 0);
         equip("paquet-de-cartes");
         equip("grinder");
@@ -176,7 +176,7 @@ class PaquetDeCartesTest {
         }
         for (List<Card> offer : offers) {
             total += offer.size();
-            petous += offer.stream().filter(c -> c.name().equals("Petit pétou")).count();
+            petous += offer.stream().filter(c -> c.name().equals("Petite taffe")).count();
         }
         // Sans Grinder : 1/4 ; avec (poids 2) : 2/5.
         assertEquals(0.4, petous / (double) total, 0.02);

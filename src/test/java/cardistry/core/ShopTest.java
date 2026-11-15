@@ -222,7 +222,7 @@ class ShopTest {
     }
 
     @Test
-    void grinderAchetéAjouteUnPetitPetou() {
+    void grinderAchetéAjouteUnePetiteTaffe() {
         boolean found = false;
         for (long seed = 0; seed < 400 && !found; seed++) {
             events.clear();
@@ -231,7 +231,7 @@ class ShopTest {
                 ShopOffer.CollectibleOffer c = (ShopOffer.CollectibleOffer) shop().offers().get(i);
                 if (c.collectible().id().equals("grinder")) {
                     engine.shopAction(ShopAction.Buy.of(i));
-                    assertEquals("Petit pétou", state.deck().get(state.deck().size() - 1).name());
+                    assertEquals("Petite taffe", state.deck().get(state.deck().size() - 1).name());
                     found = true;
                 }
             }

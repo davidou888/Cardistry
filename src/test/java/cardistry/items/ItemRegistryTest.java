@@ -47,8 +47,8 @@ class ItemRegistryTest {
         for (Collectible c : ItemRegistry.all()) {
             assertTrue(ids.add(c.qualifiedId()), "identifiant en double : " + c.qualifiedId());
         }
-        // Les homonymes carte / objet ne se confondent pas.
-        assertTrue(ids.contains("carte:petit-petou"));
+        // Les homonymes carte / objet ne se confondent pas (la carte Petit pétou est devenue Petite taffe).
+        assertTrue(ids.contains("carte:petite-taffe"));
         assertTrue(ids.contains("objet:petit-petou"));
         assertTrue(ids.contains("objet:caipirinha"));
     }
@@ -67,10 +67,10 @@ class ItemRegistryTest {
     }
 
     @Test
-    void grinderNeCibleQueLaCartePetitPetou() {
+    void grinderNeCibleQueLaCartePetiteTaffe() {
         Trinket grinder = ItemRegistry.trinket("grinder");
         cardistry.model.card.Card card = new cardistry.model.card.CardPool().cards().stream()
-                .filter(c -> c.name().equals("Petit pétou")).findFirst().orElseThrow();
+                .filter(c -> c.name().equals("Petite taffe")).findFirst().orElseThrow();
         assertEquals(2.0, grinder.cardWeight(card), 1e-9);
     }
 

@@ -3,10 +3,6 @@ package cardistry.story;
 import java.util.List;
 import java.util.Optional;
 
-import static cardistry.items.Rarity.COMMON;
-import cardistry.model.Element;
-import cardistry.model.card.SpellCard;
-
 /**
  * Registre des événements. Les trois actuels sont des <b>placeholders</b> : Louis fournira les vrais
  * (références EPFL et soirées). Ajouter un événement : une entrée dans {@link #all()} ; les
@@ -57,7 +53,7 @@ public final class StoryRegistry {
                             ctx.say("C'est fort. Ça fait du bien... pour l'instant.");
                         }),
                         StoryChoice.of("Lui demander une astuce", "+1 Boule de feu dans ton deck", ctx -> {
-                            ctx.addCard(new SpellCard("Boule de feu", Element.FIRE, 10, COMMON));
+                            ctx.addCard(cardistry.model.card.CardPool.bouleDeFeu());
                             ctx.say("Il griffonne un sort sur une serviette : Boule de feu rejoint ton deck.");
                         }),
                         StoryChoice.of("Refuser poliment", "", ctx -> ctx.say("Il hausse les épaules et s'en va."))));

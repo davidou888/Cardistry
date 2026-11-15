@@ -232,25 +232,25 @@ class DeckTest {
     // --- Grinder ---
 
     @Test
-    void grinderAjouteUnPetitPetouEtLeRendPlusFrequent() {
+    void grinderAjouteUnePetiteTaffeEtLaRendPlusFrequente() {
         setUp(numbered(12), new CardPool(), () -> List.of(ItemRegistry.trinket("grinder")), 3);
         fight(1);
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
         engine.resolveReward(RewardChoice.Take.into(0));
-        assertEquals("Petit pétou", state.deck().get(state.deck().size() - 1).name());
+        assertEquals("Petite taffe", state.deck().get(state.deck().size() - 1).name());
         assertEquals(13, state.deck().size());
-        assertEquals(2.0, state.cardWeight(new HealCard("Petit pétou", FIRE, 15, cardistry.items.Rarity.COMMON)));
+        assertEquals(2.0, state.cardWeight(new HealCard("Petite taffe", FIRE, 15, cardistry.items.Rarity.COMMON)));
     }
 
     @Test
-    void petitPetouDeuxFoisPlusFrequentDansLesRecompenses() {
-        int without = countPetitPetou(false);
-        int with = countPetitPetou(true);
+    void petiteTaffeDeuxFoisPlusFrequenteDansLesRecompenses() {
+        int without = countPetiteTaffe(false);
+        int with = countPetiteTaffe(true);
         assertTrue(with > without * 1.5, "avec Grinder " + with + ", sans " + without);
     }
 
-    private int countPetitPetou(boolean grinder) {
+    private int countPetiteTaffe(boolean grinder) {
         int count = 0;
         for (long seed = 0; seed < 300; seed++) {
             setUp(numbered(12), new CardPool(), List::of, seed);
@@ -260,7 +260,7 @@ class DeckTest {
             fight(1);
             engine.startTurn();
             engine.submit(new Action.PlayCard(0));
-            count += (int) engine.pendingCardReward().stream().filter(c -> c.name().equals("Petit pétou")).count();
+            count += (int) engine.pendingCardReward().stream().filter(c -> c.name().equals("Petite taffe")).count();
         }
         return count;
     }
