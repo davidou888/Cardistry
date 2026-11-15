@@ -155,8 +155,8 @@ comme un trinket qu'on ne peut ni perdre ni remplacer. Code : `hero.HeroRegistry
 |---|---|---|---|
 | **Louis** | 100 | MAN | +50 % de dégâts, tout le temps (tous éléments, additionné aux autres pourcentages, comme CMS). Aucun malus. |
 | **Dave** | 100 | Full skill Mr. Le Juge | Un sort du même élément que le terrain **et** qui bat l'élément de l'adversaire (ex. Boule de feu à l'EPFL contre un adversaire plante) soigne des PV enlevés à l'adversaire. |
-| **Frederic BLC** | 100 | Aucune | Aucune compétence, rien de spécial. |
 | **Sassy** | 130 | wadayatalkinabit | À chaque début de tour, son alien inflige 4 dégâts bruts à l'adversaire, en plus de l'action du joueur. 10 % de chance que l'alien rate son tour et fume un joint à la place (aucun effet, pour le lore). |
+| **Frederic BLC** | 100 | Aucune | Aucune compétence, rien de spécial. |
 
 Choix d'implémentation :
 - Louis : MAN = +50 % sur les stats de dégâts de tous les éléments (bonus permanent du personnage).

@@ -8,7 +8,7 @@ Version personnelle de Louis, développée en parallèle de celle de David (dép
 Prototype jouable, par défaut dans sa propre fenêtre en pixel art (carte, combat, cartes et icônes illustrées), sinon en plein écran terminal ou en mode texte : run de 3 niveaux sur une carte à embranchements (8 étages, boss au bout), deck construit (12 cartes au départ, pioche / défausse, récompense de carte après chaque combat), nouvelle main de 5 cartes par combat, récompense (objet ou trinket, 1 parmi 3) après chaque adversaire vaincu, adversaires à attaques annoncées (intents). PV entiers, statuts (Intox, Fons, Hypnotisé, Bondage, Brûlure), cartes à pouvoir, terrains à effet, combats qui commencent chez l'adversaire. Lancement : `./play` (voir « Commandes »).
 
 - `cardistry.Main` — assemble tout, choisit l'affichage selon l'OS et les options (voir README.md)
-- `hero/` — `Hero` (personnage jouable : stats de départ + hooks) et `HeroRegistry` (**registre** : Louis, Dave, Sassy, tous leurs chiffres). Choisi après le titre (`Input.chooseHero`), passé à `Run.setHero` ; `GameState.hero()` ; ses hooks sont appelés avant ceux des trinkets.
+- `hero/` — `Hero` (personnage jouable : stats de départ + hooks) et `HeroRegistry` (**registre** : Louis, Dave, Sassy, Frederic BLC, tous leurs chiffres). Choisi après le titre (`Input.chooseHero`), passé à `Run.setHero` ; `GameState.hero()` ; ses hooks sont appelés avant ceux des trinkets.
 - `platform/` — `Os` (détection), `SaveDirectory` (dossier de sauvegarde par OS), `UnlockFile` (secrets débloqués, `unlocks.txt`, corrompu → vide)
 - `run/` — `Run` (une partie : phases carte / combat / récompense, niveaux, codes, secrets débloqués dans le pool, Ctrl+Z en rejouant l'historique depuis la seed), `Secret`, `UnlockStore`, `UnlockTracker` (conditions de déblocage, écoute le bus). Spoilers : `docs/SECRETS.md`
 - `run/map/` — `RunMap`, `MapNode`, `NodeType`, `MapGenerator` (carte d'un niveau, sous-flux de la seed), `MapView` (ce que l'UI affiche)
@@ -56,7 +56,7 @@ Une entrée dans `HeroRegistry` (`new Hero(id, nom, capacité, description, modi
 3. Ne jamais régénérer un tag existant pour « l'améliorer » : Louis retouche les `.aseprite` à la main. Le test `toutLeContenuAUneIcone` échoue si un objet, un trinket, une carte ou un adversaire du registre n'a pas d'image.
 
 ### Dettes restantes
-- Placeholders à dessiner par Louis : les trois personnages (`images/player/louis.png`, `dave.png`, `sassy.png` ; `player.png` en attendant), Choomah, Clarence, le boss (un sprite pour les trois niveaux, idle seulement).
+- Placeholders à dessiner par Louis : les quatre personnages (`images/player/louis.png`, `dave.png`, `sassy.png`, `frederic-blc.png` ; `player.png` en attendant), Choomah, Clarence, le boss (un sprite pour les trois niveaux, idle seulement).
 - Les animations de mort des ébauches sont la pose « touché » écrasée vers le sol.
 - En fenêtre 80×24, un adversaire sans PNG aurait son sprite ASCII coupé (7 lignes disponibles) ; aucun dans le registre aujourd'hui.
 - Les états à adversaires fixés (tests) n'ont pas de deck : leur pioche tire dans le pool, sans fin (`GameState.usesDeck()`).
