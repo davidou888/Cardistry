@@ -114,6 +114,15 @@ public final class ConsoleInput implements Input {
             if (line.equalsIgnoreCase("f")) {
                 return new Action.Smoke();
             }
+            java.util.Optional<Integer> detail = detailIndex(line);
+            if (detail.isPresent()) {
+                if (detail.get() < state.hand().size()) {
+                    printDetail(state, state.hand().get(detail.get()), true);
+                } else {
+                    console.println("Pas de carte à ce numéro.");
+                }
+                continue;
+            }
             if (line.equalsIgnoreCase("g")) {
                 return new Action.RollCigarette();
             }
@@ -202,6 +211,18 @@ public final class ConsoleInput implements Input {
             if (line.equals("r")) {
                 return new cardistry.core.shop.ShopAction.Reroll();
             }
+            java.util.Optional<Integer> detail = detailIndex(line);
+            if (detail.isPresent()) {
+                if (detail.get() < shop.offers().size()
+                        && shop.offers().get(detail.get()) instanceof cardistry.core.shop.ShopOffer.CardOffer offer) {
+                    printDetail(state, offer.card(), false);
+                } else {
+                    console.println("Pas de carte à ce numéro.");
+                }
+                console.print("(Entrée pour revenir au shop) ");
+                read("");
+                continue;
+            }
             if (line.equals("t")) {
                 int index = chooseCardToRemove(state);
                 if (index >= 0) {
@@ -267,6 +288,7 @@ public final class ConsoleInput implements Input {
         }
         console.println("  r) Reroll : " + shop.rerollPrice() + "   t) Retirer une carte : " + removalPrice
                 + " (deck " + state.deck().size() + ")   0) Partir");
+        console.println("  v N) Détail de la carte N   d) Ton deck");
     }
 
     /** Événement : le texte, les choix numérotés (indisponibles marqués), puis le numéro choisi. */
@@ -346,6 +368,18 @@ public final class ConsoleInput implements Input {
                 continue;
             }
             return line;
+        }
+    }
+
+    /** « v 2 » ou « v2 » : index 1 (fiche de la carte n° 2) ; vide sinon. */
+    static java.util.Optional<Integer> detailIndex(String line) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?i)v\\s*(\\d+)").matcher(line.trim());
+        return m.matches() ? java.util.Optional.of(Integer.parseInt(m.group(1)) - 1) : java.util.Optional.empty();
+    }
+
+    private void printDetail(GameState state, cardistry.model.card.Card card, boolean inCombat) {
+        for (cardistry.ui.CardDetail.Line line : cardistry.ui.CardDetail.lines(state, card, inCombat)) {
+            console.println(line.kind() == cardistry.ui.CardDetail.Kind.TITLE ? "=== " + line.text() + " ===" : line.text());
         }
     }
 

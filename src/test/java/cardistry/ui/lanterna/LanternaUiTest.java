@@ -977,18 +977,27 @@ class LanternaUiTest {
         player.setDaemon(true);
         player.start();
         type("d");
-        waitFor(() -> screen().contains(DeckScreen.HELP) && screen().contains("▼") && screen().contains("Sorts ("));
-        assertFalse(screen().contains("▲"), screen());
+        String[] top = new String[1];
+        waitFor(() -> {
+            top[0] = screen();
+            return top[0].contains(DeckScreen.HELP) && top[0].contains("▼") && top[0].contains("Sorts (");
+        });
+        assertFalse(top[0].contains("▲"), top[0]);
         for (int i = 0; i < 60; i++) {
             press(KeyType.ArrowDown);
         }
-        waitFor(() -> screen().contains("EPFL · terrain feu") && screen().contains("▲"));
-        String bottom = dump("65-deck-defile");
-        assertFalse(bottom.contains("▼"), bottom);
+        String[] bottom = new String[1];
+        waitFor(() -> {
+            bottom[0] = screen(); // une seule capture, complète : pas de lecture en cours de dessin
+            return bottom[0].contains("EPFL · terrain feu") && bottom[0].contains("▲")
+                    && bottom[0].contains(DeckScreen.HELP);
+        });
+        Files.writeString(Path.of("build", "screens", "65-deck-defile.txt"), bottom[0]);
+        assertFalse(bottom[0].contains("▼"), bottom[0]);
         type("d");
         type("p");
         player.join(TIMEOUT.toMillis());
-        assertTrue(bottom.contains("Terrains"), bottom);
+        assertTrue(bottom[0].contains("Terrains"), bottom[0]);
     }
 
     @Test
@@ -1010,6 +1019,58 @@ class LanternaUiTest {
         type("d");
         type("p");
         player.join(TIMEOUT.toMillis());
+    }
+
+    @Test
+    void toucheVAfficheLaFicheDeLaCarteEnCombat() throws Exception {
+        open(80, 24);
+        GameState state = deckState();
+        ui.showStatus(state);
+        Action[] result = new Action[1];
+        Thread player = new Thread(() -> result[0] = ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("v");
+        waitFor(() -> screen().contains(CardDetailScreen.HELP) && screen().contains("Élément "));
+        String text = dump("67-fiche-carte");
+        type("v");
+        type("p");
+        player.join(TIMEOUT.toMillis());
+        assertTrue(result[0] instanceof Action.DrawCard);
+        String first = state.hand().get(0).name();
+        assertTrue(text.contains(first), text);
+        assertTrue(text.contains("Si tu la joues maintenant"), text);
+    }
+
+    @Test
+    void toucheVAfficheLaFicheDUneCarteAuShop() throws Exception {
+        openWithImages(100, 32);
+        GameState state = deckState();
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(GameState.newGame(),
+                new cardistry.model.card.CardPool(), new cardistry.core.Rng(2), new EventBus());
+        engine.start();
+        engine.openShop();
+        cardistry.core.Shop shop = engine.shop().orElseThrow();
+        GameState shopState = engine.state();
+        Thread player = new Thread(() -> ui.chooseShopAction(shopState, shop, 75));
+        player.setDaemon(true);
+        player.start();
+        type("v");
+        waitFor(() -> screen().contains(CardDetailScreen.HELP) && screen().contains("Élément "));
+        Thread.sleep(100);
+        cardistry.ui.window.ImageLayer.Frame frame = layer.frame();
+        java.awt.image.BufferedImage png = new cardistry.ui.window.GridRenderer(new cardistry.ui.window.CellFonts(2))
+                .render(terminal, frame.images(), frame.marks(), false);
+        javax.imageio.ImageIO.write(png, "png", Path.of("build", "screens", "68-fenetre-fiche-shop.png").toFile());
+        String text = screen();
+        type("v");
+        type("p");
+        player.join(TIMEOUT.toMillis());
+        cardistry.model.card.Card card = ((cardistry.core.shop.ShopOffer.CardOffer) shop.offers().get(0)).card();
+        assertTrue(text.contains(card.name()), text);
+        assertTrue(!text.contains("Si tu la joues"), "au shop : valeurs de base seulement");
+        assertTrue(frame.images().stream().anyMatch(i -> i.path().startsWith("cards/")), "grande illustration");
+        assertTrue(state.hand().size() > 0);
     }
 
     @Test

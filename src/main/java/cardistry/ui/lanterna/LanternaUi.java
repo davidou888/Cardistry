@@ -33,7 +33,7 @@ import java.util.List;
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS, HERO, DECK }
+        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL }
 
     /** Pages où D n'ouvre pas le deck (pas encore de partie, menus, visionneuse). */
     private static final java.util.Set<Page> NO_DECK_PAGES = java.util.EnumSet.of(Page.TITLE, Page.HERO, Page.RULES,
@@ -599,6 +599,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         }
                     } else if (c == 'q') {
                         confirmQuit();
+                    } else if (c == 'v' && shop.offers().get(shopSelected)
+                            instanceof cardistry.core.shop.ShopOffer.CardOffer offer) {
+                        showCardDetail(offer.card(), false);
+                        page = Page.SHOP;
                     } else if (c >= '1' && c <= '9' && c - '1' < count) {
                         shopSelected = c - '1';
                     }
@@ -885,6 +889,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         return new Action.RollCigarette();
                     } else if (c == 'i') {
                         showInventory();
+                    } else if (c == 'v' && handSize > 0) {
+                        showCardDetail(state.hand().get(Math.min(view.selected, handSize - 1)), true);
                     } else if (ItemKeys.slot(c, state.itemSlots()) >= 0) {
                         return new Action.UseItem(ItemKeys.slot(c, state.itemSlots()));
                     } else if (c >= '1' && c <= '9') {
@@ -1127,6 +1133,26 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 deckScroll = Math.max(0, Math.min(max, deckScroll + (key.getKeyType() == KeyType.ArrowDown ? 1 : -1)));
             }
             render();
+        }
+        page = previous;
+        render();
+    }
+
+    private cardistry.model.card.Card detailCard;
+    private boolean detailInCombat;
+
+    /** Fiche de {@code card} jusqu'à V, Échap ou Entrée ; {@code inCombat} : effet réel contre l'adversaire. */
+    private void showCardDetail(cardistry.model.card.Card card, boolean inCombat) {
+        Page previous = page;
+        page = Page.CARD_DETAIL;
+        detailCard = card;
+        detailInCombat = inCombat;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            if (key.getKeyType() == KeyType.Escape || key.getKeyType() == KeyType.Enter || isChar(key, 'v')) {
+                break;
+            }
         }
         page = previous;
         render();
@@ -1548,6 +1574,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
                     case DECK -> DeckScreen.draw(painter, state, deckScroll, deckPiles, seed);
+                    case CARD_DETAIL -> CardDetailScreen.draw(painter, state, detailCard, detailInCombat, seed);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
                                     : spriteFrame, spriteFlash, spriteHidden);

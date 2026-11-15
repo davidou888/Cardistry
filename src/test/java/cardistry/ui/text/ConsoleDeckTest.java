@@ -26,4 +26,20 @@ class ConsoleDeckTest {
         assertTrue(out.contains("  ×3 Potion · soin plante · Commun : +10 PV"), out);
         assertTrue(out.indexOf("Que veux-tu jouer ? ") < out.lastIndexOf("Que veux-tu jouer ? "), "question reposée");
     }
+
+    @Test
+    void commandeVAfficheLaFicheDUneCarte() {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        ConsoleInput input = new ConsoleInput(new Console(new ByteArrayInputStream("v 1\nv9\n0\n".getBytes(StandardCharsets.UTF_8)),
+                new PrintStream(bytes, true, StandardCharsets.UTF_8), true, false, false));
+        GameState state = new GameState(new cardistry.model.Player(100), java.util.List.of(new cardistry.model.Enemy("Mannequin",
+                cardistry.model.Element.NATURE, 50, 5)), cardistry.model.card.CardPool.dojo(),
+                java.util.List.of(cardistry.model.card.CardPool.bouleDeFeu()), new cardistry.core.stats.Stats());
+        Action action = input.nextAction(state);
+        String out = bytes.toString(StandardCharsets.UTF_8);
+        assertTrue(action instanceof Action.DrawCard);
+        assertTrue(out.contains("=== Boule de feu ==="), out);
+        assertTrue(out.contains("Contre Mannequin (plante) : ×1.5 (feu bat plante)"), out);
+        assertTrue(out.contains("Pas de carte à ce numéro."), out);
+    }
 }

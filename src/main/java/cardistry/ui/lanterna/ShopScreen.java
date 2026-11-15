@@ -20,7 +20,7 @@ final class ShopScreen {
 
     /** Réplique d'accueil provisoire (le vendeur et sa réplique viendront plus tard). */
     static final String GREETING = "« Entre, entre ! Tout est à vendre... enfin, presque. »";
-    static final String HELP = "←/→ ↑/↓ · Entrée acheter · R reroll · T retirer · P partir · Échap pause";
+    static final String HELP = "←/→ ↑/↓ · Entrée · V détail · R reroll · T retirer · P partir · Échap";
     static final String LEAVE = "[P] Partir";
     private static final int CARD_TOP = 4;
 

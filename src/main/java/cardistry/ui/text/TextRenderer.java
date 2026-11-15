@@ -355,6 +355,7 @@ public final class TextRenderer implements Renderer {
         console.println();
         console.println("[0] Piocher une carte");
         console.println("[f] Fumer une clope (gratuit, +5 PV, −1 Ivresse)   [g] Rouler une clope");
+        console.println("[v N] Détail de la carte N   [d] Ton deck");
         if (state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z)) {
             console.println("[" + ConsoleInput.UNDO + "] Ctrl+Z : annuler ton dernier tour (une fois par combat)");
         }
