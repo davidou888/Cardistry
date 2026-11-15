@@ -11,6 +11,7 @@ import cardistry.items.LootTable;
 import cardistry.items.Tag;
 import cardistry.items.Trinket;
 import cardistry.core.status.Status;
+import cardistry.core.status.StatusExtras;
 import cardistry.core.status.StatusTarget;
 import cardistry.core.status.StatusType;
 import cardistry.core.status.Statuses;
@@ -203,6 +204,9 @@ public final class CombatEngine {
     /** Effets qui font sauter ce tour ; ceux à charges en consomment une. */
     private List<String> skipCauses() {
         List<String> causes = new java.util.ArrayList<>();
+        if (state.statuses(StatusTarget.PLAYER).has(StatusType.FONS)) {
+            causes.add(StatusType.FONS.displayName());
+        }
         for (TemporaryEffect effect : List.copyOf(state.effects())) {
             if (!effect.isActive()) {
                 continue;
@@ -389,11 +393,16 @@ public final class CombatEngine {
      *
      * @return {@code true} s'il a été posé ou rafraîchi
      */
-    private boolean applyStatus(StatusTarget target, StatusType type, int turns, StatusTarget inflictedBy) {
+    private boolean applyStatus(StatusTarget target, StatusType type, int turns, StatusTarget inflictedBy,
+            StatusExtras extras) {
         if (!state.hasEnemy() || !state.combatant(target).isAlive()) {
             return false;
         }
-        Statuses.Outcome outcome = state.statuses(target).apply(type, turns, inflictedBy);
+        if (type == StatusType.BURN && state.terrain().element() == Element.WATER) {
+            bus.publish(new GameEvent.StatusRefused(target, type, "l'eau éteint la Brûlure"));
+            return false;
+        }
+        Statuses.Outcome outcome = state.statuses(target).apply(type, turns, inflictedBy, extras);
         if (outcome == Statuses.Outcome.REFUSED) {
             bus.publish(new GameEvent.StatusRefused(target, type, type.displayName() + " déjà actif"));
             return false;
@@ -401,6 +410,26 @@ public final class CombatEngine {
         bus.publish(new GameEvent.StatusApplied(target, type, state.statuses(target).get(type).orElseThrow().turnsLeft(),
                 outcome == Statuses.Outcome.REFRESHED));
         return true;
+    }
+
+    /**
+     * Tire la chance puis pose le statut. {@code turns} ≤ 0 : durée tirée entre le min et le max du
+     * statut. Contre l'adversaire, la chance est en faveur du joueur (doublée par CLAUDE.md).
+     */
+    private boolean tryStatus(StatusTarget target, StatusType type, double probability, int turns,
+            StatusExtras extras, StatusTarget inflictedBy) {
+        if (!state.hasEnemy()) {
+            return false;
+        }
+        boolean lands = probability >= 1 || (target == StatusTarget.ENEMY && inflictedBy == StatusTarget.PLAYER
+                ? Luck.chance(state, rng, probability)
+                : rng.nextDouble() < probability);
+        if (!lands) {
+            return false;
+        }
+        int duration = turns > 0 ? turns
+                : type.minTurns() + rng.nextInt(type.maxTurns() - type.minTurns() + 1);
+        return applyStatus(target, type, duration, inflictedBy, extras);
     }
 
     /** Début du tour de {@code target} : effets par tour de ses statuts. */
@@ -411,26 +440,86 @@ public final class CombatEngine {
             }
             switch (status.type()) {
                 case INTOX -> statusDamage(target, StatusType.INTOX_DAMAGE);
+                case BURN -> statusDamage(target, state.terrain().element() == Element.FIRE
+                        ? StatusType.BURN_DAMAGE_FIRE : StatusType.BURN_DAMAGE);
+                case BONDAGE -> {
+                    double stolen = statusDamage(target, state.terrain().element() == Element.NATURE
+                            ? StatusType.BONDAGE_STEAL_PLANT : StatusType.BONDAGE_STEAL);
+                    healCombatant(status.inflictedBy(), stolen);
+                }
+                case FONS -> {
+                    if (status.extras().healMaxHpPerTurn() > 0) {
+                        double max = target == StatusTarget.PLAYER ? state.maxHp() : state.currentEnemy().maxHp();
+                        double base = max * status.extras().healMaxHpPerTurn();
+                        if (target == StatusTarget.PLAYER) {
+                            double mult = state.playerStats().get(StatType.HEAL_EFFICIENCY);
+                            healPlayer(base * mult, mult); // un vrai soin (efficacité, Ross)
+                        } else {
+                            healCombatant(target, base);
+                        }
+                    }
+                }
+                case HYPNOTIZED -> {
+                    // Agit sur les multiplicateurs (GameState), rien par tour.
+                }
             }
         }
     }
 
-    /** Fin du tour de {@code target} : ses statuts perdent un tour. */
-    private void endOfTurnStatuses(StatusTarget target) {
-        for (Status ended : state.statuses(target).countDown()) {
-            bus.publish(new GameEvent.StatusEnded(target, ended.type()));
+    /** Fin du tour de {@code side} : les statuts qui décomptent sur ce camp perdent un tour. */
+    private void endOfTurnStatuses(StatusTarget side) {
+        for (StatusTarget owner : StatusTarget.values()) {
+            for (Status ended : state.statuses(owner).endTurn(owner, side)) {
+                bus.publish(new GameEvent.StatusEnded(owner, ended.type()));
+            }
         }
     }
 
-    /** Dégâts d'un statut : bruts (aucun multiplicateur, aucune réduction, pas de Rebond). */
-    private void statusDamage(StatusTarget target, double amount) {
+    /** Rend des PV bruts à {@code target} (vol de PV du Bondage), plafonnés à ses PV max. */
+    private void healCombatant(StatusTarget target, double amount) {
+        if (amount <= 0) {
+            return;
+        }
+        if (target == StatusTarget.PLAYER) {
+            healPlayer(amount, 1.0);
+        } else {
+            Enemy enemy = state.currentEnemy();
+            double healed = enemy.healSelf(amount);
+            if (healed > 0) {
+                bus.publish(new GameEvent.EnemyHealed(enemy, healed));
+            }
+        }
+    }
+
+    /** Un nouveau terrain eau éteint toutes les Brûlures. */
+    private void changeTerrain(TerrainCard terrain) {
+        TerrainCard previous = state.terrain();
+        state.setTerrain(terrain);
+        bus.publish(new GameEvent.TerrainChanged(previous, terrain));
+        if (terrain.element() == Element.WATER) {
+            for (StatusTarget owner : StatusTarget.values()) {
+                if (state.statuses(owner).remove(StatusType.BURN)) {
+                    bus.publish(new GameEvent.StatusEnded(owner, StatusType.BURN));
+                }
+            }
+        }
+    }
+
+    /**
+     * Dégâts d'un statut : bruts (aucun multiplicateur, aucune réduction, pas de Rebond).
+     *
+     * @return PV réellement enlevés (pas au-delà de ce qu'il restait)
+     */
+    private double statusDamage(StatusTarget target, double amount) {
         Combatant victim = state.combatant(target);
         boolean wasAlive = victim.isAlive();
+        double before = Math.max(0, victim.hp());
         double dealt = victim.takeDamage(amount);
         bus.publish(new GameEvent.DamageDealt(victim, dealt, 1.0, GameEvent.DamageDealt.Source.STATUS));
         if (target == StatusTarget.PLAYER && wasAlive && !victim.isAlive()) {
             bus.publish(new GameEvent.GameLost());
         }
+        return Math.min(dealt, before);
     }
 
     /**
@@ -1063,11 +1152,7 @@ public final class CombatEngine {
                 double mult = state.healMultiplier(heal);
                 healPlayer(heal.amount() * mult, mult);
             }
-            case TerrainCard terrain -> {
-                TerrainCard previous = state.terrain();
-                state.setTerrain(terrain);
-                bus.publish(new GameEvent.TerrainChanged(previous, terrain));
-            }
+            case TerrainCard terrain -> changeTerrain(terrain);
             case DeadCard dead -> throw new AssertionError("refusée par validate");
         }
         discard(card);
@@ -1149,6 +1234,10 @@ public final class CombatEngine {
 
     private void enemyAct() {
         Enemy enemy = state.currentEnemy();
+        if (state.statuses(StatusTarget.ENEMY).has(StatusType.FONS)) {
+            bus.publish(new GameEvent.EnemyTurnSkipped(enemy, StatusType.FONS.displayName(), enemy.name() + " dort."));
+            return; // l'attaque annoncée attend son réveil
+        }
         Optional<TemporaryEffect> skip = state.effects().stream()
                 .filter(e -> e.isActive() && e.skipsEnemyTurn()).findFirst();
         if (skip.isPresent()) {
@@ -1241,6 +1330,13 @@ public final class CombatEngine {
         Enemy enemy = run.enemy;
         if (!run.shieldChecked) {
             run.shieldChecked = true;
+            boolean immune = state.statuses(StatusTarget.PLAYER).get(StatusType.FONS)
+                    .map(f -> f.extras().immuneToAttacks()).orElse(false);
+            if (immune) {
+                bus.publish(new GameEvent.AttackCancelled(enemy, StatusType.FONS.displayName()));
+                run.cancelled = true;
+                return;
+            }
             Optional<TemporaryEffect> shield = state.effects().stream()
                     .filter(e -> e.isActive() && e.cancelsEnemyAttack()).findFirst();
             if (shield.isPresent()) {
@@ -1423,18 +1519,18 @@ public final class CombatEngine {
 
         @Override
         public boolean applyStatus(StatusTarget target, StatusType type, double probability) {
-            return applyStatus(target, type, probability, type.defaultTurns());
+            return applyStatus(target, type, probability, 0, StatusExtras.NONE);
         }
 
         @Override
         public boolean applyStatus(StatusTarget target, StatusType type, double probability, int turns) {
-            if (!state.hasEnemy()) {
-                return false;
-            }
-            boolean lands = probability >= 1 || (target == StatusTarget.ENEMY
-                    ? Luck.chance(state, rng, probability)
-                    : rng.nextDouble() < probability);
-            return lands && CombatEngine.this.applyStatus(target, type, turns, target.other());
+            return applyStatus(target, type, probability, turns, StatusExtras.NONE);
+        }
+
+        @Override
+        public boolean applyStatus(StatusTarget target, StatusType type, double probability, int turns,
+                StatusExtras extras) {
+            return CombatEngine.this.tryStatus(target, type, probability, turns, extras, target.other());
         }
 
         @Override

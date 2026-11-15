@@ -82,7 +82,8 @@ public interface EffectContext {
     }
 
     /**
-     * Tente d'infliger {@code type} à {@code target} pour sa durée par défaut, avec une chance de
+     * Tente d'infliger {@code type} à {@code target} pour sa durée par défaut (tirée entre son min et son
+     * max), avec une chance de
      * {@code probability} (1 = sûr). Infligé à l'adversaire, c'est un tirage en faveur du joueur
      * (doublé par CLAUDE.md) ; infligé au joueur, non.
      *
@@ -96,6 +97,12 @@ public interface EffectContext {
     /** Comme {@link #applyStatus(cardistry.core.status.StatusTarget, cardistry.core.status.StatusType, double)}, pour {@code turns} tours. */
     default boolean applyStatus(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type,
             double probability, int turns) {
+        return false;
+    }
+
+    /** Comme les autres {@code applyStatus}, avec des variantes (soin par tour, immunité aux coups). */
+    default boolean applyStatus(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type,
+            double probability, int turns, cardistry.core.status.StatusExtras extras) {
         return false;
     }
 }

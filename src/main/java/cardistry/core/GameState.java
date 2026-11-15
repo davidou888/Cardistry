@@ -543,6 +543,7 @@ public final class GameState {
     public double spellMultiplier(SpellCard spell) {
         return ElementRules.spellMultiplier(spell.element(), currentEnemy().element())
                 * playerStats.get(StatType.damageMultiplier(spell.element()))
+                * hypnosisMultiplier(cardistry.core.status.StatusTarget.ENEMY)
                 * nextSpellBoost().map(TemporaryEffect::spellMultiplier).orElse(1.0);
     }
 
@@ -571,7 +572,14 @@ public final class GameState {
     /** Multiplicateur actuel de l'attaque de l'adversaire (terrain × stat {@link StatType#ENEMY_DAMAGE}). */
     public double enemyAttackMultiplier() {
         return ElementRules.terrainAttackMultiplier(terrain.element(), currentEnemy().element())
-                * playerStats.get(StatType.ENEMY_DAMAGE);
+                * playerStats.get(StatType.ENEMY_DAMAGE)
+                * hypnosisMultiplier(cardistry.core.status.StatusTarget.PLAYER);
+    }
+
+    /** ×{@link cardistry.core.status.StatusType#HYPNOSIS_MULTIPLIER} si {@code target} est hypnotisé, ×1 sinon. */
+    public double hypnosisMultiplier(cardistry.core.status.StatusTarget target) {
+        return statuses(target).has(cardistry.core.status.StatusType.HYPNOTIZED)
+                ? cardistry.core.status.StatusType.HYPNOSIS_MULTIPLIER : 1.0;
     }
 
     /**

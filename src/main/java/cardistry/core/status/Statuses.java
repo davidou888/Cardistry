@@ -37,23 +37,31 @@ public final class Statuses {
 
     /** Applique {@code type} pour {@code turns} tours, selon sa règle de réapplication. */
     public Outcome apply(StatusType type, int turns, StatusTarget inflictedBy) {
+        return apply(type, turns, inflictedBy, StatusExtras.NONE);
+    }
+
+    /** Comme {@link #apply(StatusType, int, StatusTarget)}, avec des variantes. */
+    public Outcome apply(StatusType type, int turns, StatusTarget inflictedBy, StatusExtras extras) {
         Optional<Status> current = get(type);
         if (current.isEmpty()) {
-            active.add(new Status(type, turns, inflictedBy));
+            active.add(new Status(type, turns, inflictedBy, extras));
             return Outcome.APPLIED;
         }
         if (type.reapply() == StatusType.Reapply.REFUSE) {
             return Outcome.REFUSED;
         }
-        current.get().reset(turns);
+        current.get().reset(turns, extras);
         return Outcome.REFRESHED;
     }
 
-    /** Fin du tour de la cible : chaque statut perd un tour ; renvoie ceux qui se terminent. */
-    public List<Status> countDown() {
+    /**
+     * Fin du tour de {@code side} : les statuts de {@code owner} qui décomptent sur ce camp perdent un
+     * tour (sauf ceux posés pendant ce tour) ; renvoie ceux qui se terminent.
+     */
+    public List<Status> endTurn(StatusTarget owner, StatusTarget side) {
         List<Status> ended = new ArrayList<>();
         for (Status status : List.copyOf(active)) {
-            if (status.countDown()) {
+            if (status.endTurn(status.type().countingSide(owner) == side)) {
                 active.remove(status);
                 ended.add(status);
             }
