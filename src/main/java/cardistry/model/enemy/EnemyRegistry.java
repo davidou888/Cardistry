@@ -28,6 +28,14 @@ public final class EnemyRegistry {
     /** Chance qu'un combat commun soit contre Clarence. */
     public static final double CLARENCE_CHANCE = 0.03;
     public static final int LEVELS = 3;
+    /** Chance du Camé de brûler à chaque attaque qui porte. */
+    public static final double CAME_BURN_CHANCE = 0.3;
+    /** Chance du « Badoing, badoing ! » du Paresseux d'endormir (Fons 1 tour). */
+    public static final double PARESSEUX_FONS_CHANCE = 0.25;
+    /** Identifiants des statuts infligés (voir {@code core.status.StatusType#id()}). */
+    static final String INTOX = "intox";
+    static final String FONS = "fons";
+    static final String BURN = "brulure";
 
     public static final String CADDIE = "caddie-enerve";
     public static final String CHOOMAH = "choomah";
@@ -157,15 +165,17 @@ public final class EnemyRegistry {
             int period) {
         EnemyMove strike = EnemyMove.of("coup", "ooOOOaAAAOaAOOA", "OAUUAOOAOAUAOOOooooooO", Hit.of(hit));
         EnemyMove steal = EnemyMove.of("vol-a-la-tire", "AAAOOAaAAOAOaAOOA", "oOOOOAOOAOAOAOAOOoOOOOOAAAAAAAA",
-                new MoveEffect.Pickpocket(5, 1, hit));
+                new MoveEffect.Pickpocket(5, 1, hit), new MoveEffect.Inflict(INTOX, 1, 0, false));
         all.put(id, () -> Enemy.builder(id, name, NATURE, EnemyRank.COMMON).hp(hp).screams().sprite(CHOOMAH)
                 .behavior(EnemyBehavior.every(period, steal, strike)));
     }
 
     private static EnemyBehavior came() {
-        EnemyMove hit = EnemyMove.of("coup", "Coup de coude", "Coup de coude", Hit.of(5));
-        EnemyMove tax = EnemyMove.of("taxe", "Taxe", "Te prend 1 clope ; si tu n'en as pas, attaque deux fois",
-                new MoveEffect.Tax(1, 5, 2));
+        MoveEffect burn = new MoveEffect.Inflict(BURN, CAME_BURN_CHANCE, 0, true);
+        EnemyMove hit = EnemyMove.of("coup", "Coup de coude", "Coup de coude (30 % de Brûlure)", Hit.of(5), burn);
+        EnemyMove tax = EnemyMove.of("taxe", "Taxe",
+                "Te prend 1 clope ; si tu n'en as pas, attaque deux fois (30 % de Brûlure)",
+                new MoveEffect.Tax(1, 5, 2), burn);
         return EnemyBehavior.every(2, tax, hit);
     }
 
@@ -173,8 +183,10 @@ public final class EnemyRegistry {
     private static EnemyBehavior paresseux() {
         EnemyMove claw = EnemyMove.of("griffe", "Griffe molle", "Griffe molle", Hit.of(3));
         EnemyMove swing = EnemyMove.of("badoing", "Badoing, badoing !",
-                "Il se balance à sa branche : 50 % d'esquiver ton prochain sort, sinon deux petits coups",
-                new MoveEffect.Gamble(0.5, new MoveEffect.Dodge(), Hit.of(2, 2)));
+                "Il se balance à sa branche : 50 % d'esquiver ton prochain sort, sinon deux petits coups ;"
+                        + " 25 % de t'endormir (Fons 1 tour)",
+                new MoveEffect.Gamble(0.5, new MoveEffect.Dodge(), Hit.of(2, 2)),
+                new MoveEffect.Inflict(FONS, PARESSEUX_FONS_CHANCE, 1, false));
         return EnemyBehavior.every(2, swing, claw);
     }
 
@@ -194,8 +206,9 @@ public final class EnemyRegistry {
     private static EnemyBehavior vafi() {
         EnemyMove hit = EnemyMove.of("correction", "Correction", "Correction", Hit.of(8));
         EnemyMove series = EnemyMove.of("serie-d-algebre", "Série d'algèbre",
-                "Une carte de ta main devient « Exercice 3b » (injouable pendant ce combat)",
-                new MoveEffect.CurseCard("Exercice 3b"));
+                "Une carte de ta main devient « Exercice 3b » (injouable pendant ce combat), et tu"
+                        + " t'endors en cours (Fons 1 tour)",
+                new MoveEffect.CurseCard("Exercice 3b"), new MoveEffect.Inflict(FONS, 1, 1, false));
         EnemyMove pause = EnemyMove.of("pause-petou", "Pause pétou", "Se soigne et n'attaque pas",
                 new MoveEffect.HealSelf(12));
         return self -> {

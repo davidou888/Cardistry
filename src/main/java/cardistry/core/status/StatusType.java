@@ -78,6 +78,16 @@ public enum StatusType {
         return reapply;
     }
 
+    /** Statut d'identifiant {@code id} (voir {@link #id()}). */
+    public static StatusType byId(String id) {
+        for (StatusType type : values()) {
+            if (type.id.equals(id)) {
+                return type;
+            }
+        }
+        throw new IllegalArgumentException("Statut inconnu : " + id);
+    }
+
     /** Camp dont les fins de tour font décompter ce statut porté par {@code owner}. */
     public StatusTarget countingSide(StatusTarget owner) {
         return countsOnAttackerTurns ? owner.other() : owner;

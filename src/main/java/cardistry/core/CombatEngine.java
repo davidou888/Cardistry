@@ -1266,6 +1266,8 @@ public final class CombatEngine {
         final Enemy enemy;
         boolean shieldChecked;
         boolean cancelled;
+        /** Au moins un coup de cette attaque a porté (statuts « après un coup »). */
+        boolean landed;
 
         MoveRun(Enemy enemy) {
             this.enemy = enemy;
@@ -1322,6 +1324,12 @@ public final class CombatEngine {
                 double healed = enemy.healSelf(heal.amount() * enemy.damageScale());
                 bus.publish(new GameEvent.EnemyHealed(enemy, healed));
             }
+            case MoveEffect.Inflict inflict -> {
+                if (!inflict.afterHit() || run.landed) {
+                    tryStatus(StatusTarget.PLAYER, StatusType.byId(inflict.status()), inflict.chance(),
+                            inflict.turns(), StatusExtras.NONE, StatusTarget.ENEMY);
+                }
+            }
         }
     }
 
@@ -1358,6 +1366,7 @@ public final class CombatEngine {
         double amount = Combatant.round(state.hitDamage(hit));
         bus.publish(new GameEvent.EnemyAttacked(enemy));
         player.takeDamage(amount);
+        run.landed = true;
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
         if (!player.isAlive()) {
             bus.publish(new GameEvent.GameLost());

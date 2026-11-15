@@ -98,4 +98,17 @@ public sealed interface MoveEffect {
             return false;
         }
     }
+
+    /**
+     * Inflige un statut au joueur ({@code status} = identifiant d'un {@code core.status.StatusType}) avec
+     * {@code chance} (tirage de l'adversaire, pas doublé par CLAUDE.md), pour {@code turns} tours (0 =
+     * durée par défaut du statut). {@code afterHit} : seulement si un coup de cette attaque a porté.
+     */
+    record Inflict(String status, double chance, int turns, boolean afterHit) implements MoveEffect {
+
+        @Override
+        public boolean isAttack() {
+            return false;
+        }
+    }
 }
