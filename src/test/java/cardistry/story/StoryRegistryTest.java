@@ -100,4 +100,25 @@ class StoryRegistryTest {
         assertEquals(4, ouch.hurt);
         assertTrue(machine.choices().get(1).isAvailable(poor));
     }
+
+    /** Une carte donnée par un événement est la même que celle du pool (type, élément, rareté). */
+    @Test
+    void cartesDesEvenementsIdentiquesAuPool() {
+        List<Card> pool = new cardistry.model.card.CardPool().cards();
+        for (Story story : StoryRegistry.all()) {
+            for (StoryChoice choice : story.choices()) {
+                for (boolean lucky : new boolean[] {true, false}) {
+                    Recorder ctx = new Recorder(lucky);
+                    choice.outcome().accept(ctx);
+                    for (Card card : ctx.cards) {
+                        Card model = pool.stream().filter(c -> c.qualifiedId().equals(card.qualifiedId())).findFirst()
+                                .orElseThrow(() -> new AssertionError("carte hors du pool : " + card.qualifiedId()));
+                        assertEquals(model.getClass(), card.getClass(), card.name());
+                        assertEquals(model.element(), card.element(), card.name());
+                        assertEquals(model.rarity(), card.rarity(), card.name());
+                    }
+                }
+            }
+        }
+    }
 }

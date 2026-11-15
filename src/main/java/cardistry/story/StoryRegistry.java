@@ -3,7 +3,7 @@ package cardistry.story;
 import java.util.List;
 import java.util.Optional;
 
-import static cardistry.items.Rarity.UNCOMMON;
+import static cardistry.items.Rarity.COMMON;
 import cardistry.model.Element;
 import cardistry.model.card.SpellCard;
 
@@ -57,7 +57,7 @@ public final class StoryRegistry {
                             ctx.say("C'est fort. Ça fait du bien... pour l'instant.");
                         }),
                         StoryChoice.of("Lui demander une astuce", "+1 Boule de feu dans ton deck", ctx -> {
-                            ctx.addCard(new SpellCard("Boule de feu", Element.FIRE, 10, UNCOMMON));
+                            ctx.addCard(new SpellCard("Boule de feu", Element.FIRE, 10, COMMON));
                             ctx.say("Il griffonne un sort sur une serviette : Boule de feu rejoint ton deck.");
                         }),
                         StoryChoice.of("Refuser poliment", "", ctx -> ctx.say("Il hausse les épaules et s'en va."))));
