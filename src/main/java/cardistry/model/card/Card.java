@@ -9,6 +9,8 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard, Dead
     private final String name;
     private final Element element;
     private final Rarity rarity;
+    /** {@code null} : aucun pouvoir. */
+    private CardPower power;
 
     protected Card(String name, Element element, Rarity rarity) {
         this.name = name;
@@ -17,7 +19,6 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard, Dead
     }
 
     public String name() {
-        
         return name;
     }
 
@@ -31,13 +32,31 @@ public abstract sealed class Card permits SpellCard, HealCard, TerrainCard, Dead
         return "carte:" + cardistry.model.Ids.slug(name);
     }
 
-    /**Rareté de la carte */
+    /** Rareté de la carte. */
     public Rarity rarity() {
         return rarity;
     }
+
+    /** Pouvoir de la carte (texte + effet après l'effet principal), s'il y en a un. */
+    public java.util.Optional<CardPower> power() {
+        return java.util.Optional.ofNullable(power);
+    }
+
+    /** Pose le pouvoir de {@code source} sur {@code copy} (à appeler dans chaque {@link #copy()}). */
+    protected static <T extends Card> T samePower(Card source, T copy) {
+        ((Card) copy).power = source.power;
+        return copy;
+    }
+
+    /** Pose {@code power} sur {@code copy} (pour les {@code withPower} des sous-classes). */
+    protected static <T extends Card> T withPower(T copy, CardPower power) {
+        ((Card) copy).power = power;
+        return copy;
+    }
+
     /**
-     * Nouvelle instance indépendante. Les cartes du registre sont des modèles : on ne met en main
-     * que des copies, pour qu'une carte améliorée ou modifiée n'affecte pas les autres.
+     * Nouvelle instance indépendante, pouvoir compris. Les cartes du registre sont des modèles : on ne
+     * met en main que des copies, pour qu'une carte améliorée ou modifiée n'affecte pas les autres.
      */
     public abstract Card copy();
 }

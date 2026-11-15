@@ -10,8 +10,13 @@ public final class TerrainCard extends Card {
         super(name, element, rarity);
     }
 
+    /** Copie avec un pouvoir (texte + effet après le changement de terrain). */
+    public TerrainCard withPower(String text, java.util.function.Consumer<cardistry.core.EffectContext> effect) {
+        return withPower(copy(), new CardPower(text, effect));
+    }
+
     @Override
     public TerrainCard copy() {
-        return new TerrainCard(name(), element(), rarity());
+        return samePower(this, new TerrainCard(name(), element(), rarity()));
     }
 }

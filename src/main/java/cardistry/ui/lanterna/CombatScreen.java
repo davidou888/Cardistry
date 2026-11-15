@@ -345,8 +345,11 @@ final class CombatScreen {
         }
         String element = card.element() == null ? "null" : card.element().displayName();
         p.text(col + 1, row + 3, Painter.fit(element, inner), Palette.element(card.element()));
+        if (card.power().isPresent()) {
+            p.text(col + width - 2, row, "★", Palette.ACCENT, true);
+        }
         String value = switch (card) {
-            case SpellCard s -> num(s.damage()) + " dgt";
+            case SpellCard s -> s.damageLabel().orElse(num(s.damage())) + " dgt";
             case HealCard h -> "+" + num(h.amount()) + " PV";
             case TerrainCard t -> "terrain";
             case DeadCard d -> "bloquée";
@@ -372,13 +375,26 @@ final class CombatScreen {
 
     /** Effet de la carte si on la joue maintenant, multiplicateurs compris. */
     static String describe(GameState state, Card card) {
+        String power = card.power().map(p -> " · ★ " + p.text()).orElse("");
+        return effectOf(state, card) + power;
+    }
+
+    private static String effectOf(GameState state, Card card) {
         Enemy enemy = state.currentEnemy();
         String head = card.name() + " · ";
         return switch (card) {
+            case SpellCard s when s.hasDamageRule() || s.isUnmultiplied() -> {
+                double mult = s.isUnmultiplied() ? 1.0 : state.spellMultiplier(s);
+                String damage = s.damageLabel().orElse(num(s.damage()));
+                yield head + "sortilège " + s.element().displayName() + " : " + damage
+                        + (s.isUnmultiplied() ? " (non multipliés)" : mult != 1.0 ? " ×" + num(mult) : "")
+                        + " dégâts à " + enemy.name();
+            }
+            case SpellCard s when s.damage() <= 0 -> head + "sortilège " + s.element().displayName() + " : aucun dégât";
             case SpellCard s -> {
                 double mult = state.spellMultiplier(s);
                 yield head + "sortilège " + s.element().displayName() + " : " + num(s.damage())
-                        + (mult != 1.0 ? " ×" + num(mult) : "") + " = " + num(s.damage() * mult)
+                        + (mult != 1.0 ? " ×" + num(mult) : "") + " = " + num(cardistry.model.Combatant.round(s.damage() * mult))
                         + " dégâts à " + enemy.name();
             }
             case HealCard h -> {

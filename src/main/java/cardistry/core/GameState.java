@@ -49,6 +49,7 @@ public final class GameState {
     private int choomies = STARTING_CHOOMIES;
     private int level = 0;
     private int floor = 0;
+    private int floorsTraveled = 0;
     /** Deck de la run ; {@code null} = pas de deck, la pioche tire dans le pool (tests, scénarios). */
     private final List<Card> deck;
     private final List<Card> drawPile = new ArrayList<>();
@@ -282,6 +283,15 @@ public final class GameState {
     void setLocation(int level, int floor) {
         this.level = level;
         this.floor = floor;
+    }
+
+    /** Étages parcourus depuis le début de la partie (un par nœud de la carte où l'on est entré). */
+    public int floorsTraveled() {
+        return floorsTraveled;
+    }
+
+    void addFloorTraveled() {
+        floorsTraveled++;
     }
 
     /** Choomies (monnaie de la run). */

@@ -440,9 +440,14 @@ public final class TextRenderer implements Renderer {
     }
 
     static String describe(Card card) {
+        return describeEffect(card) + card.power().map(p -> " · ★ " + p.text()).orElse("");
+    }
+
+    private static String describeEffect(Card card) {
         String type = Ansi.element(card.element());
         return switch (card) {
-            case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : " + num(s.damage()) + " dégâts";
+            case SpellCard s -> "Sortilège " + cardName(s) + " (" + type + ") : "
+                    + s.damageLabel().orElse(num(s.damage())) + " dégâts" + (s.isUnmultiplied() ? " (non multipliés)" : "");
             case HealCard h -> "Soin " + cardName(h) + " (" + type + ") : " + num(h.amount()) + " PV";
             case TerrainCard t -> "Terrain " + cardName(t) + " (" + type + ")";
             case DeadCard d -> cardName(d) + " : injouable jusqu'à la fin du combat";

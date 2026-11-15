@@ -126,6 +126,7 @@ public final class CombatEngine {
     /** Le joueur entre dans un nœud ({@code kind} : nom affiché de son type). */
     public void enterNode(int floor, String kind) {
         state.setLocation(state.level(), floor);
+        state.addFloorTraveled();
         bus.publish(new GameEvent.NodeEntered(state.level(), floor, kind));
     }
 
@@ -378,11 +379,28 @@ public final class CombatEngine {
         for (Curse curse : state.endActiveCurses()) {
             bus.publish(new GameEvent.CurseEnded(curse));
         }
+        state.playerStats().removeBySource(COMBAT_BONUS_SOURCE);
         for (StatusTarget target : StatusTarget.values()) {
             for (Status status : state.statuses(target).clear()) {
                 bus.publish(new GameEvent.StatusEnded(target, status.type()));
             }
         }
+    }
+
+    /** Source des bonus « pour tout le combat » (Stingin' Roger), retirés en fin de combat. */
+    static final String COMBAT_BONUS_SOURCE = "combat";
+
+    /** Statuts négatifs du joueur (purge, Berceuse) : pas l'Hypnose, ni la Gueule de bois, ni l'Ivresse. */
+    public static final java.util.Set<StatusType> NEGATIVE_STATUSES = java.util.EnumSet.of(
+            StatusType.INTOX, StatusType.FONS, StatusType.BONDAGE, StatusType.BURN);
+
+    /** Retire {@code type} de {@code target} ; {@code true} s'il était actif. */
+    private boolean removeStatus(StatusTarget target, StatusType type) {
+        if (state.statuses(target).remove(type)) {
+            bus.publish(new GameEvent.StatusEnded(target, type));
+            return true;
+        }
+        return false;
     }
 
     // --- Statuts ---
@@ -1140,12 +1158,17 @@ public final class CombatEngine {
         switch (card) {
             case SpellCard spell -> {
                 Optional<TemporaryEffect> boost = state.nextSpellBoost();
-                double mult = state.spellMultiplier(spell);
+                double base = spell.baseDamage(effects); // calculé avant le coup (Matrix, Pyromane…)
+                double mult = spell.isUnmultiplied() ? 1.0 : state.spellMultiplier(spell);
                 Enemy target = state.currentEnemy();
-                double hpLost = damageEnemy(spell.damage() * mult, mult, GameEvent.DamageDealt.Source.SPELL);
-                boost.ifPresent(this::consume);
-                if (hpLost > 0) {
-                    bus.publish(new GameEvent.SpellHit(spell, target, hpLost));
+                if (base > 0) {
+                    double hpLost = damageEnemy(base * mult, mult, GameEvent.DamageDealt.Source.SPELL);
+                    if (!spell.isUnmultiplied()) {
+                        boost.ifPresent(this::consume);
+                    }
+                    if (hpLost > 0) {
+                        bus.publish(new GameEvent.SpellHit(spell, target, hpLost));
+                    }
                 }
             }
             case HealCard heal -> {
@@ -1155,6 +1178,10 @@ public final class CombatEngine {
             case TerrainCard terrain -> changeTerrain(terrain);
             case DeadCard dead -> throw new AssertionError("refusée par validate");
         }
+        card.power().ifPresent(power -> {
+            bus.publish(new GameEvent.CardPowerTriggered(card, power.text()));
+            power.effect().accept(effects);
+        });
         discard(card);
     }
 
@@ -1524,6 +1551,27 @@ public final class CombatEngine {
         @Override
         public void addEffect(TemporaryEffect effect) {
             CombatEngine.this.addEffect(effect);
+        }
+
+        @Override
+        public boolean removeStatus(StatusTarget target, StatusType type) {
+            return CombatEngine.this.removeStatus(target, type);
+        }
+
+        @Override
+        public int purgeNegativeStatuses() {
+            int removed = 0;
+            for (StatusType type : NEGATIVE_STATUSES) {
+                removed += CombatEngine.this.removeStatus(StatusTarget.PLAYER, type) ? 1 : 0;
+            }
+            return removed;
+        }
+
+        @Override
+        public void addCombatDamageBonus(double percent) {
+            for (StatType stat : StatType.allDamageMultipliers()) {
+                state.playerStats().add(cardistry.core.stats.StatModifier.percent(stat, percent, COMBAT_BONUS_SOURCE));
+            }
         }
 
         @Override

@@ -18,8 +18,13 @@ public final class HealCard extends Card {
         return amount;
     }
 
+    /** Copie avec un pouvoir (texte + effet après le soin). */
+    public HealCard withPower(String text, java.util.function.Consumer<cardistry.core.EffectContext> effect) {
+        return withPower(copy(), new CardPower(text, effect));
+    }
+
     @Override
     public HealCard copy() {
-        return new HealCard(name(), element(), amount, rarity());
+        return samePower(this, new HealCard(name(), element(), amount, rarity()));
     }
 }

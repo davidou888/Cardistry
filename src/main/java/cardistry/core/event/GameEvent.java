@@ -32,6 +32,10 @@ public sealed interface GameEvent {
     record CardPlayed(Card card) implements GameEvent {
     }
 
+    /** Le pouvoir d'une carte jouée se déclenche (après son effet principal). */
+    record CardPowerTriggered(Card card, String text) implements GameEvent {
+    }
+
     record CardDrawn(Card card) implements GameEvent {
     }
 

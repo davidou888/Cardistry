@@ -105,4 +105,28 @@ public interface EffectContext {
             double probability, int turns, cardistry.core.status.StatusExtras extras) {
         return false;
     }
+
+    /** PV actuels de l'adversaire. */
+    default int enemyHp() {
+        return state().currentEnemy().hp();
+    }
+
+    /** Étages parcourus depuis le début de la partie. */
+    default int floorsTraveled() {
+        return state().floorsTraveled();
+    }
+
+    /** Retire {@code type} de {@code target} ; {@code true} s'il était actif. */
+    default boolean removeStatus(cardistry.core.status.StatusTarget target, cardistry.core.status.StatusType type) {
+        return false;
+    }
+
+    /** Retire tous les statuts négatifs du joueur (Intox, Fons, Bondage, Brûlure) ; renvoie combien. */
+    default int purgeNegativeStatuses() {
+        return 0;
+    }
+
+    /** +{@code percent} de dégâts (tous éléments) jusqu'à la fin du combat, cumulable. */
+    default void addCombatDamageBonus(double percent) {
+    }
 }

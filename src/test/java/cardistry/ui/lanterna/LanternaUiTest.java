@@ -187,6 +187,26 @@ class LanternaUiTest {
     }
 
     @Test
+    void pouvoirDeCarteAfficheSurLaCarteEtDansLaDescription() throws IOException {
+        open(80, 24);
+        SpellCard boule = new SpellCard("Boule de feu", Element.FIRE, 10, cardistry.items.Rarity.COMMON)
+                .withPower("10 % d'infliger Brûlure", ctx -> { });
+        SpellCard aleatoire = new SpellCard("Moindre carré", Element.ALGEBRAIC, 0, cardistry.items.Rarity.UNCOMMON)
+                .withDamageRule("1-40", ctx -> 1);
+        GameState state = combat(List.of(boule, aleatoire), new Enemy("Mannequin", Element.NATURE, 20, 5));
+        assertEquals("Boule de feu · sortilège feu : 10 ×1.5 = 15 dégâts à Mannequin · ★ 10 % d'infliger Brûlure",
+                CombatScreen.describe(state, boule));
+        assertEquals("Moindre carré · sortilège algebrique : 1-40 dégâts à Mannequin",
+                CombatScreen.describe(state, aleatoire));
+        ui.onEvent(new GameEvent.GameStarted(42));
+        ui.showStatus(state);
+        String text = dump("03c-combat-pouvoir");
+        assertTrue(text.contains("★"), text);
+        assertTrue(text.contains("1-40 dgt"), text);
+        assertTrue(cardistry.ui.text.TextRendererAccess.describe(boule).endsWith("★ 10 % d'infliger Brûlure"));
+    }
+
+    @Test
     void flechesPuisEntreeJoueLaCarteSelectionnee() throws IOException {
         open(80, 24);
         GameState state = combat(List.of(

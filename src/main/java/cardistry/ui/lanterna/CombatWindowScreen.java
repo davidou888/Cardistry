@@ -346,7 +346,7 @@ final class CombatWindowScreen {
     /** Valeur affichée sur la carte : dégâts, « +PV », rien pour un terrain ou une carte morte. */
     static String value(Card card) {
         return switch (card) {
-            case SpellCard s -> num(s.damage());
+            case SpellCard s -> s.damageLabel().orElse(num(s.damage()));
             case HealCard h -> "+" + num(h.amount());
             case TerrainCard t -> "";
             case DeadCard d -> "";
@@ -371,6 +371,9 @@ final class CombatWindowScreen {
             p.text(col + 1, r, " ".repeat(width - 2), Palette.TEXT, false, back);
         }
         p.text(col + 1, row, String.valueOf(number), selected ? Palette.ACCENT : Palette.TEXT, true);
+        if (card.power().isPresent()) {
+            p.text(col + width - 2, row, "★", Palette.ACCENT, true); // pouvoir : détail sous la main
+        }
 
         int artRows = height >= 8 ? 3 : 2;
         int artCols = artRows * 2;
