@@ -168,6 +168,111 @@ return {
     c:ellipse(20, 17, 4, 3, "v"); c:ellipse(20, 16, 3, 2, "G")
     c:px(17, 12, "R"); c:px(7, 12, "Y")
   end },
+  -- ---- sorts neutres
+  { id = "pet-de-mamouz", draw = function(c)
+    -- nuage verdâtre qui s'échappe, lignes d'odeur
+    c:disc(8, 15, 5, "v"); c:disc(14, 13, 6, "v"); c:disc(18, 17, 4, "v")
+    c:disc(8, 14, 4, "g"); c:disc(14, 12, 5, "g"); c:disc(18, 16, 3, "g")
+    c:disc(12, 10, 2, "G"); c:disc(7, 12, 1, "G")
+    c:arc(6, 6, 2, 2, 180, 360, "4"); c:arc(10, 4, 2, 2, 0, 180, "4")
+    c:arc(17, 4, 2, 2, 180, 360, "4"); c:arc(21, 6, 2, 2, 0, 180, "4")
+    c:px(3, 20, "G"); c:px(21, 22, "G"); c:px(22, 11, "G")
+  end },
+  { id = "carte-basique-pas-ouf", draw = function(c)
+    -- carte grise toute simple, visage blasé
+    c:rect(6, 2, 12, 20, "3"); c:frame(6, 2, 12, 20, "2")
+    c:rect(7, 3, 10, 18, "4")
+    c:hline(9, 10, 9, "1"); c:hline(14, 15, 9, "1")
+    c:hline(9, 15, 15, "1")
+    c:px(19, 4, "3"); c:px(20, 6, "3")
+  end },
+  { id = "lancer-de-manette", draw = function(c)
+    -- manette en vol, traits de vitesse
+    c:hline(1, 6, 8, "4"); c:hline(0, 5, 12, "4"); c:hline(2, 7, 16, "4")
+    c:ellipse(11, 12, 3, 4, "2"); c:ellipse(19, 12, 3, 4, "2")
+    c:rect(11, 9, 9, 6, "2")
+    c:rect(10, 11, 3, 1, "4"); c:rect(11, 10, 1, 3, "4")
+    c:px(18, 10, "R"); c:px(20, 11, "B"); c:px(18, 12, "G"); c:px(16, 11, "Y")
+    c:hline(12, 18, 8, "3")
+  end },
+  { id = "big-lez-shotgun", draw = function(c)
+    -- fusil à pompe générique avec éclair de tir
+    c:line(3, 19, 15, 9, "N", 3)
+    c:line(9, 15, 20, 6, "3", 2)
+    c:line(10, 16, 21, 7, "2", 1)
+    c:rect(11, 12, 4, 2, "n")
+    c:px(9, 17, "2"); c:px(8, 18, "2")
+    c:disc(22, 4, 2, "Y"); c:px(22, 4, "6")
+    c:px(20, 1, "o"); c:px(23, 1, "o"); c:px(23, 7, "o")
+  end },
+  -- ---- terrains (nouveaux)
+  { id = "volcan", draw = function(c)
+    c:rect(0, 20, 24, 4, "2")
+    c:tri(1, 21, 23, 21, 12, 6, "N")
+    c:tri(5, 21, 12, 6, 12, 21, "n")
+    c:rect(10, 6, 5, 2, "R")
+    c:line(12, 7, 9, 15, "R", 1); c:line(13, 7, 16, 13, "o", 1)
+    c:disc(12, 3, 2, "3"); c:disc(15, 1, 2, "3"); c:disc(9, 2, 1, "2")
+    c:px(11, 5, "Y"); c:px(14, 4, "o")
+  end },
+  { id = "dojo", draw = function(c)
+    c:rect(0, 20, 24, 4, "s")
+    c:hline(0, 23, 21, "y")
+    c:tri(1, 9, 23, 9, 12, 3, "d")
+    c:rect(3, 9, 18, 2, "d")
+    c:rect(4, 11, 16, 9, "5")
+    c:rect(4, 11, 1, 9, "N"); c:rect(19, 11, 1, 9, "N"); c:rect(11, 11, 2, 9, "N")
+    c:rect(6, 13, 4, 4, "4"); c:rect(14, 13, 4, 4, "4")
+  end },
+  { id = "migros", draw = function(c)
+    -- supermarché générique : caddie plein
+    c:rect(0, 21, 24, 3, "3")
+    c:line(2, 5, 5, 5, "4"); c:line(5, 5, 8, 16, "4")
+    c:rect(6, 8, 15, 1, "4"); c:line(20, 8, 18, 15, "4"); c:hline(8, 18, 15, "4")
+    for x = 8, 18, 3 do c:vline(x, 9, 14, "3") end
+    c:rect(9, 5, 3, 3, "R"); c:rect(13, 4, 3, 4, "o"); c:rect(16, 6, 2, 2, "G")
+    c:disc(9, 19, 1, "2"); c:disc(17, 19, 1, "2")
+  end },
+  { id = "gare", draw = function(c)
+    -- quai, horloge de gare, rails
+    c:rect(0, 18, 24, 6, "3")
+    c:hline(0, 23, 20, "n"); c:hline(0, 23, 22, "n")
+    for x = 1, 23, 4 do c:vline(x, 20, 22, "N") end
+    c:vline(12, 9, 17, "2")
+    c:disc(12, 6, 5, "2"); c:disc(12, 6, 4, "6")
+    c:vline(12, 3, 6, "1"); c:hline(12, 14, 6, "1"); c:px(12, 6, "R")
+  end },
+  { id = "desert-kaleidoscopique", draw = function(c)
+    -- dunes sous un soleil-kaléidoscope (spirituel : magenta)
+    c:rect(0, 0, 24, 24, "1")
+    c:disc(12, 8, 6, "m"); c:disc(12, 8, 4, "M"); c:disc(12, 8, 2, "p"); c:px(12, 8, "6")
+    for _, d in ipairs({ { 12, 0 }, { 12, 16 }, { 4, 8 }, { 20, 8 }, { 6, 2 }, { 18, 2 }, { 6, 14 }, { 18, 14 } }) do
+      c:line(12, 8, d[1], d[2], "M")
+    end
+    c:ellipse(6, 22, 9, 5, "y"); c:ellipse(19, 23, 8, 5, "n")
+    c:ellipse(6, 21, 8, 3, "Y"); c:ellipse(19, 22, 7, 3, "y")
+    c:px(3, 19, "M"); c:px(20, 20, "C")
+  end },
+  { id = "espace-de-dimension-n", draw = function(c)
+    -- espace sombre, axes et hypercube en fil de fer (algébrique : cyan)
+    c:rect(0, 0, 24, 24, "0")
+    c:px(2, 3, "5"); c:px(20, 2, "5"); c:px(22, 19, "4"); c:px(3, 20, "4"); c:px(15, 22, "5")
+    c:frame(4, 8, 10, 10, "c")
+    c:frame(10, 4, 10, 10, "C")
+    c:line(4, 8, 10, 4, "C"); c:line(13, 8, 19, 4, "C")
+    c:line(4, 17, 10, 13, "c"); c:line(13, 17, 19, 13, "C")
+    c:disc(19, 4, 1, "6"); c:px(8, 12, "B")
+  end },
+  { id = "fractale", draw = function(c)
+    -- triangle de Sierpiński (géométrique : jaune) : pixel plein si x & y == 0
+    c:rect(0, 0, 24, 24, "1")
+    for y = 0, 15 do
+      for x = 0, 15 - y do
+        if (x & y) == 0 then c:px(4 + x, 19 - y, (x + y) % 4 == 0 and "y" or "Y") end
+      end
+    end
+    c:px(20, 4, "o"); c:px(18, 7, "o"); c:px(21, 9, "y")
+  end },
   -- ---- cartes mortes
   { id = "no-cards", draw = function(c)
     c:rect(5, 2, 14, 20, "2"); c:frame(5, 2, 14, 20, "3")
