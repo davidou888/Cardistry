@@ -8,8 +8,11 @@
 - À chaque tour : jouer une carte **ou** piocher, puis l'adversaire attaque. Utiliser un objet est une **action gratuite** (pas de fin de tour, pas d'attaque adverse), possible avant de jouer ou piocher.
 - Quand un adversaire meurt : Choomies, puis choix d'**1 récompense parmi 3** (objet ou trinket), puis retour à la carte. Chaque combat commence par ton tour.
 - Cartes : **Sortilège** (dégâts), **Heal** (soin, boosté dans le terrain du même type), **Terrain** (change le terrain, modifie l'attaque adverse).
-- Éléments : **Feu > Plante > Eau > Feu**. « Plante » est le nom affiché de l'élément nature (l'enum du code reste `NATURE`).
-- **Neutre** (adversaires seulement) : ×1 contre tout sort, et les terrains n'ont aucun effet sur son attaque.
+- Éléments : deux triangles, **Feu > Plante > Eau > Feu** et **Géométrique > Algébrique > Spirituel > Géométrique** ; les deux triangles ne se battent pas entre eux (×1). **GLITCH** (« error: null ») bat tout, lui-même et le neutre compris. « Plante » est le nom affiché de l'élément nature (l'enum du code reste `NATURE`).
+- **Neutre** (cartes et adversaires) : ne bat rien, n'est battu que par GLITCH ; les terrains n'ont aucun effet sur l'attaque d'un adversaire neutre.
+- Couleurs d'élément : feu rouge, eau bleu, plante vert, neutre gris clair, algébrique cyan, géométrique jaune ambre, spirituel magenta, GLITCH gris.
+- **PV toujours entiers** (joueur et adversaires) : chaque changement (dégâts, soins, statuts) est arrondi à l'entier le plus proche au moment où il s'applique ; les multiplicateurs restent décimaux.
+- Chaque combat commence sur le **terrain de l'adversaire** (voir « Terrains »).
 
 ### Multiplicateurs d'éléments (décidés)
 Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
@@ -22,7 +25,7 @@ Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
 | Eau | ×1.5 | ×1 | ×0.5 |
 | Plante | ×0.5 | ×1.5 | ×1 |
 
-×1.5 si le sort bat l'adversaire, ×0.5 si l'adversaire bat le sort, ×1 si même élément.
+×1.5 si le sort bat l'adversaire, ×0.5 si l'adversaire bat le sort, ×1 sinon. Même règle pour le second triangle et GLITCH (un sort GLITCH fait ×1.5 contre tout, un sort contre un adversaire GLITCH ×0.5).
 
 **Terrain → attaque de l'adversaire** (le terrain modifie ce que l'adversaire *inflige*, pas ce qu'il reçoit)
 
@@ -60,8 +63,17 @@ dégâts suivent le niveau). Valeurs ci-dessous au niveau 1.
 | Élite | Étudiant post-examen | Eau | 60 | Larmes : 6, +3 par carte de moins que 5 dans ta main ; sous 50 % PV, Crise de nerfs : deux attaques par tour |
 | Boss | Boss du niveau 1 / 2 / 3 (**noms à venir**) | Feu / Eau / Plante | 130 / 200 / 280 | Coup 10 ; toutes les 4 attaques, Grosse attaque 22 |
 
+Statuts infligés (tirages de l'adversaire, pas doublés par CLAUDE.md) :
+
+| Adversaire | Attaque | Statut |
+|---|---|---|
+| Camé | chaque attaque qui porte (pas la Taxe qui prend une clope) | 30 % de Brûlure |
+| Choomah (et variantes) | Vol à la tire | Intox |
+| Vafi | Série d'algèbre | Fons 1 tour (on s'endort en cours) |
+| Paresseux | « Badoing, badoing ! » | 25 % de Fons 1 tour |
+
 Règles communes :
-- L'intent est choisi au début du combat et après chaque attaque. Un tour sauté (Pétou ancestral) garde
+- L'intent est choisi au début du combat et après chaque attaque. Un adversaire en Fons annonce « Endormi » et garde son attaque pour son réveil. Un tour sauté (Pétou ancestral) garde
   l'intent et n'avance pas les compteurs (Seau, Crevaison).
 - **Moscow Mule** annule toute l'attaque (tous ses coups), mais pas les vols ni la Taxe (qui ne sont pas
   des attaques ; la Taxe sans clope, elle, frappe et s'annule).
@@ -106,9 +118,9 @@ Règles communes :
 - Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
 
 ### Deck construit (lot 1 bis)
-- **Deck de départ, 12 cartes** : 6 sorts (Boule de feu 10, Pluie de flammes 15, Jet d'eau 10, Tsunami 15,
-  Fouet de lianes 10, Tempête d'épines 15), 3 soins (Potion, Caïpirinha, Petit pétou), 3 terrains (Enfer,
-  Atlantis, Amazonie). Le terrain de départ (EPFL) est en jeu, pas dans le deck.
+- **Deck de départ, 12 cartes** : 6 sorts communs (Boule de feu, Jet d'eau, Fouet de lianes, Pet de Mamouz,
+  Carte basique pas ouf, Lancer de manette), 3 Potions, 3 terrains (Marécage, Forêt, Volcan). Le terrain de
+  départ (Dojo) est en jeu, pas dans le deck.
 - Au début de chaque combat, tout le deck est mélangé en une **pioche** ; la main de 5 en est tirée.
   Les cartes jouées, remplacées (George) ou transformées (NO CARDS, Exercice 3b) vont à la **défausse** ;
   les cartes mortes, elles, disparaissent à la fin du combat. Pioche vide : la défausse est remélangée.
@@ -117,10 +129,13 @@ Règles communes :
   3 cartes de noms différents tirées du registre (poids des trinkets compris), on en ajoute 1 au deck ou
   on passe (en plus du 1 parmi 3 d'objets).
 - **Retirer une carte** : Sieste « Faire le tri » (gratuit) ou shop (payant) ; jamais sous **5 cartes**.
-- Grinder : +1 Petit pétou dans le deck à l'obtention, Petit pétou ×2 dans les récompenses de cartes (et
+- Grinder : +1 Petite taffe dans le deck à l'obtention, Petite taffe ×2 dans les récompenses de cartes (et
   pour George). Paquet de cartes : 3 cartes de la pioche, les 2 autres à la défausse. George : carte du
   registre (elle ne reste pas dans le deck).
-- Écran de combat : « Ta main 5/7 · Pioche 7 · Défausse 0 » ; inventaire (I) : le deck.
+- Écran de combat : « Ta main 5/7 · Pioche 7 · Défausse 0 » ; inventaire (I) ; le deck complet avec **D**,
+  n'importe où pendant une partie.
+- Une main peut dépasser la taille max (taille qui baisse en cours de combat) : on garde ses cartes, toutes
+  jouables, sans pouvoir piocher.
 
 ## Personnages
 Au début de chaque partie (après l'écran titre), on choisit un personnage. Sa capacité est permanente,
@@ -157,7 +172,7 @@ Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
-La couleur de rareté est la même partout : texte en terminal ; dans la fenêtre, cadre de l'icône en combat, dans les récompenses et au shop. La couleur d'élément (feu rouge, eau bleu, plante vert, neutre gris) est réservée aux cadres de cartes.
+La couleur de rareté est la même partout : texte en terminal ; dans la fenêtre, cadre de l'icône en combat, dans les récompenses et au shop. La couleur d'élément (voir « Boucle de jeu ») est réservée aux cadres de cartes. Les cartes ont aussi une rareté.
 
 | Rareté | Couleur | Poids drop (indicatif) | Prix shop (indicatif) |
 |---|---|---|---|
@@ -234,7 +249,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
 | Peu commun | Pax | +1 taille de main | Pioche, Soirée | a |
 | Peu commun | Monde Snack | +10 PV à chaque adversaire vaincu | Soin, Soirée | a |
-| Peu commun | Grinder | Soins de type feu +50 % ; Petit pétou deux fois plus fréquent dans la pioche | Soin, Soirée | a |
+| Peu commun | Grinder | Soins de type feu +50 % ; +1 Petite taffe à l'obtention, Petite taffe deux fois plus fréquente dans la pioche | Soin, Soirée | a |
 | Peu commun | Plan du campus | Jouer un terrain inflige aussi 5 dégâts | Terrain, EPFL | a |
 | Rare | Photocopieuse | Piocher donne 2 cartes | Pioche, EPFL | a |
 | Rare | Compréhension algébrique | 20 % des dégâts de sorts te soignent | Soin, Plante | a |
@@ -263,7 +278,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Peu commun | Raclette | +50 PV, puis tu sautes ton prochain tour (l'adversaire attaque normalement) | EPFL | b (M2) |
 | Rare | Space cake | Au bout de 3 tours : +40 PV et +50 % dégâts pendant 2 tours. Si le combat se termine avant le déclenchement, le compte à rebours continue au combat suivant | Soirée | b (M2) |
 
-Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet et carte gardent le même nom, mais sont toujours distingués à l'écran (voir Interface) et ont des identifiants distincts.
+La carte Soin « Petit pétou » est devenue « Petite taffe » (plan V2) ; l'objet Petit pétou (et Googz) ne change pas. Objets et cartes homonymes restent toujours distingués à l'écran et ont des identifiants distincts (`carte:` / `objet:`).
 
 #### Choix assumés
 - **Diplôme EPFL** fait boule de neige avec les trinkets EPFL et double aussi le bonus de set EPFL : c'est voulu (synergies façon *The Binding of Isaac*).
@@ -283,6 +298,126 @@ Les cartes Soin « Caïpirinha » et « Petit pétou » existent aussi : objet e
 - **M10 — Déblocages durables** : conditions remplies pendant une partie → secret dans le pool à partir de la partie suivante, sauvegardé dans le dossier de sauvegarde. Fait (détails et spoilers : `docs/SECRETS.md`).
 - **M9 — Clopes** : ressource de run, actions Fumer / Rouler, intensité de malédiction, multiplicateur final de stat (Ross), soins non plafonnés.
 - **M8 — Combats et malédictions** : la partie est découpée en combats (un par adversaire) ; malédictions qui durent jusqu'au combat suivant (Gueule de bois).
+
+## Statuts
+Code : `core.status` (`StatusType` = tous les chiffres, `Statuses`), appliqués par `CombatEngine`.
+- Applicables au **joueur et aux adversaires**, au plus un de chaque type par combattant ; retirés à la fin du combat.
+- **Durée** : N tours de la cible ; l'effet par tour s'applique **au début** de son tour, le décompte se fait
+  **à la fin** de son tour. Un statut ne décompte jamais à la fin du tour où il a été posé (une Fons qu'on se
+  pose soi-même fait bien sauter un tour). **Hypnotisé** est compté en tours de celui qui frappe : posé sur
+  l'adversaire, il vaut pour tes prochains tours.
+- **Tirages** (seedés) : un statut que le joueur inflige à l'adversaire est un tirage en sa faveur (doublé par
+  CLAUDE.md) ; un statut subi par le joueur (adversaire, ou sa propre Petite taffe) ne l'est pas.
+- Dégâts de statut **bruts** : ni multiplicateur, ni réduction de dégâts, ni Rebond.
+- Affichage : icône 8×8 + tours restants à côté de chaque barre de PV (fenêtre), « Int3 » (terminal), « Statuts : … »
+  (mode texte) ; journal ; un son par statut (`sfx.status.<id>`, sons existants en attendant les vrais).
+
+| Statut | Effet | Durée | Réapplication |
+|---|---|---|---|
+| **Intox** | −5 PV par tour | 3 tours | **impossible** tant qu'Intox est actif |
+| **Fons** | la cible ne joue pas (le joueur passe ses tours, l'adversaire n'attaque pas et garde son intent) | 1 à 3 tours (tirés au hasard) | durée remise au max |
+| **Hypnotisé** | les cartes d'attaque font **×2** à la cible (attaques adverses ×2 si c'est le joueur) | 1 tour (certaines cartes : plus) | durée remise au max |
+| **Bondage** | vole 5 PV par tour à la cible, au profit de celui qui l'a infligé ; **8 PV** sur un terrain plante | 3 tours | durée remise au max |
+| **Brûlure** | −8 PV/tour sur terrain feu, −4 PV/tour ailleurs | 3 tours | durée remise au max |
+
+- **Brûlure et eau** : impossible à poser sur un terrain eau ; **éteinte immédiatement** quand un terrain eau est posé.
+- **Statuts négatifs du joueur** (Berceuse, purges) : Intox, Fons, Bondage, Brûlure. **Pas** l'Hypnose, la Gueule de bois ni l'Ivresse.
+- Variantes de Fons posées par des cartes : soin en % des PV max par tour (un vrai soin : efficacité, Ross),
+  immunité aux coups adverses (les statuts passent toujours). Avec une Fons d'un tour, l'attaque qui suit le
+  tour sauté n'est plus couverte (le statut a décompté).
+
+## Cartes
+Code : `model.card` (`CardPool` = registre ; les cartes à pouvoir sont des fabriques partagées par le pool, le
+deck de départ, les événements et les trinkets).
+- **Pouvoir** : un texte + un effet (`EffectContext`), déclenché **après** l'effet principal (dégâts, soin,
+  terrain) ; `copy()` le conserve. Affiché par ★ sur la carte et dans la description sous la main.
+- Un sort peut avoir des **dégâts calculés** au moment du coup, **avant** le coup (Matrix, Pyromane…), ou
+  **non multipliés** (ni élément, ni stats, ni hypnose, ni prochain sort ×N). Un sort à 0 dégât ne frappe pas ;
+  un soin à 0 PV n'agit que par son pouvoir.
+- Fiche détaillée de la carte sélectionnée avec **V** (en combat : effet réel et chaque multiplicateur ; au shop :
+  valeurs de base). Les écrans de récompense et de pioche au choix montrent les valeurs de base.
+
+### Sorts
+| Rareté | Carte | Élément | Effet |
+|---|---|---|---|
+| Commun | Boule de feu | feu | 10 ; 10 % d'infliger Brûlure |
+| Commun | Jet d'eau | eau | 10 |
+| Commun | Fouet de lianes | plante | 10 ; 10 % d'infliger Bondage |
+| Commun | Pet de Mamouz | neutre | 0 ; Intox à coup sûr |
+| Commun | Carte basique pas ouf | neutre | 10 |
+| Commun | Lancer de manette | neutre | 12 |
+| Commun | CAYOUUU | neutre | 12 |
+| Commun | Pain pita | géométrique | 10 |
+| Commun | Matrix | algébrique | 10 ; ×2 si les PV de l'adversaire finissent par 0 ou 1 (vérifié avant le coup) |
+| Peu commun | Pluie de flammes / Tsunami / Tempête d'épines | feu / eau / plante | 15 |
+| Peu commun | Moindre carré | algébrique | 1 à 40, tirage en ta faveur (le meilleur de deux avec CLAUDE.md) |
+| Peu commun | dist(PLAYER) | géométrique | 10 + étages parcourus |
+| Peu commun | Somnifère | spirituel | 0 ; Fons 1 tour à l'adversaire |
+| Peu commun | Réveil brutal | neutre | 20 à un adversaire en Fons (et le réveille), sinon 8 |
+| Rare | Purification des Chakra | spirituel | 0 ; l'adversaire est hypnotisé pour ton prochain tour |
+| Rare | Pyromane | feu | 15, ×2 si l'adversaire brûle |
+| Rare | Contre-exemple | algébrique | 0 ; annule le prochain statut que tu subirais (ce combat, cumulable) |
+| Légendaire | Big Lez Shotgun | neutre | 80 |
+| Légendaire | Professeur d'or | spirituel | 35 non multipliés ; Hypnotisé 5 tours |
+
+### Soins
+| Rareté | Carte | Élément | Effet |
+|---|---|---|---|
+| Commun | Potion | plante | +10 PV |
+| Commun | Petite taffe (ex-Petit pétou) | feu | +15 PV ; 15 % de tomber en Fons, +5 % des PV max par tour pendant cette Fons |
+| Commun | Verre d'eau | eau | +10 PV |
+| Commun | Sparadrap | neutre | +12 PV |
+| Commun | Soupe de mamie | neutre | +10 PV et retire l'Intox |
+| Commun | Stingin' Roger | feu | −5 PV, +10 % de dégâts pour tout le combat (cumulable) |
+| Peu commun | Grande potion | plante | +20 PV |
+| Peu commun | Seau d'eau | eau | +20 PV |
+| Peu commun | Berceuse inconnue | spirituel | retire tous tes statuts négatifs |
+| Rare | Taffe de foufou bâtard | feu | Fons 3 tours : immunisé aux coups adverses, +8 % des PV max par tour ; les statuts passent toujours |
+
+## Terrains
+### Terrains du joueur
+- Un terrain peut porter des **bonus de stats** (source « terrain ») et/ou un **effet spécial** ; ils ne sont
+  actifs **que tant qu'il est en jeu** : retirés quand le terrain change (l'ancien d'abord, puis le nouveau) et à
+  la fin du combat.
+
+| Terrain | Élément | Rareté | Effet |
+|---|---|---|---|
+| Marécage, Forêt, Volcan | eau, plante, feu | Commun | aucun |
+| Dojo | neutre | Commun | **+10 % de dégâts** (terrain de départ) |
+| Migros | neutre | Commun | si le combat se termine dessus : **+25 % de Choomies** |
+| Gare | neutre | Commun | jouer une carte terrain depuis la Gare **ne coûte pas le tour** et donne **+1 clope** |
+| Amazonie, Enfer, Atlantis | plante, feu, eau | Peu commun | attaques de leur élément **+20 %** |
+| Désert kaléidoscopique | spirituel | Rare | l'hypnose fait **×4** au lieu de ×2 (dans les deux sens) |
+| Espace de dimension n | algébrique | Rare | chaque sort ou soin joué dessus est **rejoué une fois à 50 %** au début du tour suivant, **seulement si on y est encore** ; son pouvoir est rejoué en entier, avec sa chance normale (Boule de feu = 10 % au rejeu aussi) ; les terrains ne sont pas rejoués, un rejeu ne se rejoue pas et ne consomme pas le prochain sort ×N |
+| Fractale | géométrique | Rare | **tous** les multiplicateurs totaux (sorts, soins, dégâts élémentaires des objets, attaque adverse) arrondis à l'entier supérieur (×1.25 → ×2, ×0.5 → ×1) |
+| EPFL | feu | Légendaire | voir ci-dessous |
+
+**EPFL** : pendant **3 tours** du joueur (après celui où il est posé), toutes ses valeurs sont **réellement
+doublées** : dégâts de toutes les cartes, soins, réduction de dégâts, **PV max et PV actuels** (×2 à l'arrivée).
+Pas doublés : taille de main, Choomies, clopes. En quittant l'EPFL (changement de terrain, fin des 3 tours ou fin
+du combat) : **PV actuels ÷ 2** (arrondis), bonus retirés ; en fin de combat, avant la fin du combat. Après 3 tours :
+retour automatique sur le **Dojo** ; changer de terrain avant annule le minuteur. Tours restants affichés à côté
+du terrain.
+
+### Terrains des adversaires
+Code : `model.enemy.EnemyTerrains`. Chaque combat commence sur le **terrain de l'adversaire** ; ces terrains ne
+sont **jamais** dans le pool (ni récompense, ni shop). Leurs malus touchent le joueur tant qu'il y reste : jouer
+une carte terrain, c'est « sortir de chez l'ennemi ». Arriver chez l'adversaire n'est pas un changement de terrain
+joué (M1 et Plan du campus ne se déclenchent pas). La règle existante s'applique : un adversaire sur un terrain de
+son élément attaque à ×1.25. Boss provisoires : départ sur le Dojo.
+
+| Adversaire | Terrain | Élément | Malus pour le joueur |
+|---|---|---|---|
+| Caddie énervé | Parking du Migros | neutre | −1 taille de main |
+| Clarence | Le canapé | neutre | aucun |
+| Le Peneu | Bord d'autoroute | neutre | +2 dégâts subis par coup (stat `DAMAGE_TAKEN`) |
+| Choomah (et variantes) | Buisson louche | plante | −20 % soins |
+| Paresseux | Canopée | plante | −15 % dégâts des sorts |
+| T-Rex défoncé | Jurassic Ecublens | plante | adversaire +15 % dégâts |
+| Camé | Passage sous-gare | feu | adversaire +15 % dégâts |
+| Vafi | Amphi d'examen | feu | −20 % dégâts des sorts |
+| Seau de fuite | Toit qui fuit | eau | −20 % soins |
+| Étudiant post-examen | Biblio à 3h du mat | eau | −1 taille de main |
 
 ## Choomies (monnaie)
 - **15 Choomies** au début de la partie. Gagnés à chaque victoire : commun 12-18, élite 30-40, boss 80-100
@@ -334,7 +469,7 @@ Code : `CombatEngine.openShop` / `shopAction`, `core.Shop`, `core.shop` (`ShopPr
 ## Secrets / easter eggs
 - Trinkets « Secret » débloqués durablement par des conditions remplies pendant une partie (façon *Isaac*) ; des codes (seed spéciale, code clavier) les donnent pour une seule partie.
 - Garder la liste des secrets dans `docs/SECRETS.md` (spoilers !).
-- Existant : terrain « EPFL » de type feu, heal « Petit pétou ».
+- Existant : terrain « EPFL » de type feu (Légendaire), soin « Petite taffe » (ex-Petit pétou).
 
 ## Interface (terminal ASCII, Lanterna)
 Fait : écrans titre, règles, combat, fin de partie ; clavier direct (←/→ + Entrée, 1-7, P piocher, Q quitter avec confirmation) ; sprites ASCII des 3 adversaires ; barres de PV ; main en cadres ASCII colorés par élément ; aperçu de l'effet réel de la carte sélectionnée ; journal de combat ; animations (dégâts qui clignotent, chiffres flottants, tremblement/charge de l'ennemi, mort, arrivée, pioche).
@@ -343,7 +478,8 @@ Fait aussi : carte de la run (écran Lanterna + mode texte), intents des adversa
 Fait aussi : shop (plein écran + mode texte) ; fenêtre du jeu par défaut (police pixel embarquée, double buffer, images PNG avec repli ASCII, filtre CRT désactivé par défaut).
 Fait aussi : événements (plein écran + mode texte).
 Fait aussi : son (musique par contexte avec fondu, effets sur les événements, placeholders), menu pause (Échap), Options (volumes, muet) depuis le titre et la pause.
-Reste : transitions d'écran ; vrais sons et musiques.
+Fait aussi : statuts (icônes et tours restants près des PV, intent « Endormi »), pouvoirs (★), deck (**D**, n'importe où : regroupé par type, ×N, défilement ; mode texte `d`), fiche de carte (**V** en combat et au shop ; mode texte `v N`).
+Reste : transitions d'écran ; vrais sons des statuts.
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
@@ -363,9 +499,13 @@ Reste : transitions d'écran ; vrais sons et musiques.
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
 - **[À DÉCIDER]** Valeur des PV max de départ (100 provisoirement, stat `MAX_HP`).
+- **[À DÉCIDER]** Règles « qui bat qui » de Spirituel / Algébrique / Géométrique : le triangle actuel est un premier jet.
+- **[À DÉCIDER]** Ennemis des nouveaux éléments : aucun adversaire n'est Spirituel / Algébrique / Géométrique pour l'instant.
+- **[À DÉCIDER]** Prix des cartes au shop : ils suivent encore la règle provisoire (dégâts / PV), pas la rareté des cartes.
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
+- ~~Plan V2~~ → statuts, pouvoirs, terrains à effet, terrains des adversaires, nouvelles cartes (voir ces sections). Moindre carré : tirage en ta faveur (doublé par CLAUDE.md). Petite taffe : reste Commune. Fractale : multiplicateur total arrondi à l'entier **supérieur**. Espace : le rejeu garde la chance normale des statuts. Hypnose comptée en tours de celui qui frappe ; un statut ne décompte pas à la fin du tour où il est posé ; chances doublées seulement contre l'adversaire ; immunité de la Taffe = coups adverses ; main au-delà du max : on garde ses cartes.
 - ~~Tables d'éléments contradictoires~~ → sortilèges : table (×1.5 / ×0.5 / ×1) ; terrain : multiplie l'attaque adverse (×1.25 / ×0.75 / ×1). Voir « Multiplicateurs d'éléments ».
 - ~~Le nouvel adversaire attaque-t-il le tour où il arrive ?~~ → Non.
 - ~~Cumul des multiplicateurs de stats~~ → ils s'additionnent.
