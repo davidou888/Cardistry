@@ -67,6 +67,8 @@ public final class CardDetail {
         List<Line> lines = new ArrayList<>();
         Enemy enemy = state.currentEnemy();
         switch (card) {
+            case SpellCard s when s.damage() <= 0 && !s.hasDamageRule() -> lines.add(new Line(
+                    "Aucun dégât à " + enemy.name() + (s.power().isPresent() ? " : son pouvoir agit" : ""), Kind.TOTAL));
             case SpellCard s when s.isUnmultiplied() -> lines.add(new Line("Dégâts non multipliés : "
                     + s.damageLabel().orElse(num(s.damage())) + " à " + enemy.name(), Kind.TOTAL));
             case SpellCard s -> {

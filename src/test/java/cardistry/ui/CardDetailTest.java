@@ -56,6 +56,8 @@ class CardDetailTest {
         assertTrue(heal.contains("Terrain Forêt : ×1.5") && heal.contains("Total : 10 ×1.5 → +15 PV"), heal);
         String prof = text(state, CardPool.professeurDOr(), true);
         assertTrue(prof.contains("Dégâts non multipliés : 35 à Mannequin"), prof);
+        String pet = text(state, CardPool.petDeMamouz(), true);
+        assertTrue(pet.contains("Aucun dégât à Mannequin : son pouvoir agit") && !pet.contains("Total"), pet);
         assertEquals("Bat tout", CardDetail.matchups(Element.GLITCH));
         assertEquals("Bat : rien · Battu par : error: null", CardDetail.matchups(Element.NEUTRAL));
         String terrain = text(state, CardPool.dojo(), true);
