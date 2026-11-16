@@ -645,18 +645,60 @@ public final class GameState {
     }
 
     /**
-     * Dégâts d'un coup de l'adversaire actuel : dégâts déclarés (plus ceux liés à ta main) × niveau ×
-     * multiplicateur, moins la réduction de dégâts, jamais sous 0.
+     * Dégâts d'un coup de l'adversaire actuel, sans critique : dégâts déclarés (plus ceux liés à ta
+     * main), voir {@link #hitDamage(double, boolean)}.
      */
     public double hitDamage(cardistry.model.enemy.MoveEffect.Hit hit) {
-        return hitDamage(hit.damage() + hit.perMissingCard()
-                * Math.max(0, cardistry.model.enemy.MoveEffect.Hit.FULL_HAND - hand.size()));
+        return hitDamage(hit, false);
     }
 
-    /** Dégâts d'un coup de {@code declared} dégâts (niveau, terrain et réduction compris), arrondis à l'entier. */
+    /** Comme {@link #hitDamage(cardistry.model.enemy.MoveEffect.Hit)}, critique ou non. */
+    public double hitDamage(cardistry.model.enemy.MoveEffect.Hit hit, boolean critical) {
+        return hitDamage(hit.damage() + hit.perMissingCard()
+                * Math.max(0, cardistry.model.enemy.MoveEffect.Hit.FULL_HAND - hand.size()), critical);
+    }
+
+    /** Dégâts d'un coup de {@code declared} dégâts, sans critique (aperçu de l'intent). */
     public double hitDamage(double declared) {
-        return cardistry.model.Combatant.round(Math.max(0, declared * currentEnemy().damageScale()
-                * enemyAttackMultiplier() - playerStats.get(StatType.DEFENSE)));
+        return hitDamage(declared, false);
+    }
+
+    /**
+     * Dégâts d'un coup de {@code declared} dégâts ({@link CombatFormula#damage}) : (déclarés × niveau +
+     * FOR de l'adversaire) × terrain × hypnose × critique − ta DEF, au moins 1.
+     */
+    public double hitDamage(double declared, boolean critical) {
+        Enemy enemy = currentEnemy();
+        return CombatFormula.damage(declared * enemy.damageScale(), enemy.stat(StatType.STRENGTH),
+                enemyAttackMultiplier(), critical, playerStats.get(StatType.DEFENSE), 0);
+    }
+
+    /** Stats du joueur ou de l'adversaire actuel. */
+    public Stats stats(cardistry.core.status.StatusTarget target) {
+        return target == cardistry.core.status.StatusTarget.PLAYER ? playerStats : currentEnemy().stats();
+    }
+
+    /**
+     * Dégâts d'un sort de {@code base} dégâts contre l'adversaire actuel ({@link CombatFormula#damage}) :
+     * stat offensive, multiplicateurs × {@code factor} (rejeu de l'Espace), critique, DEF de
+     * l'adversaire moins la DEF que le sort ignore. Un sort non multiplié fait {@code base × factor} brut.
+     */
+    public int spellDamage(SpellCard spell, double base, double factor, boolean critical, boolean withBoost) {
+        if (spell.isUnmultiplied()) {
+            return cardistry.model.Combatant.round(base * factor);
+        }
+        return CombatFormula.damage(base, CombatFormula.offense(spell.element(), playerStats),
+                spellMultiplier(spell, withBoost) * factor, critical, currentEnemy().stat(StatType.DEFENSE), 0);
+    }
+
+    /** Aperçu des dégâts d'un sort à dégâts fixes (sans critique, prochain sort ×N compris). */
+    public int spellDamage(SpellCard spell) {
+        return spellDamage(spell, spell.damage(), 1.0, false, true);
+    }
+
+    /** PV rendus par une carte de soin, avant plafond : (soin + ESP) × multiplicateurs. */
+    public double healAmount(HealCard heal) {
+        return CombatFormula.heal(heal.amount(), playerStats.get(StatType.MIND), healMultiplier(heal));
     }
 
     /** Dégâts d'un coup de la prochaine attaque annoncée (0 si elle n'attaque pas). */

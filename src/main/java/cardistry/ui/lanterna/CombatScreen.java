@@ -390,19 +390,18 @@ final class CombatScreen {
             }
             case SpellCard s when s.damage() <= 0 -> head + "sortilège " + s.element().displayName() + " : aucun dégât";
             case SpellCard s -> {
-                double mult = state.spellMultiplier(s);
-                yield head + "sortilège " + s.element().displayName() + " : " + num(s.damage())
-                        + (mult != 1.0 ? " ×" + num(mult) : "") + " = " + num(cardistry.model.Combatant.round(s.damage() * mult))
-                        + " dégâts à " + enemy.name();
+                yield head + "sortilège " + s.element().displayName() + " : "
+                        + cardistry.ui.CardDetail.damageFormula(state, s, false) + " dégâts à " + enemy.name();
             }
             case HealCard h when h.amount() <= 0 -> head + "soin " + h.element().displayName() + " : aucun soin direct";
             case HealCard h -> {
                 double mult = state.healMultiplier(h);
                 double missing = Math.max(0, state.maxHp() - state.player().hp());
-                double healed = Math.min(h.amount() * mult, missing);
-                yield head + "soin " + h.element().displayName() + " : " + num(h.amount())
+                double raw = state.healAmount(h);
+                double healed = Math.min(raw, missing);
+                yield head + "soin " + h.element().displayName() + " : " + cardistry.ui.CardDetail.healBase(state, h)
                         + (mult != 1.0 ? " ×" + num(mult) : "") + " → +" + num(healed) + " PV"
-                        + (healed < h.amount() * mult ? " (PV max)" : "");
+                        + (healed < raw ? " (PV max)" : "");
             }
             case DeadCard d -> head + "injouable jusqu'à la fin du combat (NullPointerException)";
             case TerrainCard t -> {

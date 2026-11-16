@@ -16,8 +16,8 @@ public interface EffectContext {
     void damageEnemy(double amount);
 
     /**
-     * Inflige {@code amount} dégâts de l'élément {@code element}, comme un sortilège : avec le
-     * multiplicateur élémentaire et la stat de dégâts de cet élément.
+     * Inflige {@code amount} dégâts de l'élément {@code element} : avec le multiplicateur élémentaire,
+     * la stat de dégâts de cet élément et la DEF de l'adversaire (ni stat offensive, ni critique).
      */
     void elementalDamage(double amount, Element element);
 
@@ -35,6 +35,19 @@ public interface EffectContext {
 
     /** Soigne le joueur de {@code amount} PV × efficacité des soins, plafonné aux PV max. */
     void healPlayer(double amount);
+
+    /**
+     * Soin d'un objet à PV fixes : {@code (amount + ESP) × efficacité des soins}, plafonné aux PV max
+     * (voir {@link CombatFormula#heal}).
+     */
+    default void itemHeal(double amount) {
+        healPlayer(amount);
+    }
+
+    /** Soin d'un objet à PV fixes de l'élément {@code element}, comme {@link #elementalHeal}, + ESP. */
+    default void itemHeal(double amount, Element element) {
+        elementalHeal(amount, element);
+    }
 
     /** Inflige {@code amount} dégâts bruts au joueur (ni réduction ni multiplicateur) ; peut le tuer. */
     void damagePlayer(double amount);

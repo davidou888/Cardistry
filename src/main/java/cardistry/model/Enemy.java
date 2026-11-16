@@ -4,6 +4,7 @@ import cardistry.model.enemy.EnemyBehavior;
 import cardistry.model.enemy.EnemyMove;
 import cardistry.model.enemy.EnemyRank;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,6 +35,8 @@ public class Enemy extends Combatant {
     private final String spriteId;
     /** Terrain sur lequel commence le combat ; {@code null} : celui du joueur reste. */
     private final cardistry.model.card.TerrainCard terrain;
+    /** FOR, INT, ESP, DEF, RES, CHA (même système que le joueur, voir {@code core.CombatFormula}). */
+    private final cardistry.core.stats.Stats stats = new cardistry.core.stats.Stats();
 
     private EnemyMove intent;
     private int actions = 0;
@@ -60,6 +63,7 @@ public class Enemy extends Combatant {
         this.voice = b.voice;
         this.spriteId = b.spriteId != null ? b.spriteId : b.id;
         this.terrain = b.terrain;
+        b.stats.forEach(stats::setBase);
     }
 
     public static Builder builder(String id, String name, Element element, EnemyRank rank) {
@@ -168,6 +172,19 @@ public class Enemy extends Combatant {
         dodgeReady = value;
     }
 
+    /**
+     * Stats de l'adversaire (FOR, INT, ESP, DEF, RES, CHA ; niveau compris). Modifiables en combat
+     * (Jet d'eau…) : l'instance ne vit qu'un combat.
+     */
+    public cardistry.core.stats.Stats stats() {
+        return stats;
+    }
+
+    /** Valeur d'une stat de l'adversaire. */
+    public double stat(cardistry.core.stats.StatType stat) {
+        return stats.get(stat);
+    }
+
     /** Se soigne sans dépasser ses PV max ; renvoie les PV rendus. */
     public double healSelf(double amount) {
         return heal(Math.max(0, Math.min(round(amount), maxHp - hp())));
@@ -188,6 +205,8 @@ public class Enemy extends Combatant {
         private Voice voice = Voice.NORMAL;
         private String spriteId;
         private cardistry.model.card.TerrainCard terrain;
+        private final java.util.Map<cardistry.core.stats.StatType, Double> stats =
+                new java.util.EnumMap<>(cardistry.core.stats.StatType.class);
 
         private Builder(String id, String name, Element element, EnemyRank rank) {
             this.id = id;
@@ -237,6 +256,22 @@ public class Enemy extends Combatant {
         /** Le combat commence sur ce terrain (voir {@code EnemyTerrains}). */
         public Builder terrain(cardistry.model.card.TerrainCard value) {
             terrain = value;
+            return this;
+        }
+
+        /** Stats de base (niveau 1) : FOR, INT, ESP, DEF, RES, CHA. */
+        public Builder stats(int strength, int intelligence, int mind, int defense, int resistance, int luck) {
+            int[] values = {strength, intelligence, mind, defense, resistance, luck};
+            List<cardistry.core.stats.StatType> types = cardistry.core.stats.StatType.characterStats();
+            for (int i = 0; i < values.length; i++) {
+                stats.put(types.get(i), (double) values[i]);
+            }
+            return this;
+        }
+
+        /** Ajoute {@code amount} à la stat de base {@code stat} (scaling par niveau). */
+        public Builder addStat(cardistry.core.stats.StatType stat, int amount) {
+            stats.merge(stat, (double) amount, Double::sum);
             return this;
         }
 

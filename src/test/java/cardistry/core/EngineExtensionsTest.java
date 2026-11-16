@@ -72,11 +72,11 @@ class EngineExtensionsTest {
     }
 
     @Test
-    void reductionJamaisSousZero() {
+    void laDefLaisseToujoursAuMoinsUnDegat() {
         setUp(List.of());
         state.playerStats().add(flat(StatType.DEFENSE, 50, "test"));
         engine.submit(new Action.DrawCard());
-        assertEquals(100, state.player().hp(), DELTA);
+        assertEquals(99, state.player().hp(), DELTA);
     }
 
     @Test

@@ -465,21 +465,36 @@ public final class CombatEngine {
     /**
      * Tire la chance puis pose le statut. {@code turns} ≤ 0 : durée tirée entre le min et le max du
      * statut. Contre l'adversaire, la chance est en faveur du joueur (doublée par CLAUDE.md).
+     * {@code withStats} : la chance gagne 3 % par INT du lanceur et perd 5 % par RES de la cible (même
+     * à coup sûr), et la RES de la cible peut raccourcir la durée ({@link CombatFormula}).
      */
     private boolean tryStatus(StatusTarget target, StatusType type, double probability, int turns,
-            StatusExtras extras, StatusTarget inflictedBy) {
+            StatusExtras extras, StatusTarget inflictedBy, boolean withStats) {
         if (!state.hasEnemy()) {
             return false;
         }
-        boolean lands = probability >= 1 || (target == StatusTarget.ENEMY && inflictedBy == StatusTarget.PLAYER
-                ? Luck.chance(state, rng, probability)
-                : rng.nextDouble() < probability);
+        double resistance = withStats ? state.stats(target).get(StatType.RESISTANCE) : 0;
+        double chance = withStats
+                ? CombatFormula.statusChance(probability, state.stats(inflictedBy).get(StatType.INTELLIGENCE), resistance)
+                : probability;
+        if (chance <= 0) {
+            return false;
+        }
+        boolean lands = chance >= 1 || (target == StatusTarget.ENEMY && inflictedBy == StatusTarget.PLAYER
+                ? Luck.chance(state, rng, chance)
+                : rng.nextDouble() < chance);
         if (!lands) {
             return false;
         }
         int duration = turns > 0 ? turns
                 : type.minTurns() + rng.nextInt(type.maxTurns() - type.minTurns() + 1);
-        return applyStatus(target, type, duration, inflictedBy, extras);
+        return applyStatus(target, type, CombatFormula.statusTurns(duration, resistance), inflictedBy, extras);
+    }
+
+    /** Coup critique du joueur sur un sort : 3 % par CHA, tirage en sa faveur (doublé par CLAUDE.md). */
+    private boolean playerCritical() {
+        double chance = CombatFormula.critChance(state.playerStats().get(StatType.LUCK));
+        return chance > 0 && Luck.chance(state, rng, chance);
     }
 
     /** Début du tour de {@code target} : effets par tour de ses statuts. */
@@ -1286,7 +1301,12 @@ public final class CombatEngine {
                 double mult = spell.isUnmultiplied() ? 1.0 : state.spellMultiplier(spell, !echo);
                 Enemy target = state.currentEnemy();
                 if (base > 0) {
-                    double hpLost = damageEnemy(base * mult * factor, mult, GameEvent.DamageDealt.Source.SPELL);
+                    boolean critical = !spell.isUnmultiplied() && playerCritical();
+                    int amount = state.spellDamage(spell, base, factor, critical, !echo);
+                    if (critical && !target.dodgeReady()) {
+                        bus.publish(new GameEvent.CriticalHit(target));
+                    }
+                    double hpLost = damageEnemy(amount, mult, GameEvent.DamageDealt.Source.SPELL);
                     if (!spell.isUnmultiplied()) {
                         boost.ifPresent(this::consume);
                     }
@@ -1298,7 +1318,7 @@ public final class CombatEngine {
             case HealCard heal -> {
                 if (heal.amount() > 0) { // un « soin » à 0 n'agit que par son pouvoir
                     double mult = state.healMultiplier(heal);
-                    healPlayer(heal.amount() * mult * factor, mult);
+                    healPlayer(state.healAmount(heal) * factor, mult);
                 }
             }
             case TerrainCard terrain -> changeTerrain(terrain);
@@ -1488,7 +1508,8 @@ public final class CombatEngine {
                 }
             }
             case MoveEffect.HealSelf heal -> {
-                double healed = enemy.healSelf(heal.amount() * enemy.damageScale());
+                double healed = enemy.healSelf(CombatFormula.heal(heal.amount() * enemy.damageScale(),
+                        enemy.stat(StatType.MIND), 1.0));
                 bus.publish(new GameEvent.EnemyHealed(enemy, healed));
             }
             case MoveEffect.ChangeElement change -> {
@@ -1502,7 +1523,7 @@ public final class CombatEngine {
             case MoveEffect.Inflict inflict -> {
                 if (!inflict.afterHit() || run.landed) {
                     tryStatus(StatusTarget.PLAYER, StatusType.byId(inflict.status()), inflict.chance(),
-                            inflict.turns(), StatusExtras.NONE, StatusTarget.ENEMY);
+                            inflict.turns(), StatusExtras.NONE, StatusTarget.ENEMY, true);
                 }
             }
         }
@@ -1532,14 +1553,21 @@ public final class CombatEngine {
             return;
         }
         if (hit.missChance() > 0 && rng.nextDouble() < hit.missChance()) {
-            double healed = hit.healOnMiss() > 0 ? enemy.healSelf(hit.healOnMiss() * enemy.damageScale()) : 0;
+            double healed = hit.healOnMiss() > 0 ? enemy.healSelf(CombatFormula.heal(hit.healOnMiss() * enemy.damageScale(),
+                    enemy.stat(StatType.MIND), 1.0)) : 0;
             bus.publish(new GameEvent.EnemyMissed(enemy, healed));
             return;
         }
         Player player = state.player();
         double mult = state.enemyAttackMultiplier();
-        double amount = Combatant.round(state.hitDamage(hit));
+        // Tirage de l'adversaire : pas un tirage de chance du joueur (CLAUDE.md ne le double pas).
+        double critChance = CombatFormula.critChance(enemy.stat(StatType.LUCK));
+        boolean critical = critChance > 0 && rng.nextDouble() < critChance;
+        double amount = Combatant.round(state.hitDamage(hit, critical));
         bus.publish(new GameEvent.EnemyAttacked(enemy));
+        if (critical) {
+            bus.publish(new GameEvent.CriticalHit(player));
+        }
         player.takeDamage(amount);
         run.landed = true;
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
@@ -1660,7 +1688,9 @@ public final class CombatEngine {
         public void elementalDamage(double amount, Element element) {
             double mult = state.terrainRounding(ElementRules.spellMultiplier(element, state.currentEnemy().element())
                     * state.playerStats().get(StatType.damageMultiplier(element)));
-            CombatEngine.this.damageEnemy(amount * mult, mult, GameEvent.DamageDealt.Source.EFFECT);
+            // Ni stat offensive ni critique (pas un sort), mais la DEF de l'adversaire compte.
+            int dealt = CombatFormula.damage(amount, 0, mult, false, state.currentEnemy().stat(StatType.DEFENSE), 0);
+            CombatEngine.this.damageEnemy(dealt, mult, GameEvent.DamageDealt.Source.EFFECT);
         }
 
         @Override
@@ -1735,7 +1765,9 @@ public final class CombatEngine {
         @Override
         public boolean applyStatus(StatusTarget target, StatusType type, double probability, int turns,
                 StatusExtras extras) {
-            return CombatEngine.this.tryStatus(target, type, probability, turns, extras, target.other());
+            // Un statut que le joueur se pose lui-même (Petite taffe) ne passe pas par INT ni RES.
+            return CombatEngine.this.tryStatus(target, type, probability, turns, extras, target.other(),
+                    target == StatusTarget.ENEMY);
         }
 
         @Override
@@ -1764,6 +1796,18 @@ public final class CombatEngine {
         public void healPlayer(double amount) {
             double mult = state.playerStats().get(StatType.HEAL_EFFICIENCY);
             CombatEngine.this.healPlayer(amount * mult, mult);
+        }
+
+        @Override
+        public void itemHeal(double amount) {
+            double mult = state.playerStats().get(StatType.HEAL_EFFICIENCY);
+            CombatEngine.this.healPlayer(CombatFormula.heal(amount, state.playerStats().get(StatType.MIND), mult), mult);
+        }
+
+        @Override
+        public void itemHeal(double amount, Element element) {
+            double mult = state.healMultiplier(element);
+            CombatEngine.this.healPlayer(CombatFormula.heal(amount, state.playerStats().get(StatType.MIND), mult), mult);
         }
 
         @Override

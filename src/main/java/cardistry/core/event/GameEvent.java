@@ -92,7 +92,11 @@ public sealed interface GameEvent {
      *
      * @param hpLost PV réellement enlevés à l'adversaire (sans les dégâts en trop s'il meurt)
      */
-    record SpellHit(cardistry.model.card.SpellCard spell, Enemy enemy, double hpLost) implements GameEvent {
+    /** Coup critique (×1,5) sur {@code target} : le joueur (coup adverse) ou l'adversaire (sort). */
+    record CriticalHit(Combatant target) implements GameEvent {
+    }
+
+        record SpellHit(cardistry.model.card.SpellCard spell, Enemy enemy, double hpLost) implements GameEvent {
     }
 
     /** Une capacité (personnage) se manifeste : {@code message} est la ligne à afficher. */

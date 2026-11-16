@@ -337,7 +337,7 @@ public final class ItemRegistry {
     public static List<Item> items() {
         return List.of(
                 new Item("mate", "Maté", "+10 PV", "", COMMON, Set.of(Tag.HEAL),
-                        ctx -> ctx.healPlayer(10)),
+                        ctx -> ctx.itemHeal(10)),
                 new Item("pichet-vide", "Pichet vide", "15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse", "",
                         COMMON, Set.of(Tag.PARTY, Tag.DRINK),
                         ctx -> {
@@ -345,14 +345,14 @@ public final class ItemRegistry {
                             ctx.damagePlayer(5);
                         }),
                 new Item("caipirinha", "Caïpirinha", "+20 PV, +1 Ivresse", "", COMMON, Set.of(Tag.PARTY, Tag.DRINK),
-                        ctx -> ctx.healPlayer(20)),
+                        ctx -> ctx.itemHeal(20)),
                 new Item("petit-petou", "Petit pétou", "+15 PV (soin feu), −1 Ivresse", "", COMMON, Set.of(Tag.PARTY),
                         ctx -> {
-                            ctx.elementalHeal(15, Element.FIRE);
+                            ctx.itemHeal(15, Element.FIRE);
                             ctx.addDrunkenness(-1);
                         }),
                 new Item("spritz", "Spritz", "+30 PV, +1 Ivresse", "", UNCOMMON, Set.of(Tag.PARTY, Tag.DRINK),
-                        ctx -> ctx.healPlayer(30)),
+                        ctx -> ctx.itemHeal(30)),
                 new Item("shot-de-jager", "Shot de Jäger", "Prochain sort ×2, +1 Ivresse", "", UNCOMMON,
                         Set.of(Tag.PARTY, Tag.DRINK),
                         ctx -> ctx.addEffect(TemporaryEffect.builder("shot-de-jager", "Shot de Jäger")
@@ -370,7 +370,7 @@ public final class ItemRegistry {
                 new Item("raclette", "Raclette", "+50 PV, mais tu sautes ton prochain tour", "", UNCOMMON,
                         Set.of(Tag.EPFL),
                         ctx -> {
-                            ctx.healPlayer(50);
+                            ctx.itemHeal(50);
                             ctx.addEffect(TemporaryEffect.builder("raclette", "Raclette")
                                     .summary("tu sautes ton prochain tour")
                                     .charges(1)
@@ -388,7 +388,7 @@ public final class ItemRegistry {
                                 .percent(StatType.FIRE_DAMAGE, 0.5)
                                 .percent(StatType.WATER_DAMAGE, 0.5)
                                 .percent(StatType.NATURE_DAMAGE, 0.5)
-                                .onActivate(c -> c.healPlayer(40))
+                                .onActivate(c -> c.itemHeal(40))
                                 .build())),
                 new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),
                         ctx -> ctx.drawCards(2)),

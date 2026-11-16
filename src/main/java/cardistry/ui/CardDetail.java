@@ -91,8 +91,7 @@ public final class CardDetail {
                 double mult = state.spellMultiplier(s);
                 String total = s.hasDamageRule()
                         ? s.damageLabel().orElse("?") + " ×" + num(mult) + " dégâts à " + enemy.name()
-                        : num(s.damage()) + " ×" + num(mult) + " = " + num(Combatant.round(s.damage() * mult))
-                                + " dégâts à " + enemy.name();
+                        : damageFormula(state, s, true) + " dégâts à " + enemy.name();
                 lines.add(new Line("Total : " + total, Kind.TOTAL));
             }
             case HealCard h when h.amount() <= 0 -> lines.add(new Line("Aucun soin direct : son pouvoir agit",
@@ -106,10 +105,10 @@ public final class CardDetail {
                     lines.add(new Line("Tes bonus de soin : ×" + num(efficiency), Kind.TEXT));
                 }
                 double mult = state.healMultiplier(h);
-                double raw = h.amount() * mult;
+                double raw = state.healAmount(h);
                 double missing = Math.max(0, state.maxHp() - state.player().hp());
                 double healed = state.healingUncapped() ? raw : Math.min(raw, missing);
-                lines.add(new Line("Total : " + num(h.amount()) + " ×" + num(mult) + " → +" + num(Combatant.round(healed))
+                lines.add(new Line("Total : " + healBase(state, h) + " ×" + num(mult) + " → +" + num(Combatant.round(healed))
                         + " PV" + (healed < raw ? " (PV max)" : ""), Kind.TOTAL));
             }
             case TerrainCard t -> {
@@ -121,6 +120,30 @@ public final class CardDetail {
             }
         }
         return lines;
+    }
+
+    /**
+     * Calcul d'un sort à dégâts fixes : « 10 ×1.5 = 15 », ou avec les stats « (10 + 3) ×1.5 − 2 = 18 »
+     * (stat offensive du joueur, DEF de l'adversaire). {@code alwaysMultiplier} : affiche aussi ×1.
+     */
+    public static String damageFormula(GameState state, SpellCard spell, boolean alwaysMultiplier) {
+        double mult = state.spellMultiplier(spell);
+        double offense = cardistry.core.CombatFormula.offense(spell.element(), state.playerStats());
+        double defense = state.currentEnemy().stat(StatType.DEFENSE);
+        String base = offense == 0 ? num(spell.damage())
+                : "(" + num(spell.damage()) + (offense > 0 ? " + " : " − ") + num(Math.abs(offense)) + ")";
+        String text = base + (alwaysMultiplier || mult != 1.0 ? " ×" + num(mult) : "");
+        if (defense != 0) {
+            text += (defense > 0 ? " − " : " + ") + num(Math.abs(defense));
+        }
+        return text + " = " + num(state.spellDamage(spell));
+    }
+
+    /** Base d'un soin : « 10 », ou « (10 + 2) » avec l'ESP du joueur. */
+    public static String healBase(GameState state, HealCard heal) {
+        double mind = state.playerStats().get(StatType.MIND);
+        return mind == 0 ? num(heal.amount())
+                : "(" + num(heal.amount()) + (mind > 0 ? " + " : " − ") + num(Math.abs(mind)) + ")";
     }
 
     /** « (feu bat plante) », « (eau bat feu) » ou vide. */

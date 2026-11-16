@@ -33,6 +33,9 @@ public final class HookDispatcher {
             case GameEvent.CardReplaced e -> hook.onCardReplaced(e, ctx);
             case GameEvent.DamageDealt e -> hook.onDamageDealt(e, ctx);
             case GameEvent.SpellHit e -> hook.onSpellHit(e, ctx);
+            case GameEvent.CriticalHit e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.AbilityTriggered e -> {
                 // Concerne seulement l'UI.
             }

@@ -49,6 +49,9 @@ public final class IntentText {
             case cardistry.core.event.GameEvent.DodgeReady e -> e.enemy().name() + " "
                     + say(e.enemy(), "esquivera ton prochain sort");
             case cardistry.core.event.GameEvent.EnemyDodged e -> e.enemy().name() + " " + say(e.enemy(), "esquive ton sort !");
+            case cardistry.core.event.GameEvent.CriticalHit e -> e.target() instanceof Enemy
+                    ? "Coup critique ! (×" + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER) + ")"
+                    : "Coup critique de l'adversaire ! (×" + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER) + ")";
             case cardistry.core.event.GameEvent.EnemyHealed e -> e.enemy().name() + " "
                     + say(e.enemy(), "se soigne de " + num(e.amount()) + " PV");
             case cardistry.core.event.GameEvent.CardCursed e -> e.removed().name() + " devient « " + e.dead().name()
@@ -99,7 +102,8 @@ public final class IntentText {
             case MoveEffect.Dodge dodge -> "esquive ton prochain sort";
             case MoveEffect.CurseCard curse -> "une carte devient « " + curse.cardName() + " »";
             case MoveEffect.HealSelf heal -> "se soigne de "
-                    + num(heal.amount() * (state.hasEnemy() ? state.currentEnemy().damageScale() : 1));
+                    + num(state.hasEnemy() ? cardistry.core.CombatFormula.heal(heal.amount() * state.currentEnemy().damageScale(),
+                            state.currentEnemy().stat(cardistry.core.stats.StatType.MIND), 1.0) : heal.amount());
             case MoveEffect.ChangeElement change -> "change d'élément";
             case MoveEffect.Inflict inflict -> (inflict.chance() < 1 ? percent(inflict.chance()) + " de " : "")
                     + cardistry.core.status.StatusType.byId(inflict.status()).displayName()
