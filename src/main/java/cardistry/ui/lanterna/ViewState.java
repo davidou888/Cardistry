@@ -40,6 +40,10 @@ final class ViewState {
     /** Animation du sprite de l'adversaire (attaque, dégâts, mort) ; idle par défaut. */
     String spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
     int spriteFrame = 0;
+    /** Animation du personnage (attack, hurt, death) ; idle par défaut, avec la frame idle commune. */
+    String playerAnimation = cardistry.ui.sprite.Sprite.IDLE;
+    int playerFrame = 0;
+    int playerOffsetX;
     /** Frame idle en cours (avance toute seule pendant l'attente d'une touche). */
     int idleFrame = 0;
     /** Page des textes trop longs (descriptions) : avance toutes les {@code PAGE_MS}, revient à 0 à chaque touche. */
@@ -65,5 +69,8 @@ final class ViewState {
         floating.clear();
         spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
         spriteFrame = 0;
+        playerAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        playerFrame = 0;
+        playerOffsetX = 0;
     }
 }

@@ -164,7 +164,12 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             case GameEvent.PlayerTurnStarted e -> {
                 // Rien de plus à afficher.
             }
-            case GameEvent.CardPlayed e -> view.log("Tu joues la carte " + e.card().name(), Palette.TEXT);
+            case GameEvent.CardPlayed e -> {
+                view.log("Tu joues la carte " + e.card().name(), Palette.TEXT);
+                if (e.card() instanceof cardistry.model.card.SpellCard) {
+                    animatePlayerAttack();
+                }
+            }
             case GameEvent.CardReplayed e -> view.log("Espace : " + e.card().name() + " rejouée à "
                     + num(e.factor() * 100) + " %", Palette.INFO);
             case GameEvent.CardReplaced e -> {
@@ -325,7 +330,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             }
             case GameEvent.SecretUnlocked e -> view.log("Secret débloqué : " + e.name(), Palette.SECRET);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
-            case GameEvent.GameLost e -> view.log("Défaite...", Palette.DAMAGE);
+            case GameEvent.GameLost e -> {
+                view.log("Défaite...", Palette.DAMAGE);
+                animatePlayerDeath();
+            }
             case GameEvent.IntentChosen e -> render();
             case GameEvent.RestTaken e -> view.log("Sieste : " + e.choice(), Palette.HEAL);
             case GameEvent.DeckShuffled e -> view.log("Défausse remélangée : " + e.size() + " cartes", Palette.DIM);
@@ -1466,10 +1474,49 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         render();
     }
 
+    /** Frames d'une animation du personnage dans la fenêtre (0 sans images ou sans personnage). */
+    private int playerFrames(String animation) {
+        return images != null && state != null && state.hero().isPresent()
+                ? cardistry.ui.window.Images.playerFrames(state.hero().get().id(), animation) : 0;
+    }
+
+    /** Le personnage lance un sort : ses frames d'attaque, en avançant vers l'adversaire. */
+    private void animatePlayerAttack() {
+        int frames = playerFrames(cardistry.ui.sprite.Sprite.ATTACK);
+        if (frames == 0) {
+            return;
+        }
+        int[] offsets = {1, 2, 2, 0};
+        for (int i = 0; i < offsets.length; i++) {
+            view.playerAnimation = cardistry.ui.sprite.Sprite.ATTACK;
+            view.playerFrame = Math.min(frames - 1, i * frames / offsets.length);
+            view.playerOffsetX = offsets[i];
+            frame();
+        }
+        view.playerAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        view.playerOffsetX = 0;
+    }
+
+    /** Le personnage tombe : ses frames de mort, puis il reste sur la dernière. */
+    private void animatePlayerDeath() {
+        int frames = playerFrames(cardistry.ui.sprite.Sprite.DEATH);
+        for (int i = 0; i < frames * 3; i++) {
+            view.playerAnimation = cardistry.ui.sprite.Sprite.DEATH;
+            view.playerFrame = i / 3;
+            frame();
+        }
+    }
+
     private void animatePlayerHit(double amount) {
         double before = state.player().hp() + amount;
+        boolean hurtFrames = playerFrames(cardistry.ui.sprite.Sprite.HURT) > 0;
         for (int i = 0; i < 6; i++) {
-            view.playerFlash = i % 2 == 0 ? Palette.DAMAGE : null;
+            if (hurtFrames) {
+                view.playerAnimation = cardistry.ui.sprite.Sprite.HURT;
+                view.playerFrame = i / 3;
+                view.playerOffsetX = i < 3 ? -1 : 0;
+            }
+            view.playerFlash = (hurtFrames ? i == 0 : i % 2 == 0) ? Palette.DAMAGE : null;
             view.playerHpShown = before - amount * (i + 1) / 6;
             view.floating.clear();
             view.floating.add(new ViewState.Floating("-" + num(amount), Palette.DAMAGE, false, i / 2));
@@ -1732,7 +1779,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         }
         return page == Page.COMBAT && state != null && state.hasEnemy() && state.currentEnemy().isAlive()
                 && (currentSprite().idle().size() > 1
-                        || images != null && cardistry.ui.window.Images.idleFrames(state.currentEnemy().spriteId()) > 1);
+                        || images != null && cardistry.ui.window.Images.idleFrames(state.currentEnemy().spriteId()) > 1
+                        || playerFrames(cardistry.ui.sprite.Sprite.IDLE) > 1);
     }
 
     private static boolean isChar(KeyStroke key, char expected) {

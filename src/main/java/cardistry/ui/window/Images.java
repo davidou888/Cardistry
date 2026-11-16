@@ -52,6 +52,33 @@ public final class Images {
         return get(base).isPresent() ? Optional.of(base) : Optional.empty();
     }
 
+    /**
+     * Chemin de l'image d'un personnage jouable ou d'un familier ({@code player/<id>.<animation>.<n>.png}) :
+     * la frame, sinon la dernière de l'animation, sinon l'idle (en boucle), sinon {@code player/<id>.png}.
+     */
+    public static Optional<String> player(String id, String animation, int frame) {
+        int count = playerFrames(id, animation);
+        if (count > 0) {
+            int n = animation.equals("idle") ? Math.floorMod(frame, count) : Math.min(frame, count - 1);
+            return Optional.of("player/" + id + "." + animation + "." + (n + 1) + ".png");
+        }
+        int idle = playerFrames(id, "idle");
+        if (idle > 0) {
+            return Optional.of("player/" + id + ".idle." + (Math.floorMod(frame, idle) + 1) + ".png");
+        }
+        String base = "player/" + id + ".png";
+        return get(base).isPresent() ? Optional.of(base) : Optional.empty();
+    }
+
+    /** Nombre de frames d'une animation d'un personnage jouable ou d'un familier (0 s'il n'y en a pas). */
+    public static int playerFrames(String id, String animation) {
+        int count = 0;
+        while (get("player/" + id + "." + animation + "." + (count + 1) + ".png").isPresent()) {
+            count++;
+        }
+        return count;
+    }
+
     /** Nombre de frames idle en images (0 s'il n'y en a pas). */
     public static int idleFrames(String spriteId) {
         return frames(spriteId, "idle");

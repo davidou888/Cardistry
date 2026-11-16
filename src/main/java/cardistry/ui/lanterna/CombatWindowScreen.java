@@ -148,10 +148,21 @@ final class CombatWindowScreen {
         return Math.max(6, Math.min(MAX_HP_BAR, l.half() - 2 - nameLength - valueLength - 2));
     }
 
+    /**
+     * Image du personnage pour l'animation en cours ({@code player/<id>.<animation>.<n>.png}), sinon
+     * son image fixe, sinon le placeholder commun.
+     */
+    static String playerImage(GameState state, ViewState view) {
+        return state.hero().flatMap(hero -> cardistry.ui.window.Images.player(hero.id(), view.playerAnimation,
+                view.playerAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame : view.playerFrame))
+                .orElseGet(() -> state.hero().map(MenuScreens::heroImage).orElse(PLAYER_IMAGE));
+    }
+
     private static void drawPlayer(Painter p, GameState state, ViewState view, Layout l) {
-        String image = state.hero().map(MenuScreens::heroImage).orElse(PLAYER_IMAGE);
+        String image = playerImage(state, view);
         String name = Format.playerLabel(state);
-        if (!p.image(l.playerCol(), l.spriteTop(), l.spriteCols(), l.spriteRows(), image, view.playerFlash, 1f)) {
+        if (!p.image(l.playerCol() + view.playerOffsetX, l.spriteTop(), l.spriteCols(), l.spriteRows(), image,
+                view.playerFlash, 1f)) {
             p.text(l.playerCol() + Math.max(0, (l.spriteCols() - 5) / 2), l.spriteTop() + l.spriteRows() / 2, "(toi)",
                     Palette.DIM);
         }

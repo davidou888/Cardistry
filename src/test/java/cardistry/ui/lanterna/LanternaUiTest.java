@@ -1658,6 +1658,25 @@ class LanternaUiTest {
     }
 
     @Test
+    void imageDuPersonnageSelonSonAnimation() {
+        GameState state = GameState.newGame(cardistry.hero.HeroRegistry.LOUIS);
+        ViewState view = new ViewState();
+        assertEquals("player/louis.idle.1.png", CombatWindowScreen.playerImage(state, view));
+        view.idleFrame = 3;
+        assertEquals("player/louis.idle.2.png", CombatWindowScreen.playerImage(state, view), "l'idle boucle");
+        view.playerAnimation = "attack";
+        view.playerFrame = 1;
+        assertEquals("player/louis.attack.2.png", CombatWindowScreen.playerImage(state, view));
+        view.playerFrame = 5;
+        assertEquals("player/louis.attack.2.png", CombatWindowScreen.playerImage(state, view), "reste sur la fin");
+        view.playerAnimation = "hurt";
+        view.playerFrame = 0;
+        assertEquals("player/louis.hurt.1.png", CombatWindowScreen.playerImage(state, view));
+        assertEquals(CombatWindowScreen.PLAYER_IMAGE, CombatWindowScreen.playerImage(GameState.newGame(), view),
+                "sans personnage : le placeholder commun");
+    }
+
+    @Test
     void chaqueSpriteAUnFichierParAnimation() {
         for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
             String sprite = cardistry.model.enemy.EnemyRegistry.create(id, 1).spriteId();
