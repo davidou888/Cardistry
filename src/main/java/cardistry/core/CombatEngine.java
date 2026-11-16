@@ -1787,6 +1787,16 @@ public final class CombatEngine {
         }
 
         @Override
+        public void addCombatStat(StatusTarget target, StatType stat, double amount) {
+            if (!state.hasEnemy()) {
+                return;
+            }
+            // L'adversaire ne vit qu'un combat ; le bonus du joueur part à la fin du combat.
+            state.stats(target).add(cardistry.core.stats.StatModifier.flat(stat, amount, COMBAT_BONUS_SOURCE));
+            bus.publish(new GameEvent.CombatStatChanged(target, stat, amount));
+        }
+
+        @Override
         public boolean applyStatus(StatusTarget target, StatusType type, double probability) {
             return applyStatus(target, type, probability, 0, StatusExtras.NONE);
         }

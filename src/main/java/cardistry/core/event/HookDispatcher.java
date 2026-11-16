@@ -36,6 +36,9 @@ public final class HookDispatcher {
             case GameEvent.CriticalHit e -> {
                 // Pas de hook pour l'instant.
             }
+            case GameEvent.CombatStatChanged e -> {
+                // Pas de hook pour l'instant.
+            }
             case GameEvent.BossBonus e -> {
                 // Pas de hook pour l'instant.
             }

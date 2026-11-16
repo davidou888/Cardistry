@@ -148,6 +148,31 @@ class StatsCombatTest {
         assertEquals(90, enemy.hp());
     }
 
+    // --- Stats pour le combat ---
+
+    @Test
+    void statsDeCombatPourLeJoueurEtLAdversaire() {
+        setUp(NEUTRAL, stats(0, 0, 0, 3, 0, 0), 0, List.of(new SpellCard("Coup", NEUTRAL, 10, Rarity.COMMON)));
+        use(ctx -> {
+            ctx.addCombatStat(StatusTarget.PLAYER, StatType.STRENGTH, 2);
+            ctx.addCombatStat(StatusTarget.ENEMY, StatType.DEFENSE, -1);
+        });
+        assertEquals(2, state.playerStats().get(StatType.STRENGTH), 1e-9);
+        assertEquals(2, enemy.stat(StatType.DEFENSE), 1e-9);
+        assertTrue(events.contains(new GameEvent.CombatStatChanged(StatusTarget.ENEMY, StatType.DEFENSE, -1)));
+        engine.submit(new Action.PlayCard(0)); // 10 + 2 − 2
+        assertEquals(90, enemy.hp());
+    }
+
+    @Test
+    void lesStatsDeCombatDuJoueurPartentALaFinDuCombat() {
+        setUp(NEUTRAL, NONE, 0, List.of(new SpellCard("Coup", NEUTRAL, 1000, Rarity.COMMON)));
+        use(ctx -> ctx.addCombatStat(StatusTarget.PLAYER, StatType.STRENGTH, 2));
+        engine.submit(new Action.PlayCard(0));
+        assertTrue(engine.isOver());
+        assertEquals(0, state.playerStats().get(StatType.STRENGTH), 1e-9);
+    }
+
     // --- Coups adverses ---
 
     @Test

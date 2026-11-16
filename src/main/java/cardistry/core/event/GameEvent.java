@@ -96,6 +96,11 @@ public sealed interface GameEvent {
     record BossBonus(double maxHp, int statPoints) implements GameEvent {
     }
 
+    /** {@code amount} points de {@code stat} pour {@code target}, jusqu'à la fin du combat. */
+    record CombatStatChanged(cardistry.core.status.StatusTarget target, cardistry.core.stats.StatType stat,
+            double amount) implements GameEvent {
+    }
+
     /** Un point de stats placé ; {@code remaining} points restent à placer. */
     record StatPointSpent(cardistry.core.stats.StatType stat, int remaining) implements GameEvent {
     }

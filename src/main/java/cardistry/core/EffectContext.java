@@ -142,4 +142,12 @@ public interface EffectContext {
     /** +{@code percent} de dégâts (tous éléments) jusqu'à la fin du combat, cumulable. */
     default void addCombatDamageBonus(double percent) {
     }
+
+    /**
+     * {@code amount} points de {@code stat} (une des 6 stats ; négatif pour en retirer) pour le joueur
+     * ou l'adversaire actuel, jusqu'à la fin du combat. Cumulable.
+     */
+    default void addCombatStat(cardistry.core.status.StatusTarget target, cardistry.core.stats.StatType stat,
+            double amount) {
+    }
 }
