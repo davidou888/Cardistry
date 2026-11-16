@@ -491,9 +491,16 @@ public final class CombatEngine {
         return applyStatus(target, type, CombatFormula.statusTurns(duration, resistance), inflictedBy, extras);
     }
 
-    /** Coup critique du joueur sur un sort : 3 % par CHA, tirage en sa faveur (doublé par CLAUDE.md). */
-    private boolean playerCritical() {
-        double chance = CombatFormula.critChance(state.playerStats().get(StatType.LUCK));
+    /**
+     * Coup critique du joueur sur un sort : 3 % par CHA, tirage en sa faveur (doublé par CLAUDE.md) ;
+     * sûr si le sort le garantit à cette CHA (Lancer de manette).
+     */
+    private boolean playerCritical(SpellCard spell) {
+        double luck = state.playerStats().get(StatType.LUCK);
+        if (spell.sureCriticalLuck() > 0 && luck >= spell.sureCriticalLuck()) {
+            return true;
+        }
+        double chance = CombatFormula.critChance(luck);
         return chance > 0 && Luck.chance(state, rng, chance);
     }
 
@@ -1335,7 +1342,7 @@ public final class CombatEngine {
                 double mult = spell.isUnmultiplied() ? 1.0 : state.spellMultiplier(spell, !echo);
                 Enemy target = state.currentEnemy();
                 if (base > 0) {
-                    boolean critical = !spell.isUnmultiplied() && playerCritical();
+                    boolean critical = !spell.isUnmultiplied() && playerCritical(spell);
                     int amount = state.spellDamage(spell, base, factor, critical, !echo);
                     if (critical && !target.dodgeReady()) {
                         bus.publish(new GameEvent.CriticalHit(target));

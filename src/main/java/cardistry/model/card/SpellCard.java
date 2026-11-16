@@ -17,6 +17,10 @@ public final class SpellCard extends Card {
     /** Texte des dégâts quand ils sont calculés (« 1-40 », « 10 / 20 »). */
     private String damageLabel;
     private boolean unmultiplied;
+    /** Points de DEF de l'adversaire ignorés ({@code Double.POSITIVE_INFINITY} : toute). */
+    private double defensePierce;
+    /** CHA à partir de laquelle le coup est toujours critique ; 0 = jamais garanti. */
+    private int sureCriticalLuck;
 
     public SpellCard(String name, Element element, double damage, Rarity rarity) {
         super(name, element, rarity);
@@ -48,6 +52,30 @@ public final class SpellCard extends Card {
         return unmultiplied;
     }
 
+    /** Points de DEF de l'adversaire que ce sort ignore (0 : aucun ; infini : toute). */
+    public double defensePierce() {
+        return defensePierce;
+    }
+
+    /** CHA à partir de laquelle ce sort est toujours critique (0 : jamais garanti). */
+    public int sureCriticalLuck() {
+        return sureCriticalLuck;
+    }
+
+    /** Copie qui ignore {@code points} de DEF de l'adversaire ({@code Double.POSITIVE_INFINITY} : toute). */
+    public SpellCard piercing(double points) {
+        SpellCard copy = copy();
+        copy.defensePierce = points;
+        return copy;
+    }
+
+    /** Copie toujours critique quand le lanceur a au moins {@code luck} CHA. */
+    public SpellCard criticalFrom(int luck) {
+        SpellCard copy = copy();
+        copy.sureCriticalLuck = luck;
+        return copy;
+    }
+
     /** Copie avec un pouvoir (texte + effet après les dégâts). */
     public SpellCard withPower(String text, Consumer<EffectContext> effect) {
         return withPower(copy(), new CardPower(text, effect));
@@ -74,6 +102,8 @@ public final class SpellCard extends Card {
         copy.rule = rule;
         copy.damageLabel = damageLabel;
         copy.unmultiplied = unmultiplied;
+        copy.defensePierce = defensePierce;
+        copy.sureCriticalLuck = sureCriticalLuck;
         return copy;
     }
 }

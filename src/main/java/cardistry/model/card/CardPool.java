@@ -43,18 +43,18 @@ public class CardPool {
         // --- Sortilèges (nom, élément, dégâts) ---
         //COMMON
         cards.add(bouleDeFeu());
-        cards.add(new SpellCard("Jet d'eau", WATER, 10.0, COMMON));
+        cards.add(jetDEau());
         cards.add(fouetDeLianes());
         cards.add(petDeMamouz());
         cards.add(new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON));
-        cards.add(new SpellCard("Lancer de manette", NEUTRAL, 12.0, COMMON));
-        cards.add(new SpellCard("CAYOUUU", NEUTRAL, 12, COMMON));
-        cards.add(new SpellCard("Pain pita", GEOMETRIC, 10, COMMON));
+        cards.add(lancerDeManette());
+        cards.add(cayouuu());
+        cards.add(painPita());
         cards.add(matrix());
         //UNCOMMON
-        cards.add(new SpellCard("Pluie de flammes", FIRE, 15.0, UNCOMMON));
-        cards.add(new SpellCard("Tsunami", WATER, 15.0, UNCOMMON));
-        cards.add(new SpellCard("Tempête d'épines", NATURE, 15.0, UNCOMMON));
+        cards.add(pluieDeFlammes());
+        cards.add(tsunami());
+        cards.add(tempeteDEpines());
         cards.add(moindreCarre());
         cards.add(distPlayer());
         cards.add(somnifere());
@@ -65,7 +65,7 @@ public class CardPool {
         cards.add(pyromane());
         cards.add(contreExemple());
         //LEGENDARY
-        cards.add(new SpellCard("Big Lez Shotgun", NEUTRAL, 80, LEGENDARY));
+        cards.add(bigLezShotgun());
         cards.add(professeurDOr());
 
 
@@ -136,11 +136,11 @@ public class CardPool {
     public static List<Card> startingDeck() {
         return List.of(
             bouleDeFeu(),
-            new SpellCard("Jet d'eau", WATER, 10.0, COMMON),
+            jetDEau(),
             fouetDeLianes(),
             petDeMamouz(),
             new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON),
-            new SpellCard("Lancer de manette", NEUTRAL, 12.0, COMMON),
+            lancerDeManette(),
             new HealCard("Potion", NATURE, 10.0, COMMON),
             new HealCard("Potion", NATURE, 10.0, COMMON),
             new HealCard("Potion", NATURE, 10.0, COMMON),
@@ -196,6 +196,68 @@ public class CardPool {
                 "15 % de tomber en Fons (+5 % de tes PV max par tour pendant la Fons)",
                 ctx -> ctx.applyStatus(StatusTarget.PLAYER, StatusType.FONS, PETITE_TAFFE_FONS, 0,
                         new StatusExtras(PETITE_TAFFE_HEAL_PER_TURN, false)));
+    }
+
+    // --- Sorts du plan V3 (stats) ---
+
+    /** DEF perdue par l'adversaire, pour le combat, à chaque Jet d'eau. */
+    public static final double JET_D_EAU_DEFENSE_LOSS = 1;
+    public static final double PLUIE_DE_FLAMMES_BURN = 0.20;
+    public static final double TEMPETE_D_EPINES_BONDAGE = 0.20;
+    /** CHA à partir de laquelle le Lancer de manette est toujours critique. */
+    public static final int LANCER_DE_MANETTE_LUCK = 3;
+    /** DEF ignorée par CAYOUUU. */
+    public static final double CAYOUUU_PIERCE = 2;
+    /** FOR perdue pour le reste du combat après un Big Lez Shotgun (recul). */
+    public static final double BIG_LEZ_RECOIL = 2;
+
+    /** Jet d'eau : 10 dégâts eau ; l'adversaire perd 1 DEF pour le combat (l'eau use). */
+    public static SpellCard jetDEau() {
+        return new SpellCard("Jet d'eau", WATER, 10, COMMON).withPower("l'adversaire perd 1 DEF pour le combat",
+                ctx -> ctx.addCombatStat(StatusTarget.ENEMY, StatType.DEFENSE, -JET_D_EAU_DEFENSE_LOSS));
+    }
+
+    /** Tsunami : 15 dégâts eau, ignore la DEF (la vague passe par-dessus tout). */
+    public static SpellCard tsunami() {
+        return new SpellCard("Tsunami", WATER, 15, UNCOMMON).piercing(Double.POSITIVE_INFINITY)
+                .withPower("ignore la DEF", ctx -> { });
+    }
+
+    /** Pluie de flammes : 15 dégâts feu, 20 % d'infliger Brûlure. */
+    public static SpellCard pluieDeFlammes() {
+        return new SpellCard("Pluie de flammes", FIRE, 15, UNCOMMON).withPower("20 % d'infliger Brûlure",
+                ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.BURN, PLUIE_DE_FLAMMES_BURN));
+    }
+
+    /** Tempête d'épines : 15 dégâts plante, 20 % d'infliger Bondage. */
+    public static SpellCard tempeteDEpines() {
+        return new SpellCard("Tempête d'épines", NATURE, 15, UNCOMMON).withPower("20 % d'infliger Bondage",
+                ctx -> ctx.applyStatus(StatusTarget.ENEMY, StatusType.BONDAGE, TEMPETE_D_EPINES_BONDAGE));
+    }
+
+    /** Lancer de manette : 12 dégâts neutres, toujours critique avec 3 CHA ou plus. */
+    public static SpellCard lancerDeManette() {
+        return new SpellCard("Lancer de manette", NEUTRAL, 12, COMMON).criticalFrom(LANCER_DE_MANETTE_LUCK)
+                .withPower("critique garanti si CHA ≥ " + LANCER_DE_MANETTE_LUCK, ctx -> { });
+    }
+
+    /** CAYOUUU : 12 dégâts neutres, ignore 2 points de DEF. */
+    public static SpellCard cayouuu() {
+        return new SpellCard("CAYOUUU", NEUTRAL, 12, COMMON).piercing(CAYOUUU_PIERCE)
+                .withPower("ignore 2 points de DEF", ctx -> { });
+    }
+
+    /** Pain pita : 10 dégâts géométriques, ignore la DEF (trouver le bon angle). */
+    public static SpellCard painPita() {
+        return new SpellCard("Pain pita", GEOMETRIC, 10, COMMON).piercing(Double.POSITIVE_INFINITY)
+                .withPower("ignore la DEF", ctx -> { });
+    }
+
+    /** Big Lez Shotgun : 80 dégâts neutres ; recul : −2 FOR pour le reste du combat. */
+    public static SpellCard bigLezShotgun() {
+        return new SpellCard("Big Lez Shotgun", NEUTRAL, 80, LEGENDARY).withPower(
+                "recul : −2 FOR pour le reste du combat",
+                ctx -> ctx.addCombatStat(StatusTarget.PLAYER, StatType.STRENGTH, -BIG_LEZ_RECOIL));
     }
 
     /** Matrix : dégâts de base, doublés si les PV de l'adversaire finissent par 0 ou 1 (avant le coup). */

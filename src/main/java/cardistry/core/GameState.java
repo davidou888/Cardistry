@@ -699,7 +699,8 @@ public final class GameState {
             return cardistry.model.Combatant.round(base * factor);
         }
         return CombatFormula.damage(base, CombatFormula.offense(spell.element(), playerStats),
-                spellMultiplier(spell, withBoost) * factor, critical, currentEnemy().stat(StatType.DEFENSE), 0);
+                spellMultiplier(spell, withBoost) * factor, critical, currentEnemy().stat(StatType.DEFENSE),
+                spell.defensePierce());
     }
 
     /** Aperçu des dégâts d'un sort à dégâts fixes (sans critique, prochain sort ×N compris). */
