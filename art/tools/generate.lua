@@ -283,3 +283,44 @@ end
 
 buildAnimated("enemies.lua", "enemies", 0.25) -- adversaires
 buildAnimated("npcs.lua", "npc", 0.5)         -- personnages non joueurs (marchand du shop)
+buildAnimated("players.lua", "player", 0.25)  -- personnages jouables et familier (placeholders)
+
+-- Sprites dessinés à la main avec seulement leur idle (Choomah, Clarence, boss) : les animations
+-- manquantes sont des PLACEHOLDERS dérivés de la première frame idle (décalée pour attack, reculée
+-- pour hurt, écrasée pour death), à redessiner. Les tags existants ne sont jamais touchés.
+local function idleImage(path)
+  local spr = app.open(path)
+  if spr == nil then fail("impossible d'ouvrir " .. path) end
+  local image
+  for _, tag in ipairs(spr.tags) do
+    if tag.name == "idle" then
+      local cel = spr.layers[1]:cel(tag.fromFrame.frameNumber)
+      if cel then
+        image = Image(spr.width, spr.height, ColorMode.RGB)
+        image:drawImage(cel.image, cel.position)
+      end
+    end
+  end
+  spr:close()
+  return image
+end
+
+local function shifted(img, dx)
+  local out = Image(img.width, img.height, ColorMode.RGB)
+  out:drawImage(img, Point(dx, 0))
+  return out
+end
+
+local function deriveMissing(id)
+  local path = art .. "enemies/" .. id .. ".aseprite"
+  if not exists(path) then return end
+  local idle = idleImage(path)
+  if idle == nil then fail(path .. " n'a pas de tag idle") end
+  build(path, 64, {
+    { id = "attack", images = function() return { shifted(idle, -3), shifted(idle, -6) } end },
+    { id = "hurt", images = function() return { shifted(idle, 3) } end },
+    { id = "death", images = function() return { squashed(idle, 0.7), squashed(idle, 0.35) } end },
+  }, 0.25)
+end
+
+for _, id in ipairs({ "choomah", "clarence", "boss" }) do deriveMissing(id) end

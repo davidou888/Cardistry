@@ -128,8 +128,9 @@ val exportArt by tasks.registering {
                 runAseprite(asepritePath!!, "-b", file.path, "--save-as", File(out, "{tag}.png").path)
             }
         }
-        // Sprites animés : adversaires et personnages non joueurs (marchand), un .aseprite par id.
-        for (folder in listOf("enemies", "npc")) {
+        // Sprites animés : adversaires, personnages non joueurs (marchand), personnages jouables et
+        // familier (art/player/), un .aseprite par id.
+        for (folder in listOf("enemies", "npc", "player")) {
             val out = File(imagesDir, folder)
             out.mkdirs()
             for (file in File(artDir, folder).listFiles { f -> f.name.endsWith(".aseprite") }.orEmpty().sorted()) {

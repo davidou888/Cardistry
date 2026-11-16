@@ -1658,6 +1658,28 @@ class LanternaUiTest {
     }
 
     @Test
+    void chaqueSpriteAUnFichierParAnimation() {
+        for (String id : cardistry.model.enemy.EnemyRegistry.ids()) {
+            String sprite = cardistry.model.enemy.EnemyRegistry.create(id, 1).spriteId();
+            for (String animation : List.of("idle", "attack", "hurt", "death")) {
+                assertTrue(cardistry.ui.window.Images.frames(sprite, animation) >= 1,
+                        "adversaire " + sprite + " sans animation " + animation);
+            }
+        }
+        for (cardistry.hero.Hero hero : cardistry.hero.HeroRegistry.all()) {
+            for (String animation : List.of("idle", "attack", "hurt", "death")) {
+                String path = "player/" + hero.id() + "." + animation + ".1.png";
+                assertEquals(64, cardistry.ui.window.Images.get(path)
+                        .orElseThrow(() -> new AssertionError("personnage sans image : " + path)).getWidth());
+            }
+        }
+        for (String animation : List.of("idle", "attack", "smoke", "ko")) {
+            String path = "player/alien." + animation + ".1.png";
+            assertTrue(cardistry.ui.window.Images.get(path).isPresent(), "alien sans image : " + path);
+        }
+    }
+
+    @Test
     void toutLeContenuAUneIcone() {
         for (Item item : ItemRegistry.items()) {
             assertTrue(cardistry.ui.window.Images.item(item.id()).isPresent(), "objet sans icône : " + item.id());
