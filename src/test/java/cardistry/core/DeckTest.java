@@ -122,6 +122,35 @@ class DeckTest {
     }
 
     @Test
+    void lesCartesMortesNeComptentPasDansLaTailleDeMain() {
+        // Vafi / NG : une main de 7 cartes toutes mortes ne doit pas bloquer le combat.
+        setUp(numbered(12));
+        fight(100);
+        engine.submit(new Action.DrawCard());
+        engine.submit(new Action.DrawCard());
+        assertEquals(state.handSize(), state.hand().size());
+        for (int i = 0; i < state.hand().size(); i++) {
+            state.replaceInHand(i, new DeadCard());
+        }
+        assertEquals(0, state.handCount());
+        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.DrawCard()));
+        assertEquals(8, state.hand().size());
+        assertEquals(1, state.handCount());
+    }
+
+    @Test
+    void uneMainPleineDeCartesVivantesResteBloqueeALaPioche() {
+        setUp(numbered(12));
+        fight(100);
+        engine.submit(new Action.DrawCard());
+        engine.submit(new Action.DrawCard());
+        state.replaceInHand(0, new DeadCard());
+        assertEquals(ActionResult.TURN_ENDED, engine.submit(new Action.DrawCard())); // 6 vivantes + 1 morte
+        assertEquals(ActionResult.REJECTED, engine.submit(new Action.DrawCard())); // 7 vivantes
+        assertTrue(events.contains(new GameEvent.ActionRejected(GameEvent.ActionRejected.Reason.HAND_FULL)));
+    }
+
+    @Test
     void plusRienAPiocher() {
         setUp(numbered(5)); // tout est en main
         fight(100);

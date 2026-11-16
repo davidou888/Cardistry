@@ -363,7 +363,8 @@ public final class TextRenderer implements Renderer {
             console.println("[" + ItemKeys.key(i) + "] Utiliser l'" + describe(state.items().get(i)).replaceFirst("^Objet", "objet")
                     + " (gratuit)");
         }
-        console.println("Tu as " + hand.size() + "/" + state.handSize() + " cartes");
+        console.println("Tu as " + state.handCount() + "/" + state.handSize() + " cartes"
+                + (hand.size() > state.handCount() ? " (+ " + (hand.size() - state.handCount()) + " morte(s))" : ""));
         console.println(SEPARATOR);
         console.println();
         console.pause(1);

@@ -259,7 +259,7 @@ public final class CombatEngine {
         boolean endsTurn = switch (action) {
             case Action.DrawCard draw -> {
                 int count = Math.max(1, state.playerStats().getInt(StatType.CARDS_PER_DRAW));
-                for (int i = 0; i < count && state.hand().size() < state.handSize(); i++) {
+                for (int i = 0; i < count && state.handCount() < state.handSize(); i++) {
                     drawCard();
                 }
                 yield true;
@@ -312,7 +312,7 @@ public final class CombatEngine {
     private Optional<Reason> validate(Action action) {
         return switch (action) {
             case Action.DrawCard draw -> {
-                if (state.hand().size() >= state.handSize()) {
+                if (state.handCount() >= state.handSize()) {
                     yield Optional.of(Reason.HAND_FULL);
                 }
                 if (state.usesDeck() && state.drawPile().isEmpty() && state.discardPile().isEmpty()) {
@@ -1791,7 +1791,7 @@ public final class CombatEngine {
 
         @Override
         public void drawCards(int count) {
-            for (int i = 0; i < count && state.hand().size() < state.handSize(); i++) {
+            for (int i = 0; i < count && state.handCount() < state.handSize(); i++) {
                 drawCard();
             }
         }

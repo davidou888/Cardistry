@@ -53,7 +53,7 @@ final class CombatScreen {
         drawEffects(p, state);
         drawSprite(p, state, view);
         drawTerrainAndPlayer(p, state, view);
-        p.separator(11, "Ta main " + state.hand().size() + "/" + state.handSize() + (state.usesDeck()
+        p.separator(11, "Ta main " + state.handCount() + "/" + state.handSize() + (state.usesDeck()
                 ? " · Pioche " + state.drawPile().size() + " · Défausse " + state.discardPile().size() : ""));
         drawUndoStatus(p, state);
         drawHand(p, state, view);

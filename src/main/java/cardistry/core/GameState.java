@@ -335,6 +335,14 @@ public final class GameState {
         return Collections.unmodifiableList(hand);
     }
 
+    /**
+     * Cartes de la main qui comptent dans la taille de main : les cartes mortes (« NO CARDS »,
+     * « Exercice 3b ») n'y comptent pas, on peut toujours piocher à côté.
+     */
+    public int handCount() {
+        return (int) hand.stream().filter(card -> !(card instanceof cardistry.model.card.DeadCard)).count();
+    }
+
     /** Taille maximale de la main (stat {@link StatType#HAND_SIZE}). */
     public int handSize() {
         return playerStats.getInt(StatType.HAND_SIZE);

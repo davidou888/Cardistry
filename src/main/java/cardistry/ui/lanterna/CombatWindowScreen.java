@@ -111,7 +111,7 @@ final class CombatWindowScreen {
         p.frame("Cardistry", "Tour " + state.turn() + " · " + state.choomies() + " Choomies · Seed " + seed,
                 Painter.fit(state.hasTrinket(cardistry.items.ItemRegistry.CTRL_Z) ? HELP_UNDO : HELP, p.cols() - 6));
         drawHeader(p, state, view);
-        p.separator(l.separator(), "Ta main " + state.hand().size() + "/" + state.handSize() + (state.usesDeck()
+        p.separator(l.separator(), "Ta main " + state.handCount() + "/" + state.handSize() + (state.usesDeck()
                 ? " · Pioche " + state.drawPile().size() + " · Défausse " + state.discardPile().size() : ""));
         String undo = CombatScreen.undoStatus(state);
         if (!undo.isEmpty()) {

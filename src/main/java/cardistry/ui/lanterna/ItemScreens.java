@@ -63,7 +63,7 @@ final class ItemScreens {
 
     static void cardChoice(Painter p, GameState state, List<cardistry.model.card.Card> options, int selected,
             boolean showMeta, long seed, int tick) {
-        p.frame("Pioche", "Ta main " + state.hand().size() + "/" + state.handSize(),
+        p.frame("Pioche", "Ta main " + state.handCount() + "/" + state.handSize(),
                 "1-" + options.size() + " ou ←/→ + Entrée garder · les autres sont défaussées");
         p.centered(2, "Choisis la carte à garder", Palette.ACCENT, true);
         if (showMeta) {
