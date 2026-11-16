@@ -60,6 +60,48 @@ class EnemyRegistryTest {
         assertEquals(1.5, create(CADDIE, 3).damageScale(), DELTA);
     }
 
+    /** FOR, INT, ESP, DEF, RES, CHA de {@code enemy}. */
+    private static List<Integer> stats(Enemy enemy) {
+        return cardistry.core.stats.StatType.characterStats().stream().map(t -> (int) enemy.stat(t)).toList();
+    }
+
+    @Test
+    void statsAuNiveau1() {
+        assertEquals(List.of(1, 0, 0, 2, 2, 0), stats(create(CADDIE, 1)));
+        assertEquals(List.of(0, 0, 0, 0, 1, 3), stats(create(CHOOMAH, 1)));
+        assertEquals(List.of(0, 0, 0, 0, 0, 4), stats(create(CHOOMAH_PRESSE, 1)));
+        assertEquals(List.of(2, 0, 0, 1, 1, 1), stats(create(CHOOMAH_COSTAUD, 1)));
+        assertEquals(List.of(1, 2, 0, 0, 3, 1), stats(create(CAME, 1)));
+        assertEquals(List.of(0, 1, 1, 1, 2, 2), stats(create(PARESSEUX, 1)));
+        assertEquals(List.of(0, 0, 0, 0, 0, 0), stats(create(CLARENCE, 1)));
+        assertEquals(List.of(0, 0, 0, 1, 4, 0), stats(create(SEAU, 1)));
+        assertEquals(List.of(0, 1, 3, 0, 2, 0), stats(create(GOUROU, 1)));
+        assertEquals(List.of(0, 4, 0, 1, 1, 0), stats(create(NG, 1)));
+        assertEquals(List.of(1, 2, 0, 2, 1, 1), stats(create(HYPERCUBE, 1)));
+        assertEquals(List.of(1, 0, 0, 0, 1, 3), stats(create(GOBELIN, 1)));
+        assertEquals(List.of(2, 4, 2, 1, 3, 1), stats(create(VAFI, 1)));
+        assertEquals(List.of(1, 0, 0, 4, 5, 0), stats(create(PENEU, 1)));
+        assertEquals(List.of(4, 0, 1, 2, 0, 0), stats(create(TREX, 1)));
+        assertEquals(List.of(1, 3, 0, 0, 0, 2), stats(create(ETUDIANT, 1)));
+        assertEquals(List.of(2, 3, 2, 1, 3, 2), stats(create(ENGEANCE, 1)));
+    }
+
+    @Test
+    void plusUnForEtUneDefParNiveauSaufLesBoss() {
+        assertEquals(List.of(2, 0, 0, 3, 2, 0), stats(create(CADDIE, 2)));
+        assertEquals(List.of(3, 0, 0, 4, 2, 0), stats(create(CADDIE, 3)));
+        assertEquals(List.of(3, 1, 1, 2, 3, 1), stats(create(bossId(1), 1)));
+        assertEquals(List.of(4, 2, 2, 3, 4, 2), stats(create(bossId(2), 2)));
+        assertEquals(List.of(5, 3, 3, 4, 5, 3), stats(create(bossId(3), 3)));
+    }
+
+    @Test
+    void chaqueAdversaireADesStats() {
+        for (String id : EnemyRegistry.ids()) {
+            assertEquals(6, baseStats(id).length, id);
+        }
+    }
+
     @Test
     void bossPvFixesDegatsSelonLeNiveau() {
         assertEquals(130, create(bossId(1), 1).maxHp(), DELTA);

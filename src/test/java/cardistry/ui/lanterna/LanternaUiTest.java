@@ -872,7 +872,7 @@ class LanternaUiTest {
         ui.showStatus(state);
         String text = dump("41-combat-caddie");
         assertTrue(text.contains("(O)      (O)"), text);
-        assertTrue(text.contains("Prochain : Roue voilée : 6"));
+        assertTrue(text.contains("Prochain : Roue voilée : 7"), text); // 6 + FOR 1
         int row = text.lines().toList().indexOf(text.lines().filter(l -> l.contains("(O)")).findFirst().orElseThrow());
         int col = text.lines().toList().get(row).indexOf("(O)") + 1;
         assertEquals(com.googlecode.lanterna.TextColor.ANSI.YELLOW_BRIGHT,

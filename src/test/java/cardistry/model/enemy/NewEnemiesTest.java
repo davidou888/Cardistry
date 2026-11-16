@@ -104,7 +104,7 @@ class NewEnemiesTest {
     @Test
     void hypercubeTunnelTopologiquePuisCelibatForce() {
         setUp(EnemyRegistry.HYPERCUBE, 1);
-        assertEquals(List.of(5, 5, 8), turns(3), "Célibat forcé : 2 × 4");
+        assertEquals(List.of(6, 6, 10), turns(3), "FOR 1 : 5 + 1, puis Célibat forcé 2 × (4 + 1)");
         assertEquals("Tunnel topologique", EnemyRegistry.create(EnemyRegistry.HYPERCUBE, 1).peekIntent().name());
     }
 
@@ -115,7 +115,9 @@ class NewEnemiesTest {
             setUp(EnemyRegistry.GOBELIN, seed);
             seen.addAll(turns(2));
         }
-        assertEquals(Set.of(6, 7), seen);
+        // FOR 1 : 7 ou 8 ; CHA 3 : parfois un critique (×1,5 → 11 ou 12).
+        assertTrue(seen.containsAll(Set.of(7, 8)), seen.toString());
+        assertTrue(Set.of(7, 8, 11, 12).containsAll(seen), seen.toString());
         assertEquals("67", EnemyRegistry.create(EnemyRegistry.GOBELIN, 1).peekIntent().name());
         assertEquals(EnemyRegistry.SIX_SEVEN, EnemyRegistry.create(EnemyRegistry.GOBELIN, 1).peekIntent().id());
     }
@@ -123,7 +125,7 @@ class NewEnemiesTest {
     @Test
     void engeancePiegePatissierPuisGreenOut() {
         setUp(EnemyRegistry.ENGEANCE, 1);
-        assertEquals(List.of(9, 9), turns(2));
+        assertEquals(List.of(11, 11), turns(2), "9 + FOR 2");
         turns(1); // Green out : tu t'endors
         assertTrue(state.statuses(StatusTarget.PLAYER).has(StatusType.FONS));
         assertFalse(engine.startTurn(), "tour sauté");

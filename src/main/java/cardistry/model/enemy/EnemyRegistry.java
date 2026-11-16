@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Registre de tous les adversaires : PV et attaques au niveau 1, multipliés par niveau
- * ({@link #HP_SCALE}, {@link #DAMAGE_SCALE}). Ajouter un adversaire : une entrée dans
+ * Registre de tous les adversaires : PV, attaques et stats au niveau 1, multipliés par niveau
+ * ({@link #HP_SCALE}, {@link #DAMAGE_SCALE}, +{@link #STAT_GAIN_PER_LEVEL} FOR et DEF par niveau). Ajouter un adversaire : une entrée dans
  * {@link #definitions()} (builder de {@link Enemy}, comportement de {@link EnemyBehavior}) et son
  * sprite dans {@code src/main/resources/sprites/<id>.txt}.
  */
@@ -66,6 +66,41 @@ public final class EnemyRegistry {
     public static final List<String> CHOOMAH_VARIANTS = List.of(CHOOMAH, CHOOMAH_PRESSE, CHOOMAH_COSTAUD);
     public static final List<String> ELITES = List.of(VAFI, PENEU, TREX, ETUDIANT, ENGEANCE);
 
+    /** FOR et DEF gagnées par niveau au-delà du premier (pas les boss : leurs stats sont fixées par niveau). */
+    public static final int STAT_GAIN_PER_LEVEL = 1;
+
+    /** Stats au niveau 1 : FOR, INT, ESP, DEF, RES, CHA (voir {@code core.CombatFormula}). */
+    private static final Map<String, int[]> STATS = Map.ofEntries(
+            Map.entry(CADDIE, new int[] {1, 0, 0, 2, 2, 0}),
+            Map.entry(CHOOMAH, new int[] {0, 0, 0, 0, 1, 3}),
+            Map.entry(CHOOMAH_PRESSE, new int[] {0, 0, 0, 0, 0, 4}),
+            Map.entry(CHOOMAH_COSTAUD, new int[] {2, 0, 0, 1, 1, 1}),
+            Map.entry(CAME, new int[] {1, 2, 0, 0, 3, 1}),
+            Map.entry(PARESSEUX, new int[] {0, 1, 1, 1, 2, 2}),
+            Map.entry(CLARENCE, new int[] {0, 0, 0, 0, 0, 0}),
+            Map.entry(SEAU, new int[] {0, 0, 0, 1, 4, 0}),
+            Map.entry(GOUROU, new int[] {0, 1, 3, 0, 2, 0}),
+            Map.entry(NG, new int[] {0, 4, 0, 1, 1, 0}),
+            Map.entry(HYPERCUBE, new int[] {1, 2, 0, 2, 1, 1}),
+            Map.entry(GOBELIN, new int[] {1, 0, 0, 0, 1, 3}),
+            Map.entry(VAFI, new int[] {2, 4, 2, 1, 3, 1}),
+            Map.entry(PENEU, new int[] {1, 0, 0, 4, 5, 0}),
+            Map.entry(TREX, new int[] {4, 0, 1, 2, 0, 0}),
+            Map.entry(ETUDIANT, new int[] {1, 3, 0, 0, 0, 2}),
+            Map.entry(ENGEANCE, new int[] {2, 3, 2, 1, 3, 2}),
+            Map.entry("boss-1", new int[] {3, 1, 1, 2, 3, 1}),
+            Map.entry("boss-2", new int[] {4, 2, 2, 3, 4, 2}),
+            Map.entry("boss-3", new int[] {5, 3, 3, 4, 5, 3}));
+
+    /** Stats de base (niveau 1) de l'adversaire {@code id} : FOR, INT, ESP, DEF, RES, CHA. */
+    public static int[] baseStats(String id) {
+        int[] stats = STATS.get(id);
+        if (stats == null) {
+            throw new IllegalArgumentException("Adversaire sans stats : " + id);
+        }
+        return stats.clone();
+    }
+
     private interface Definition {
         Enemy.Builder create();
     }
@@ -89,6 +124,12 @@ public final class EnemyRegistry {
         int index = Math.max(0, Math.min(LEVELS, level) - 1);
         Enemy.Builder builder = definition.create();
         boolean boss = id.startsWith("boss-");
+        int[] stats = baseStats(id);
+        builder.stats(stats[0], stats[1], stats[2], stats[3], stats[4], stats[5]);
+        if (!boss) {
+            builder.addStat(cardistry.core.stats.StatType.STRENGTH, STAT_GAIN_PER_LEVEL * index)
+                    .addStat(cardistry.core.stats.StatType.DEFENSE, STAT_GAIN_PER_LEVEL * index);
+        }
         return builder.scale(boss ? 1.0 : HP_SCALE[index], DAMAGE_SCALE[index]).terrain(EnemyTerrains.of(id)).build();
     }
 
