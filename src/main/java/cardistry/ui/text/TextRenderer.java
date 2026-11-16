@@ -62,6 +62,8 @@ public final class TextRenderer implements Renderer {
             case GameEvent.DamageDealt e -> {
                 if (e.target() instanceof Enemy enemy) {
                     console.println("→ " + enemy.name() + " subit " + num(e.amount()) + " dégâts" + mult(e.multiplier()));
+                } else if (e.target() instanceof cardistry.model.Familiar f) {
+                    console.println("→ " + cardistry.ui.FamiliarText.hitLine(f, e.amount()) + mult(e.multiplier()));
                 } else {
                     console.println("→ Tu subis " + num(e.amount()) + " dégâts" + mult(e.multiplier()));
                 }

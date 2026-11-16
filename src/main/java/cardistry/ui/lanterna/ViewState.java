@@ -40,6 +40,11 @@ final class ViewState {
     /** Animation du sprite de l'adversaire (attaque, dégâts, mort) ; idle par défaut. */
     String spriteAnimation = cardistry.ui.sprite.Sprite.IDLE;
     int spriteFrame = 0;
+    /** Familier : PV affichés pendant une animation, clignotement, animation (attack, smoke) et frame. */
+    Double familiarHpShown;
+    TextColor familiarFlash;
+    String familiarAnimation = cardistry.ui.sprite.Sprite.IDLE;
+    int familiarFrame = 0;
     /** Animation du personnage (attack, hurt, death) ; idle par défaut, avec la frame idle commune. */
     String playerAnimation = cardistry.ui.sprite.Sprite.IDLE;
     int playerFrame = 0;
@@ -72,5 +77,9 @@ final class ViewState {
         playerAnimation = cardistry.ui.sprite.Sprite.IDLE;
         playerFrame = 0;
         playerOffsetX = 0;
+        familiarHpShown = null;
+        familiarFlash = null;
+        familiarAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        familiarFrame = 0;
     }
 }

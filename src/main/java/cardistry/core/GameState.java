@@ -47,6 +47,7 @@ public final class GameState {
     private boolean finalCombat = false;
     private boolean won = false;
     private int choomies = STARTING_CHOOMIES;
+    private cardistry.model.Familiar familiar;
     /** Points de stats gagnés (après un boss) et pas encore répartis. */
     private int statPoints = 0;
     private int level = 0;
@@ -144,6 +145,9 @@ public final class GameState {
         }
         GameState state = openRun(new Player(stats.get(StatType.MAX_HP)), CardPool.startingTerrain(), stats, deck);
         state.hero = hero;
+        if (hero != null) {
+            hero.familiarSpec().ifPresent(spec -> state.familiar = new cardistry.model.Familiar(spec));
+        }
         return state;
     }
 
@@ -157,7 +161,13 @@ public final class GameState {
         }
         hero.modifiers().forEach(playerStats::add);
         this.hero = hero;
+        hero.familiarSpec().ifPresent(spec -> familiar = new cardistry.model.Familiar(spec));
         return this;
+    }
+
+    /** Familier aux côtés du joueur (l'alien de Sassy), s'il y en a un. */
+    public java.util.Optional<cardistry.model.Familiar> familiar() {
+        return java.util.Optional.ofNullable(familiar);
     }
 
     /** Personnage joué, s'il y en a un. */
@@ -682,6 +692,20 @@ public final class GameState {
         Enemy enemy = currentEnemy();
         return CombatFormula.damage(declared * enemy.damageScale(), enemy.stat(StatType.STRENGTH),
                 enemyAttackMultiplier(), critical, playerStats.get(StatType.DEFENSE), 0);
+    }
+
+    /** Dégâts d'un coup sur le familier : comme sur le joueur, mais ta DEF ne le protège pas. */
+    public double familiarHitDamage(cardistry.model.enemy.MoveEffect.Hit hit, boolean critical) {
+        Enemy enemy = currentEnemy();
+        double declared = hit.damage() + hit.perMissingCard()
+                * Math.max(0, cardistry.model.enemy.MoveEffect.Hit.FULL_HAND - hand.size());
+        return CombatFormula.damage(declared * enemy.damageScale(), enemy.stat(StatType.STRENGTH),
+                enemyAttackMultiplier(), critical, 0, 0);
+    }
+
+    /** {@code true} si la prochaine attaque annoncée vise le familier (et non le joueur). */
+    public boolean familiarTargeted() {
+        return familiar != null && familiar.isTargeted() && !familiar.isKnockedOut();
     }
 
     /** Stats du joueur ou de l'adversaire actuel. */

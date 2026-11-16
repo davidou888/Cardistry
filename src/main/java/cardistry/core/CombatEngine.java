@@ -351,6 +351,7 @@ public final class CombatEngine {
 
     /** Nouvelle main, compteur de tours du combat remis à zéro. */
     private void beginCombat() {
+        state.familiar().ifPresent(cardistry.model.Familiar::restore); // le familier revient avec tous ses PV
         state.currentEnemy().terrain().ifPresent(state::setTerrain); // chez l'adversaire
         applyTerrainBonuses();
         state.resetCombatTurn();
@@ -380,7 +381,12 @@ public final class CombatEngine {
 
     private void announceIntent() {
         Enemy enemy = state.currentEnemy();
-        bus.publish(new GameEvent.IntentChosen(enemy, enemy.chooseIntent()));
+        EnemyMove move = enemy.chooseIntent();
+        // Une attaque peut viser le familier à la place du joueur : tirage de l'adversaire (pas doublé).
+        state.familiar().ifPresent(f -> f.setTargeted(!f.isKnockedOut()
+                && move.effects().stream().anyMatch(e -> e instanceof MoveEffect.Hit)
+                && rng.nextDouble() < f.spec().targetChance()));
+        bus.publish(new GameEvent.IntentChosen(enemy, move));
     }
 
     /** Fin du combat : l'Ivresse retombe, les malédictions du combat s'arrêtent. */
@@ -1604,6 +1610,11 @@ public final class CombatEngine {
         // Tirage de l'adversaire : pas un tirage de chance du joueur (CLAUDE.md ne le double pas).
         double critChance = CombatFormula.critChance(enemy.stat(StatType.LUCK));
         boolean critical = critChance > 0 && rng.nextDouble() < critChance;
+        Optional<cardistry.model.Familiar> familiar = state.familiar().filter(cardistry.model.Familiar::isTargeted);
+        if (familiar.isPresent()) {
+            strikeFamiliar(familiar.get(), hit, critical, mult, enemy);
+            return;
+        }
         double amount = Combatant.round(state.hitDamage(hit, critical));
         bus.publish(new GameEvent.EnemyAttacked(enemy));
         if (critical) {
@@ -1614,6 +1625,27 @@ public final class CombatEngine {
         bus.publish(new GameEvent.DamageDealt(player, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
         if (!player.isAlive()) {
             bus.publish(new GameEvent.GameLost());
+        }
+    }
+
+    /**
+     * Coup sur le familier visé : sans la DEF du joueur ; aucun statut « après un coup » (le familier
+     * n'en subit pas). Assommé, les coups suivants de l'attaque se perdent.
+     */
+    private void strikeFamiliar(cardistry.model.Familiar familiar, MoveEffect.Hit hit, boolean critical, double mult,
+            Enemy enemy) {
+        if (familiar.isKnockedOut()) {
+            return;
+        }
+        double amount = Combatant.round(state.familiarHitDamage(hit, critical));
+        bus.publish(new GameEvent.EnemyAttacked(enemy));
+        if (critical) {
+            bus.publish(new GameEvent.CriticalHit(familiar));
+        }
+        familiar.takeDamage(amount);
+        bus.publish(new GameEvent.DamageDealt(familiar, amount, mult, GameEvent.DamageDealt.Source.ENEMY_ATTACK));
+        if (familiar.isKnockedOut()) {
+            bus.publish(new GameEvent.FamiliarKnockedOut(familiar));
         }
     }
 
@@ -1749,6 +1781,11 @@ public final class CombatEngine {
         @Override
         public void announce(String message) {
             bus.publish(new GameEvent.AbilityTriggered(message));
+        }
+
+        @Override
+        public void familiarActs(GameEvent.FamiliarActed.Action action) {
+            state.familiar().ifPresent(f -> bus.publish(new GameEvent.FamiliarActed(f, action)));
         }
 
         @Override

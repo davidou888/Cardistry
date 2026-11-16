@@ -86,6 +86,10 @@ public interface EffectContext {
         return Luck.favorable(state(), roll, better);
     }
 
+    /** Le familier agit (animation et journal) ; sans familier, rien. */
+    default void familiarActs(cardistry.core.event.GameEvent.FamiliarActed.Action action) {
+    }
+
     /** Affiche une ligne dans le journal (capacité d'un personnage qui se déclenche). */
     default void announce(String message) {
     }

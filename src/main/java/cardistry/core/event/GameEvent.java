@@ -92,6 +92,19 @@ public sealed interface GameEvent {
      *
      * @param hpLost PV réellement enlevés à l'adversaire (sans les dégâts en trop s'il meurt)
      */
+    /** Le familier agit à son tour : il attaque ou, raté, il fume un joint. */
+    record FamiliarActed(cardistry.model.Familiar familiar, Action action) implements GameEvent {
+
+        public enum Action {
+            ATTACK,
+            SMOKE
+        }
+    }
+
+    /** Le familier tombe à 0 PV : assommé jusqu'à la fin du combat. */
+    record FamiliarKnockedOut(cardistry.model.Familiar familiar) implements GameEvent {
+    }
+
     /** Boss vaincu (sauf le dernier) : PV max gagnés pour toute la partie, points de stats à répartir. */
     record BossBonus(double maxHp, int statPoints) implements GameEvent {
     }

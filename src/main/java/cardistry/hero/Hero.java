@@ -14,12 +14,24 @@ import java.util.List;
  * @param description effet de la capacité, affiché au choix du personnage
  * @param modifiers stats de départ (PV max, malus de Gueule de bois…)
  * @param hooks réactions aux événements du combat
+ * @param familiar son familier, ou {@code null}
  */
 public record Hero(String id, String name, String abilityName, String description, List<StatModifier> modifiers,
-        GameHooks hooks) {
+        GameHooks hooks, cardistry.model.Familiar.Spec familiar) {
 
     public Hero {
         modifiers = List.copyOf(modifiers);
+    }
+
+    /** Personnage sans familier. */
+    public Hero(String id, String name, String abilityName, String description, List<StatModifier> modifiers,
+            GameHooks hooks) {
+        this(id, name, abilityName, description, modifiers, hooks, null);
+    }
+
+    /** Son familier (l'alien de Sassy), s'il en a un. */
+    public java.util.Optional<cardistry.model.Familiar.Spec> familiarSpec() {
+        return java.util.Optional.ofNullable(familiar);
     }
 
     /** Source de ses modificateurs dans les stats. */

@@ -23,6 +23,13 @@ public final class HeroRegistry {
     public static final double ALIEN_DAMAGE = 4;
     /** Chance que l'alien rate son tour (il fume un joint). */
     public static final double ALIEN_MISS_CHANCE = 0.10;
+    /** PV de l'alien. */
+    public static final double ALIEN_HP = 20;
+    /** Chance qu'une attaque adverse vise l'alien à la place de Sassy (tirage de l'adversaire). */
+    public static final double ALIEN_TARGET_CHANCE = 0.25;
+    /** L'alien de Sassy : un familier. */
+    public static final cardistry.model.Familiar.Spec ALIEN =
+            new cardistry.model.Familiar.Spec("alien", "Alien", ALIEN_HP, ALIEN_TARGET_CHANCE);
 
     // --- Stats de base (FOR, INT, ESP, DEF, RES, CHA) : 8 points, 12 pour Frederic BLC ---
     public static final int[] LOUIS_STATS = {3, 2, 0, 1, 1, 1};
@@ -53,8 +60,9 @@ public final class HeroRegistry {
             });
 
     public static final Hero SASSY = new Hero("sassy", "Sassy", "wadayatalkinabit",
-            "+30 PV max. À chaque tour, son alien inflige 4 dégâts à l'adversaire (10 % de chance qu'il fume un"
-                    + " joint à la place).",
+            "+30 PV max. À chaque tour, son alien (20 PV) inflige 4 dégâts à l'adversaire (10 % de chance qu'il"
+                    + " fume un joint à la place). 25 % des attaques adverses le visent ; à 0 PV, il est assommé"
+                    + " jusqu'au combat suivant.",
             with(stats("sassy", SASSY_STATS),
                     List.of(StatModifier.flat(StatType.MAX_HP, SASSY_BONUS_HP, Hero.modifierSource("sassy")))),
             new GameHooks() {
@@ -63,15 +71,20 @@ public final class HeroRegistry {
                     if (!ctx.state().hasEnemy() || !ctx.state().currentEnemy().isAlive()) {
                         return;
                     }
+                    if (ctx.state().familiar().map(cardistry.model.Familiar::isKnockedOut).orElse(false)) {
+                        return; // assommé jusqu'à la fin du combat
+                    }
                     // Tirage défavorable au joueur : pas un tirage de chance (CLAUDE.md ne le double pas).
                     if (ctx.rng().nextDouble() < ALIEN_MISS_CHANCE) {
                         ctx.announce("L'alien rate son tour : il fume un joint à la place.");
+                        ctx.familiarActs(GameEvent.FamiliarActed.Action.SMOKE);
                     } else {
                         ctx.announce("L'alien de Sassy attaque.");
+                        ctx.familiarActs(GameEvent.FamiliarActed.Action.ATTACK);
                         ctx.damageEnemy(ALIEN_DAMAGE);
                     }
                 }
-            });
+            }, ALIEN);
 
     /** Frederic BLC : aucune compétence, rien de spécial. */
     public static final Hero FREDERIC = new Hero("frederic-blc", "Frederic BLC", "Aucune",

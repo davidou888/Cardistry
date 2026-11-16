@@ -193,6 +193,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 if (e.target() instanceof Enemy enemy) {
                     view.log(enemy.name() + " subit " + num(e.amount()) + " dégâts" + mult(e.multiplier()), Palette.ACCENT);
                     animateEnemyHit(enemy, e.amount());
+                } else if (e.target() instanceof cardistry.model.Familiar f) {
+                    view.log(cardistry.ui.FamiliarText.hitLine(f, e.amount()) + mult(e.multiplier()), Palette.WARNING);
+                    animateFamiliarHit(e.amount());
                 } else {
                     view.log("Tu subis " + num(e.amount()) + " dégâts" + mult(e.multiplier()), Palette.DAMAGE);
                     animatePlayerHit(e.amount());
@@ -1478,6 +1481,18 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private int playerFrames(String animation) {
         return images != null && state != null && state.hero().isPresent()
                 ? cardistry.ui.window.Images.playerFrames(state.hero().get().id(), animation) : 0;
+    }
+
+    /** Le familier est touché : sa barre descend, il clignote. */
+    private void animateFamiliarHit(double amount) {
+        double before = state.familiar().map(f -> f.hp() + amount).orElse(0.0);
+        for (int i = 0; i < 6; i++) {
+            view.familiarFlash = i % 2 == 0 ? Palette.DAMAGE : null;
+            view.familiarHpShown = before - amount * (i + 1) / 6;
+            frame();
+        }
+        view.resetEffects();
+        render();
     }
 
     /** Le personnage lance un sort : ses frames d'attaque, en avançant vers l'adversaire. */
