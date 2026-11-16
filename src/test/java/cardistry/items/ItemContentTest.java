@@ -175,6 +175,30 @@ class ItemContentTest {
     }
 
     @Test
+    void proteineEtDocumentationPlusTroisPourLeCombat() {
+        setUp(List.of(), 1);
+        assertEquals(ActionResult.FREE_ACTION, use("proteine-en-poudre"));
+        use("documentation-latex");
+        assertEquals(3, state.playerStats().get(cardistry.core.stats.StatType.STRENGTH), DELTA);
+        assertEquals(3, state.playerStats().get(cardistry.core.stats.StatType.INTELLIGENCE), DELTA);
+        assertEquals(Rarity.COMMON, ItemRegistry.item("proteine-en-poudre").rarity());
+        assertEquals(Rarity.COMMON, ItemRegistry.item("documentation-latex").rarity());
+    }
+
+    @Test
+    void theOdorantPlusTroisResEtRetireUnSeulStatut() {
+        setUp(List.of(), 1);
+        var statuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER);
+        statuses.apply(cardistry.core.status.StatusType.BURN, 3, cardistry.core.status.StatusTarget.ENEMY);
+        statuses.apply(cardistry.core.status.StatusType.BONDAGE, 3, cardistry.core.status.StatusTarget.ENEMY);
+        use("the-odorant");
+        assertEquals(3, state.playerStats().get(cardistry.core.stats.StatType.RESISTANCE), DELTA);
+        assertEquals(List.of(cardistry.core.status.StatusType.BONDAGE),
+                statuses.all().stream().map(cardistry.core.status.Status::type).toList(), "un seul statut retiré");
+        assertEquals(Rarity.COMMON, ItemRegistry.item("the-odorant").rarity());
+    }
+
+    @Test
     void gazDuBatInfNeTireJamaisGlitch() {
         assertEquals(List.of(cardistry.model.Element.FIRE, cardistry.model.Element.WATER, cardistry.model.Element.NATURE,
                 cardistry.model.Element.ALGEBRAIC, cardistry.model.Element.SPIRIT, cardistry.model.Element.GEOMETRIC),

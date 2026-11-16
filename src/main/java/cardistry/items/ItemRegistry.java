@@ -11,6 +11,8 @@ import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatModifier;
 import cardistry.core.stats.StatType;
+import cardistry.core.status.StatusTarget;
+import cardistry.core.status.StatusType;
 import static cardistry.items.Rarity.COMMON;
 import static cardistry.items.Rarity.LEGENDARY;
 import static cardistry.items.Rarity.RARE;
@@ -409,12 +411,35 @@ public final class ItemRegistry {
                                 .percent(StatType.NATURE_DAMAGE, 0.5)
                                 .onActivate(c -> c.itemHeal(40))
                                 .build())),
+                // Stats temporaires du plan V3 : +3 pour le combat.
+                new Item("proteine-en-poudre", "Protéine en poudre", "+3 FOR pour le combat", "", COMMON,
+                        Set.of(Tag.STRENGTH),
+                        ctx -> ctx.addCombatStat(StatusTarget.PLAYER, StatType.STRENGTH, COMBAT_ITEM_STAT)),
+                new Item("documentation-latex", "Documentation LATEX", "+3 INT pour le combat", "", COMMON,
+                        Set.of(Tag.EPFL),
+                        ctx -> ctx.addCombatStat(StatusTarget.PLAYER, StatType.INTELLIGENCE, COMBAT_ITEM_STAT)),
+                new Item("the-odorant", "Thé odorant", "+3 RES pour le combat et retire un statut négatif", "",
+                        COMMON, Set.of(Tag.DEFENSE),
+                        ctx -> {
+                            ctx.addCombatStat(StatusTarget.PLAYER, StatType.RESISTANCE, COMBAT_ITEM_STAT);
+                            for (StatusType type : THE_ODORANT_STATUSES) {
+                                if (ctx.removeStatus(StatusTarget.PLAYER, type)) {
+                                    break;
+                                }
+                            }
+                        }),
                 new Item("cafffeeeeinnnn", "Cafffeeeeinnnn", "Pioche 2 cartes", "", COMMON, Set.of(Tag.EPFL),
                         ctx -> ctx.drawCards(2)),
                 new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,
                         Set.of(Tag.EPFL),
                         ctx -> ctx.elementalDamage(20, ctx.rng().pick(GAZ_ELEMENTS))));
     }
+
+    /** Stat gagnée pour le combat par les objets du plan V3 (Protéine en poudre…). */
+    public static final double COMBAT_ITEM_STAT = 3;
+    /** Statuts que le Thé odorant retire (le premier présent, dans cet ordre). */
+    public static final List<StatusType> THE_ODORANT_STATUSES =
+            List.of(StatusType.INTOX, StatusType.BURN, StatusType.BONDAGE, StatusType.FONS);
 
     /** Éléments que peut tirer le Gaz du bat Inf : tous sauf neutre et GLITCH (qui ferait ×1,5 contre tout). */
     public static final List<Element> GAZ_ELEMENTS = Element.PLAYABLE.stream().filter(e -> e != Element.GLITCH).toList();
