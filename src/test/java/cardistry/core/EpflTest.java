@@ -133,7 +133,7 @@ class EpflTest {
     @Test
     void laReductionDeDegatsEstDoublee() {
         setUp(10, CardPool.epfl());
-        state.playerStats().add(cardistry.core.stats.StatModifier.flat(StatType.DAMAGE_REDUCTION, 3, "test"));
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(StatType.DEFENSE, 3, "test"));
         engine.submit(new Action.PlayCard(0)); // 200 PV ; coup de 10 − 2 × 3
         assertEquals(196, state.player().hp());
     }

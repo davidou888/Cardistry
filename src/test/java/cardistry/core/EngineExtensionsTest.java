@@ -63,7 +63,7 @@ class EngineExtensionsTest {
     @Test
     void reductionDeDegatsParAttaque() {
         setUp(List.of());
-        state.playerStats().add(flat(StatType.DAMAGE_REDUCTION, 2, "test"));
+        state.playerStats().add(flat(StatType.DEFENSE, 2, "test"));
         assertEquals(8, state.enemyAttackDamage(), DELTA); // Forêt : Mannequin ×1, 10 − 2
 
         engine.submit(new Action.DrawCard());
@@ -74,7 +74,7 @@ class EngineExtensionsTest {
     @Test
     void reductionJamaisSousZero() {
         setUp(List.of());
-        state.playerStats().add(flat(StatType.DAMAGE_REDUCTION, 50, "test"));
+        state.playerStats().add(flat(StatType.DEFENSE, 50, "test"));
         engine.submit(new Action.DrawCard());
         assertEquals(100, state.player().hp(), DELTA);
     }

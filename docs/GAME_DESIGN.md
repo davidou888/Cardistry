@@ -177,7 +177,7 @@ Choix d'implémentation :
 | Exemple | Maté : +10 PV | Redistribution des briquets : +25 % dégâts feu |
 
 ### Effets sur les stats
-Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, Choomies gagnés, multiplicateur par élément, efficacité des soins, réduction de dégâts. **[À DÉCIDER]** ajouter crit / esquive ?
+Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, Choomies gagnés, multiplicateur par élément, efficacité des soins, DEF (ex-réduction de dégâts ; voir « Stats de personnage »).
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
@@ -251,7 +251,7 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Commun | Redistribution des briquets | +25 % dégâts feu | Feu, Soirée | a |
 | Commun | Pichet de Sat | +25 % dégâts eau | Eau, EPFL | a |
 | Commun | Plante du Rolex | +25 % dégâts plante | Plante, EPFL | a |
-| Commun | Polycopié d'Analyse I | −2 dégâts à chaque attaque subie | Défense, EPFL | a |
+| Commun | Polycopié d'Analyse I | +2 DEF | Défense, EPFL | a |
 | Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère (validé) | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
 | Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des +5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
@@ -419,7 +419,7 @@ son élément attaque à ×1.25. Boss provisoires : départ sur le Dojo.
 |---|---|---|---|
 | Caddie énervé | Parking du Migros | neutre | −1 taille de main |
 | Clarence | Le canapé | neutre | aucun |
-| Le Peneu | Bord d'autoroute | neutre | +2 dégâts subis par coup (stat `DAMAGE_TAKEN`) |
+| Le Peneu | Bord d'autoroute | neutre | −2 DEF (stat `DEFENSE`) |
 | Choomah (et variantes) | Buisson louche | plante | −20 % soins |
 | Paresseux | Canopée | plante | −15 % dégâts des sorts |
 | T-Rex défoncé | Jurassic Ecublens | plante | adversaire +15 % dégâts |

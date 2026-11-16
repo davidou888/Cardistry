@@ -29,15 +29,15 @@ public final class EnemyTerrains {
     public static final double CANOPY_SPELL_MALUS = -0.15;
     public static final double EXAM_SPELL_MALUS = -0.20;
     public static final double ENEMY_DAMAGE_BONUS = 0.15;
-    /** Bord d'autoroute : dégâts subis en plus à chaque coup. */
-    public static final double HIGHWAY_EXTRA_DAMAGE = 2;
+    /** Bord d'autoroute : DEF perdue tant qu'on y reste. */
+    public static final double HIGHWAY_DEFENSE_MALUS = -2;
 
     private static final Map<String, Supplier<TerrainCard>> TERRAINS = Map.ofEntries(
             Map.entry(EnemyRegistry.CADDIE, () -> terrain("Parking du Migros", NEUTRAL, "−1 taille de main",
                     flat(StatType.HAND_SIZE, -1, ""))),
             Map.entry(EnemyRegistry.CLARENCE, EnemyTerrains::couch),
-            Map.entry(EnemyRegistry.PENEU, () -> terrain("Bord d'autoroute", NEUTRAL, "+2 dégâts subis par coup",
-                    flat(StatType.DAMAGE_TAKEN, HIGHWAY_EXTRA_DAMAGE, ""))),
+            Map.entry(EnemyRegistry.PENEU, () -> terrain("Bord d'autoroute", NEUTRAL, "−2 DEF",
+                    flat(StatType.DEFENSE, HIGHWAY_DEFENSE_MALUS, ""))),
             Map.entry(EnemyRegistry.CHOOMAH, EnemyTerrains::bush),
             Map.entry(EnemyRegistry.CHOOMAH_PRESSE, EnemyTerrains::bush),
             Map.entry(EnemyRegistry.CHOOMAH_COSTAUD, EnemyTerrains::bush),

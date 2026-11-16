@@ -51,9 +51,9 @@ public final class ItemRegistry {
                         .percent(StatType.NATURE_DAMAGE, 0.25)
                         .build(),
                 Trinket.builder("polycopie-d-analyse-i", "Polycopié d'Analyse I", COMMON)
-                        .description("−2 dégâts à chaque attaque subie")
+                        .description("+2 DEF")
                         .tags(Tag.DEFENSE, Tag.EPFL)
-                        .flat(StatType.DAMAGE_REDUCTION, 2)
+                        .flat(StatType.DEFENSE, 2)
                         .build(),
                 honore(),
                 Trinket.builder("latte-macchiato-vanille", "Latte macchiato vanille", COMMON)

@@ -124,7 +124,7 @@ class EnemyMoveTest {
     void plusieursCoupsEtReductionParCoup() {
         setUp(always(MoveEffect.Hit.of(4, 2)), List.of());
         state.playerStats().add(cardistry.core.stats.StatModifier.flat(
-                cardistry.core.stats.StatType.DAMAGE_REDUCTION, 1, "test"));
+                cardistry.core.stats.StatType.DEFENSE, 1, "test"));
         endTurn();
         assertEquals(100 - 3 - 3, state.player().hp(), DELTA);
         assertEquals(2, events.stream().filter(e -> e instanceof GameEvent.EnemyAttacked).count());

@@ -91,9 +91,10 @@ class EnemyTerrainTest {
     }
 
     @Test
-    void bordDAutorouteDeuxDegatsDePlusParCoup() {
+    void bordDAutorouteMoinsDeuxDef() {
         Enemy peneu = fight(EnemyRegistry.PENEU);
-        assertEquals(6 + 2, state.hitDamage(6), 1e-9); // Crevaison 6, neutre : ×1
+        assertEquals(-2, state.playerStats().get(StatType.DEFENSE), 1e-9);
+        assertEquals(6 + 2, state.hitDamage(6), 1e-9); // Crevaison 6, neutre : ×1, DEF −2
         assertEquals(peneu.name(), state.currentEnemy().name());
     }
 

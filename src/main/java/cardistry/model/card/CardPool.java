@@ -333,7 +333,7 @@ public class CardPool {
         for (StatType stat : StatType.allDamageMultipliers()) {
             doubled.add(cardistry.core.stats.StatModifier.multiply(stat, 2, ""));
         }
-        for (StatType stat : java.util.List.of(StatType.HEAL_EFFICIENCY, StatType.DAMAGE_REDUCTION, StatType.MAX_HP)) {
+        for (StatType stat : java.util.List.of(StatType.HEAL_EFFICIENCY, StatType.DEFENSE, StatType.MAX_HP)) {
             doubled.add(cardistry.core.stats.StatModifier.multiply(stat, 2, ""));
         }
         return new TerrainCard("EPFL", FIRE, LEGENDARY)

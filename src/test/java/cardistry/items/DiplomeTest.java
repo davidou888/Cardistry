@@ -75,7 +75,7 @@ class DiplomeTest {
         equip("polycopie-d-analyse-i");        // EPFL : −2 → −4
         // Briquets non doublés (+25 %) ; Diplôme + Polycopié = set EPFL 2, doublé (+20 %)
         assertEquals(1.45, stat(StatType.FIRE_DAMAGE), DELTA);
-        assertEquals(4, stat(StatType.DAMAGE_REDUCTION), DELTA);
+        assertEquals(4, stat(StatType.DEFENSE), DELTA);
     }
 
     @Test

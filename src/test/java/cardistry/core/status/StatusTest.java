@@ -99,7 +99,7 @@ class StatusTest {
     @Test
     void intoxSurLeJoueurAuDebutDeSonTourEtDegatsBruts() {
         Stats stats = new Stats();
-        stats.add(StatModifier.flat(StatType.DAMAGE_REDUCTION, 3, "test")); // ne réduit pas un statut
+        stats.add(StatModifier.flat(StatType.DEFENSE, 3, "test")); // ne réduit pas un statut
         setUp(100, 0, stats);
         engine.startTurn();
         inflict(StatusTarget.PLAYER, StatusType.INTOX, 1);
