@@ -779,7 +779,7 @@ public final class CombatEngine {
         List<Card> options = new java.util.ArrayList<>();
         int guard = 0;
         while (options.size() < CARD_REWARD_OPTIONS && guard++ < 200) {
-            Card card = drawFromPool();
+            Card card = offerFromPool();
             if (options.stream().noneMatch(c -> c.name().equals(card.name()))) {
                 options.add(card);
             }
@@ -1130,7 +1130,7 @@ public final class CombatEngine {
         List<String> names = new java.util.ArrayList<>();
         int guard = 0;
         while (names.size() < Shop.CARDS && guard++ < 500) {
-            Card card = drawFromPool();
+            Card card = offerFromPool();
             if (!names.contains(card.name())) {
                 names.add(card.name());
                 stock.add(new cardistry.core.shop.ShopOffer.CardOffer(card, cardistry.core.shop.ShopPrices.price(card)));
@@ -1259,8 +1259,22 @@ public final class CombatEngine {
 
     // --- Actions du joueur ---
 
+    /** Pioche sans deck (tests, adversaires fixés) : une carte du pool, poids des trinkets seulement. */
     private Card drawFromPool() {
         return pool.draw(rng, state::cardWeight);
+    }
+
+    /**
+     * Carte proposée (récompense de carte, shop, George) : tirée selon sa rareté, comme les objets
+     * ({@link cardistry.items.Rarity#dropWeight()}), et les poids des trinkets.
+     */
+    private Card offerFromPool() {
+        return pool.draw(rng, card -> offerWeight(state, card));
+    }
+
+    /** Poids d'une carte proposée : poids de sa rareté × poids des trinkets (Grinder…). */
+    public static double offerWeight(GameState state, Card card) {
+        return card.rarity().dropWeight() * state.cardWeight(card);
     }
 
     /**
@@ -1868,7 +1882,7 @@ public final class CombatEngine {
             if (state.hand().get(slot) instanceof DeadCard) {
                 return;
             }
-            Card replacement = drawFromPool();
+            Card replacement = offerFromPool();
             Card removed = state.replaceInHand(slot, replacement);
             discard(removed);
             bus.publish(new GameEvent.CardReplaced(removed, replacement));

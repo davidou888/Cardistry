@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 public final class LootTable {
 
     /** Poids d'un secret débloqué (un commun pèse {@link Rarity#COMMON}{@code .dropWeight()}). */
-    public static final int UNLOCKED_SECRET_WEIGHT = 2;
+    public static final int UNLOCKED_SECRET_WEIGHT = 1;
 
     private final Supplier<List<Collectible>> source;
     private final Set<String> unlockedSecrets;

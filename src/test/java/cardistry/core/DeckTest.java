@@ -151,6 +151,24 @@ class DeckTest {
     }
 
     @Test
+    void lesCartesProposeesSontTireesSelonLeurRarete() {
+        GameState game = GameState.newGame();
+        SpellCard common = new SpellCard("Commune", FIRE, 1, cardistry.items.Rarity.COMMON);
+        SpellCard legendary = new SpellCard("Légendaire", FIRE, 1, cardistry.items.Rarity.LEGENDARY);
+        assertEquals(60, CombatEngine.offerWeight(game, common), 1e-9);
+        assertEquals(1, CombatEngine.offerWeight(game, legendary), 1e-9);
+        CardPool pool = new CardPool(List.of(common, legendary));
+        Rng rng = new Rng(3);
+        int legendaries = 0;
+        int trials = 30_500;
+        for (int i = 0; i < trials; i++) {
+            legendaries += pool.draw(rng, c -> CombatEngine.offerWeight(game, c)).rarity()
+                    == cardistry.items.Rarity.LEGENDARY ? 1 : 0;
+        }
+        assertEquals(1.0 / 61, (double) legendaries / trials, 0.004);
+    }
+
+    @Test
     void plusRienAPiocher() {
         setUp(numbered(5)); // tout est en main
         fight(100);

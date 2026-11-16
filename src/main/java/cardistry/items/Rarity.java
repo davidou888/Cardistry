@@ -5,7 +5,7 @@ public enum Rarity {
     COMMON("Commun", 60, 50),
     UNCOMMON("Peu commun", 25, 80),
     RARE("Rare", 12, 130),
-    LEGENDARY("Légendaire", 3, 200),
+    LEGENDARY("Légendaire", 1, 200),
     /** N'apparaît jamais dans les tirages normaux. */
     SECRET("Secret", 0, 0);
 

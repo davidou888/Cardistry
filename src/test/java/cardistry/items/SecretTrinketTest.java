@@ -353,7 +353,7 @@ class SecretTrinketTest {
         Trinket secret = ItemRegistry.trinket(ItemRegistry.CTRL_Z);
         LootTable table = new LootTable(() -> List.of(secret, item("commun", Rarity.COMMON)), Set.of(ItemRegistry.CTRL_Z));
         assertEquals(LootTable.UNLOCKED_SECRET_WEIGHT, table.weight(secret));
-        assertEquals(2, LootTable.UNLOCKED_SECRET_WEIGHT);
+        assertEquals(1, LootTable.UNLOCKED_SECRET_WEIGHT);
         setUp(2, List.of(), 1);
         assertEquals(2, table.offer(state, new Rng(1), 3).size());
     }
@@ -373,7 +373,7 @@ class SecretTrinketTest {
             }
         }
         double rate = (double) hits / trials;
-        assertTrue(Math.abs(rate - 2.0 / 62) < 0.005, "taux " + rate); // 2 / (2 + 60)
+        assertTrue(Math.abs(rate - 1.0 / 61) < 0.004, "taux " + rate); // 1 / (1 + 60)
     }
 
     @Test
