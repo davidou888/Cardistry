@@ -93,6 +93,11 @@ final class CombatWindowScreen {
             return spriteTop + spriteRows;
         }
 
+        /** Hauteur du sprite du familier (en lignes ; deux colonnes par ligne). */
+        int familiarRows() {
+            return Math.max(2, Math.min(spriteRows / 2, (statusWidth - 1) / 2));
+        }
+
         int detailRow() {
             return separator + cardHeight + 2;
         }
@@ -183,10 +188,14 @@ final class CombatWindowScreen {
         int badgeCol = col + barWidth + 2 + value.length();
         StatusBadges.draw(p, badgeCol, l.hpRow(), statuses, Math.max(0, 2 + l.half() - badgeCol));
 
-        // À côté du sprite : Ivresse, Gueule de bois, effets en cours.
+        // À côté du sprite : Ivresse, Gueule de bois, effets en cours ; en bas, le familier.
         int statusCol = l.playerCol() + l.spriteCols() + 2;
         List<StatusLine> lines = statusLines(state, l.statusWidth());
         int capacity = l.spriteRows();
+        if (state.familiar().isPresent()) {
+            capacity = Math.max(1, capacity - l.familiarRows() - 2); // barre et « visé ! » au-dessus
+            drawFamiliar(p, state.familiar().get(), view, l, statusCol);
+        }
         for (int i = 0; i < lines.size() && i < capacity; i++) {
             boolean overflow = i == capacity - 1 && lines.size() > capacity;
             if (overflow) {
@@ -194,6 +203,33 @@ final class CombatWindowScreen {
             } else {
                 p.text(statusCol, l.spriteTop() + i, lines.get(i).text(), lines.get(i).color(), lines.get(i).bold());
             }
+        }
+    }
+
+    /**
+     * Le familier (l'alien de Sassy) dans son emplacement, en bas à droite du joueur : sa barre de PV
+     * au-dessus de lui, son sprite (idle, attack, smoke ; ko quand il est assommé).
+     */
+    private static void drawFamiliar(Painter p, cardistry.model.Familiar familiar, ViewState view, Layout l, int col) {
+        int rows = l.familiarRows();
+        int top = l.hpRow() - rows;
+        double hp = view.familiarHpShown != null ? view.familiarHpShown : Math.max(0, familiar.hp());
+        String value = familiar.isKnockedOut() && view.familiarHpShown == null ? "KO"
+                : num(Math.max(0, hp)) + "/" + num(familiar.maxHp());
+        int barWidth = Math.max(3, Math.min(10, l.statusWidth() - value.length() - 1));
+        TextColor color = view.familiarFlash != null ? view.familiarFlash
+                : familiar.isKnockedOut() ? Palette.DIM : Palette.health(hp / familiar.maxHp());
+        p.text(col, top - 1, Painter.bar(hp, familiar.maxHp(), barWidth), color, view.familiarFlash != null);
+        p.text(col + barWidth + 1, top - 1, value, familiar.isKnockedOut() ? Palette.DIM : Palette.TEXT);
+        if (familiar.isTargeted() && !familiar.isKnockedOut()) {
+            p.text(col, top - 2, Painter.fit("visé !", l.statusWidth()), Palette.DAMAGE, true);
+        }
+        String animation = familiar.isKnockedOut() ? "ko" : view.familiarAnimation;
+        int frame = animation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame : view.familiarFrame;
+        java.util.Optional<String> image = Images.player(familiar.id(), animation, frame);
+        if (image.isEmpty() || !p.image(col, top, rows * 2, rows, image.get(), view.familiarFlash, 1f)) {
+            p.text(col, top + rows / 2, Painter.fit("(" + familiar.name().toLowerCase() + ")", l.statusWidth()),
+                    Palette.DIM);
         }
     }
 
@@ -255,7 +291,8 @@ final class CombatWindowScreen {
                     Palette.DIM);
             return;
         }
-        p.text(p.cols() - 2 - l.half(), l.separator() - 1, cardistry.ui.StatSheet.defenseLine(enemy), Palette.DIM);
+        String defense = cardistry.ui.StatSheet.defenseLine(enemy);
+        p.text(p.cols() - 3 - defense.length(), l.separator() - 1, defense, Palette.DIM);
         // Pas d'image : PV sous l'intent, puis le sprite ASCII (trop large pour la zone carrée).
         enemyHp(p, state, l, l.top() + 1, enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
         if (view.enemyHidden) {

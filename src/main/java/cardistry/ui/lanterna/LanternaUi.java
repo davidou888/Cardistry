@@ -333,6 +333,9 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
             }
             case GameEvent.SecretUnlocked e -> view.log("Secret débloqué : " + e.name(), Palette.SECRET);
             case GameEvent.GameWon e -> view.log("Victoire !", Palette.ACCENT);
+            case GameEvent.FamiliarActed e -> animateFamiliar(e.action() == GameEvent.FamiliarActed.Action.ATTACK
+                    ? cardistry.ui.sprite.Sprite.ATTACK : "smoke");
+            case GameEvent.FamiliarKnockedOut e -> render();
             case GameEvent.GameLost e -> {
                 view.log("Défaite...", Palette.DAMAGE);
                 animatePlayerDeath();
@@ -1483,6 +1486,20 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                 ? cardistry.ui.window.Images.playerFrames(state.hero().get().id(), animation) : 0;
     }
 
+    /** Le familier attaque (frames attack) ou fume un joint (frames smoke). */
+    private void animateFamiliar(String animation) {
+        int frames = images != null && state != null
+                ? state.familiar().map(f -> cardistry.ui.window.Images.playerFrames(f.id(), animation)).orElse(0) : 0;
+        for (int i = 0; i < frames * 3; i++) {
+            view.familiarAnimation = animation;
+            view.familiarFrame = i / 3;
+            frame();
+        }
+        view.familiarAnimation = cardistry.ui.sprite.Sprite.IDLE;
+        view.familiarFrame = 0;
+        render();
+    }
+
     /** Le familier est touché : sa barre descend, il clignote. */
     private void animateFamiliarHit(double amount) {
         double before = state.familiar().map(f -> f.hp() + amount).orElse(0.0);
@@ -1795,7 +1812,8 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         return page == Page.COMBAT && state != null && state.hasEnemy() && state.currentEnemy().isAlive()
                 && (currentSprite().idle().size() > 1
                         || images != null && cardistry.ui.window.Images.idleFrames(state.currentEnemy().spriteId()) > 1
-                        || playerFrames(cardistry.ui.sprite.Sprite.IDLE) > 1);
+                        || playerFrames(cardistry.ui.sprite.Sprite.IDLE) > 1
+                        || images != null && state.familiar().isPresent());
     }
 
     private static boolean isChar(KeyStroke key, char expected) {

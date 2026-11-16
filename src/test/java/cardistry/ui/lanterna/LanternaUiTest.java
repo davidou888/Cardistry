@@ -1658,6 +1658,38 @@ class LanternaUiTest {
     }
 
     @Test
+    void alienDeSassyAvecSaBarreDeVieEtSaCible() throws IOException {
+        openWithImages(80, 24);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)),
+                hydra()).withHero(cardistry.hero.HeroRegistry.SASSY);
+        cardistry.model.Familiar alien = state.familiar().orElseThrow();
+        alien.setTargeted(true);
+        ui.showStatus(state);
+        String text = dump("86-fenetre-alien");
+        CombatWindowScreen.Layout l = CombatWindowScreen.Layout.of(80, 24);
+        List<String> lines = text.lines().toList();
+        assertTrue(lines.get(l.hpRow() - l.familiarRows() - 1).contains("20/20"), "barre de vie au-dessus de l'alien");
+        assertTrue(placed("player/alien.idle.1.png").rows() == l.familiarRows(), "emplacement dédié du familier");
+        assertTrue(text.contains("Vise l'alien · Attaque"), text);
+        assertTrue(text.contains("visé !"), text);
+        alien.takeDamage(20);
+        alien.setTargeted(false);
+        ui.showStatus(state);
+        assertTrue(placed("player/alien.ko.1.png") != null, "assommé : sprite KO");
+        assertTrue(screen().contains("KO"), screen());
+    }
+
+    @Test
+    void alienEnTerminal() throws IOException {
+        open(80, 24);
+        GameState state = combat(List.of(new SpellCard("Jet d'eau", Element.WATER, 10, cardistry.items.Rarity.COMMON)),
+                hydra()).withHero(cardistry.hero.HeroRegistry.SASSY);
+        ui.showStatus(state);
+        String text = dump("87-terminal-alien");
+        assertTrue(text.contains("ALIEN 20/20"), text);
+    }
+
+    @Test
     void imageDuPersonnageSelonSonAnimation() {
         GameState state = GameState.newGame(cardistry.hero.HeroRegistry.LOUIS);
         ViewState view = new ViewState();

@@ -47,6 +47,27 @@ class WindowScreenshotTest {
         assertTrue(Files.exists(Path.of("build/screens/80-fenetre-combat.png")));
     }
 
+    @Test
+    void sassyEtSonAlienDansLaFenetre() throws IOException {
+        for (int[] size : new int[][] {{100, 32}, {80, 24}}) {
+            DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(size[0], size[1]));
+            ImageLayer layer = new ImageLayer();
+            LanternaUi ui = new LanternaUi(terminal, true, false, layer);
+            GameState state = GameState.newGame(cardistry.hero.HeroRegistry.SASSY);
+            CombatEngine engine = new CombatEngine(state, new CardPool(), new Rng(4), new EventBus());
+            engine.start();
+            engine.startCombat(EnemyRegistry.create(EnemyRegistry.CAME, 1), false);
+            state.familiar().orElseThrow().setTargeted(true);
+            state.familiar().orElseThrow().takeDamage(6);
+            ui.onEvent(new GameEvent.GameStarted(4));
+            ui.showStatus(state);
+            save(new GridRenderer(new CellFonts(2)).render(terminal, layer.snapshot(), layer.marks(), false),
+                    "90-fenetre-alien-" + size[0] + "x" + size[1]);
+            ui.close();
+        }
+        assertTrue(Files.exists(Path.of("build/screens/90-fenetre-alien-80x24.png")));
+    }
+
     private static void mapScreenshot(int cols, int rows, String name) throws IOException {
         DefaultVirtualTerminal terminal = new DefaultVirtualTerminal(new TerminalSize(cols, rows));
         ImageLayer layer = new ImageLayer();

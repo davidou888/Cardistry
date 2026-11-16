@@ -32,7 +32,8 @@ public final class IntentText {
         if (enemy.voice() == Enemy.Voice.SCREAM) {
             effects = Scream.of(effects);
         }
-        return effects.isEmpty() ? move.name() : move.name() + " : " + effects;
+        String target = state.currentEnemy() == enemy ? FamiliarText.intentTarget(state) : "";
+        return target + (effects.isEmpty() ? move.name() : move.name() + " : " + effects);
     }
 
     /**

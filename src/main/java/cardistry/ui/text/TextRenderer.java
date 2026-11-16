@@ -281,6 +281,8 @@ public final class TextRenderer implements Renderer {
                 + " points de vie" + (hp > state.maxHp() ? " (" + Ansi.yellow("+" + num(hp - state.maxHp())) + " au-dessus du max)" : ""));
         String gauge = state.trinkets().stream().flatMap(t -> t.gauge().stream()).findFirst()
                 .map(g -> " · " + g.label() + " " + g.value() + "/" + g.max()).orElse("");
+        state.familiar().ifPresent(f -> console.println("Ton " + cardistry.ui.FamiliarText.status(f).toLowerCase()
+                .replaceFirst(" ", " : ") + (f.isKnockedOut() ? " jusqu'au prochain combat" : " PV")));
         console.println("Clopes : " + state.cigarettes() + "/" + state.cigaretteMax() + gauge
                 + " · Choomies : " + state.choomies());
         var playerStatuses = state.statuses(cardistry.core.status.StatusTarget.PLAYER).all();

@@ -23,9 +23,9 @@ public final class FamiliarText {
                 + (familiar.isKnockedOut() ? "assommé" : num(Math.max(0, familiar.hp())) + "/" + num(familiar.maxHp()));
     }
 
-    /** Suffixe de l'intent quand l'attaque vise le familier : « → vise l'alien » ; vide sinon. */
+    /** Début de l'intent quand l'attaque vise le familier : « Vise l'alien · » ; vide sinon. */
     public static String intentTarget(GameState state) {
         return state.familiarTargeted()
-                ? " → vise l'" + state.familiar().orElseThrow().name().toLowerCase() : "";
+                ? "Vise l'" + state.familiar().orElseThrow().name().toLowerCase() + " · " : "";
     }
 }

@@ -204,10 +204,16 @@ final class CombatScreen {
         drawTrinkets(p, state);
     }
 
-    /** Ligne 7, après « TOI » : Ivresse (si non nulle) et malédictions. */
+    /** Ligne 7, après « TOI » : le familier (l'alien de Sassy), l'Ivresse (si non nulle) et les malédictions. */
     private static void drawDrunkennessAndCurses(Painter p, GameState state) {
         int col = 2 + Format.playerLabel(state).length() + 1;
         int limit = p.cols() - SPRITE_WIDTH - 3;
+        if (state.familiar().isPresent()) {
+            cardistry.model.Familiar familiar = state.familiar().get();
+            String text = cardistry.ui.FamiliarText.status(familiar);
+            p.text(col, 7, text, familiar.isKnockedOut() ? Palette.DIM : Palette.HEAL, !familiar.isKnockedOut());
+            col += text.length() + 2;
+        }
         if (state.drunkenness() > 0) {
             // Ligne étroite : le palier sans son pourcentage (il est dans le journal et les règles).
             String tier = state.drunkTier().displayName();
