@@ -238,8 +238,13 @@ final class CombatWindowScreen {
             }
             // Sous le sprite, en miroir du joueur : « 21/28 ████████ CADDIE ÉNERVÉ ».
             enemyHp(p, state, l, l.hpRow(), enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
+            // Juste au-dessus de sa barre, à gauche du sprite : DEF et RES, ce qui change tes choix.
+            String defense = cardistry.ui.StatSheet.defenseLine(enemy);
+            p.text(Math.max(p.cols() - 2 - l.half(), l.enemyCol() - 1 - defense.length()), l.hpRow() - 1, defense,
+                    Palette.DIM);
             return;
         }
+        p.text(p.cols() - 2 - l.half(), l.separator() - 1, cardistry.ui.StatSheet.defenseLine(enemy), Palette.DIM);
         // Pas d'image : PV sous l'intent, puis le sprite ASCII (trop large pour la zone carrée).
         enemyHp(p, state, l, l.top() + 1, enemyLabel(enemy, l, value), value, hp, enemy.maxHp(), color);
         if (view.enemyHidden) {

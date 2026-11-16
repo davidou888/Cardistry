@@ -72,6 +72,7 @@ final class CombatScreen {
         p.text(2, 1, cardistry.ui.Format.location(state), Palette.DIM);
         p.text(2, 2, enemy.name().toUpperCase(), Palette.element(enemy.element()), true);
         p.text(3 + enemy.name().length(), 2, "· " + enemy.element().displayName(), Palette.element(enemy.element()));
+        p.text(6 + enemy.name().length() + enemy.element().displayName().length(), 2, cardistry.ui.StatSheet.defenseLine(enemy), Palette.DIM);
 
         double hp = view.enemyHpShown != null ? view.enemyHpShown : enemy.hp();
         hpLine(p, 3, hp, enemy.maxHp(), Palette.DAMAGE, null,

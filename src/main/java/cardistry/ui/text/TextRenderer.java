@@ -290,6 +290,7 @@ public final class TextRenderer implements Renderer {
         console.println("ADVERSAIRE :");
         console.println(enemyName(enemy) + ", de type " + Ansi.element(enemy.element())
                 + ", il lui reste " + num(enemy.hp()) + " points de vie");
+        console.println(cardistry.ui.StatSheet.defenseLine(enemy) + " (fiche complète : a)");
         var enemyStatuses = state.statuses(cardistry.core.status.StatusTarget.ENEMY).all();
         if (!enemyStatuses.isEmpty()) {
             console.println("Statuts : " + cardistry.ui.StatusText.describeAll(enemyStatuses));

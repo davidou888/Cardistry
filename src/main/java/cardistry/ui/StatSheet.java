@@ -70,6 +70,16 @@ public final class StatSheet {
         return rows;
     }
 
+    /** « DEF 2 · RES 3 » : les stats de l'adversaire qui changent tes choix (fiche complète : A). */
+    public static String defenseLine(cardistry.model.Enemy enemy) {
+        return "DEF " + plain(enemy.stat(StatType.DEFENSE)) + " · RES " + plain(enemy.stat(StatType.RESISTANCE));
+    }
+
+    /** « 2 » ou « −1 ». */
+    private static String plain(double value) {
+        return value < 0 ? "−" + num(-value) : num(value);
+    }
+
     /** « +2 » ou « −1 ». */
     private static String signed(double value) {
         return (value >= 0 ? "+" : "−") + num(Math.abs(value));

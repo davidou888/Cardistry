@@ -873,6 +873,7 @@ class LanternaUiTest {
         String text = dump("41-combat-caddie");
         assertTrue(text.contains("(O)      (O)"), text);
         assertTrue(text.contains("Prochain : Roue voilée : 7"), text); // 6 + FOR 1
+        assertTrue(text.contains("CADDIE ÉNERVÉ · neutre DEF 2 · RES 2"), "DEF et RES près de sa barre de PV");
         int row = text.lines().toList().indexOf(text.lines().filter(l -> l.contains("(O)")).findFirst().orElseThrow());
         int col = text.lines().toList().get(row).indexOf("(O)") + 1;
         assertEquals(com.googlecode.lanterna.TextColor.ANSI.YELLOW_BRIGHT,
@@ -1502,6 +1503,7 @@ class LanternaUiTest {
         List<String> lines = text.lines().toList();
         CombatWindowScreen.Layout l = CombatWindowScreen.Layout.of(80, 24);
         String info = lines.get(l.hpRow());
+        assertTrue(lines.get(l.hpRow() - 1).contains("DEF 0 · RES 0"), "DEF et RES juste au-dessus de sa barre de PV");
         assertTrue(info.indexOf("TOI") == 3 && info.strip().endsWith("IMAGÉ │") || info.contains("IMAGÉ"), info);
         assertTrue(info.indexOf("100/100") < 40 && info.indexOf("20/20") > 40, "une barre de PV sous chaque sprite");
         assertTrue(text.contains("100/100") && text.contains("20/20"), text);
