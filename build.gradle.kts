@@ -52,6 +52,9 @@ tasks.test {
     useJUnitPlatform()
     // Rendu de la fenêtre testé dans des images, jamais à l'écran (CI sans affichage).
     systemProperty("java.awt.headless", "true")
+    if (project.hasProperty("trace")) {
+        systemProperty("trace", "true")
+    }
     // Les tests ne jouent jamais de son.
     systemProperty("cardistry.audio", "off")
 }
@@ -154,6 +157,9 @@ val planche by tasks.registering(JavaExec::class) {
     mainClass = "cardistry.tools.ArtSheet"
     args("art/planche.png", "art/planche-ennemis.png")
     systemProperty("java.awt.headless", "true")
+    if (project.hasProperty("trace")) {
+        systemProperty("trace", "true")
+    }
     mustRunAfter(exportArt)
 }
 
@@ -166,6 +172,26 @@ val animationCheck by tasks.registering(JavaExec::class) {
     systemProperty("cardistry.audio", "off")
     if (project.hasProperty("enemies")) {
         args((project.property("enemies") as String).split(","))
+    }
+}
+
+// ./gradlew balanceRun [-Pseeds=N] [-Pheroes=id,id] : parties complètes jouées par un bot, chiffres d'équilibrage.
+val balanceRun by tasks.registering(JavaExec::class) {
+    group = "verification"
+    description = "Joue des parties complètes avec chaque personnage et écrit les chiffres d'équilibrage."
+    classpath = sourceSets["test"].output.classesDirs + sourceSets["main"].runtimeClasspath
+    mainClass = "cardistry.tools.BalanceRun"
+    dependsOn("testClasses")
+    systemProperty("cardistry.audio", "off")
+    systemProperty("java.awt.headless", "true")
+    if (project.hasProperty("trace")) {
+        systemProperty("trace", "true")
+    }
+    if (project.hasProperty("seeds")) {
+        systemProperty("seeds", project.property("seeds") as String)
+    }
+    if (project.hasProperty("heroes")) {
+        systemProperty("heroes", project.property("heroes") as String)
     }
 }
 
