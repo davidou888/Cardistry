@@ -46,6 +46,12 @@ class HeroTest {
         engine.start();
     }
 
+    /** Retire la CHA du personnage : aucun coup critique, dégâts exacts. */
+    private void noCrit() {
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(cardistry.core.stats.StatType.LUCK,
+                -state.playerStats().get(cardistry.core.stats.StatType.LUCK), "test"));
+    }
+
     private static Enemy enemy(Element element, double hp) {
         return new Enemy("Mannequin", element, hp, 5);
     }
@@ -77,14 +83,15 @@ class HeroTest {
     @Test
     void louisPlus50PourCentDeDegatsAChaqueSort() {
         setUp(HeroRegistry.LOUIS, 1, WATER, List.of(spell(FIRE, 10), spell(FIRE, 10)), enemy(FIRE, 500));
+        noCrit();
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(15, damageToEnemy(), DELTA, "10 × 1.5");
+        assertEquals(20, damageToEnemy(), DELTA, "(10 + FOR 3) × 1.5 = 19.5");
 
         events.clear();
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(15, damageToEnemy(), DELTA, "tout le temps, pas seulement le premier sort");
+        assertEquals(20, damageToEnemy(), DELTA, "tout le temps, pas seulement le premier sort");
         assertTrue(state.nextSpellBoost().isEmpty(), "plus d'effet « premier sort »");
     }
 
@@ -115,27 +122,32 @@ class HeroTest {
     // --- Frederic BLC : rien de spécial ---
 
     @Test
-    void fredericBlcAucuneCompetence() {
+    void fredericBlcAucuneCompetenceMaisDeuxPartout() {
         setUp(HeroRegistry.FREDERIC, 1, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 500));
+        noCrit();
         assertEquals(100, state.maxHp(), DELTA);
         assertEquals(1.0, state.playerStats().get(cardistry.core.stats.StatType.FIRE_DAMAGE), DELTA);
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(10, damageToEnemy(), DELTA);
-        assertTrue(HeroRegistry.FREDERIC.modifiers().isEmpty());
+        assertEquals(12, damageToEnemy(), DELTA, "10 + FOR 2");
+        assertTrue(HeroRegistry.FREDERIC.modifiers().stream()
+                .allMatch(m -> cardistry.core.stats.StatType.characterStats().contains(m.stat()) && m.value() == 2),
+                "seulement ses stats de base");
     }
 
     // --- Dave : Full skill Mr. Le Juge ---
 
     @Test
     void daveSortDuTerrainQuiBatLAdversaireSoigneDesPvEnleves() {
-        // Boule de feu sur un terrain feu contre un adversaire plante : 10 × 1.5 = 15 dégâts, 15 PV rendus.
+        // Boule de feu sur un terrain feu contre un adversaire plante : (10 + FOR 1) × 1.5 = 16.5 → 17 dégâts,
+        // 17 PV rendus (soin sans ESP : ce n'est ni une carte ni un objet).
         setUp(HeroRegistry.DAVE, 1, FIRE, List.of(spell(FIRE, 10)), enemy(NATURE, 500));
+        noCrit();
         state.player().takeDamage(50);
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(15, damageToEnemy(), DELTA);
-        assertEquals(15, healed(), DELTA);
+        assertEquals(17, damageToEnemy(), DELTA);
+        assertEquals(17, healed(), DELTA);
     }
 
     @Test
@@ -214,9 +226,10 @@ class HeroTest {
             seed++;
         }
         setUp(HeroRegistry.SASSY, seed, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 500));
+        noCrit();
         engine.startTurn();
         engine.submit(new Action.PlayCard(0));
-        assertEquals(4 + 10, damageToEnemy(), DELTA);
+        assertEquals(4 + 11, damageToEnemy(), DELTA, "alien brut + (10 + FOR 1)");
     }
 
     @Test
@@ -228,6 +241,24 @@ class HeroTest {
         setUp(HeroRegistry.SASSY, seed, WATER, List.of(spell(FIRE, 10)), enemy(FIRE, 3));
         assertFalse(engine.startTurn(), "l'adversaire meurt au début du tour : rien à jouer");
         assertTrue(engine.isOver() && state.isWon());
+    }
+
+    @Test
+    void statsDeBaseDesPersonnages() {
+        java.util.Map<Hero, int[]> expected = java.util.Map.of(
+                HeroRegistry.LOUIS, new int[] {3, 2, 0, 1, 1, 1},
+                HeroRegistry.DAVE, new int[] {1, 3, 1, 1, 1, 1},
+                HeroRegistry.SASSY, new int[] {1, 0, 2, 2, 2, 1},
+                HeroRegistry.FREDERIC, new int[] {2, 2, 2, 2, 2, 2});
+        expected.forEach((hero, values) -> {
+            GameState game = GameState.newGame(hero);
+            List<cardistry.core.stats.StatType> types = cardistry.core.stats.StatType.characterStats();
+            for (int i = 0; i < types.size(); i++) {
+                assertEquals(values[i], game.playerStats().get(types.get(i)), DELTA, hero.name() + " " + types.get(i));
+            }
+            int total = java.util.Arrays.stream(values).sum();
+            assertEquals(hero == HeroRegistry.FREDERIC ? 12 : 8, total, hero.name());
+        });
     }
 
     @Test

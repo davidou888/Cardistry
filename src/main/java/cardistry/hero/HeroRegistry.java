@@ -24,17 +24,23 @@ public final class HeroRegistry {
     /** Chance que l'alien rate son tour (il fume un joint). */
     public static final double ALIEN_MISS_CHANCE = 0.10;
 
+    // --- Stats de base (FOR, INT, ESP, DEF, RES, CHA) : 8 points, 12 pour Frederic BLC ---
+    public static final int[] LOUIS_STATS = {3, 2, 0, 1, 1, 1};
+    public static final int[] DAVE_STATS = {1, 3, 1, 1, 1, 1};
+    public static final int[] SASSY_STATS = {1, 0, 2, 2, 2, 1};
+    public static final int[] FREDERIC_STATS = {2, 2, 2, 2, 2, 2};
+
     public static final Hero LOUIS = new Hero("louis", "Louis", "MAN",
             "+50 % de dégâts, tout le temps.",
-            StatType.allDamageMultipliers().stream()
-                    .map(stat -> StatModifier.percent(stat, MAN_DAMAGE_BONUS, Hero.modifierSource("louis"))).toList(),
+            with(stats("louis", LOUIS_STATS), StatType.allDamageMultipliers().stream()
+                    .map(stat -> StatModifier.percent(stat, MAN_DAMAGE_BONUS, Hero.modifierSource("louis"))).toList()),
             new GameHooks() {
             });
 
     public static final Hero DAVE = new Hero("dave", "Dave", "Full skill Mr. Le Juge",
             "Un sort du même élément que le terrain et qui bat l'élément de l'adversaire te soigne des PV"
                     + " qu'il lui enlève.",
-            List.of(),
+            stats("dave", DAVE_STATS),
             new GameHooks() {
                 @Override
                 public void onSpellHit(GameEvent.SpellHit event, EffectContext ctx) {
@@ -49,7 +55,8 @@ public final class HeroRegistry {
     public static final Hero SASSY = new Hero("sassy", "Sassy", "wadayatalkinabit",
             "+30 PV max. À chaque tour, son alien inflige 4 dégâts à l'adversaire (10 % de chance qu'il fume un"
                     + " joint à la place).",
-            List.of(StatModifier.flat(StatType.MAX_HP, SASSY_BONUS_HP, Hero.modifierSource("sassy"))),
+            with(stats("sassy", SASSY_STATS),
+                    List.of(StatModifier.flat(StatType.MAX_HP, SASSY_BONUS_HP, Hero.modifierSource("sassy")))),
             new GameHooks() {
                 @Override
                 public void onTurnStart(GameEvent.TurnStarted event, EffectContext ctx) {
@@ -68,12 +75,29 @@ public final class HeroRegistry {
 
     /** Frederic BLC : aucune compétence, rien de spécial. */
     public static final Hero FREDERIC = new Hero("frederic-blc", "Frederic BLC", "Aucune",
-            "Aucune compétence, rien de spécial.", List.of(), new GameHooks() {
+            "Aucune compétence, mais des stats parfaitement moyennes : 2 partout.", stats("frederic-blc", FREDERIC_STATS),
+            new GameHooks() {
             });
 
     private static final List<Hero> ALL = List.of(LOUIS, DAVE, SASSY, FREDERIC);
 
     private HeroRegistry() {
+    }
+
+    /** Stats de base du personnage {@code id} (FOR, INT, ESP, DEF, RES, CHA), en modificateurs plats. */
+    private static List<StatModifier> stats(String id, int[] values) {
+        List<StatType> types = StatType.characterStats();
+        java.util.ArrayList<StatModifier> modifiers = new java.util.ArrayList<>();
+        for (int i = 0; i < types.size(); i++) {
+            if (values[i] != 0) {
+                modifiers.add(StatModifier.flat(types.get(i), values[i], Hero.modifierSource(id)));
+            }
+        }
+        return modifiers;
+    }
+
+    private static List<StatModifier> with(List<StatModifier> first, List<StatModifier> second) {
+        return java.util.stream.Stream.concat(first.stream(), second.stream()).toList();
     }
 
     /** Personnages proposés au début d'une partie, dans l'ordre d'affichage. */
