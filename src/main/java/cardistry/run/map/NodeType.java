@@ -7,7 +7,8 @@ public enum NodeType {
     SHOP('$', "Shop"),
     EVENT('?', "Événement"),
     REST('Z', "Sieste"),
-    BOSS('B', "Boss");
+    BOSS('B', "Boss"),
+    ALTAR('A', "Autel");
 
     private final char symbol;
     private final String displayName;
@@ -27,6 +28,6 @@ public enum NodeType {
 
     /** Nœuds qui ne se suivent jamais deux fois sur un chemin. */
     public boolean noRepeat() {
-        return this == SHOP || this == ELITE || this == REST;
+        return this == SHOP || this == ELITE || this == REST || this == ALTAR;
     }
 }

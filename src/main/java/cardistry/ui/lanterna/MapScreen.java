@@ -248,6 +248,7 @@ final class MapScreen {
             case EVENT -> "Une rencontre, un choix.";
             case REST -> "Une pause avant le boss.";
             case BOSS -> "Le boss du niveau.";
+            case ALTAR -> "Un autel sacrificel.";
         };
     }
 
@@ -259,6 +260,7 @@ final class MapScreen {
             case EVENT -> Palette.INFO;
             case REST -> Palette.HEAL;
             case BOSS -> Palette.SECRET;
+            case ALTAR -> Palette.ALTAR;
         };
     }
 }

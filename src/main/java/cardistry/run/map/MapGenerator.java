@@ -33,20 +33,21 @@ public final class MapGenerator {
     public static final int BOSS_COLUMN = COLUMNS / 2;
 
     /** Poids des types aux étages 2 et 3. */
-    public static final Map<NodeType, Integer> EARLY_WEIGHTS = weights(60, 25, 15, 0, 0);
+    public static final Map<NodeType, Integer> EARLY_WEIGHTS = weights(60, 25, 15, 0, 0, 25); //A MODIFIER !!!
     /** Poids des types aux étages 4 à 6. */
-    public static final Map<NodeType, Integer> LATE_WEIGHTS = weights(45, 22, 10, 15, 8);
+    public static final Map<NodeType, Integer> LATE_WEIGHTS = weights(45, 22, 10, 15, 8, 22);
 
     private MapGenerator() {
     }
 
-    private static Map<NodeType, Integer> weights(int combat, int event, int shop, int elite, int rest) {
+    private static Map<NodeType, Integer> weights(int combat, int event, int shop, int elite, int rest, int altar) {
         Map<NodeType, Integer> w = new EnumMap<>(NodeType.class);
         w.put(NodeType.COMBAT, combat);
         w.put(NodeType.EVENT, event);
         w.put(NodeType.SHOP, shop);
         w.put(NodeType.ELITE, elite);
         w.put(NodeType.REST, rest);
+        w.put(NodeType.ALTAR, altar);
         return w;
     }
 

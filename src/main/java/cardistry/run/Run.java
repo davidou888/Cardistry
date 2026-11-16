@@ -64,6 +64,8 @@ public final class Run {
         EVENT,
         /** Après un boss : placer un point de stats (un à la fois). */
         STAT_POINTS,
+        /** autel sacrificielle */
+        ALTAR,
         /** Partie terminée. */
         OVER
     }
@@ -102,9 +104,16 @@ public final class Run {
     private record StatPoint(cardistry.core.stats.StatType stat) implements Step {
     }
 
+    private record Sacrifice(cardistry.core.stats.StatType stat) implements Step{
+    }
+
+    private record LeaveAltar() implements Step{
+    }
+
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
     private record TurnMark(int historySize, int combat, int turn) {
     }
+
 
     private final long seed;
     private final Set<String> unlockedIds;
@@ -326,6 +335,25 @@ public final class Run {
         return spent;
     }
 
+    public boolean sacrifice(cardistry.core.stats.StatType stat){
+        if (phase() != Phase.ALTAR){
+            throw new IllegalStateException("Pas d'autel maintenant.");
+        }
+        boolean done = session.engine.sacrifice(stat);
+        if(done){
+            history.add(new Sacrifice(stat));
+        }
+        return done;
+    }
+
+    public void leaveAltar(){
+        if (phase() != Phase.ALTAR){
+            throw new IllegalStateException("Pas d'autel maintenant.");
+        }
+        session.atAltar = false;
+        history.add(new LeaveAltar());
+    }
+
     public boolean hasPendingCardReward() {
         return session.engine.hasPendingCardReward();
     }
@@ -453,6 +481,8 @@ public final class Run {
                 case ShopStep s -> replayed.engine.shopAction(s.action());
                 case StoryStep s -> replayed.engine.chooseStory(s.choice());
                 case StatPoint s -> replayed.engine.spendStatPoint(s.stat());
+                case Sacrifice s-> replayed.engine.sacrifice(s.stat());
+                case LeaveAltar s-> replayed.atAltar=false;
                 case CardReward c -> {
                     replayed.engine.resolveCardReward(c.index());
                     replayed.settle();
@@ -477,6 +507,7 @@ public final class Run {
         String previousCommon;
         String previousElite;
         boolean resting;
+        boolean atAltar;
 
         Session(EventBus bus) {
             GameState state = newState != null ? newState.get() : GameState.newGame(hero);
@@ -516,6 +547,9 @@ public final class Run {
             if (engine.story().isPresent()) {
                 return Phase.EVENT;
             }
+            if (atAltar){
+                return Phase.ALTAR;
+            }
             return resting ? Phase.REST : Phase.MAP;
         }
 
@@ -551,6 +585,7 @@ public final class Run {
                 case REST -> resting = true;
                 case SHOP -> engine.openShop();
                 case EVENT -> engine.startStory(nextStory());
+                case ALTAR -> atAltar=true;
             }
             settle();
         }

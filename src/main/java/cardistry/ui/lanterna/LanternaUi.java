@@ -28,12 +28,14 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
+import cardistry.utils.Log;
 
 /** Interface plein écran (Lanterna) : affichage, animations et clavier. */
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL, STAT_POINTS, STATS }
+        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL, STAT_POINTS, STATS, ALTAR }
 
     /** Pages où D n'ouvre pas le deck (pas encore de partie, menus, visionneuse). */
     private static final java.util.Set<Page> NO_DECK_PAGES = java.util.EnumSet.of(Page.TITLE, Page.HERO, Page.RULES,
@@ -67,6 +69,10 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
     private int restSelected = 0;
     private int mapSelected = 0;
 
+
+    /**ALTAR */
+    private int altarStat=0;
+    private int altarButton=0;
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast, boolean ascii) throws IOException {
         Terminal terminal = new DefaultTerminalFactory(System.out, System.in, StandardCharsets.UTF_8)
@@ -767,6 +773,36 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         return stats.get(statSelected);
                     }
                 }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    @Override
+    public Optional<cardistry.core.stats.StatType> chooseAltar(GameState state) {
+        this.state = state;
+        List<cardistry.core.stats.StatType> stats = cardistry.core.stats.StatType.characterStats();
+        page = Page.ALTAR;
+        render();
+        while (true) {
+            //Log.println("DEBUG_ALTAR_BUTTON"+ altarButton); //DEBUG
+            //Log.println("DEBUG_ALTAR_STAT"+ altarStat); //DEBUG
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft -> altarButton = Math.floorMod(altarButton - 1, 2);
+                case ArrowUp -> altarStat = Math.floorMod(altarStat - 1, stats.size());
+                case ArrowRight -> altarButton = Math.floorMod(altarButton + 1, 2);
+                case ArrowDown -> altarStat = Math.floorMod(altarStat + 1, stats.size());
+                case Enter -> {
+                    if(altarButton==0){
+                        return Optional.empty();
+                    }else{
+                        return Optional.of(stats.get(altarStat));
+                    }
+                }
+                case Escape -> pauseMenu();
                 default -> {
                 }
             }
@@ -1718,6 +1754,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
                     case STAT_POINTS -> MenuScreens.statPoints(painter, state, statSelected, seed);
+                    case ALTAR -> AltarScreen.draw(painter, state, altarStat, altarButton, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
                     case DECK -> DeckScreen.draw(painter, state, deckScroll, deckPiles, seed);
                     case STATS -> StatsScreen.draw(painter, state, statsOfEnemy, seed);

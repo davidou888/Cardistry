@@ -10,6 +10,7 @@ import cardistry.ui.Input;
 import cardistry.ui.ItemKeys;
 import cardistry.ui.TitleChoice;
 import java.util.List;
+import java.util.Optional;
 
 public final class ConsoleInput implements Input {
 
@@ -338,8 +339,31 @@ public final class ConsoleInput implements Input {
         return stats.get(readNumber("Stat à augmenter ? ", 1, stats.size()) - 1);
     }
 
+    @Override
+    public Optional<cardistry.core.stats.StatType> chooseAltar(GameState state) {
+        current = state;
+        List<cardistry.core.stats.StatType> stats = cardistry.core.stats.StatType.characterStats();
+        console.println();
+        console.println("PV:"+ state.player().hp());
+        console.println("PV MAX:"+ state.maxHp());
+        console.println(Ansi.yellow("Progression") + " : " + state.statPoints() + " point(s) de stats à placer.");
+        for (int i = 0; i < stats.size(); i++) {
+            cardistry.core.stats.StatType stat = stats.get(i);
+            console.println("[" + (i + 1) + "] " + stat.abbreviation() + " " + cardistry.ui.Format.num(state.playerStats().get(stat))
+                    + " · " + stat.displayName() + " : " + stat.effectText());
+        }
+        console.println("[0] Partir");
+        int choice=readNumber("Stat à augmenter", 1, stats.size());
+        if (choice==0){
+            return Optional.empty();
+        }
+        else{
+            return Optional.of(stats.get(choice-1));
+        }
+    }
+    
     private boolean metaPhraseShown = false;
-
+    
     @Override
     public int chooseDrawnCard(GameState state, List<cardistry.model.card.Card> options) {
         current = state;

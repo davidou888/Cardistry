@@ -18,6 +18,7 @@ final class Palette {
     static final TextColor INFO = TextColor.ANSI.CYAN;
     /** Secrets (même couleur que la rareté Secret). */
     static final TextColor SECRET = TextColor.ANSI.MAGENTA_BRIGHT;
+    static final TextColor ALTAR = TextColor.ANSI.RED;
 
     private Palette() {
     }

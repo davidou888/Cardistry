@@ -102,6 +102,13 @@ public interface Input extends PlayerDecisions {
     default cardistry.core.stats.StatType chooseStatPoint(GameState state) {
         return cardistry.core.stats.StatType.STRENGTH;
     }
+    /**
+     * Autel : la stat à améliorer (un sacrifice), ou vide pour partir.
+     * Par défaut : partir.
+     */
+    default java.util.Optional<cardistry.core.stats.StatType> chooseAltar(GameState state) {
+        return java.util.Optional.empty();
+    }
 
     /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
     default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {

@@ -1,13 +1,14 @@
 package cardistry.hero;
 
+import java.util.List;
+import java.util.NoSuchElementException;
+
 import cardistry.core.EffectContext;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameHooks;
 import cardistry.core.stats.StatModifier;
 import cardistry.core.stats.StatType;
 import cardistry.model.Element;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 /** Registre des personnages jouables : tout leur contenu (chiffres compris) est ici. */
 public final class HeroRegistry {
@@ -33,8 +34,8 @@ public final class HeroRegistry {
 
     // --- Stats de base (FOR, INT, ESP, DEF, RES, CHA) : 8 points, 12 pour Frederic BLC ---
     public static final int[] LOUIS_STATS = {3, 2, 0, 1, 1, 1};
-    public static final int[] DAVE_STATS = {1, 3, 1, 1, 1, 1};
-    public static final int[] SASSY_STATS = {1, 0, 2, 2, 2, 1};
+    public static final int[] DAVE_STATS = {2, 3, 1, 1, 1, 1};
+    public static final int[] SASSY_STATS = {2, 0, 2, 2, 2, 1};
     public static final int[] FREDERIC_STATS = {2, 2, 2, 2, 2, 2};
 
     public static final Hero LOUIS = new Hero("louis", "Louis", "MAN",
@@ -45,14 +46,14 @@ public final class HeroRegistry {
             });
 
     public static final Hero DAVE = new Hero("dave", "Dave", "Full skill Mr. Le Juge",
-            "Un sort du même élément que le terrain et qui bat l'élément de l'adversaire te soigne des PV"
+            "Un sort du même élément que le terrain te soigne des PV"
                     + " qu'il lui enlève.",
             stats("dave", DAVE_STATS),
             new GameHooks() {
                 @Override
                 public void onSpellHit(GameEvent.SpellHit event, EffectContext ctx) {
                     Element spell = event.spell().element();
-                    if (spell == ctx.state().terrain().element() && spell.beats(event.enemy().element())) {
+                    if (spell == ctx.state().terrain().element()) {
                         ctx.announce("Full skill Mr. Le Juge : le sort te soigne.");
                         ctx.healPlayer(event.hpLost());
                     }

@@ -62,6 +62,7 @@ public final class AudioDirector implements Consumer<GameEvent> {
             case REST -> Optional.of(MusicContext.REST);
             case SHOP -> Optional.of(MusicContext.SHOP);
             case EVENT -> Optional.of(MusicContext.EVENT);
+            case ALTAR -> Optional.of(MusicContext.EVENT);
             case OVER -> Optional.of(state.isWon() ? MusicContext.VICTORY : MusicContext.GAME_OVER);
         };
     }

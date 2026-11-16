@@ -64,6 +64,7 @@ public final class GameLoop {
                 case EVENT -> story(run, renderer, input);
                 case SHOP -> run.shop(input.chooseShopAction(run.state(), run.shop().orElseThrow(),
                         run.cardRemovalPrice()));
+                case ALTAR -> altar(run, input);
                 case OVER -> {
                 }
             }
@@ -128,6 +129,14 @@ public final class GameLoop {
             run.rest(option, index);
         } else {
             run.rest(option);
+        }
+    }
+    private static void altar(Run run, Input input){
+        var choice = input.chooseAltar(run.state());
+        if(choice.isPresent()){
+            run.sacrifice(choice.get());
+        }else{
+            run.leaveAltar();
         }
     }
 

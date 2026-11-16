@@ -1,20 +1,23 @@
 package cardistry.core;
 
+import java.util.List;
+import java.util.Optional;
+
 import cardistry.core.event.EventBus;
 import cardistry.core.event.GameEvent;
 import cardistry.core.event.GameEvent.ActionRejected.Reason;
 import cardistry.core.event.HookDispatcher;
 import cardistry.core.stats.StatType;
-import cardistry.items.Collectible;
-import cardistry.items.Item;
-import cardistry.items.LootTable;
-import cardistry.items.Tag;
-import cardistry.items.Trinket;
 import cardistry.core.status.Status;
 import cardistry.core.status.StatusExtras;
 import cardistry.core.status.StatusTarget;
 import cardistry.core.status.StatusType;
 import cardistry.core.status.Statuses;
+import cardistry.items.Collectible;
+import cardistry.items.Item;
+import cardistry.items.LootTable;
+import cardistry.items.Tag;
+import cardistry.items.Trinket;
 import cardistry.model.Combatant;
 import cardistry.model.Element;
 import cardistry.model.ElementRules;
@@ -28,8 +31,6 @@ import cardistry.model.card.SpellCard;
 import cardistry.model.card.TerrainCard;
 import cardistry.model.enemy.EnemyMove;
 import cardistry.model.enemy.MoveEffect;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Règles du combat. N'affiche rien : chaque changement d'état est publié sur le bus.
@@ -929,6 +930,34 @@ public final class CombatEngine {
         return true;
     }
 
+    /**
+     * Définition de l'autel sacrificiel, permet de choisir une stat a augmenter d un point en echange de 10 pv
+     */
+    public static final double ALTAR_MAX_HP_COST=10;
+
+
+    //*Sacrifice, mouahahahahahaha */
+    public boolean sacrifice(StatType stat){
+        if (!StatType.characterStats().contains(stat)){
+            return false;
+        }
+        boolean surplus = state.player().hp() > state.maxHp(); //dans le cas de ross
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(StatType.MAX_HP, -ALTAR_MAX_HP_COST, "autel"));
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(stat, 1, "autel"));
+
+        if (surplus){ //cas de ross
+            state.player().takeDamage(ALTAR_MAX_HP_COST);
+        }
+        else{//cas normal
+            int over = state.player().hp() - (int) state.maxHp();
+            if (over>0){
+                state.player().takeDamage(over);
+            }
+        }
+        return true;
+    }
+
+
     public boolean hasPendingReward() {
         return !pendingReward.isEmpty();
     }
@@ -1274,7 +1303,7 @@ public final class CombatEngine {
 
     /** Poids d'une carte proposée : poids de sa rareté × poids des trinkets (Grinder…). */
     public static double offerWeight(GameState state, Card card) {
-        return card.rarity().dropWeight() * state.cardWeight(card);
+        return card.rarity().cardWeight() * state.cardWeight(card);
     }
 
     /**

@@ -1,5 +1,6 @@
 package cardistry;
 
+import cardistry.utils.Log;
 import cardistry.core.Rng;
 import cardistry.core.event.EventBus;
 import cardistry.platform.Os;
@@ -179,6 +180,7 @@ public final class Main {
      * équipé pour cette partie seulement).
      */
     static Game prepare(List<String> options, UnlockStore store) {
+        Log.println("Preparing Game...");
         if (options.contains("--reset-unlocks")) {
             store.reset();
         }
@@ -193,6 +195,7 @@ public final class Main {
     }
 
     private static void play(Game game, cardistry.ui.Renderer renderer, cardistry.ui.Input input, Sound sound) {
+        Log.println("Running Game...");
         GameLoop.run(game.run(), renderer, input, game.tracker()::unlockedThisRun, sound.director());
     }
 
@@ -211,6 +214,7 @@ public final class Main {
                 play(game, ui, ui, sound);
             } catch (cardistry.ui.LeaveGameException e) {
                 // Partie abandonnée : retour au titre.
+                Log.println("Game exited.");
             }
             ui.backToTitle();
         }
