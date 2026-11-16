@@ -70,7 +70,7 @@ class LongTextTest {
     void titreUneLigneParCycleDElementsEtMenuVisible() {
         String screen = render(80, 24, p -> MenuScreens.title(p, 1, List.of()));
         assertTrue(screen.contains("Feu > Plante > Eau > Feu"), screen);
-        assertTrue(screen.contains("Algebrique > Spirituel > Geometrique > Algebrique"), screen);
+        assertTrue(screen.contains("Algébrique > Spirituel > Géométrique > Algébrique"), screen);
         assertTrue(screen.contains("Error: null bat tout"), screen);
         assertTrue(screen.contains("▶ Jouer"), screen);
     }

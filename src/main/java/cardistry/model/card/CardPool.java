@@ -42,7 +42,7 @@ public class CardPool {
     /** Pool standard du jeu. */
     public CardPool() {
         // --- Sortilèges (nom, élément, dégâts) ---
-        //COMMON
+        // Commun
         cards.add(bouleDeFeu());
         cards.add(jetDEau());
         cards.add(fouetDeLianes());
@@ -52,7 +52,7 @@ public class CardPool {
         cards.add(cayouuu());
         cards.add(painPita());
         cards.add(matrix());
-        //UNCOMMON
+        // Peu commun
         cards.add(pluieDeFlammes());
         cards.add(tsunami());
         cards.add(tempeteDEpines());
@@ -60,19 +60,16 @@ public class CardPool {
         cards.add(distPlayer());
         cards.add(somnifere());
         cards.add(reveilBrutal());
-
-        //RARE
+        // Rare
         cards.add(purificationDesChakra());
         cards.add(pyromane());
         cards.add(contreExemple());
-        //LEGENDARY
+        // Légendaire
         cards.add(bigLezShotgun());
         cards.add(professeurDOr());
 
-
-        
         // --- Terrains (nom, élément) ---
-        // COMMON
+        // Commun
         cards.add(new TerrainCard("Marécage", WATER, COMMON));
         cards.add(new TerrainCard("Forêt", NATURE, COMMON));
         cards.add(new TerrainCard("Volcan", FIRE, COMMON));
@@ -81,16 +78,14 @@ public class CardPool {
                 "si le combat se termine ici : +25 % de Choomies", percent(StatType.CHOOMIES_GAIN, 0.25, "")));
         cards.add(new TerrainCard("Gare", NEUTRAL, COMMON).withEffect(TerrainCard.Effect.FREE_DEPARTURE,
                 "jouer un terrain depuis la Gare ne coûte pas le tour et donne +1 clope"));
-
-        //UNCOMMON
+        // Peu commun
         cards.add(new TerrainCard("Amazonie", NATURE, UNCOMMON).withBonuses("attaques plante +20 %",
                 percent(StatType.NATURE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         cards.add(new TerrainCard("Enfer", FIRE, UNCOMMON).withBonuses("attaques feu +20 %",
                 percent(StatType.FIRE_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
         cards.add(new TerrainCard("Atlantis", WATER, UNCOMMON).withBonuses("attaques eau +20 %",
                 percent(StatType.WATER_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
-
-        //RARE
+        // Rare
         cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, RARE)
                 .withBonuses("+1 ESP", flat(StatType.MIND, TERRAIN_STAT_BONUS, ""))
                 .withEffect(TerrainCard.Effect.DEEP_HYPNOSIS, "l'hypnose fait ×4 au lieu de ×2"));
@@ -100,32 +95,23 @@ public class CardPool {
                         "chaque carte jouée ici est rejouée une fois à 50 % au tour suivant, si tu y es encore"));
         cards.add(new TerrainCard("Fractale", GEOMETRIC, RARE).withEffect(TerrainCard.Effect.CEILING,
                 "tous les multiplicateurs (toi et l'adversaire) arrondis à l'entier supérieur"));
-
-        //LEGENDARY
+        // Légendaire
         cards.add(epfl());
-        
-        
-        
-        
-        
 
         // --- Soins (nom, élément, PV rendus) ---
-        //COMMON
+        // Commun
         cards.add(new HealCard("Potion", NATURE, 10.0, COMMON));
         cards.add(petiteTaffe());
         cards.add(new HealCard("Verre d'eau", WATER, 10, COMMON));
         cards.add(sparadrap());
         cards.add(soupeDeMamie());
         cards.add(stinginRoger());
+        // Peu commun
         cards.add(new HealCard("Seau d'eau", WATER, 20, UNCOMMON));
         cards.add(berceuseInconnue());
-        cards.add(taffeDeFoufouBatard());
-        //UNCOMMON
         cards.add(new HealCard("Grande potion", NATURE, 20.0, UNCOMMON));
-        //RARE
-        //LEGENDARY
-        
-        
+        // Rare
+        cards.add(taffeDeFoufouBatard());
     }
 
     /** Cartes du registre (avec leurs doublons), en lecture seule. */

@@ -12,9 +12,9 @@ public enum Element {
     WATER("eau"),
     NATURE("plante"),
     NEUTRAL("neutre"),
-    ALGEBRAIC("algebrique"),
+    ALGEBRAIC("algébrique"),
     SPIRIT("spirituel"),
-    GEOMETRIC("geometrique"),
+    GEOMETRIC("géométrique"),
     GLITCH("error: null");
 
     /** Éléments des cartes, terrains et soins (tout sauf {@link #NEUTRAL}). */

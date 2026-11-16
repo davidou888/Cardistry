@@ -394,8 +394,11 @@ public final class ItemRegistry {
                         ctx -> ctx.drawCards(2)),
                 new Item("gaz-du-bat-inf", "Gaz du bat Inf", "20 dégâts d'un élément aléatoire", "", COMMON,
                         Set.of(Tag.EPFL),
-                        ctx -> ctx.elementalDamage(20, ctx.rng().pick(Element.PLAYABLE))));
+                        ctx -> ctx.elementalDamage(20, ctx.rng().pick(GAZ_ELEMENTS))));
     }
+
+    /** Éléments que peut tirer le Gaz du bat Inf : tous sauf neutre et GLITCH (qui ferait ×1,5 contre tout). */
+    public static final List<Element> GAZ_ELEMENTS = Element.PLAYABLE.stream().filter(e -> e != Element.GLITCH).toList();
 
     /** Tous les objets et trinkets. */
     public static List<Collectible> all() {

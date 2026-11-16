@@ -175,6 +175,13 @@ class ItemContentTest {
     }
 
     @Test
+    void gazDuBatInfNeTireJamaisGlitch() {
+        assertEquals(List.of(cardistry.model.Element.FIRE, cardistry.model.Element.WATER, cardistry.model.Element.NATURE,
+                cardistry.model.Element.ALGEBRAIC, cardistry.model.Element.SPIRIT, cardistry.model.Element.GEOMETRIC),
+                ItemRegistry.GAZ_ELEMENTS);
+    }
+
+    @Test
     void gazDuBatInfDeterministe() {
         setUp(List.of(), 7);
         use("gaz-du-bat-inf");

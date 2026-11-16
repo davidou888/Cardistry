@@ -196,7 +196,7 @@ class LanternaUiTest {
         GameState state = combat(List.of(boule, aleatoire), new Enemy("Mannequin", Element.NATURE, 20, 5));
         assertEquals("Boule de feu · sortilège feu : 10 ×1.5 = 15 dégâts à Mannequin · ★ 10 % d'infliger Brûlure",
                 CombatScreen.describe(state, boule));
-        assertEquals("Moindre carré · sortilège algebrique : 1-40 dégâts à Mannequin",
+        assertEquals("Moindre carré · sortilège algébrique : 1-40 dégâts à Mannequin",
                 CombatScreen.describe(state, aleatoire));
         ui.onEvent(new GameEvent.GameStarted(42));
         ui.showStatus(state);
