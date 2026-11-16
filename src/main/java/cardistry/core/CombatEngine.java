@@ -411,7 +411,7 @@ public final class CombatEngine {
     }
 
     /** Source des bonus « pour tout le combat » (Stingin' Roger), retirés en fin de combat. */
-    static final String COMBAT_BONUS_SOURCE = "combat";
+    public static final String COMBAT_BONUS_SOURCE = "combat";
 
     /** Statuts négatifs du joueur (purge, Berceuse) : pas l'Hypnose, ni la Gueule de bois, ni l'Ivresse. */
     public static final java.util.Set<StatusType> NEGATIVE_STATUSES = java.util.EnumSet.of(
@@ -596,7 +596,7 @@ public final class CombatEngine {
     }
 
     /** Source des bonus du terrain en jeu (retirés quand il change, puis en fin de combat). */
-    static final String TERRAIN_SOURCE = "terrain";
+    public static final String TERRAIN_SOURCE = "terrain";
 
     /** Bonus de stats du terrain en jeu : on retire ceux de l'ancien, puis on pose ceux du nouveau. */
     private void applyTerrainBonuses() {

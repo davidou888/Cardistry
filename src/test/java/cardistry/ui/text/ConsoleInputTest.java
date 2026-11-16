@@ -69,6 +69,21 @@ class ConsoleInputTest {
     }
 
     @Test
+    void fichesDeStatsEnModeTexte() {
+        GameState state = GameState.newGame(cardistry.hero.HeroRegistry.FREDERIC);
+        CombatEngine engine = new CombatEngine(state, new cardistry.model.card.CardPool(), new Rng(1), new EventBus());
+        engine.start();
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.CADDIE, 1),
+                false);
+        assertEquals(new Action.DrawCard(), input("c\na\n0\n").nextAction(state));
+        String text = out.toString(StandardCharsets.UTF_8);
+        assertTrue(text.contains("=== Fiche de Frederic BLC ==="), text);
+        assertTrue(text.contains("FOR 2 · Force"), text);
+        assertTrue(text.contains("=== Fiche de Caddie énervé ==="), text);
+        assertTrue(text.contains("DEF 2 · Défense"), text);
+    }
+
+    @Test
     void carteEnModeTexte() {
         cardistry.run.Run run = new cardistry.run.Run(4, java.util.Set.of(), new EventBus());
         run.start();

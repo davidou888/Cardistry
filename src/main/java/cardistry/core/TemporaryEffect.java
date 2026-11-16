@@ -162,7 +162,7 @@ public final class TemporaryEffect {
 
     // --- Transitions (moteur uniquement) ---
 
-    String modifierSource() {
+    public String modifierSource() {
         return modifierSource;
     }
 

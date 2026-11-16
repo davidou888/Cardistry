@@ -19,7 +19,7 @@ import com.googlecode.lanterna.TextColor;
  */
 final class MapScreen {
 
-    static final String HELP = "←/→ choisir · Entrée y aller · I inventaire · D deck · Q quitter";
+    static final String HELP = "←/→ choisir · Entrée y aller · I inventaire · D deck · C fiche · Q quitter";
     private static final int TOP = 3;
     private static final int LEFT = 4;
 
@@ -37,7 +37,7 @@ final class MapScreen {
 
     // --- Fenêtre : carte en pixels ---
 
-    static final String HELP_PIXELS = "←/→ ↑/↓ choisir · Entrée y aller · I inventaire · D deck · Q quitter";
+    static final String HELP_PIXELS = "←/→ ↑/↓ choisir · Entrée y aller · I · D deck · C fiche · Q quitter";
     /** Lignes au-dessus de la carte (cadre, stats) et en dessous (prochain nœud, légende, cadre). */
     private static final int MAP_TOP_ROWS = 2;
     private static final int MAP_BOTTOM_ROWS = 4;

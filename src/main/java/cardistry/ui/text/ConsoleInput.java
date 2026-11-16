@@ -381,7 +381,28 @@ public final class ConsoleInput implements Input {
                 console.print(prompt);
                 continue;
             }
+            boolean enemySheet = line.equalsIgnoreCase(ENEMY_SHEET_COMMAND) && current != null && current.hasEnemy()
+                    && current.currentEnemy().isAlive();
+            if ((line.equalsIgnoreCase(SHEET_COMMAND) || enemySheet) && current != null) {
+                printSheet(current, enemySheet);
+                console.print(prompt);
+                continue;
+            }
             return line;
+        }
+    }
+
+    /** Commandes du mode texte : ta fiche de stats, celle de l'adversaire. */
+    static final String SHEET_COMMAND = "c";
+    static final String ENEMY_SHEET_COMMAND = "a";
+
+    private void printSheet(GameState state, boolean enemy) {
+        console.println("=== Fiche de " + (enemy ? state.currentEnemy().name() : state.playerName()) + " ===");
+        for (cardistry.ui.StatSheet.Row row : enemy ? cardistry.ui.StatSheet.enemy(state)
+                : cardistry.ui.StatSheet.player(state)) {
+            String detail = row.detail();
+            console.println(row.head() + " · " + row.stat().displayName() + " : " + row.stat().effectText()
+                    + (detail.isEmpty() ? "" : " (" + detail + ")"));
         }
     }
 

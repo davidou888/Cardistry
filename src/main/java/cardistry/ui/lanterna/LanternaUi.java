@@ -33,7 +33,7 @@ import java.util.List;
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL, STAT_POINTS }
+        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL, STAT_POINTS, STATS }
 
     /** Pages où D n'ouvre pas le deck (pas encore de partie, menus, visionneuse). */
     private static final java.util.Set<Page> NO_DECK_PAGES = java.util.EnumSet.of(Page.TITLE, Page.HERO, Page.RULES,
@@ -1176,6 +1176,32 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
         render();
     }
 
+    private boolean statsOfEnemy;
+
+    /** C (fiche personnage) ou A (fiche adversaire) : comme D, pendant une partie, hors menus. */
+    private boolean opensStats(KeyStroke key, char letter) {
+        return key.getKeyType() == KeyType.Character && Character.toLowerCase(key.getCharacter()) == letter
+                && !key.isCtrlDown() && !key.isAltDown() && state != null && page != Page.STATS
+                && !NO_DECK_PAGES.contains(page) && !view.confirmingQuit;
+    }
+
+    /** Fiche des stats jusqu'à C / A, Échap ou Entrée. */
+    private void showStats(boolean enemy) {
+        Page previous = page;
+        page = Page.STATS;
+        statsOfEnemy = enemy;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            if (key.getKeyType() == KeyType.Escape || key.getKeyType() == KeyType.Enter
+                    || isChar(key, enemy ? 'a' : 'c')) {
+                break;
+            }
+        }
+        page = previous;
+        render();
+    }
+
     private cardistry.model.card.Card detailCard;
     private boolean detailInCombat;
 
@@ -1615,6 +1641,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     case STAT_POINTS -> MenuScreens.statPoints(painter, state, statSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
                     case DECK -> DeckScreen.draw(painter, state, deckScroll, deckPiles, seed);
+                    case STATS -> StatsScreen.draw(painter, state, statsOfEnemy, seed);
                     case CARD_DETAIL -> CardDetailScreen.draw(painter, state, detailCard, detailInCombat, seed);
                     case SPRITES -> SpriteViewerScreen.draw(painter, catalog, spriteIndex, spriteAnimation,
                             spriteAnimation.equals(cardistry.ui.sprite.Sprite.IDLE) ? view.idleFrame + spriteFrame
@@ -1660,6 +1687,15 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                     view.pageTick = 0; // une touche : les textes longs reprennent au début
                     if (opensDeck(key)) {
                         showDeck(); // n'importe où : le deck, puis retour à l'écran en cours
+                        continue;
+                    }
+                    if (opensStats(key, 'c')) {
+                        showStats(false); // fiche personnage, n'importe où pendant une partie
+                        continue;
+                    }
+                    if (opensStats(key, 'a') && state.hasEnemy() && state.currentEnemy().isAlive()
+                            && (page == Page.COMBAT || page == Page.CARD_CHOICE)) {
+                        showStats(true); // fiche de l'adversaire, en combat
                         continue;
                     }
                     return key;

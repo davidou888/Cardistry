@@ -968,6 +968,39 @@ class LanternaUiTest {
     }
 
     @Test
+    void fichesDeStatsDuJoueurEtDeLAdversaireEnCombat() throws Exception {
+        open(80, 24);
+        GameState state = GameState.newGame(cardistry.hero.HeroRegistry.LOUIS);
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(state, new cardistry.model.card.CardPool(),
+                new cardistry.core.Rng(1), new EventBus());
+        engine.start();
+        engine.equip(cardistry.items.ItemRegistry.trinket("donut-muscle"));
+        engine.startCombat(cardistry.model.enemy.EnemyRegistry.create(cardistry.model.enemy.EnemyRegistry.PENEU, 2), false);
+        ui.showStatus(state);
+        Thread player = new Thread(() -> ui.nextAction(state));
+        player.setDaemon(true);
+        player.start();
+        type("c");
+        waitFor(() -> screen().contains("Fiche de Louis"));
+        String mine = dump("65-fiche-joueur");
+        assertTrue(mine.contains("FOR 5"), mine);
+        assertTrue(mine.contains("personnage +3, Donut Musclé +2"), mine);
+        assertTrue(mine.contains("DEF −1"), mine); // 1 − 2 (Bord d'autoroute)
+        assertTrue(mine.contains("terrain Bord d'autoroute −2"), mine);
+        type("c");
+        waitFor(() -> !screen().contains("Fiche de Louis"));
+        type("a");
+        waitFor(() -> screen().contains("Fiche de Le Peneu"));
+        String his = dump("66-fiche-adversaire");
+        assertTrue(his.contains("DEF 5"), his); // 4 + 1 (niveau 2)
+        assertTrue(his.contains("RES 5"), his);
+        press(KeyType.Escape);
+        waitFor(() -> !screen().contains("Fiche de Le Peneu"));
+        type("p");
+        player.join(TIMEOUT.toMillis());
+    }
+
+    @Test
     void unGrosDeckDefileAvecLesFleches() throws Exception {
         open(80, 24);
         GameState state = GameState.newGame();
