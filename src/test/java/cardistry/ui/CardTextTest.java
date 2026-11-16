@@ -18,6 +18,6 @@ class CardTextTest {
                 CardText.summary(CardPool.moindreCarre()));
         assertEquals("Professeur d'or · sort spirituel · Légendaire : 35 dégâts (non multipliés)"
                 + " · ★ hypnotise l'adversaire pendant 5 tours", CardText.summary(CardPool.professeurDOr()));
-        assertEquals("Dojo · terrain neutre · Commun · +10 % de dégâts", CardText.summary(CardPool.dojo()));
+        assertEquals("Dojo · terrain neutre · Commun · +1 FOR", CardText.summary(CardPool.dojo()));
     }
 }

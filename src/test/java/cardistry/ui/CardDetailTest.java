@@ -61,6 +61,6 @@ class CardDetailTest {
         assertEquals("Bat tout", CardDetail.matchups(Element.GLITCH));
         assertEquals("Bat : rien · Battu par : error: null", CardDetail.matchups(Element.NEUTRAL));
         String terrain = text(state, CardPool.dojo(), true);
-        assertTrue(terrain.contains("+10 % de dégâts") && terrain.contains("Attaque de Mannequin"), terrain);
+        assertTrue(terrain.contains("+1 FOR") && terrain.contains("Attaque de Mannequin"), terrain);
     }
 }

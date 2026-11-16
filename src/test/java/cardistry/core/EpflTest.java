@@ -73,7 +73,7 @@ class EpflTest {
         assertEquals("Dojo", state.terrain().name());
         assertEquals(100, state.player().hp());
         assertEquals(100, state.maxHp(), 1e-9);
-        assertEquals(1.1, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9, "bonus du Dojo");
+        assertEquals(1, state.playerStats().get(StatType.STRENGTH), 1e-9, "bonus du Dojo");
     }
 
     @Test

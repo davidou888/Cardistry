@@ -47,14 +47,22 @@ class TerrainEffectTest {
     }
 
     @Test
-    void dojoDixPourcentDeDegatsTousElements() {
+    void dojoUnForPourLesSortsDeForce() {
         setUp(CardPool.startingTerrain(), 0, spell(Element.NEUTRAL, 10), spell(Element.ALGEBRAIC, 20));
         assertEquals("Dojo", state.terrain().name());
         engine.submit(new Action.PlayCard(0));
         assertEquals(1000 - 11, enemy.hp());
         engine.startTurn();
-        engine.submit(new Action.PlayCard(0));
-        assertEquals(1000 - 11 - 22, enemy.hp());
+        engine.submit(new Action.PlayCard(0)); // algébrique : l'INT compte, pas la FOR
+        assertEquals(1000 - 11 - 20, enemy.hp());
+    }
+
+    @Test
+    void desertUnEspEtEspaceUneInt() {
+        assertEquals(1, bonusOn("Désert kaléidoscopique", StatType.MIND), 1e-9);
+        assertEquals(1, bonusOn("Espace de dimension n", StatType.INTELLIGENCE), 1e-9);
+        assertEquals(TerrainCard.Effect.DEEP_HYPNOSIS, terrain("Désert kaléidoscopique").effect());
+        assertEquals(TerrainCard.Effect.REPLAY, terrain("Espace de dimension n").effect());
     }
 
     @Test
@@ -74,10 +82,10 @@ class TerrainEffectTest {
     @Test
     void bonusRetiresQuandLeTerrainChangePuisEnFinDeCombat() {
         setUp(CardPool.startingTerrain(), 0, terrain("Amazonie"), spell(Element.NEUTRAL, 1000));
-        assertEquals(1.1, state.playerStats().get(StatType.NATURE_DAMAGE), 1e-9);
+        assertEquals(1, state.playerStats().get(StatType.STRENGTH), 1e-9);
         engine.submit(new Action.PlayCard(0)); // Dojo → Amazonie
-        assertEquals(1.2, state.playerStats().get(StatType.NATURE_DAMAGE), 1e-9, "le Dojo est retiré");
-        assertEquals(1.0, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9);
+        assertEquals(1.2, state.playerStats().get(StatType.NATURE_DAMAGE), 1e-9);
+        assertEquals(0, state.playerStats().get(StatType.STRENGTH), 1e-9, "le Dojo est retiré");
         engine.startTurn();
         engine.submit(new Action.PlayCard(0)); // tue l'adversaire : fin du combat
         assertEquals("Suivant", state.currentEnemy().name());
@@ -131,7 +139,7 @@ class TerrainEffectTest {
     @Test
     void descriptionDuTerrain() {
         assertTrue(terrain("Gare").effectText().orElseThrow().contains("ne coûte pas le tour"));
-        assertTrue(CardPool.startingTerrain().effectText().orElseThrow().contains("+10 %"));
+        assertTrue(CardPool.startingTerrain().effectText().orElseThrow().contains("+1 FOR"));
     }
 
     // --- Désert kaléidoscopique, Fractale ---

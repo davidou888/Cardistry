@@ -8,6 +8,7 @@ import cardistry.core.stats.StatType;
 import cardistry.core.status.StatusExtras;
 import cardistry.core.status.StatusTarget;
 import cardistry.core.status.StatusType;
+import static cardistry.core.stats.StatModifier.flat;
 import static cardistry.core.stats.StatModifier.percent;
 import static cardistry.items.Rarity.COMMON;
 import static cardistry.items.Rarity.LEGENDARY;
@@ -90,10 +91,13 @@ public class CardPool {
                 percent(StatType.WATER_DAMAGE, ELEMENT_TERRAIN_BONUS, "")));
 
         //RARE
-        cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, RARE).withEffect(
-                TerrainCard.Effect.DEEP_HYPNOSIS, "l'hypnose fait ×4 au lieu de ×2"));
-        cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, RARE).withEffect(TerrainCard.Effect.REPLAY,
-                "chaque carte jouée ici est rejouée une fois à 50 % au tour suivant, si tu y es encore"));
+        cards.add(new TerrainCard("Désert kaléidoscopique", SPIRIT, RARE)
+                .withBonuses("+1 ESP", flat(StatType.MIND, TERRAIN_STAT_BONUS, ""))
+                .withEffect(TerrainCard.Effect.DEEP_HYPNOSIS, "l'hypnose fait ×4 au lieu de ×2"));
+        cards.add(new TerrainCard("Espace de dimension n", ALGEBRAIC, RARE)
+                .withBonuses("+1 INT", flat(StatType.INTELLIGENCE, TERRAIN_STAT_BONUS, ""))
+                .withEffect(TerrainCard.Effect.REPLAY,
+                        "chaque carte jouée ici est rejouée une fois à 50 % au tour suivant, si tu y es encore"));
         cards.add(new TerrainCard("Fractale", GEOMETRIC, RARE).withEffect(TerrainCard.Effect.CEILING,
                 "tous les multiplicateurs (toi et l'adversaire) arrondis à l'entier supérieur"));
 
@@ -156,8 +160,8 @@ public class CardPool {
         return dojo();
     }
 
-    /** Bonus de dégâts du Dojo (tous éléments). */
-    public static final double DOJO_DAMAGE_BONUS = 0.10;
+    /** Stat donnée par le Dojo (FOR), le Désert kaléidoscopique (ESP) et l'Espace de dimension n (INT). */
+    public static final double TERRAIN_STAT_BONUS = 1;
     /** Bonus d'Amazonie, Enfer, Atlantis à leur élément. */
     public static final double ELEMENT_TERRAIN_BONUS = 0.20;
 
@@ -460,10 +464,9 @@ public class CardPool {
                         + " soins, réduction, PV (÷2 en partant) ; puis retour au Dojo");
     }
 
-    /** Dojo : terrain de départ, +10 % de dégâts. */
+    /** Dojo : terrain de départ, +1 FOR (on s'entraîne). */
     public static TerrainCard dojo() {
-        return new TerrainCard("Dojo", NEUTRAL, COMMON).withBonuses("+10 % de dégâts",
-                StatType.allDamageMultipliers().stream().map(stat -> percent(stat, DOJO_DAMAGE_BONUS, "")).toList());
+        return new TerrainCard("Dojo", NEUTRAL, COMMON).withBonuses("+1 FOR", flat(StatType.STRENGTH, TERRAIN_STAT_BONUS, ""));
     }
 
     /** Tire une carte au hasard et en renvoie une copie. */
