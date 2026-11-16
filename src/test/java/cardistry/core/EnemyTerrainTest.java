@@ -99,28 +99,31 @@ class EnemyTerrainTest {
     }
 
     @Test
-    void buissonLoucheEtToitQuiFuitMoinsVingtPourcentDeSoins() {
+    void buissonLoucheMoinsVingtPourcentDeSoinsEtToitQuiFuitMoinsDeuxEsp() {
         fight(EnemyRegistry.CHOOMAH);
         assertEquals(0.8, state.playerStats().get(StatType.HEAL_EFFICIENCY), 1e-9);
         fight(EnemyRegistry.SEAU);
-        assertEquals(0.8, state.playerStats().get(StatType.HEAL_EFFICIENCY), 1e-9);
+        assertEquals(1.0, state.playerStats().get(StatType.HEAL_EFFICIENCY), 1e-9);
+        assertEquals(-2, state.playerStats().get(StatType.MIND), 1e-9);
     }
 
     @Test
-    void canopeeEtAmphiMoinsDeDegatsDesSorts() {
+    void canopeeMoinsDeDegatsDesSortsEtAmphiMoinsDeuxInt() {
         fight(EnemyRegistry.PARESSEUX);
         assertEquals(0.85, state.playerStats().get(StatType.FIRE_DAMAGE), 1e-9);
         assertEquals(0.85, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9);
         fight(EnemyRegistry.VAFI);
-        assertEquals(0.8, state.playerStats().get(StatType.WATER_DAMAGE), 1e-9);
+        assertEquals(1.0, state.playerStats().get(StatType.WATER_DAMAGE), 1e-9);
+        assertEquals(-2, state.playerStats().get(StatType.INTELLIGENCE), 1e-9);
     }
 
     @Test
-    void jurassicEtPassageAdversairePlusQuinzePourcentEtBonusDeSonElement() {
+    void jurassicPlusQuinzePourcentEtPassageSousGareMoinsDeuxRes() {
         fight(EnemyRegistry.TREX);
         assertEquals(1.25 * 1.15, state.enemyAttackMultiplier(), 1e-9, "plante sur terrain plante, +15 %");
         fight(EnemyRegistry.CAME);
-        assertEquals(1.25 * 1.15, state.enemyAttackMultiplier(), 1e-9);
+        assertEquals(1.25, state.enemyAttackMultiplier(), 1e-9, "feu sur terrain feu, sans +15 %");
+        assertEquals(-2, state.playerStats().get(StatType.RESISTANCE), 1e-9);
     }
 
     @Test
@@ -150,7 +153,7 @@ class EnemyTerrainTest {
         fight(EnemyRegistry.SEAU);
         assertTrue(events.stream().anyMatch(e -> e instanceof GameEvent.CombatStarted c
                 && c.enemy().terrain().orElseThrow().name().equals("Toit qui fuit")));
-        assertTrue(EnemyTerrains.of(EnemyRegistry.SEAU).effectText().orElseThrow().contains("−20 %"));
+        assertTrue(EnemyTerrains.of(EnemyRegistry.SEAU).effectText().orElseThrow().contains("−2 ESP"));
         assertTrue(new SpellCard("x", Element.FIRE, 1, Rarity.COMMON).power().isEmpty());
     }
 }

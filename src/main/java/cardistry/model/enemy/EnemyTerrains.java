@@ -27,7 +27,8 @@ public final class EnemyTerrains {
 
     public static final double HEAL_MALUS = -0.20;
     public static final double CANOPY_SPELL_MALUS = -0.15;
-    public static final double EXAM_SPELL_MALUS = -0.20;
+    /** Malus de stat des terrains ennemis convertis au plan V3 (Amphi INT, Toit ESP, Passage RES). */
+    public static final double STAT_MALUS = -2;
     public static final double ENEMY_DAMAGE_BONUS = 0.15;
     /** Bord d'autoroute : DEF perdue tant qu'on y reste. */
     public static final double HIGHWAY_DEFENSE_MALUS = -2;
@@ -44,11 +45,12 @@ public final class EnemyTerrains {
             Map.entry(EnemyRegistry.PARESSEUX, () -> spellMalus("Canopée", NATURE, CANOPY_SPELL_MALUS)),
             Map.entry(EnemyRegistry.TREX, () -> terrain("Jurassic Ecublens", NATURE, "l'adversaire fait +15 % de dégâts",
                     percent(StatType.ENEMY_DAMAGE, ENEMY_DAMAGE_BONUS, ""))),
-            Map.entry(EnemyRegistry.CAME, () -> terrain("Passage sous-gare", FIRE, "l'adversaire fait +15 % de dégâts",
-                    percent(StatType.ENEMY_DAMAGE, ENEMY_DAMAGE_BONUS, ""))),
-            Map.entry(EnemyRegistry.VAFI, () -> spellMalus("Amphi d'examen", FIRE, EXAM_SPELL_MALUS)),
-            Map.entry(EnemyRegistry.SEAU, () -> terrain("Toit qui fuit", WATER, "−20 % de soins",
-                    percent(StatType.HEAL_EFFICIENCY, HEAL_MALUS, ""))),
+            Map.entry(EnemyRegistry.CAME, () -> terrain("Passage sous-gare", FIRE, "−2 RES",
+                    flat(StatType.RESISTANCE, STAT_MALUS, ""))),
+            Map.entry(EnemyRegistry.VAFI, () -> terrain("Amphi d'examen", FIRE, "−2 INT",
+                    flat(StatType.INTELLIGENCE, STAT_MALUS, ""))),
+            Map.entry(EnemyRegistry.SEAU, () -> terrain("Toit qui fuit", WATER, "−2 ESP",
+                    flat(StatType.MIND, STAT_MALUS, ""))),
             Map.entry(EnemyRegistry.ETUDIANT, () -> terrain("Biblio à 3h du mat", WATER, "−1 taille de main",
                     flat(StatType.HAND_SIZE, -1, ""))),
             Map.entry(EnemyRegistry.GOUROU, () -> spellMalus("Salle de méditation", Element.SPIRIT, CANOPY_SPELL_MALUS)),
