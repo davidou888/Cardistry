@@ -61,6 +61,33 @@ class DiplomeTest {
     }
 
     @Test
+    void trinketsDeStatsPlusDeuxEtDoublesParLeDiplomeSeulementSiEpfl() {
+        setUp(List.of());
+        java.util.Map<String, StatType> trinkets = java.util.Map.of(
+                "donut-muscle", StatType.STRENGTH, "carte-graphique", StatType.INTELLIGENCE,
+                "baton-d-encens", StatType.MIND, "veste-de-ski", StatType.DEFENSE,
+                "carnet-de-vaccination", StatType.RESISTANCE, "benediction-qcm", StatType.LUCK);
+        trinkets.forEach((id, stat) -> {
+            Trinket trinket = ItemRegistry.trinket(id);
+            assertEquals(Rarity.COMMON, trinket.rarity(), id);
+            assertEquals("+2 " + stat.abbreviation(), trinket.description(), id);
+        });
+        equip("donut-muscle");
+        equip("carte-graphique");
+        equip("benediction-qcm");
+        assertEquals(2, stat(StatType.STRENGTH), DELTA);
+        assertEquals(2, stat(StatType.INTELLIGENCE), DELTA);
+        equip("diplome-epfl");
+        assertEquals(2, stat(StatType.STRENGTH), DELTA, "Donut Musclé : tag Force, pas EPFL");
+        assertEquals(4, stat(StatType.INTELLIGENCE), DELTA, "Carte graphique : EPFL, doublée");
+        assertEquals(4, stat(StatType.LUCK), DELTA, "Benediction QCM : EPFL, doublée");
+        assertTrue(ItemRegistry.trinket("donut-muscle").tags().contains(Tag.STRENGTH));
+        assertTrue(ItemRegistry.trinket("baton-d-encens").tags().contains(Tag.PARTY));
+        assertTrue(ItemRegistry.trinket("veste-de-ski").tags().contains(Tag.DEFENSE));
+        assertTrue(ItemRegistry.trinket("carnet-de-vaccination").tags().contains(Tag.DEFENSE));
+    }
+
+    @Test
     void unEmplacementDeTrinketEnPlus() {
         setUp(List.of());
         equip("diplome-epfl");

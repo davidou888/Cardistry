@@ -69,6 +69,13 @@ public final class ItemRegistry {
                         })
                         .build(),
 
+                // Stats du plan V3 : +2 dans une des 6 stats.
+                statTrinket("donut-muscle", "Donut Musclé", StatType.STRENGTH, Tag.STRENGTH),
+                statTrinket("carte-graphique", "Carte graphique", StatType.INTELLIGENCE, Tag.EPFL),
+                statTrinket("baton-d-encens", "Bâton d'encens", StatType.MIND, Tag.PARTY),
+                statTrinket("veste-de-ski", "Veste de ski", StatType.DEFENSE, Tag.DEFENSE),
+                statTrinket("carnet-de-vaccination", "Carnet de vaccination", StatType.RESISTANCE, Tag.DEFENSE),
+                statTrinket("benediction-qcm", "Benediction QCM", StatType.LUCK, Tag.EPFL),
                 // --- Peu communs ---
                 Trinket.builder("pax", "Pax", UNCOMMON)
                         .description("+1 taille de main")
@@ -300,6 +307,18 @@ public final class ItemRegistry {
                         }
                     }
                 })
+                .build();
+    }
+
+    /** Points de stat des trinkets communs du plan V3 (Donut Musclé…). */
+    public static final double STAT_TRINKET_BONUS = 2;
+
+    /** Trinket commun « +2 {@code stat} » (doublé par le Diplôme EPFL s'il est tagué EPFL). */
+    private static Trinket statTrinket(String id, String name, StatType stat, Tag tag) {
+        return Trinket.builder(id, name, COMMON)
+                .description("+" + (int) STAT_TRINKET_BONUS + " " + stat.abbreviation())
+                .tags(tag)
+                .flat(stat, STAT_TRINKET_BONUS)
                 .build();
     }
 

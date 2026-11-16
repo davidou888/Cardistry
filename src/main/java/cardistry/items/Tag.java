@@ -9,6 +9,7 @@ public enum Tag {
     DRAW("Pioche"),
     TERRAIN("Terrain"),
     DEFENSE("Défense"),
+    STRENGTH("Force"),
     EPFL("EPFL"),
     PARTY("Soirée"),
     DRINK("Boisson"),
