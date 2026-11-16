@@ -145,6 +145,25 @@ class StatCardsTest {
     }
 
     @Test
+    void carteBasiquePasOufSixPlusDeuxFor() {
+        setUp(0, CardPool.carteBasiquePasOuf(), CardPool.carteBasiquePasOuf());
+        play(); // FOR 0 : 6
+        assertEquals(194, enemy.hp());
+        player(StatType.STRENGTH, 3);
+        play(); // 6 + 2 × 3, la FOR n'est pas ajoutée une troisième fois
+        assertEquals(182, enemy.hp());
+    }
+
+    @Test
+    void contreExempleAnnuleUnPlusIntSurTroisStatuts() {
+        setUp(0, CardPool.contreExemple());
+        player(StatType.INTELLIGENCE, 7); // 1 + 2
+        play();
+        TemporaryEffect ward = state.effects().stream().filter(e -> e.cancelsNextStatus()).findFirst().orElseThrow();
+        assertEquals(3, (int) ward.chargesLeft());
+    }
+
+    @Test
     void lesCartesDuDeckDeDepartSontLesMemes() {
         List<String> powers = CardPool.startingDeck().stream()
                 .filter(c -> c.name().equals("Jet d'eau") || c.name().equals("Lancer de manette"))

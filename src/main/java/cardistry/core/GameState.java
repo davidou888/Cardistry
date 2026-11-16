@@ -698,7 +698,8 @@ public final class GameState {
         if (spell.isUnmultiplied()) {
             return cardistry.model.Combatant.round(base * factor);
         }
-        return CombatFormula.damage(base, CombatFormula.offense(spell.element(), playerStats),
+        double offense = spell.addsOffenseStat() ? CombatFormula.offense(spell.element(), playerStats) : 0;
+        return CombatFormula.damage(base, offense,
                 spellMultiplier(spell, withBoost) * factor, critical, currentEnemy().stat(StatType.DEFENSE),
                 spell.defensePierce());
     }

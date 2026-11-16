@@ -46,7 +46,7 @@ public class CardPool {
         cards.add(jetDEau());
         cards.add(fouetDeLianes());
         cards.add(petDeMamouz());
-        cards.add(new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON));
+        cards.add(carteBasiquePasOuf());
         cards.add(lancerDeManette());
         cards.add(cayouuu());
         cards.add(painPita());
@@ -139,7 +139,7 @@ public class CardPool {
             jetDEau(),
             fouetDeLianes(),
             petDeMamouz(),
-            new SpellCard("Carte basique pas ouf", NEUTRAL, 10.0, COMMON),
+            carteBasiquePasOuf(),
             lancerDeManette(),
             new HealCard("Potion", NATURE, 10.0, COMMON),
             new HealCard("Potion", NATURE, 10.0, COMMON),
@@ -273,14 +273,37 @@ public class CardPool {
     }
 
     public static final int MOINDRE_CARRE_MIN = 1;
-    public static final int MOINDRE_CARRE_MAX = 40;
+    /** Maximum du tirage sans INT : il monte de {@link #MOINDRE_CARRE_PER_INT} par point d'INT. */
+    public static final int MOINDRE_CARRE_MAX = 30;
+    public static final int MOINDRE_CARRE_PER_INT = 2;
 
-    /** Moindre carré : dégâts tirés entre 1 et 40 (tirage en ta faveur : deux avec CLAUDE.md, le meilleur). */
+    /**
+     * Moindre carré : dégâts tirés entre 1 et 30 + 2 × INT (tirage en ta faveur : deux avec CLAUDE.md,
+     * le meilleur). L'INT est déjà dans le tirage : la formule ne l'ajoute pas une seconde fois.
+     */
     public static SpellCard moindreCarre() {
         return new SpellCard("Moindre carré", ALGEBRAIC, 0, UNCOMMON).withDamageRule(
-                MOINDRE_CARRE_MIN + "-" + MOINDRE_CARRE_MAX,
-                ctx -> ctx.favorable(() -> MOINDRE_CARRE_MIN + ctx.rng().nextInt(MOINDRE_CARRE_MAX - MOINDRE_CARRE_MIN + 1),
-                        Integer::compare));
+                MOINDRE_CARRE_MIN + "-" + MOINDRE_CARRE_MAX + "+2×INT",
+                ctx -> {
+                    int max = Math.max(MOINDRE_CARRE_MIN, MOINDRE_CARRE_MAX + (int) Math.floor(
+                            MOINDRE_CARRE_PER_INT * ctx.state().playerStats().get(StatType.INTELLIGENCE)));
+                    return ctx.favorable(() -> MOINDRE_CARRE_MIN + ctx.rng().nextInt(max - MOINDRE_CARRE_MIN + 1),
+                            Integer::compare);
+                }).statInDamage();
+    }
+
+    public static final double CARTE_BASIQUE_DAMAGE = 6;
+    public static final double CARTE_BASIQUE_PER_STRENGTH = 2;
+
+    /**
+     * Carte basique pas ouf : 6 + 2 × FOR dégâts neutres (la FOR est comptée par la carte, pas une
+     * seconde fois par la formule). « Pas ouf, sauf si t'es fort. »
+     */
+    public static SpellCard carteBasiquePasOuf() {
+        return new SpellCard("Carte basique pas ouf", NEUTRAL, CARTE_BASIQUE_DAMAGE, COMMON).withDamageRule(
+                "6+2×FOR", ctx -> CARTE_BASIQUE_DAMAGE
+                        + CARTE_BASIQUE_PER_STRENGTH * ctx.state().playerStats().get(StatType.STRENGTH))
+                .statInDamage();
     }
 
     public static final double DIST_PLAYER_DAMAGE = 10;
@@ -336,12 +359,23 @@ public class CardPool {
                         ctx -> ctx.removeStatus(StatusTarget.ENEMY, StatusType.FONS));
     }
 
-    /** Contre-exemple : aucun dégât, annule le prochain statut que tu subirais (pendant ce combat). */
+    /** INT par statut annulé en plus par le Contre-exemple. */
+    public static final int CONTRE_EXEMPLE_INT_PER_STATUS = 3;
+
+    /**
+     * Contre-exemple : aucun dégât, annule les 1 + INT ÷ 3 (arrondi en dessous) prochains statuts que
+     * tu subirais (pendant ce combat).
+     */
     public static SpellCard contreExemple() {
         return new SpellCard("Contre-exemple", ALGEBRAIC, 0, RARE).withPower(
-                "annule le prochain statut que tu subirais (ce combat)",
-                ctx -> ctx.addEffect(cardistry.core.TemporaryEffect.builder("contre-exemple", "Contre-exemple")
-                        .summary("annule le prochain statut").charges(1).cancelsNextStatus().build()));
+                "annule les 1 + INT ÷ 3 prochains statuts que tu subirais (ce combat)",
+                ctx -> {
+                    int count = 1 + Math.max(0, (int) Math.floor(
+                            ctx.state().playerStats().get(StatType.INTELLIGENCE) / CONTRE_EXEMPLE_INT_PER_STATUS));
+                    ctx.addEffect(cardistry.core.TemporaryEffect.builder("contre-exemple", "Contre-exemple")
+                            .summary(count > 1 ? "annule les " + count + " prochains statuts" : "annule le prochain statut")
+                            .charges(count).cancelsNextStatus().build());
+                });
     }
 
     /** Soupe de mamie : +10 PV et retire l'Intox. */

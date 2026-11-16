@@ -81,7 +81,7 @@ class NewCardsTest {
     }
 
     @Test
-    void moindreCarreDegatsDeUnAQuaranteEnTaFaveur() {
+    void moindreCarreDegatsDeUnATrentePlusDeuxIntEnTaFaveur() {
         int min = Integer.MAX_VALUE;
         int max = 0;
         double sum = 0;
@@ -101,9 +101,18 @@ class NewCardsTest {
             sumLucky += 1000 - enemy.hp();
         }
         assertEquals(1, min);
-        assertEquals(40, max);
-        assertEquals(20.5, sum / runs, 1.5);
-        assertEquals(27.4, sumLucky / runs, 1.5, "CLAUDE.md : le meilleur de deux tirages");
+        assertEquals(30, max, "sans INT");
+        assertEquals(15.5, sum / runs, 1.5);
+        assertEquals(20.5, sumLucky / runs, 1.5, "CLAUDE.md : le meilleur de deux tirages");
+        int maxWithInt = 0;
+        for (long seed = 0; seed < 300; seed++) {
+            Stats smart = new Stats();
+            smart.add(StatModifier.flat(StatType.INTELLIGENCE, 5, "test"));
+            setUp(1000, seed, smart, CardPool.moindreCarre());
+            play();
+            maxWithInt = Math.max(maxWithInt, 1000 - enemy.hp());
+        }
+        assertEquals(40, maxWithInt, "INT 5 : jusqu'à 30 + 10, sans ajouter l'INT une seconde fois");
         assertEquals(Rarity.UNCOMMON, CardPool.moindreCarre().rarity());
     }
 

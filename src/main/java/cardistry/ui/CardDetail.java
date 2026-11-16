@@ -128,7 +128,8 @@ public final class CardDetail {
      */
     public static String damageFormula(GameState state, SpellCard spell, boolean alwaysMultiplier) {
         double mult = state.spellMultiplier(spell);
-        double offense = cardistry.core.CombatFormula.offense(spell.element(), state.playerStats());
+        double offense = spell.addsOffenseStat()
+                ? cardistry.core.CombatFormula.offense(spell.element(), state.playerStats()) : 0;
         double defense = state.currentEnemy().stat(StatType.DEFENSE);
         String base = offense == 0 ? num(spell.damage())
                 : "(" + num(spell.damage()) + (offense > 0 ? " + " : " − ") + num(Math.abs(offense)) + ")";

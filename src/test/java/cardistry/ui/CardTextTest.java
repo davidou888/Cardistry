@@ -14,7 +14,7 @@ class CardTextTest {
                 CardText.summary(CardPool.bouleDeFeu()));
         assertEquals("Pet de Mamouz · sort neutre · Commun : aucun dégât · ★ inflige Intox",
                 CardText.summary(CardPool.petDeMamouz()));
-        assertEquals("Moindre carré · sort algebrique · Peu commun : 1-40 dégâts",
+        assertEquals("Moindre carré · sort algebrique · Peu commun : 1-30+2×INT dégâts",
                 CardText.summary(CardPool.moindreCarre()));
         assertEquals("Professeur d'or · sort spirituel · Légendaire : 35 dégâts (non multipliés)"
                 + " · ★ hypnotise l'adversaire pendant 5 tours", CardText.summary(CardPool.professeurDOr()));

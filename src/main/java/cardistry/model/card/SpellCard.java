@@ -21,6 +21,8 @@ public final class SpellCard extends Card {
     private double defensePierce;
     /** CHA à partir de laquelle le coup est toujours critique ; 0 = jamais garanti. */
     private int sureCriticalLuck;
+    /** {@code true} : la stat offensive est déjà dans les dégâts de la carte, la formule ne l'ajoute pas. */
+    private boolean statInDamage;
 
     public SpellCard(String name, Element element, double damage, Rarity rarity) {
         super(name, element, rarity);
@@ -60,6 +62,21 @@ public final class SpellCard extends Card {
     /** CHA à partir de laquelle ce sort est toujours critique (0 : jamais garanti). */
     public int sureCriticalLuck() {
         return sureCriticalLuck;
+    }
+
+    /**
+     * {@code true} si la formule ajoute la stat offensive du lanceur aux dégâts de base (presque
+     * toujours) ; {@code false} si les dégâts de la carte la comptent déjà (Carte basique pas ouf).
+     */
+    public boolean addsOffenseStat() {
+        return !statInDamage;
+    }
+
+    /** Copie dont les dégâts (règle) comptent déjà la stat offensive : la formule ne l'ajoute pas. */
+    public SpellCard statInDamage() {
+        SpellCard copy = copy();
+        copy.statInDamage = true;
+        return copy;
     }
 
     /** Copie qui ignore {@code points} de DEF de l'adversaire ({@code Double.POSITIVE_INFINITY} : toute). */
@@ -104,6 +121,7 @@ public final class SpellCard extends Card {
         copy.unmultiplied = unmultiplied;
         copy.defensePierce = defensePierce;
         copy.sureCriticalLuck = sureCriticalLuck;
+        copy.statInDamage = statInDamage;
         return copy;
     }
 }
