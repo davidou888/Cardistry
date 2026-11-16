@@ -132,6 +132,7 @@ public final class BalanceRun {
                     run.chooseStory(bot.chooseStory(run.state(), story));
                 }
                 case SHOP -> run.shop(bot.shop(run.state(), run.shop().orElseThrow()));
+                case STAT_POINTS -> run.spendStatPoint(bot.statPoint(run.state()));
                 case OVER -> {
                 }
             }
@@ -397,6 +398,17 @@ public final class BalanceRun {
                 }
             }
             return new ShopAction.Leave();
+        }
+
+        /** Points de stats : un dans la meilleure stat offensive, un en DEF, en alternance. */
+        cardistry.core.stats.StatType statPoint(GameState state) {
+            if (state.statPoints() % 2 == 1) {
+                return cardistry.core.stats.StatType.DEFENSE;
+            }
+            cardistry.core.stats.Stats stats = state.playerStats();
+            return java.util.stream.Stream.of(cardistry.core.stats.StatType.STRENGTH,
+                    cardistry.core.stats.StatType.INTELLIGENCE, cardistry.core.stats.StatType.MIND)
+                    .max(java.util.Comparator.comparingDouble(stats::get)).orElseThrow();
         }
 
         @Override

@@ -1104,6 +1104,31 @@ class LanternaUiTest {
     }
 
     @Test
+    void pointsDeStatsApresUnBoss() throws IOException {
+        open(80, 24);
+        GameState state = GameState.newGame(cardistry.hero.HeroRegistry.LOUIS);
+        cardistry.core.CombatEngine engine = new cardistry.core.CombatEngine(state, new cardistry.model.card.CardPool(),
+                new cardistry.core.Rng(1), new EventBus());
+        engine.start();
+        engine.recoverAfterBoss();
+        press(KeyType.ArrowDown);
+        press(KeyType.ArrowDown);
+        press(KeyType.ArrowDown);
+        press(KeyType.Enter);
+        assertEquals(cardistry.core.stats.StatType.DEFENSE,
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseStatPoint(state)));
+        String text = dump("62b-points-de-stats");
+        assertTrue(text.contains("Boss vaincu"), text);
+        assertTrue(text.contains("2 points de stats à placer"), text);
+        assertTrue(text.contains("FOR 3"), text);
+        assertTrue(text.contains("DEF 1"), text);
+        assertTrue(text.contains("+25 pour toute la partie"), text);
+        type("6");
+        assertEquals(cardistry.core.stats.StatType.LUCK,
+                assertTimeoutPreemptively(TIMEOUT, () -> ui.chooseStatPoint(state)));
+    }
+
+    @Test
     void siesteEtTri() throws IOException {
         open(80, 24);
         GameState state = deckState();

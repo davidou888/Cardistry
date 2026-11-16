@@ -95,6 +95,14 @@ public interface Input extends PlayerDecisions {
         return 0;
     }
 
+    /**
+     * Après un boss : la stat (une des 6 stats de personnage) où placer le prochain point ; appelé
+     * une fois par point. Par défaut la Force.
+     */
+    default cardistry.core.stats.StatType chooseStatPoint(GameState state) {
+        return cardistry.core.stats.StatType.STRENGTH;
+    }
+
     /** Sieste : un choix parmi {@code options}. Par défaut le premier. */
     default cardistry.run.RestOption chooseRest(GameState state, List<cardistry.run.RestOption> options) {
         return options.get(0);

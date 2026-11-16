@@ -324,6 +324,20 @@ public final class ConsoleInput implements Input {
         return options.get(readNumber("Ton choix ? ", 1, options.size()) - 1);
     }
 
+    @Override
+    public cardistry.core.stats.StatType chooseStatPoint(GameState state) {
+        current = state;
+        List<cardistry.core.stats.StatType> stats = cardistry.core.stats.StatType.characterStats();
+        console.println();
+        console.println(Ansi.yellow("Progression") + " : " + state.statPoints() + " point(s) de stats à placer.");
+        for (int i = 0; i < stats.size(); i++) {
+            cardistry.core.stats.StatType stat = stats.get(i);
+            console.println("[" + (i + 1) + "] " + stat.abbreviation() + " " + cardistry.ui.Format.num(state.playerStats().get(stat))
+                    + " · " + stat.displayName() + " : " + stat.effectText());
+        }
+        return stats.get(readNumber("Stat à augmenter ? ", 1, stats.size()) - 1);
+    }
+
     private boolean metaPhraseShown = false;
 
     @Override

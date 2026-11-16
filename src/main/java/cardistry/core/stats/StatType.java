@@ -129,6 +129,19 @@ public enum StatType {
         };
     }
 
+    /** Effet d'un point d'une stat de personnage, affiché au joueur (vide pour les autres stats). */
+    public String effectText() {
+        return switch (this) {
+            case STRENGTH -> "+1 dégât des sorts feu, eau, plante, neutre";
+            case INTELLIGENCE -> "+1 dégât algébrique/géométrique, +3 % de statut";
+            case MIND -> "+1 dégât des sorts spirituels, +1 PV par soin";
+            case DEFENSE -> "−1 dégât par coup subi";
+            case RESISTANCE -> "−5 % de subir un statut ; à 5 : statuts −1 tour";
+            case LUCK -> "+3 % de coup critique (×1,5) sur tes sorts";
+            default -> "";
+        };
+    }
+
     /** Nom affiché d'une stat de personnage (Force, Intelligence…), ou le nom de l'enum sinon. */
     public String displayName() {
         return switch (this) {

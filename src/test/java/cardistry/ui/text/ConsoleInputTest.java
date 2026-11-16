@@ -57,6 +57,18 @@ class ConsoleInputTest {
     }
 
     @Test
+    void pointsDeStatsEnModeTexte() {
+        GameState state = GameState.newGame(cardistry.hero.HeroRegistry.SASSY);
+        CombatEngine engine = new CombatEngine(state, new cardistry.model.card.CardPool(), new Rng(1), new EventBus());
+        engine.start();
+        engine.recoverAfterBoss();
+        assertEquals(cardistry.core.stats.StatType.RESISTANCE, input("9\n5\n").chooseStatPoint(state));
+        String text = out.toString(StandardCharsets.UTF_8);
+        assertTrue(text.contains("2 point(s) de stats à placer"), text);
+        assertTrue(text.contains("[5] RES 2 · Résistance"), text);
+    }
+
+    @Test
     void carteEnModeTexte() {
         cardistry.run.Run run = new cardistry.run.Run(4, java.util.Set.of(), new EventBus());
         run.start();

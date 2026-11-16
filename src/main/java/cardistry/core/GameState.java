@@ -47,6 +47,8 @@ public final class GameState {
     private boolean finalCombat = false;
     private boolean won = false;
     private int choomies = STARTING_CHOOMIES;
+    /** Points de stats gagnés (après un boss) et pas encore répartis. */
+    private int statPoints = 0;
     private int level = 0;
     private int floor = 0;
     private int floorsTraveled = 0;
@@ -341,6 +343,15 @@ public final class GameState {
      */
     public int handCount() {
         return (int) hand.stream().filter(card -> !(card instanceof cardistry.model.card.DeadCard)).count();
+    }
+
+    /** Points de stats à répartir (gagnés après un boss). */
+    public int statPoints() {
+        return statPoints;
+    }
+
+    void setStatPoints(int value) {
+        statPoints = value;
     }
 
     /** Taille maximale de la main (stat {@link StatType#HAND_SIZE}). */

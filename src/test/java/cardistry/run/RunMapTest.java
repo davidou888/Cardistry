@@ -2,6 +2,7 @@ package cardistry.run;
 
 import static cardistry.model.Element.FIRE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -60,6 +61,7 @@ class RunMapTest {
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case REST -> run.rest(RestOption.HEAL);
+                case STAT_POINTS -> run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH);
                 case OVER -> {
                 }
             }
@@ -86,6 +88,7 @@ class RunMapTest {
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case REST -> run.rest(RestOption.HEAL);
+                case STAT_POINTS -> run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH);
                 case OVER -> {
                 }
             }
@@ -156,7 +159,7 @@ class RunMapTest {
         run.submit(new Action.PlayCard(0));
         run.resolveReward(new RewardChoice.Skip());
         run.resolveCardReward(-1);
-        assertEquals(70, run.state().player().hp(), 1e-9);
+        assertEquals(70 + 25, run.state().player().hp(), 1e-9); // récupération sans bonus de soin, puis +25
     }
 
     @Test
@@ -194,7 +197,41 @@ class RunMapTest {
         }
         run.resolveCardReward(-1);
         assertEquals(2, run.state().level());
-        assertEquals(70, run.state().player().hp(), 1e-9); // 40 + 60 / 2
+        assertEquals(70 + 25, run.state().player().hp(), 1e-9); // 40 + 60 / 2, puis +25 PV max et actuels
+        assertEquals(125, run.state().maxHp(), 1e-9);
+    }
+
+    @Test
+    void apresUnBossDeuxPointsDeStatsARepartir() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.phase() == Run.Phase.COMBAT && r.state().isBossFight());
+        assertTrue(run.startTurn());
+        run.submit(new Action.PlayCard(0));
+        if (run.phase() == Run.Phase.REWARD) {
+            run.resolveReward(new RewardChoice.Skip());
+        }
+        run.resolveCardReward(-1);
+        assertEquals(Run.Phase.STAT_POINTS, run.phase());
+        assertEquals(2, run.statPoints());
+        assertTrue(events.contains(new GameEvent.BossBonus(25, 2)));
+        assertThrows(IllegalStateException.class, () -> run.chooseNode(0));
+        double strength = run.state().playerStats().get(cardistry.core.stats.StatType.STRENGTH);
+        assertFalse(run.spendStatPoint(cardistry.core.stats.StatType.MAX_HP), "seulement les 6 stats");
+        assertTrue(run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH));
+        assertEquals(Run.Phase.STAT_POINTS, run.phase());
+        assertTrue(run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH));
+        assertEquals(strength + 2, run.state().playerStats().get(cardistry.core.stats.StatType.STRENGTH), 1e-9);
+        assertEquals(Run.Phase.MAP, run.phase());
+        assertEquals(2, run.state().level());
+    }
+
+    @Test
+    void lesBonusDeBossDurentToutLaPartie() {
+        Run run = strongRun(2);
+        playUntil(run, r -> r.state().level() == 3 && r.phase() == Run.Phase.MAP);
+        assertEquals(150, run.state().maxHp(), 1e-9);
+        assertEquals(4, run.state().playerStats().modifiers().stream()
+                .filter(m -> m.source().equals(cardistry.core.CombatEngine.PROGRESSION_SOURCE)).count());
     }
 
     @Test
@@ -362,6 +399,7 @@ class RunMapTest {
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
+                case STAT_POINTS -> run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH);
                 case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 case SHOP, OVER -> {
                 }
@@ -397,6 +435,7 @@ class RunMapTest {
             switch (run.phase()) {
                 case MAP -> run.chooseNode(0);
                 case REST -> run.rest(RestOption.HEAL);
+                case STAT_POINTS -> run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH);
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case EVENT -> run.chooseStory(run.story().orElseThrow().choices().size() - 1);
                 default -> throw new AssertionError(run.phase());
@@ -455,6 +494,7 @@ class RunMapTest {
                 case REWARD -> run.resolveReward(new RewardChoice.Skip());
                 case CARD_REWARD -> run.resolveCardReward(-1);
                 case REST -> run.rest(RestOption.HEAL);
+                case STAT_POINTS -> run.spendStatPoint(cardistry.core.stats.StatType.STRENGTH);
                 case SHOP -> run.shop(new cardistry.core.shop.ShopAction.Leave());
                 case OVER -> {
                 }

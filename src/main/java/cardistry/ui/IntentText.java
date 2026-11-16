@@ -49,6 +49,10 @@ public final class IntentText {
             case cardistry.core.event.GameEvent.DodgeReady e -> e.enemy().name() + " "
                     + say(e.enemy(), "esquivera ton prochain sort");
             case cardistry.core.event.GameEvent.EnemyDodged e -> e.enemy().name() + " " + say(e.enemy(), "esquive ton sort !");
+            case cardistry.core.event.GameEvent.BossBonus e -> "Boss vaincu : +" + num(e.maxHp())
+                    + " PV max pour toute la partie, et " + e.statPoints() + " points de stats à répartir";
+            case cardistry.core.event.GameEvent.StatPointSpent e -> "+1 " + e.stat().displayName()
+                    + (e.remaining() > 0 ? " (encore " + e.remaining() + ")" : "");
             case cardistry.core.event.GameEvent.CriticalHit e -> e.target() instanceof Enemy
                     ? "Coup critique ! (×" + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER) + ")"
                     : "Coup critique de l'adversaire ! (×" + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER) + ")";

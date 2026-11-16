@@ -260,6 +260,33 @@ final class MenuScreens {
         }
     }
 
+    /** Après un boss : placer un point dans une des 6 stats (un point à la fois). */
+    static void statPoints(Painter p, GameState state, int selected, long seed) {
+        p.frame("Progression", "Niveau " + state.level() + " · Seed " + seed,
+                "↑/↓ choisir · Entrée placer le point · 1-6 · Q quitter");
+        List<cardistry.core.stats.StatType> stats = cardistry.core.stats.StatType.characterStats();
+        int top = Math.max(2, p.rows() / 2 - 8);
+        p.centered(top, "Boss vaincu !", Palette.ACCENT, true);
+        p.centered(top + 2, "PV max " + num(state.maxHp()) + " (+" + num(cardistry.core.CombatEngine.BOSS_MAX_HP_BONUS)
+                + " pour toute la partie)", Palette.HEAL, false);
+        int points = state.statPoints();
+        p.centered(top + 3, points + (points > 1 ? " points de stats à placer" : " point de stats à placer"),
+                Palette.TEXT, false);
+        String[] lines = new String[stats.size()];
+        for (int i = 0; i < stats.size(); i++) {
+            cardistry.core.stats.StatType stat = stats.get(i);
+            lines[i] = "[" + (i + 1) + "] " + stat.abbreviation() + " " + num(state.playerStats().get(stat)) + "  "
+                    + stat.displayName() + " : " + stat.effectText();
+        }
+        int width = java.util.Arrays.stream(lines).mapToInt(String::length).max().orElse(0) + 2;
+        int col = Math.max(2, (p.cols() - width) / 2);
+        for (int i = 0; i < lines.length; i++) {
+            boolean isSelected = i == selected;
+            p.text(col, top + 5 + i * 2, Painter.fit((isSelected ? "> " : "  ") + lines[i], p.cols() - col - 2),
+                    isSelected ? Palette.ACCENT : Palette.TEXT, isSelected);
+        }
+    }
+
     /** Menu pause. */
     static void pause(Painter p, int selected, long seed) {
         p.frame("Pause", "Seed " + seed, "↑/↓ choisir · Entrée valider · Échap reprendre");

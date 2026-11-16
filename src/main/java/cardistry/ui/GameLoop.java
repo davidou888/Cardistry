@@ -60,6 +60,7 @@ public final class GameLoop {
                     run.resolveCardReward(index < run.pendingCardReward().size() ? index : -1);
                 }
                 case REST -> rest(run, input);
+                case STAT_POINTS -> run.spendStatPoint(input.chooseStatPoint(run.state()));
                 case EVENT -> story(run, renderer, input);
                 case SHOP -> run.shop(input.chooseShopAction(run.state(), run.shop().orElseThrow(),
                         run.cardRemovalPrice()));

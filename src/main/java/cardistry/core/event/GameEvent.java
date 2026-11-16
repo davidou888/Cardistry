@@ -92,6 +92,14 @@ public sealed interface GameEvent {
      *
      * @param hpLost PV réellement enlevés à l'adversaire (sans les dégâts en trop s'il meurt)
      */
+    /** Boss vaincu (sauf le dernier) : PV max gagnés pour toute la partie, points de stats à répartir. */
+    record BossBonus(double maxHp, int statPoints) implements GameEvent {
+    }
+
+    /** Un point de stats placé ; {@code remaining} points restent à placer. */
+    record StatPointSpent(cardistry.core.stats.StatType stat, int remaining) implements GameEvent {
+    }
+
     /** Coup critique (×1,5) sur {@code target} : le joueur (coup adverse) ou l'adversaire (sort). */
     record CriticalHit(Combatant target) implements GameEvent {
     }

@@ -874,12 +874,46 @@ public final class CombatEngine {
         removeCardFromDeck(index);
     }
 
-    /** Après un boss : la moitié des PV manquants. Récupération, pas un soin : aucun bonus de soin. */
+    /** PV max gagnés pour toute la partie après chaque boss (sauf le dernier), avec autant de PV actuels. */
+    public static final double BOSS_MAX_HP_BONUS = 25;
+    /** Points de stats à répartir après chaque boss (sauf le dernier). */
+    public static final int BOSS_STAT_POINTS = 2;
+    /** Source des PV max gagnés sur les boss. */
+    public static final String BOSS_BONUS_SOURCE = "boss";
+    /** Source des points de stats répartis. */
+    public static final String PROGRESSION_SOURCE = "progression";
+
+    /**
+     * Après un boss : la moitié des PV manquants (récupération, pas un soin : aucun bonus de soin),
+     * puis +{@link #BOSS_MAX_HP_BONUS} PV max (et actuels) pour toute la partie et
+     * {@link #BOSS_STAT_POINTS} points de stats à répartir.
+     */
     public void recoverAfterBoss() {
         double missing = Math.max(0, state.maxHp() - state.player().hp());
         if (missing > 0) {
             healPlayer(missing * BOSS_RECOVERY, 1.0);
         }
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(StatType.MAX_HP, BOSS_MAX_HP_BONUS,
+                BOSS_BONUS_SOURCE));
+        state.player().heal(BOSS_MAX_HP_BONUS);
+        state.setStatPoints(state.statPoints() + BOSS_STAT_POINTS);
+        bus.publish(new GameEvent.BossBonus(BOSS_MAX_HP_BONUS, BOSS_STAT_POINTS));
+    }
+
+    /**
+     * Place un point de stats dans {@code stat} (+1 pour toute la partie).
+     *
+     * @return {@code false} s'il n'y a pas de point à placer ou si ce n'est pas une des 6 stats
+     */
+    public boolean spendStatPoint(StatType stat) {
+        if (state.statPoints() <= 0 || !StatType.characterStats().contains(stat)) {
+            bus.publish(new GameEvent.ActionRejected(GameEvent.ActionRejected.Reason.INVALID_CHOICE));
+            return false;
+        }
+        state.playerStats().add(cardistry.core.stats.StatModifier.flat(stat, 1, PROGRESSION_SOURCE));
+        state.setStatPoints(state.statPoints() - 1);
+        bus.publish(new GameEvent.StatPointSpent(stat, state.statPoints()));
+        return true;
     }
 
     public boolean hasPendingReward() {

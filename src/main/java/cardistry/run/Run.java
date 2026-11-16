@@ -62,6 +62,8 @@ public final class Run {
         SHOP,
         /** Événement : choisir une option. */
         EVENT,
+        /** Après un boss : placer un point de stats (un à la fois). */
+        STAT_POINTS,
         /** Partie terminée. */
         OVER
     }
@@ -95,6 +97,9 @@ public final class Run {
     }
 
     private record StoryStep(int choice) implements Step {
+    }
+
+    private record StatPoint(cardistry.core.stats.StatType stat) implements Step {
     }
 
     /** Début d'un tour où le joueur agit : {@code historySize} étapes le précèdent. */
@@ -300,6 +305,27 @@ public final class Run {
         return session.engine.shopAction(action);
     }
 
+    /** Points de stats à placer ({@link Phase#STAT_POINTS}). */
+    public int statPoints() {
+        return state().statPoints();
+    }
+
+    /**
+     * Place un point de stats dans {@code stat} (une des 6 stats de personnage).
+     *
+     * @return {@code false} si le choix est refusé (le point reste à placer)
+     */
+    public boolean spendStatPoint(cardistry.core.stats.StatType stat) {
+        if (phase() != Phase.STAT_POINTS) {
+            throw new IllegalStateException("Pas de point de stats à placer maintenant");
+        }
+        boolean spent = session.engine.spendStatPoint(stat);
+        if (spent) {
+            history.add(new StatPoint(stat));
+        }
+        return spent;
+    }
+
     public boolean hasPendingCardReward() {
         return session.engine.hasPendingCardReward();
     }
@@ -426,6 +452,7 @@ public final class Run {
                 case Rest r -> replayed.rest(r.option(), r.cardIndex());
                 case ShopStep s -> replayed.engine.shopAction(s.action());
                 case StoryStep s -> replayed.engine.chooseStory(s.choice());
+                case StatPoint s -> replayed.engine.spendStatPoint(s.stat());
                 case CardReward c -> {
                     replayed.engine.resolveCardReward(c.index());
                     replayed.settle();
@@ -479,6 +506,9 @@ public final class Run {
             }
             if (engine.combatActive() || !mapped) {
                 return Phase.COMBAT;
+            }
+            if (engine.state().statPoints() > 0) {
+                return Phase.STAT_POINTS;
             }
             if (engine.shop().isPresent()) {
                 return Phase.SHOP;

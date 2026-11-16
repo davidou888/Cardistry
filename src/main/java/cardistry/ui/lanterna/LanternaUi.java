@@ -33,7 +33,7 @@ import java.util.List;
 public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     private enum Page { TITLE, RULES, COMBAT, INVENTORY, REWARD, REPLACE, DISCARD, CARD_CHOICE, GAME_OVER, SPRITES, MAP, REST, CARD_REWARD, DECK_REMOVE, SHOP, STORY, STORY_RESULT,
-        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL }
+        PAUSE, OPTIONS, HERO, DECK, CARD_DETAIL, STAT_POINTS }
 
     /** Pages où D n'ouvre pas le deck (pas encore de partie, menus, visionneuse). */
     private static final java.util.Set<Page> NO_DECK_PAGES = java.util.EnumSet.of(Page.TITLE, Page.HERO, Page.RULES,
@@ -718,6 +718,39 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                         confirmQuit();
                     } else if (c >= '1' && c < '1' + options.size()) {
                         return options.get(c - '1');
+                    }
+                }
+                default -> {
+                }
+            }
+            render();
+        }
+    }
+
+    private int statSelected = 0;
+
+    @Override
+    public cardistry.core.stats.StatType chooseStatPoint(GameState state) {
+        this.state = state;
+        List<cardistry.core.stats.StatType> stats = cardistry.core.stats.StatType.characterStats();
+        page = Page.STAT_POINTS;
+        render();
+        while (true) {
+            KeyStroke key = readKey();
+            switch (key.getKeyType()) {
+                case ArrowLeft, ArrowUp -> statSelected = Math.floorMod(statSelected - 1, stats.size());
+                case ArrowRight, ArrowDown -> statSelected = Math.floorMod(statSelected + 1, stats.size());
+                case Enter -> {
+                    return stats.get(statSelected);
+                }
+                case Escape -> pauseMenu();
+                case Character -> {
+                    char c = Character.toLowerCase(key.getCharacter());
+                    if (c == 'q') {
+                        confirmQuit();
+                    } else if (c >= '1' && c < '1' + stats.size()) {
+                        statSelected = c - '1';
+                        return stats.get(statSelected);
                     }
                 }
                 default -> {
@@ -1579,6 +1612,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
                             view.pageTick);
                     case DECK_REMOVE -> ItemScreens.deckRemove(painter, state, deckSelected, seed);
                     case REST -> MenuScreens.rest(painter, state, restOptions, restSelected, seed);
+                    case STAT_POINTS -> MenuScreens.statPoints(painter, state, statSelected, seed);
                     case MAP -> MapScreen.draw(painter, mapView, mapSelected, seed, view.toast, view.idleFrame);
                     case DECK -> DeckScreen.draw(painter, state, deckScroll, deckPiles, seed);
                     case CARD_DETAIL -> CardDetailScreen.draw(painter, state, detailCard, detailInCombat, seed);
