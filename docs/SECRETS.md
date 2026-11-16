@@ -19,7 +19,7 @@ Absents du pool tant qu'ils ne sont pas débloqués. Tous trois tag Méta.
 ### Déblocage durable (façon Isaac)
 - Une condition remplie pendant une partie débloque le secret **pour de bon** ; il rejoint le pool des
   récompenses **à partir de la partie suivante** (le pool d'une partie est figé à son lancement).
-- Dans le pool, un secret débloqué a un **poids de 2** (un commun pèse 60) : il n'est jamais équipé
+- Dans le pool, un secret débloqué a un **poids de 1** (un commun pèse 60, une Légendaire 1) : il n'est jamais équipé
   d'office.
 - Écran de fin : « ✦ Secret débloqué : <nom> ✦ » (une ligne par secret ; rien si aucun).
 - Le déblocage est sauvegardé dès que la condition est remplie (quitter ensuite ne le perd pas).

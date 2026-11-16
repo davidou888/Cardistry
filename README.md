@@ -345,5 +345,8 @@ séparés) : voir [`licenses/THIRD-PARTY.md`](licenses/THIRD-PARTY.md).
 - `./gradlew animationCheck` : ouvre la vraie fenêtre, joue tout seul (carte, combats, journal) à vitesse
   normale et écrit la trace des animations réellement affichées ; `-Penemies=came,vafi` pour choisir
   les adversaires. Il faut un écran : ce n'est pas un test de la CI.
+- `./gradlew balanceRun` : un bot joue des parties complètes avec chaque personnage, sans affichage, et
+  écrit la durée des combats, les PV autour des boss, le taux de victoire et la fréquence des Légendaires
+  proposées ; `-Pseeds=200` pour le nombre de parties, `-Pheroes=louis,sassy` pour choisir les personnages.
 - Contexte et conventions du projet : [`CLAUDE.md`](CLAUDE.md) ; game design :
   [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md).

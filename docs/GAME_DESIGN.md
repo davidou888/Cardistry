@@ -41,11 +41,14 @@ Source de vérité dans le code : `cardistry.model.ElementRules` (testé).
 
 ## Adversaires
 Registre : `cardistry.model.enemy.EnemyRegistry` (testé). Chaque adversaire a une liste d'attaques et
-**annonce la prochaine** (intent, affiché avec les dégâts réels : niveau, terrain, réduction). Ses tirages
-(Gamble, coup raté) ne sont **pas** doublés par CLAUDE.md.
+**annonce la prochaine** (intent, affiché avec les dégâts réels : niveau, FOR, terrain, ta DEF ; « Vise l'alien · »
+quand l'attaque vise le familier de Sassy). Ses tirages (Gamble, coup raté, critique, cible) ne sont **pas**
+doublés par CLAUDE.md. Chaque adversaire a les 6 stats (voir « Stats ») ; sa DEF et sa RES sont affichées près de
+sa barre de PV, sa fiche complète avec **A**.
 
-**Scaling par niveau** : PV ×1 / ×1.4 / ×1.9, dégâts ×1 / ×1.25 / ×1.5 (les boss ont des PV fixés, leurs
-dégâts suivent le niveau). Valeurs ci-dessous au niveau 1.
+**Scaling par niveau** : PV ×1 / ×1.4 / ×1.9, dégâts ×1 / ×1.25 / ×1.5, et **+1 FOR et +1 DEF** par niveau
+au-delà du premier (les boss ont des PV et des stats fixés pour leur niveau, leurs dégâts suivent le niveau).
+Valeurs ci-dessous au niveau 1 ; leurs stats sont dans « Stats des adversaires ».
 
 | Rang | Nom | Élément | PV | Attaques |
 |---|---|---|---|---|
@@ -124,7 +127,9 @@ Règles communes :
 - **Récompenses** : 1 parmi 3 après chaque combat ; élite : toutes au moins Peu commun ; boss : toutes au
   moins Rare (les secrets débloqués restent possibles).
 - **Après chaque boss** (sauf le dernier) : la moitié des PV manquants est rendue — une **récupération**,
-  pas un soin (aucun bonus de soin, pas de Ross) —, puis le niveau suivant commence.
+  pas un soin (aucun bonus de soin, pas de Ross) —, puis **+25 PV max** (et +25 PV actuels) jusqu'à la fin de
+  la partie, puis l'écran **Progression** : **2 points de stats** à placer un par un (FOR, INT, ESP, DEF, RES
+  ou CHA), puis le niveau suivant commence.
 - Mort = fin de la run. Méta-progression : seulement les secrets débloqués (voir `docs/SECRETS.md`).
 
 ### Deck construit (lot 1 bis)
@@ -146,6 +151,9 @@ Règles communes :
   n'importe où pendant une partie.
 - Une main peut dépasser la taille max (taille qui baisse en cours de combat) : on garde ses cartes, toutes
   jouables, sans pouvoir piocher.
+- Les **cartes mortes** (« NO CARDS », « Exercice 3b ») **ne comptent pas** dans la taille de main : on peut
+  toujours piocher à côté (« Ta main X/7 » ne compte que les cartes vivantes). Sans cette règle, une main de 7
+  « Exercice 3b » bloquait le combat.
 
 ## Personnages
 Au début de chaque partie (après l'écran titre), on choisit un personnage. Sa capacité est permanente,
@@ -155,8 +163,31 @@ comme un trinket qu'on ne peut ni perdre ni remplacer. Code : `hero.HeroRegistry
 |---|---|---|---|
 | **Louis** | 100 | MAN | +50 % de dégâts, tout le temps (tous éléments, additionné aux autres pourcentages, comme CMS). Aucun malus. |
 | **Dave** | 100 | Full skill Mr. Le Juge | Un sort du même élément que le terrain **et** qui bat l'élément de l'adversaire (ex. Boule de feu à l'EPFL contre un adversaire plante) soigne des PV enlevés à l'adversaire. |
-| **Sassy** | 130 | wadayatalkinabit | À chaque début de tour, son alien inflige 4 dégâts bruts à l'adversaire, en plus de l'action du joueur. 10 % de chance que l'alien rate son tour et fume un joint à la place (aucun effet, pour le lore). |
-| **Frederic BLC** | 100 | Aucune | Aucune compétence, rien de spécial. |
+| **Sassy** | 130 | wadayatalkinabit | À chaque début de tour, son alien inflige 4 dégâts bruts à l'adversaire, en plus de l'action du joueur. 10 % de chance que l'alien rate son tour et fume un joint à la place (aucun effet, pour le lore). L'alien est un **familier** de 20 PV (voir ci-dessous). |
+| **Frederic BLC** | 100 | Aucune | Aucune compétence, mais des stats « parfaitement moyennes » : 2 partout (12 points au lieu de 8). |
+
+**Stats de base** (8 points selon la capacité, 12 pour Frederic BLC) :
+
+| Personnage | FOR | INT | ESP | DEF | RES | CHA | Logique |
+|---|---|---|---|---|---|---|---|
+| Louis | 3 | 2 | 0 | 1 | 1 | 1 | MAN : profil offensif |
+| Dave | 1 | 3 | 1 | 1 | 1 | 1 | INT pour les statuts et les sorts algébriques/géométriques |
+| Sassy | 1 | 0 | 2 | 2 | 2 | 1 | Déjà 130 PV et l'alien : profil endurant |
+| Frederic BLC | 2 | 2 | 2 | 2 | 2 | 2 | Aucune capacité : le perso des builds de stats |
+
+**L'alien de Sassy (familier)** — code : `model.Familiar` (générique : un trinket ou un objet pourra plus tard
+en invoquer un), `HeroRegistry.ALIEN` :
+- **20 PV**, barre de vie au-dessus de son sprite, dans un emplacement dédié à droite du personnage.
+- Quand l'adversaire annonce une attaque qui frappe, **25 %** de chances qu'elle **vise l'alien** à la place du
+  joueur (tirage seedé de l'adversaire, pas doublé par CLAUDE.md) ; l'intent l'annonce (« Vise l'alien · … »,
+  « visé ! » au-dessus de sa barre).
+- Sur l'alien : la **DEF du joueur ne le protège pas** (FOR, terrain, hypnose et critique de l'adversaire
+  comptent) ; **aucun statut** (les statuts « après un coup » sont perdus). Moscow Mule annule l'attaque comme
+  d'habitude.
+- À **0 PV**, il est **assommé** jusqu'à la fin du combat : il n'attaque plus, n'est plus visé, sprite « KO » ;
+  les coups restants de l'attaque se perdent. Il revient au combat suivant avec tous ses PV.
+- Animations : idle, attaque quand il frappe, « fume un joint » quand il rate, KO (placeholders dans
+  `art/player/alien.aseprite`).
 
 Choix d'implémentation :
 - Louis : MAN = +50 % sur les stats de dégâts de tous les éléments (bonus permanent du personnage).
@@ -166,6 +197,81 @@ Choix d'implémentation :
 - Sassy : l'alien attaque aussi pendant un tour sauté et peut achever l'adversaire. Dégâts bruts (aucun
   multiplicateur, le Rebond du Peneu s'applique). Son raté n'est pas un tirage de chance : CLAUDE.md ne le
   double pas.
+
+## Stats (plan V3)
+Six stats de personnage, partagées par le joueur et les adversaires, de petites valeurs (0 à 10) pour calculer de
+tête. Code : `core.stats.StatType` (`STRENGTH`, `INTELLIGENCE`, `MIND`, `DEFENSE`, `RESISTANCE`, `LUCK`), toutes
+les formules dans `core.CombatFormula` (testée).
+
+| Stat | Abrév. | Effet par point |
+|---|---|---|
+| Force | FOR | +1 dégât sur les sorts feu, eau, plante, neutre ; +1 sur chaque coup d'un adversaire |
+| Intelligence | INT | +1 dégât sur les sorts algébriques et géométriques ; +3 % de chance d'infliger un statut |
+| Esprit | ESP | +1 dégât sur les sorts spirituels ; +1 PV sur chaque soin à PV fixes |
+| Défense | DEF | −1 dégât subi par coup (remplace l'ancienne réduction de dégâts et les « dégâts subis en plus ») |
+| Résistance | RES | −5 % de chance de subir un statut ; à 5 ou plus, statuts subis −1 tour (minimum 1) |
+| Chance | CHA | +3 % de coup critique (×1,5) |
+
+**Formules** :
+- **Dégâts d'un sort** : `(base + stat offensive) × multiplicateurs × critique − DEF de la cible`, **minimum 1**
+  si la carte a des dégâts (un sort à 0 reste à 0). Stat offensive selon l'élément (FOR / INT / ESP) ; sort
+  GLITCH : la meilleure des trois. Multiplicateurs : élément, terrain, statuts (Hypnotisé), trinkets en %,
+  prochain sort ×N. Rejeu de l'Espace : le ×0,5 est un multiplicateur (avant la DEF).
+  Exemple : Boule de feu (10), FOR 3, contre plante (×1,5) avec DEF 2 : (10 + 3) × 1,5 − 2 = 17,5 → 18.
+- **Coup d'un adversaire** : `(dégâts déclarés × niveau + sa FOR) × terrain × hypnose × critique − ta DEF`,
+  minimum 1, **coup par coup** (2 × 4 : deux fois la FOR, deux fois la DEF). Une DEF n'annule donc plus jamais
+  un coup. Une DEF négative (malus de terrain) ajoute des dégâts.
+- **Critique** : 3 % par CHA, ×1,5, sur les sorts multipliés seulement (pas Professeur d'or) ; tirage en faveur
+  du joueur, doublé par CLAUDE.md. Les adversaires font aussi des critiques sur leurs coups (leur CHA, pas
+  doublé). Journal : « Coup critique ! ».
+- **Dégâts élémentaires des objets** (Gaz du bat Inf) : multiplicateurs et DEF, sans stat offensive ni critique.
+  **Dégâts bruts inchangés** : statuts, Rebond, alien, Plan du campus, sorts non multipliés : ni stats, ni DEF.
+- **Soins** : `(base + ESP) × multiplicateurs de soin`, puis plafond (sauf Ross), pour les **cartes et objets
+  à PV fixes** (`ctx.itemHeal`). Pas d'ESP sur les clopes, la Sieste, les soins en % (Fons), le soin de Dave,
+  les trinkets ni la récupération après boss. L'ESP d'un adversaire s'ajoute à ses propres soins (Pause pétou,
+  fringale).
+- **Chance de statut** : `chance de la carte + 3 % × INT du lanceur − 5 % × RES de la cible`, entre 0 et 100 %,
+  **y compris pour les statuts « à coup sûr »** (Pet de Mamouz contre RES 4 : 80 %). L'INT du joueur compte pour
+  tous les statuts qu'il pose (cartes, trinkets, objets) ; un statut qu'il se pose lui-même (Petite taffe, Taffe
+  de foufou) ne passe ni par l'INT ni par la RES. Statuts d'un adversaire : son INT contre ta RES.
+- Les tirages doublés par CLAUDE.md restent ceux en faveur du joueur (critiques compris).
+
+**Stats temporaires** : `ctx.addCombatStat` donne ou retire des points pour un combat, au joueur ou à
+l'adversaire (Jet d'eau, Big Lez, Stingin' Roger, Sparadrap, Soupe de mamie, objets du plan V3).
+
+**Progression** : après chaque boss (sauf le dernier), +25 PV max pour la partie et **+2 points** à placer
+(écran Progression, un point à la fois ; mode texte : choix numéroté). `StoryContext` pourra donner ou retirer
+1 point (« Tu révises toute la nuit : +1 INT, −1 RES ») quand les vrais événements arriveront.
+
+### Stats des adversaires
+Valeurs au niveau 1 (FOR, INT, ESP, DEF, RES, CHA), code : `EnemyRegistry` (table `STATS`). Hors boss, +1 FOR et
++1 DEF par niveau au-delà du premier.
+
+| Adversaire | FOR | INT | ESP | DEF | RES | CHA | Logique |
+|---|---|---|---|---|---|---|---|
+| Caddie énervé | 1 | 0 | 0 | 2 | 2 | 0 | Carcasse en métal : DEF |
+| Choomah | 0 | 0 | 0 | 0 | 1 | 3 | Voleur : CHA |
+| Choomah pressé | 0 | 0 | 0 | 0 | 0 | 4 | Rapide et chanceux, fragile |
+| Choomah costaud | 2 | 0 | 0 | 1 | 1 | 1 | Plus de FOR |
+| Camé | 1 | 2 | 0 | 0 | 3 | 1 | INT : Brûlure plus fréquente ; RES : habitué aux substances |
+| Paresseux | 0 | 1 | 1 | 1 | 2 | 2 | Esquiveur |
+| Clarence | 0 | 0 | 0 | 0 | 0 | 0 | Rien. Évidemment. |
+| Seau de fuite | 0 | 0 | 0 | 1 | 4 | 0 | Un seau ne s'intoxique pas |
+| Gourou du Sat | 0 | 1 | 3 | 0 | 2 | 0 | ESP |
+| NG | 0 | 4 | 0 | 1 | 1 | 0 | INT |
+| Hypercube misogyne | 1 | 2 | 0 | 2 | 1 | 1 | Forme solide : DEF |
+| Gobelin | 1 | 0 | 0 | 0 | 1 | 3 | « 67 » : CHA |
+| Vafi (élite) | 2 | 4 | 2 | 1 | 3 | 1 | Prof d'algèbre : INT ; ESP pour la Pause pétou |
+| Le Peneu (élite) | 1 | 0 | 0 | 4 | 5 | 0 | Caoutchouc : les petits sorts rebondissent |
+| T-Rex défoncé (élite) | 4 | 0 | 1 | 2 | 0 | 0 | FOR énorme, RES nulle : facile à statuer |
+| Étudiant post-examen (élite) | 1 | 3 | 0 | 0 | 0 | 2 | Épuisé : aucune défense |
+| Engeance des cookies (élite) | 2 | 3 | 2 | 1 | 3 | 2 | Équilibrée et imprévisible |
+| Boss du niveau 1 | 3 | 1 | 1 | 2 | 3 | 1 | Test des stats |
+| Boss du niveau 2 | 4 | 2 | 2 | 3 | 4 | 2 | Exige un build |
+| Boss du niveau 3 | 5 | 3 | 3 | 4 | 5 | 3 | Fin de run |
+
+Les boss ont une RES élevée pour qu'on ne puisse pas les enchaîner en Fons ou en Intox ; leurs stats seront à
+revoir avec leurs vrais noms et attaques.
 
 ## Objets et trinkets
 | | Objet | Trinket |
@@ -177,7 +283,7 @@ Choix d'implémentation :
 | Exemple | Maté : +10 PV | Redistribution des briquets : +25 % dégâts feu |
 
 ### Effets sur les stats
-Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, Choomies gagnés, multiplicateur par élément, efficacité des soins, DEF (ex-réduction de dégâts ; voir « Stats de personnage »).
+Stats modifiables : PV max (plafond des soins), taille de main, cartes piochées, Choomies gagnés, multiplicateur par élément, efficacité des soins, et les 6 stats de personnage (voir « Stats »).
 Ordre de calcul : base → bonus plats → pourcentages. Les pourcentages **s'additionnent** : deux trinkets +25 % feu = +50 % (×1.5), pas ×1.5625. Formule : `(base + plats) × (1 + somme des %)`, plancher à 0.
 
 ### Rareté
@@ -188,14 +294,19 @@ La couleur de rareté est la même partout : texte en terminal ; dans la fenêtr
 | Commun | blanc | 60 | 50 |
 | Peu commun | vert | 25 | 80 |
 | Rare | bleu | 12 | 130 |
-| Légendaire | jaune | 3 | 200 |
-| Secret | magenta | seulement une fois débloqué (poids 2), voir `docs/SECRETS.md` | — |
+| Légendaire | jaune | 1 | 200 |
+| Secret | magenta | seulement une fois débloqué (poids 1), voir `docs/SECRETS.md` | — |
+
+Les **cartes proposées** (récompenses de carte, shop, George) sont tirées avec les mêmes poids de rareté que les
+objets (× les poids des trinkets, Grinder…) ; elles étaient tirées uniformément, ce qui proposait une Légendaire
+plusieurs fois par partie. Mesure (`./gradlew balanceRun`, 800 parties du bot) : 3,3 → 0,23 Légendaire proposée
+par partie. La pioche des parties sans deck (tests) reste uniforme.
 
 ### Synergies
 - Chaque objet/trinket porte des **tags** (élément, archétype : Brûlure, Soin, Terrain, Pioche…).
 - Synergies de set : 2/3/4 trinkets du même tag → bonus croissant.
 - Synergies directes : un trinket qui modifie l'effet d'un autre (ex. « tes trinkets Feu affectent aussi les Heals »).
-- Tags utilisés par le premier jet : **EPFL**, **Soirée**, **Boisson**, **Méta**, éléments (Feu, Eau, Plante), archétypes (Soin, Pioche, Terrain, Défense).
+- Tags utilisés par le premier jet : **EPFL**, **Soirée**, **Boisson**, **Méta**, éléments (Feu, Eau, Plante), archétypes (Soin, Pioche, Terrain, Défense, Force).
 
 #### Bonus de set (décidés, étape 6)
 Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte pour **chacun de ses tags**. Les paliers se **cumulent** (à 4, on a aussi ceux de 2 et 3). Recalculés à chaque changement d'inventaire ; notification quand un palier s'active ; détail dans l'inventaire (I). Noms provisoires.
@@ -232,13 +343,13 @@ Seuls les **trinkets équipés** comptent (pas les objets). Un trinket compte po
 - Affichage : un petit paquet ASCII en bas de l'écran, avec le nombre de clopes et les touches.
 
 ### Contenu — premier jet
-Implémentés à ce jour — étape 7 : Paquet de cartes (pioche au choix), défausse obligatoire quand on perd le Diplôme EPFL avec 6 trinkets. Étape 6 : bonus de set, Diplôme EPFL. Étape 5 : clopes, Googz, Honoré, Ross. Étape 4 : Caïpirinha, Petit pétou (objets), Shot de Jäger, Moscow Mule, Raclette, Space cake, Pétou ancestral. Étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
+Implémentés à ce jour — plan V3 : 6 trinkets de stats (Donut Musclé, Carte graphique, Bâton d'encens, Veste de ski, Carnet de vaccination, Benediction QCM) et 3 objets (Protéine en poudre, Documentation LATEX, Thé odorant). Étape 7 : Paquet de cartes (pioche au choix), défausse obligatoire quand on perd le Diplôme EPFL avec 6 trinkets. Étape 6 : bonus de set, Diplôme EPFL. Étape 5 : clopes, Googz, Honoré, Ross. Étape 4 : Caïpirinha, Petit pétou (objets), Shot de Jäger, Moscow Mule, Raclette, Space cake, Pétou ancestral. Étape 3 : Spritz, Pichet vide, Foie d'ingénieur, Ptit Sat ?. Étape 2 (tout ce qui est **a**) : 14 trinkets (Redistribution des briquets, Pichet de Sat, Plante du Rolex, Polycopié d'Analyse I, Latte macchiato vanille, M1, Pax, Monde Snack, Grinder, Plan du campus, Photocopieuse, Compréhension algébrique, CMS, George) et 3 objets (Maté, Cafffeeeeinnnn, Gaz du bat Inf). Le reste suit l'ordre de « Nouvelles mécaniques ».
 
 Précisions d'implémentation :
 - Les soins des objets et trinkets passent par l'efficacité des soins ; Grinder ajoute +50 % aux cartes de soin feu en plus.
-- Polycopié d'Analyse I ne réduit que les attaques adverses (pas les dégâts qu'on s'inflige soi-même), jamais sous 0.
+- Polycopié d'Analyse I (+2 DEF) ne réduit que les attaques adverses (pas les dégâts qu'on s'inflige soi-même) ; un coup fait toujours au moins 1.
 - Compréhension algébrique ne compte que les dégâts des sorts joués (pas ceux des objets ni de Plan du campus).
-- Plan du campus et les dégâts « bruts » des objets ignorent éléments et stats ; Gaz du bat Inf est traité comme un sort de l'élément tiré.
+- Plan du campus et les dégâts « bruts » des objets ignorent éléments et stats ; Gaz du bat Inf est traité comme des dégâts élémentaires de l'élément tiré (multiplicateurs et DEF, ni stat offensive ni critique) et ne tire jamais GLITCH.
 - George ne se déclenche que sur les pioches (pas sur la main distribuée en début de combat). La carte remplacée part à la défausse ; la nouvelle vient du registre et ne rejoint pas le deck.
 - Pichet vide : les 5 PV perdus ignorent Polycopié d'Analyse I et peuvent tuer le joueur ; si le joueur et l'adversaire meurent en même temps, c'est une défaite.
 - Ptit Sat ? : même portée que CMS (dégâts élémentaires), recalculé à chaque changement d'Ivresse.
@@ -254,6 +365,12 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 | Commun | Polycopié d'Analyse I | +2 DEF | Défense, EPFL | a |
 | Commun | Honoré | Jauge Honoré : +1 par tour joué ; à 5, une clope gratuite et retour à 0. La jauge persiste entre les combats. Paquet plein : la jauge reste à 5 (« clope prête ») et la clope arrive dès qu'une place se libère (validé) | Soirée | b (M9) |
 | Commun | Latte macchiato vanille | +1 carte au premier tour de chaque combat | Pioche, EPFL | a (+ notion de combat, M8) |
+| Commun | Donut Musclé | +2 FOR | Force | a |
+| Commun | Carte graphique | +2 INT (×2 avec le Diplôme EPFL) | EPFL | a |
+| Commun | Bâton d'encens | +2 ESP | Soirée | a |
+| Commun | Veste de ski | +2 DEF | Défense | a |
+| Commun | Carnet de vaccination | +2 RES | Défense | a |
+| Commun | Benediction QCM | +2 CHA (×2 avec le Diplôme EPFL) | EPFL | a |
 | Peu commun | Googz | Quand tu fumes, 20 % de chances que la clope se transforme en Petit pétou : effet de l'objet Petit pétou (+15 PV soin feu, −1 Ivresse) **à la place** des +5 PV ; réduit quand même la Gueule de bois | Soirée | b (M9) |
 | Peu commun | M1 | Changer de terrain rend 5 PV | Terrain, EPFL | a |
 | Peu commun | Pax | +1 taille de main | Pioche, Soirée | a |
@@ -275,12 +392,15 @@ Colonne **Méca.** : **a** = faisable avec les mécaniques existantes (stats, ho
 #### Objets (consommables)
 | Rareté | Nom | Effet | Tags | Méca. |
 |---|---|---|---|---|
-| Commun | Maté | +10 PV | Soin | a |
+| Commun | Maté | +10 PV (+ESP, comme tous les objets à PV fixes) | Soin | a |
 | Commun | Pichet vide | 15 dégâts à l'adversaire, tu perds 5 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
 | Commun | Caïpirinha | +20 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
 | Commun | Petit pétou | +15 PV, −1 Ivresse (minimum 0). Compte comme un soin feu (boosté par Grinder) | Soirée | a + b (M1) |
 | Commun | Cafffeeeeinnnn | Pioche 2 cartes | EPFL | a |
-| Commun | Gaz du bat Inf | 20 dégâts d'un élément aléatoire | EPFL | a |
+| Commun | Gaz du bat Inf | 20 dégâts d'un élément aléatoire (jamais GLITCH) | EPFL | a |
+| Commun | Protéine en poudre | +3 FOR pour le combat | Force | a |
+| Commun | Documentation LATEX | +3 INT pour le combat | EPFL | a |
+| Commun | Thé odorant | +3 RES pour le combat et retire un statut négatif (le premier de Intox, Brûlure, Bondage, Fons) | Défense | a |
 | Peu commun | Spritz | +30 PV, +1 Ivresse | Soirée, Boisson | a + b (M1) |
 | Peu commun | Shot de Jäger | Prochain **sort** ×2, +1 Ivresse. Actif jusqu'à ce qu'un sort soit joué, perdu à la fin du combat | Soirée, Boisson | b (M1, M2) |
 | Peu commun | Moscow Mule | Annule la prochaine attaque adverse, +1 Ivresse. Perdu à la fin du combat s'il n'a pas servi | Soirée, Boisson | b (M1, M2) |
@@ -317,7 +437,9 @@ Code : `core.status` (`StatusType` = tous les chiffres, `Statuses`), appliqués 
   l'adversaire, il vaut pour tes prochains tours.
 - **Tirages** (seedés) : un statut que le joueur inflige à l'adversaire est un tirage en sa faveur (doublé par
   CLAUDE.md) ; un statut subi par le joueur (adversaire, ou sa propre Petite taffe) ne l'est pas.
-- Dégâts de statut **bruts** : ni multiplicateur, ni réduction de dégâts, ni Rebond.
+- Dégâts de statut **bruts** : ni multiplicateur, ni DEF, ni Rebond.
+- **Chance et durée** : +3 % par INT du lanceur, −5 % par RES de la cible (même à coup sûr), −1 tour à 5 RES
+  (minimum 1) ; voir « Stats ».
 - Affichage : icône 8×8 + tours restants à côté de chaque barre de PV (fenêtre), « Int3 » (terminal), « Statuts : … »
   (mode texte) ; journal ; un son par statut (`sfx.status.<id>`, sons existants en attendant les vrais).
 
@@ -343,30 +465,33 @@ deck de départ, les événements et les trinkets).
 - Un sort peut avoir des **dégâts calculés** au moment du coup, **avant** le coup (Matrix, Pyromane…), ou
   **non multipliés** (ni élément, ni stats, ni hypnose, ni prochain sort ×N). Un sort à 0 dégât ne frappe pas ;
   un soin à 0 PV n'agit que par son pouvoir.
-- Fiche détaillée de la carte sélectionnée avec **V** (en combat : effet réel et chaque multiplicateur ; au shop :
+- Fiche détaillée de la carte sélectionnée avec **V** (en combat : effet réel, chaque multiplicateur, « + FOR »,
+  « − DEF » de l'adversaire et la part ignorée, chance de critique, « (10 + 3) ×1.5 − 2 = 18 » ; au shop :
   valeurs de base). Les écrans de récompense et de pioche au choix montrent les valeurs de base.
 
 ### Sorts
 | Rareté | Carte | Élément | Effet |
 |---|---|---|---|
 | Commun | Boule de feu | feu | 10 ; 10 % d'infliger Brûlure |
-| Commun | Jet d'eau | eau | 10 |
+| Commun | Jet d'eau | eau | 10 ; l'adversaire perd 1 DEF pour le combat (l'eau use) |
 | Commun | Fouet de lianes | plante | 10 ; 10 % d'infliger Bondage |
 | Commun | Pet de Mamouz | neutre | 0 ; Intox à coup sûr |
-| Commun | Carte basique pas ouf | neutre | 10 |
-| Commun | Lancer de manette | neutre | 12 |
-| Commun | CAYOUUU | neutre | 12 |
-| Commun | Pain pita | géométrique | 10 |
+| Commun | Carte basique pas ouf | neutre | 6 + 2 × FOR (la FOR est comptée par la carte, pas une seconde fois) |
+| Commun | Lancer de manette | neutre | 12 ; critique garanti si CHA ≥ 3 |
+| Commun | CAYOUUU | neutre | 12 ; ignore 2 points de DEF |
+| Commun | Pain pita | géométrique | 10 ; ignore la DEF |
 | Commun | Matrix | algébrique | 10 ; ×2 si les PV de l'adversaire finissent par 0 ou 1 (vérifié avant le coup) |
-| Peu commun | Pluie de flammes / Tsunami / Tempête d'épines | feu / eau / plante | 15 |
-| Peu commun | Moindre carré | algébrique | 1 à 40, tirage en ta faveur (le meilleur de deux avec CLAUDE.md) |
+| Peu commun | Pluie de flammes | feu | 15 ; 20 % de Brûlure |
+| Peu commun | Tsunami | eau | 15 ; ignore la DEF |
+| Peu commun | Tempête d'épines | plante | 15 ; 20 % de Bondage |
+| Peu commun | Moindre carré | algébrique | 1 à 30 + 2 × INT, tirage en ta faveur (le meilleur de deux avec CLAUDE.md) ; l'INT n'est pas ajoutée une seconde fois |
 | Peu commun | dist(PLAYER) | géométrique | 10 + étages parcourus |
 | Peu commun | Somnifère | spirituel | 0 ; Fons 1 tour à l'adversaire |
 | Peu commun | Réveil brutal | neutre | 20 à un adversaire en Fons (et le réveille), sinon 8 |
 | Rare | Purification des Chakra | spirituel | 0 ; l'adversaire est hypnotisé pour ton prochain tour |
 | Rare | Pyromane | feu | 15, ×2 si l'adversaire brûle |
-| Rare | Contre-exemple | algébrique | 0 ; annule le prochain statut que tu subirais (ce combat, cumulable) |
-| Légendaire | Big Lez Shotgun | neutre | 80 |
+| Rare | Contre-exemple | algébrique | 0 ; annule les 1 + INT ÷ 3 (arrondi en dessous) prochains statuts que tu subirais (ce combat, cumulable) |
+| Légendaire | Big Lez Shotgun | neutre | 80 ; recul : −2 FOR pour le reste du combat |
 | Légendaire | Professeur d'or | spirituel | 35 non multipliés ; Hypnotisé 5 tours |
 
 ### Soins
@@ -375,12 +500,12 @@ deck de départ, les événements et les trinkets).
 | Commun | Potion | plante | +10 PV |
 | Commun | Petite taffe (ex-Petit pétou) | feu | +15 PV ; 15 % de tomber en Fons, +5 % des PV max par tour pendant cette Fons |
 | Commun | Verre d'eau | eau | +10 PV |
-| Commun | Sparadrap | neutre | +12 PV |
-| Commun | Soupe de mamie | neutre | +10 PV et retire l'Intox |
-| Commun | Stingin' Roger | feu | −5 PV, +10 % de dégâts pour tout le combat (cumulable) |
+| Commun | Sparadrap | neutre | +12 PV ; +1 DEF pour le combat |
+| Commun | Soupe de mamie | neutre | +10 PV, retire l'Intox ; +1 RES pour le combat |
+| Commun | Stingin' Roger | feu | −5 PV, +1 FOR pour tout le combat (cumulable) |
 | Peu commun | Grande potion | plante | +20 PV |
 | Peu commun | Seau d'eau | eau | +20 PV |
-| Peu commun | Berceuse inconnue | spirituel | retire tous tes statuts négatifs |
+| Peu commun | Berceuse inconnue | spirituel | retire tous tes statuts négatifs ; +2 × ESP PV (soin spirituel, sans ESP en plus) |
 | Rare | Taffe de foufou bâtard | feu | Fons 3 tours : immunisé aux coups adverses, +8 % des PV max par tour ; les statuts passent toujours |
 
 ## Terrains
@@ -392,17 +517,17 @@ deck de départ, les événements et les trinkets).
 | Terrain | Élément | Rareté | Effet |
 |---|---|---|---|
 | Marécage, Forêt, Volcan | eau, plante, feu | Commun | aucun |
-| Dojo | neutre | Commun | **+10 % de dégâts** (terrain de départ) |
+| Dojo | neutre | Commun | **+1 FOR** (terrain de départ, et celui des boss) |
 | Migros | neutre | Commun | si le combat se termine dessus : **+25 % de Choomies** |
 | Gare | neutre | Commun | jouer une carte terrain depuis la Gare **ne coûte pas le tour** et donne **+1 clope** |
 | Amazonie, Enfer, Atlantis | plante, feu, eau | Peu commun | attaques de leur élément **+20 %** |
-| Désert kaléidoscopique | spirituel | Rare | l'hypnose fait **×4** au lieu de ×2 (dans les deux sens) |
-| Espace de dimension n | algébrique | Rare | chaque sort ou soin joué dessus est **rejoué une fois à 50 %** au début du tour suivant, **seulement si on y est encore** ; son pouvoir est rejoué en entier, avec sa chance normale (Boule de feu = 10 % au rejeu aussi) ; les terrains ne sont pas rejoués, un rejeu ne se rejoue pas et ne consomme pas le prochain sort ×N |
+| Désert kaléidoscopique | spirituel | Rare | l'hypnose fait **×4** au lieu de ×2 (dans les deux sens) ; **+1 ESP** |
+| Espace de dimension n | algébrique | Rare | **+1 INT** ; chaque sort ou soin joué dessus est **rejoué une fois à 50 %** au début du tour suivant, **seulement si on y est encore** ; son pouvoir est rejoué en entier, avec sa chance normale (Boule de feu = 10 % au rejeu aussi) ; les terrains ne sont pas rejoués, un rejeu ne se rejoue pas et ne consomme pas le prochain sort ×N |
 | Fractale | géométrique | Rare | **tous** les multiplicateurs totaux (sorts, soins, dégâts élémentaires des objets, attaque adverse) arrondis à l'entier supérieur (×1.25 → ×2, ×0.5 → ×1) |
 | EPFL | feu | Légendaire | voir ci-dessous |
 
 **EPFL** : pendant **3 tours** du joueur (après celui où il est posé), toutes ses valeurs sont **réellement
-doublées** : dégâts de toutes les cartes, soins, réduction de dégâts, **PV max et PV actuels** (×2 à l'arrivée).
+doublées** : dégâts de toutes les cartes, soins, DEF, **PV max et PV actuels** (×2 à l'arrivée).
 Pas doublés : taille de main, Choomies, clopes. En quittant l'EPFL (changement de terrain, fin des 3 tours ou fin
 du combat) : **PV actuels ÷ 2** (arrondis), bonus retirés ; en fin de combat, avant la fin du combat. Après 3 tours :
 retour automatique sur le **Dojo** ; changer de terrain avant annule le minuteur. Tours restants affichés à côté
@@ -423,9 +548,9 @@ son élément attaque à ×1.25. Boss provisoires : départ sur le Dojo.
 | Choomah (et variantes) | Buisson louche | plante | −20 % soins |
 | Paresseux | Canopée | plante | −15 % dégâts des sorts |
 | T-Rex défoncé | Jurassic Ecublens | plante | adversaire +15 % dégâts |
-| Camé | Passage sous-gare | feu | adversaire +15 % dégâts |
-| Vafi | Amphi d'examen | feu | −20 % dégâts des sorts |
-| Seau de fuite | Toit qui fuit | eau | −20 % soins |
+| Camé | Passage sous-gare | feu | −2 RES |
+| Vafi | Amphi d'examen | feu | −2 INT |
+| Seau de fuite | Toit qui fuit | eau | −2 ESP |
 | Étudiant post-examen | Biblio à 3h du mat | eau | −1 taille de main |
 | Gourou du Sat | Salle de méditation | spirituel | −15 % dégâts des sorts |
 | NG | Salle d'exercices | algébrique | −1 taille de main |
@@ -491,7 +616,8 @@ Fait aussi : shop (plein écran + mode texte) ; fenêtre du jeu par défaut (pol
 Fait aussi : événements (plein écran + mode texte).
 Fait aussi : son (musique par contexte avec fondu, effets sur les événements, placeholders), menu pause (Échap), Options (volumes, muet) depuis le titre et la pause.
 Fait aussi : statuts (icônes et tours restants près des PV, intent « Endormi »), pouvoirs (★), deck (**D**, n'importe où : regroupé par type, ×N, défilement ; mode texte `d`), fiche de carte (**V** en combat et au shop ; mode texte `v N`).
-Reste : transitions d'écran ; vrais sons des statuts.
+Fait aussi (plan V3) : fiche des stats du joueur (**C**, n'importe où pendant une partie : les 6 stats, leur effet, le détail de chaque bonus) et de l'adversaire (**A**, en combat) ; mode texte `c` et `a` ; DEF et RES de l'adversaire près de sa barre de PV ; écran Progression après les boss ; personnage animé dans la fenêtre (idle, attaque quand il lance un sort, dégâts, mort : `images/player/<id>.<animation>.<n>.png`) ; emplacement du familier (alien de Sassy) avec sa barre de vie.
+Reste : transitions d'écran ; vrais sons des statuts ; vrais sprites des personnages, de l'alien, de Choomah, de Clarence et du boss (placeholders, un fichier par animation).
 
 - Plein écran, input direct au clavier (plus de « Appuie sur Entrée »).
 - Écrans : titre, carte de la run, combat, shop, récompense, game over.
@@ -505,7 +631,9 @@ Reste : transitions d'écran ; vrais sons des statuts.
 - **[À DÉCIDER]** Nom du vendeur du shop et sa réplique d'accueil. Il a un sprite (ébauche : bonnet, barbe, clope au bec) et il fume.
 - **[À DÉCIDER]** Dave : son soin profite-t-il des bonus de soin (efficacité, Ross) ou est-il brut ? *Provisoire : il en profite.*
 - Provisoire : chiffres des paliers d'Ivresse (+10 / +25 / +50 %) et de la clope (+5 PV, sans limite par tour) à ajuster en jouant.
-- **[À DÉCIDER]** Sprites des trois personnages (placeholder commun en attendant) et affichage de l'alien de Sassy.
+- **[À DÉCIDER]** Vrais sprites des personnages et de l'alien (placeholders par animation dans `art/player/`).
+- **[À DÉCIDER]** Équilibrage après le plan V3 : avec les cartes tirées selon leur rareté, le bot d'équilibrage gagne beaucoup moins (voir le compte rendu du plan V3) ; poids des cartes à revoir ?
+- **[À DÉCIDER]** CMS : reste « +50 % dégâts, adversaire +25 % » pour l'instant (option : +3 FOR, +3 INT, adversaire +2 FOR).
 - **[À DÉCIDER]** Les vrais événements (les 3 actuels sont des placeholders).
 - Provisoire : les intents des Choomah gardent les chiffres lisibles dans le cri.
 - Nom définitif du jeu (« Cardistry » affiché en attendant).
@@ -514,6 +642,7 @@ Reste : transitions d'écran ; vrais sons des statuts.
 - **[À DÉCIDER]** CMS : « +50 % dégâts » = sorts seulement, ou aussi objets et trinkets ? *Provisoire : +50 % sur les dégâts élémentaires (sorts et Gaz du bat Inf), pas sur les dégâts bruts (Plan du campus, Pichet vide).*
 
 ### Tranchées
+- ~~Plan V3 (stats)~~ → six stats (FOR, INT, ESP, DEF, RES, CHA) pour le joueur et les adversaires (section « Stats »). La RES s'applique aussi aux statuts « à coup sûr » ; critique ×1,5 ; +2 points de stats et +25 PV max après chaque boss ; Frederic BLC 2 partout ; adversaires +1 FOR et +1 DEF par niveau (pas les boss) ; sorts GLITCH : la meilleure stat offensive ; CMS inchangé pour l'instant ; Gaz du bat Inf sans GLITCH. Interprétations validées : coup adverse = (déclaré × niveau + FOR) × multiplicateurs × critique − DEF, minimum 1, coup par coup ; critique sur les sorts multipliés (et les coups adverses) ; dégâts élémentaires des objets sans stat ni critique ; rejeu = ×0,5 avant la DEF ; ESP sur les cartes et objets à PV fixes ; INT du joueur pour tous ses statuts ; boss sans scaling de stats ; Carte basique et Moindre carré comptent leur stat eux-mêmes ; Berceuse 2 × ESP sans ESP en plus ; Contre-exemple 1 + ⌊INT ÷ 3⌋ ; nouveaux objets communs ; touches C et A. Alien de Sassy : familier de 20 PV, 25 % des attaques le visent, assommé à 0 PV jusqu'au combat suivant, ni DEF ni statuts. Légendaires : cartes tirées selon leur rareté, poids des Légendaires et des secrets à 1. Cartes mortes hors de la taille de main.
 - ~~Qui bat qui des nouveaux éléments~~ → Géométrique > Algébrique > Spirituel > Géométrique, GLITCH bat tout (règle du code, `model.Element`).
 - ~~Prix des cartes au shop~~ → selon la rareté de la carte.
 - ~~Ennemis des nouveaux éléments~~ → Gourou du Sat (spirituel), NG (algébrique), Hypercube misogyne (géométrique), plus le Gobelin (plante) et l'élite Engeance des cookies (GLITCH).
@@ -531,7 +660,7 @@ Reste : transitions d'écran ; vrais sons des statuts.
 - ~~Ptit Sat ?~~ → dégâts élémentaires, comme CMS.
 - ~~Pichet vide mortel~~ → peut tuer le joueur ; mort simultanée = défaite.
 - ~~Gueule de bois avec une main pleine~~ → sans objet : la main de départ (5) reste sous la taille max (6 avec la malédiction).
-- ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés ; un secret débloqué pendant la partie gagnante compte. Ctrl+Z : une fois par combat, ni après la mort ni au premier tour d'un combat. `--seed null` : seed aléatoire affichée. Mode texte : seul le code « claude » (détails : `docs/SECRETS.md`).
+- ~~Secrets : déblocage~~ → durable, par conditions remplies pendant une partie ; le secret entre dans le pool (poids 2, puis 1 depuis le plan V3) à la partie suivante ; les codes ne valent que pour la partie en cours. NullPointerException : NO CARDS injouable jusqu'à la fin du combat, le dernier adversaire compte comme boss. CLAUDE.md : seuls les tirages de chance en faveur du joueur sont doublés ; un secret débloqué pendant la partie gagnante compte. Ctrl+Z : une fois par combat, ni après la mort ni au premier tour d'un combat. `--seed null` : seed aléatoire affichée. Mode texte : seul le code « claude » (détails : `docs/SECRETS.md`).
 - ~~Pioche infinie~~ → remplacée par un deck construit (lot 1 bis de la run complète).
 - ~~Run complète (lot 1)~~ → 3 niveaux de 8 étages boss compris (7 = Sieste, 8 = Boss) ; valeurs d'adversaires, de boss et de scaling validées pour démarrer ; Rebond du Peneu ne tue pas ; Sieste : soin 30 %, +3 clopes ou retirer une carte, n'efface pas la Gueule de bois ; après chaque boss, la moitié des PV manquants ; NullPointerException peut annuler une élite (seuls les 3 boss sont immunisés) ; Moscow Mule annule toute une attaque mais pas les vols ni la Taxe ; tirages des adversaires hors CLAUDE.md ; carte tirée d'un sous-flux nommé de la seed ; « Plante » affiché pour l'élément nature.
 - ~~Lot 1 : choix provisoires~~ → récompense de carte à part, après l'objet ; Peu commun en élite, Rare au boss ; la Sieste est un soin (efficacité, Ross), la récupération après boss non ; le Shot de Jäger est consommé si le Paresseux esquive ; Sieste possible aux étages 4-5.
