@@ -72,7 +72,7 @@ public final class LanternaUi implements Renderer, Input, AutoCloseable {
 
     /**ALTAR */
     private int altarStat=0;
-    private int altarButton=0;
+    private int altarButton=1;
     /** Ouvre le terminal courant en plein écran. */
     public static LanternaUi open(boolean fast, boolean ascii) throws IOException {
         Terminal terminal = new DefaultTerminalFactory(System.out, System.in, StandardCharsets.UTF_8)
