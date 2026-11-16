@@ -88,6 +88,7 @@ public final class CardDetail {
                 if (state.terrain().effect() == TerrainCard.Effect.CEILING) {
                     lines.add(new Line("Fractale : total arrondi à l'entier supérieur", Kind.TEXT));
                 }
+                lines.addAll(statLines(state, s, enemy));
                 double mult = state.spellMultiplier(s);
                 String total = s.hasDamageRule()
                         ? s.damageLabel().orElse("?") + " ×" + num(mult) + " dégâts à " + enemy.name()
@@ -104,6 +105,11 @@ public final class CardDetail {
                 if (efficiency != 1.0) {
                     lines.add(new Line("Tes bonus de soin : ×" + num(efficiency), Kind.TEXT));
                 }
+                double mind = state.playerStats().get(StatType.MIND);
+                if (mind != 0) {
+                    lines.add(new Line("Ton ESP : " + (mind > 0 ? "+" : "−") + num(Math.abs(mind))
+                            + " PV (avant les multiplicateurs)", Kind.TEXT));
+                }
                 double mult = state.healMultiplier(h);
                 double raw = state.healAmount(h);
                 double missing = Math.max(0, state.maxHp() - state.player().hp());
@@ -118,6 +124,41 @@ public final class CardDetail {
             }
             case DeadCard d -> {
             }
+        }
+        return lines;
+    }
+
+    /** Lignes des stats d'un sort : « + FOR », « − DEF » de l'adversaire, chance de critique. */
+    private static List<Line> statLines(GameState state, SpellCard spell, Enemy enemy) {
+        List<Line> lines = new ArrayList<>();
+        cardistry.core.stats.StatType offenseStat = cardistry.core.CombatFormula.offensiveStat(spell.element());
+        double offense = cardistry.core.CombatFormula.offense(spell.element(), state.playerStats());
+        String statName = offenseStat != null ? offenseStat.abbreviation() : "meilleure stat (GLITCH)";
+        if (!spell.addsOffenseStat()) {
+            lines.add(new Line("Ta " + statName + " est déjà comptée dans ses dégâts", Kind.TEXT));
+        } else if (offense != 0) {
+            lines.add(new Line("+ " + statName + " : " + (offense > 0 ? "+" : "−") + num(Math.abs(offense))
+                    + " dégâts (avant les multiplicateurs)", Kind.TEXT));
+        }
+        double defense = enemy.stat(StatType.DEFENSE);
+        if (defense != 0) {
+            double kept = cardistry.core.CombatFormula.effectiveDefense(defense, spell.defensePierce());
+            String head = "− DEF de " + enemy.name() + " : ";
+            if (kept == 0) {
+                lines.add(new Line(head + num(defense) + ", ignorée par ce sort", Kind.TEXT));
+            } else {
+                String note = kept == defense ? "" : " (" + num(defense - kept) + " ignorée par ce sort)";
+                lines.add(new Line(head + (kept > 0 ? "−" : "+") + num(Math.abs(kept)) + " dégâts" + note, Kind.TEXT));
+            }
+        }
+        double luck = state.playerStats().get(StatType.LUCK);
+        if (spell.sureCriticalLuck() > 0 && luck >= spell.sureCriticalLuck()) {
+            lines.add(new Line("Coup critique garanti (CHA ≥ " + spell.sureCriticalLuck() + ") : ×"
+                    + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER), Kind.TEXT));
+        } else if (luck > 0) {
+            lines.add(new Line("Coup critique : " + num(Math.round(cardistry.core.CombatFormula.critChance(luck) * 100))
+                    + " % de chance, ×" + num(cardistry.core.CombatFormula.CRIT_MULTIPLIER)
+                    + (state.luckyRolls() ? " (tirage doublé)" : ""), Kind.TEXT));
         }
         return lines;
     }

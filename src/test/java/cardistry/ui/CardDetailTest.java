@@ -43,6 +43,30 @@ class CardDetailTest {
     }
 
     @Test
+    void sortAvecForDefEtCritique() {
+        Stats stats = new Stats();
+        stats.add(StatModifier.flat(StatType.STRENGTH, 3, "test"));
+        stats.add(StatModifier.flat(StatType.LUCK, 1, "test"));
+        Enemy armored = cardistry.model.Enemy.builder("m", "Mannequin", Element.NATURE,
+                cardistry.model.enemy.EnemyRank.COMMON).hp(50).stats(0, 0, 0, 2, 0, 0)
+                .behavior(cardistry.model.enemy.EnemyBehavior.always(cardistry.model.enemy.EnemyMove.basicAttack(5)))
+                .build();
+        GameState state = new GameState(new Player(100), List.of(armored),
+                new TerrainCard("Forêt", Element.NATURE, Rarity.COMMON), List.of(), stats);
+        String text = text(state, CardPool.bouleDeFeu(), true);
+        assertTrue(text.contains("+ FOR : +3 dégâts (avant les multiplicateurs)"), text);
+        assertTrue(text.contains("− DEF de Mannequin : −2 dégâts"), text);
+        assertTrue(text.contains("Coup critique : 3 % de chance, ×1.5"), text);
+        assertTrue(text.contains("Total : (10 + 3) ×1.5 − 2 = 18 dégâts à Mannequin"), text);
+        String tsunami = text(state, CardPool.tsunami(), true);
+        assertTrue(tsunami.contains("− DEF de Mannequin : 2, ignorée par ce sort"), tsunami);
+        assertTrue(text(state, CardPool.cayouuu(), true).contains("− DEF de Mannequin : 2, ignorée par ce sort"));
+        stats.add(StatModifier.flat(StatType.LUCK, 2, "test"));
+        assertTrue(text(state, CardPool.lancerDeManette(), true).contains("Coup critique garanti (CHA ≥ 3)"));
+        assertTrue(text(state, CardPool.carteBasiquePasOuf(), true).contains("Ta FOR est déjà comptée"));
+    }
+
+    @Test
     void auShopSeulementLesValeursDeBase() {
         String text = text(combat(Element.NATURE, new Stats()), CardPool.bouleDeFeu(), false);
         assertTrue(!text.contains("Si tu la joues") && !text.contains("Mannequin"), text);
