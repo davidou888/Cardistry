@@ -299,14 +299,14 @@ class NewCardsTest {
     // --- Lot 4 ---
 
     @Test
-    void stinginRogerMoinsCinqPvEtDixPourcentDeDegatsCumulables() {
+    void stinginRogerMoinsCinqPvEtUnForCumulables() {
         setUpFire(0, CardPool.stinginRoger(), CardPool.stinginRoger(), spell(10));
         play();
         assertEquals(95, state.player().hp());
         engine.startTurn();
         play();
         assertEquals(90, state.player().hp());
-        assertEquals(1.2, state.playerStats().get(StatType.NEUTRAL_DAMAGE), 1e-9);
+        assertEquals(2, state.playerStats().get(StatType.STRENGTH), 1e-9);
         engine.startTurn();
         play();
         assertEquals(100 - 12, enemy.hp());

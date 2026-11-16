@@ -163,6 +163,37 @@ class StatCardsTest {
         assertEquals(3, (int) ward.chargesLeft());
     }
 
+    // --- Soins ---
+
+    @Test
+    void sparadrapDouzePvEtUneDefPourLeCombat() {
+        setUp(0, CardPool.sparadrap());
+        state.player().takeDamage(50);
+        play(); // 12 × 1,5 (soin neutre sur terrain neutre)
+        assertEquals(68, state.player().hp());
+        assertEquals(1, state.playerStats().get(StatType.DEFENSE), 1e-9);
+    }
+
+    @Test
+    void soupeDeMamieUneResPourLeCombat() {
+        setUp(0, CardPool.soupeDeMamie());
+        state.player().takeDamage(50);
+        play(); // 10 × 1,5
+        assertEquals(65, state.player().hp());
+        assertEquals(1, state.playerStats().get(StatType.RESISTANCE), 1e-9);
+    }
+
+    @Test
+    void berceuseInconnueSoigneDeDeuxFoisLEsprit() {
+        setUp(0, CardPool.berceuseInconnue(), CardPool.berceuseInconnue());
+        state.player().takeDamage(50);
+        play(); // ESP 0 : aucun soin
+        assertEquals(50, state.player().hp());
+        player(StatType.MIND, 3);
+        play(); // 2 × 3, terrain neutre : ×1, pas d'ESP en plus
+        assertEquals(56, state.player().hp());
+    }
+
     @Test
     void lesCartesDuDeckDeDepartSontLesMemes() {
         List<String> powers = CardPool.startingDeck().stream()

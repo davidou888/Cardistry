@@ -110,7 +110,7 @@ public class CardPool {
         cards.add(new HealCard("Potion", NATURE, 10.0, COMMON));
         cards.add(petiteTaffe());
         cards.add(new HealCard("Verre d'eau", WATER, 10, COMMON));
-        cards.add(new HealCard("Sparadrap", NEUTRAL, 12, COMMON));
+        cards.add(sparadrap());
         cards.add(soupeDeMamie());
         cards.add(stinginRoger());
         cards.add(new HealCard("Seau d'eau", WATER, 20, UNCOMMON));
@@ -378,28 +378,50 @@ public class CardPool {
                 });
     }
 
-    /** Soupe de mamie : +10 PV et retire l'Intox. */
+    /** Soupe de mamie : +10 PV, retire l'Intox et +1 RES pour le combat (la soupe de mamie immunise). */
     public static HealCard soupeDeMamie() {
-        return new HealCard("Soupe de mamie", NEUTRAL, 10, COMMON).withPower("retire l'Intox",
-                ctx -> ctx.removeStatus(StatusTarget.PLAYER, StatusType.INTOX));
-    }
-
-    public static final double STINGIN_ROGER_COST = 5;
-    public static final double STINGIN_ROGER_BONUS = 0.10;
-
-    /** Stingin' Roger : −5 PV, +10 % de dégâts pour tout le combat (cumulable). */
-    public static HealCard stinginRoger() {
-        return new HealCard("Stingin' Roger", FIRE, 0, COMMON).withPower(
-                "−5 PV, +10 % de dégâts pour tout le combat (cumulable)", ctx -> {
-                    ctx.damagePlayer(STINGIN_ROGER_COST);
-                    ctx.addCombatDamageBonus(STINGIN_ROGER_BONUS);
+        return new HealCard("Soupe de mamie", NEUTRAL, 10, COMMON).withPower("retire l'Intox ; +1 RES pour le combat",
+                ctx -> {
+                    ctx.removeStatus(StatusTarget.PLAYER, StatusType.INTOX);
+                    ctx.addCombatStat(StatusTarget.PLAYER, StatType.RESISTANCE, 1);
                 });
     }
 
-    /** Berceuse inconnue : retire tous tes statuts négatifs (pas la Gueule de bois ni l'Ivresse). */
+    /** Sparadrap : +12 PV et +1 DEF pour le combat. */
+    public static HealCard sparadrap() {
+        return new HealCard("Sparadrap", NEUTRAL, 12, COMMON).withPower("+1 DEF pour le combat",
+                ctx -> ctx.addCombatStat(StatusTarget.PLAYER, StatType.DEFENSE, 1));
+    }
+
+    public static final double STINGIN_ROGER_COST = 5;
+    /** FOR gagnée pour tout le combat par Stingin' Roger. */
+    public static final double STINGIN_ROGER_STRENGTH = 1;
+
+    /** Stingin' Roger : −5 PV, +1 FOR pour tout le combat (cumulable). */
+    public static HealCard stinginRoger() {
+        return new HealCard("Stingin' Roger", FIRE, 0, COMMON).withPower(
+                "−5 PV, +1 FOR pour tout le combat (cumulable)", ctx -> {
+                    ctx.damagePlayer(STINGIN_ROGER_COST);
+                    ctx.addCombatStat(StatusTarget.PLAYER, StatType.STRENGTH, STINGIN_ROGER_STRENGTH);
+                });
+    }
+
+    /** PV rendus par la Berceuse inconnue par point d'ESP. */
+    public static final double BERCEUSE_HEAL_PER_MIND = 2;
+
+    /**
+     * Berceuse inconnue : retire tous tes statuts négatifs (pas la Gueule de bois ni l'Ivresse), puis
+     * soigne de 2 × ESP PV (soin spirituel : terrain et bonus de soin, sans ESP en plus).
+     */
     public static HealCard berceuseInconnue() {
         return new HealCard("Berceuse inconnue", SPIRIT, 0, UNCOMMON).withPower(
-                "retire tous tes statuts négatifs (Intox, Fons, Bondage, Brûlure)", ctx -> ctx.purgeNegativeStatuses());
+                "retire tous tes statuts négatifs (Intox, Fons, Bondage, Brûlure) ; +2 × ESP PV", ctx -> {
+                    ctx.purgeNegativeStatuses();
+                    double heal = BERCEUSE_HEAL_PER_MIND * ctx.state().playerStats().get(StatType.MIND);
+                    if (heal > 0) {
+                        ctx.elementalHeal(heal, SPIRIT);
+                    }
+                });
     }
 
     public static final int TAFFE_FOUFOU_TURNS = 3;
