@@ -181,7 +181,10 @@ public final class EnemyRegistry {
         common(all, HYPERCUBE, "Hypercube misogyne", GEOMETRIC, 25, hypercube());
         common(all, GOBELIN, "Gobelin", NATURE, 22, gobelin());
         elite(all, ENGEANCE, "Engeance des cookies", GLITCH, 60, engeance(), 0);
-        boss(all, 1, FIRE, 130, 10, 22);
+        all.put(bossId(1), () -> Enemy.builder(bossId(1), "Nortin", NEUTRAL, EnemyRank.BOSS)
+        .hp(160)
+        .sprite("boss")
+                .behavior(nortin()));
         boss(all, 2, WATER, 200, 10, 22);
         boss(all, 3, NATURE, 280, 10, 22);
         return all;
@@ -342,4 +345,25 @@ public final class EnemyRegistry {
                 new Hit(6, 2, 3, 0, 0));
         return self -> self.hpRatio() < 0.5 ? crisis : tears;
     }
+
+
+    private static EnemyBehavior nortin() {
+        EnemyMove bitchSlap = EnemyMove.of("bitchslap", "Bitch Slap", "bcz he's a bitch",
+                Hit.of(8));
+        EnemyMove dodge = EnemyMove.of("dodge", "Esquive",
+                "Il se cache comme... you know what : 70 % d'esquiver ton prochain sort, sinon bitch slap ",
+                new MoveEffect.Gamble(0.7, new MoveEffect.Dodge(), Hit.of(8)));
+        EnemyMove steal = EnemyMove.of("vol-trinket", "Vole de trinket", "Il a 20 % de chance de te voler un trinket",
+                new MoveEffect.StealTrinket(0.2, 8));
+        EnemyMove kickNuts = EnemyMove.of("kicknuts", "Hit in the nuts", "Yes like reeeaaal b...",
+                Hit.of(16));
+
+        return self -> switch (self.actions() % 4) {
+            case 0 -> bitchSlap;
+            case 1 -> dodge;
+            case 2 -> steal;
+            default -> kickNuts;
+        };
+    }
+
 }

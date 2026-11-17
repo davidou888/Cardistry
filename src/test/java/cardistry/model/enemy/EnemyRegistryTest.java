@@ -104,15 +104,46 @@ class EnemyRegistryTest {
 
     @Test
     void bossPvFixesDegatsSelonLeNiveau() {
-        assertEquals(130, create(bossId(1), 1).maxHp(), DELTA);
+        // Niveau 1 (Nortin) : voir les tests nortin… ci-dessous.
         assertEquals(200, create(bossId(2), 2).maxHp(), DELTA);
         assertEquals(280, create(bossId(3), 3).maxHp(), DELTA);
         assertEquals(1.5, create(bossId(3), 3).damageScale(), DELTA);
-        for (int level = 1; level <= 3; level++) {
+        for (int level = 2; level <= 3; level++) {
             Enemy boss = create(bossId(level), level);
             assertEquals(EnemyRank.BOSS, boss.rank());
             assertEquals(List.of("coup", "coup", "coup", "grosse-attaque", "coup"), ids(moves(boss, 5)));
         }
+    }
+
+    @Test
+    void nortinEstLeBossDuNiveauUn() {
+        Enemy nortin = create(bossId(1), 1);
+        assertEquals("Nortin", nortin.name());
+        assertEquals(Element.NEUTRAL, nortin.element());
+        assertEquals(EnemyRank.BOSS, nortin.rank());
+        assertEquals(160, nortin.maxHp(), DELTA);
+        assertEquals("boss", nortin.spriteId());
+    }
+
+    @Test
+    void nortinRepeteUnCycleDeQuatreTours() {
+        assertEquals(List.of("bitchslap", "dodge", "vol-trinket", "kicknuts",
+                        "bitchslap", "dodge", "vol-trinket", "kicknuts"),
+                ids(moves(create(bossId(1), 1), 8)));
+    }
+
+    @Test
+    void nortinDegatsDeSesCoups() {
+        List<EnemyMove> moves = moves(create(bossId(1), 1), 4);
+        assertEquals(8, damage(moves.get(0)), DELTA);  // Bitch slap
+        assertEquals(new MoveEffect.StealTrinket(0.2, 8), moves.get(2).effects().get(0)); // Vol de trinket
+        assertEquals(16, damage(moves.get(3)), DELTA); // Hit in the nuts
+    }
+
+    @Test
+    void nortinEsquiveSeptantepourcentSinonBitchSlap() {
+        EnemyMove dodge = moves(create(bossId(1), 1), 2).get(1);
+        assertEquals(new MoveEffect.Gamble(0.7, new MoveEffect.Dodge(), Hit.of(8)), dodge.effects().get(0));
     }
 
     @Test
