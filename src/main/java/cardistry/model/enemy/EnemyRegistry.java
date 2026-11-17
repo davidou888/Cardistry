@@ -183,7 +183,7 @@ public final class EnemyRegistry {
         elite(all, ENGEANCE, "Engeance des cookies", GLITCH, 60, engeance(), 0);
         all.put(bossId(1), () -> Enemy.builder(bossId(1), "Nortin", NEUTRAL, EnemyRank.BOSS)
         .hp(160)
-        .sprite("boss")
+        .sprite("nortin")
                 .behavior(nortin()));
         boss(all, 2, WATER, 200, 10, 22);
         boss(all, 3, NATURE, 280, 10, 22);

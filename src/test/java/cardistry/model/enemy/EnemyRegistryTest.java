@@ -122,7 +122,13 @@ class EnemyRegistryTest {
         assertEquals(Element.NEUTRAL, nortin.element());
         assertEquals(EnemyRank.BOSS, nortin.rank());
         assertEquals(160, nortin.maxHp(), DELTA);
-        assertEquals("boss", nortin.spriteId());
+        assertEquals("nortin", nortin.spriteId());
+    }
+
+    @Test
+    void lesBossDesNiveauxDeuxEtTroisGardentLeSpriteCommun() {
+        assertEquals("boss", create(bossId(2), 1).spriteId());
+        assertEquals("boss", create(bossId(3), 1).spriteId());
     }
 
     @Test

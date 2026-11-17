@@ -614,6 +614,59 @@ local function gobelinSprite()
   return sprite
 end
 
+-- ------------------------------------------------------------------ Nortin (boss du niveau 1, neutre)
+-- Costaud, longs cheveux blonds avec frange, débardeur bleu clair, sourcils froncés. Mains vides, bras
+-- le long du corps ; à l'attaque, le bras côté joueur part en gifle (Bitch slap).
+
+local function nortin(c, pose)
+  local bob = pose.alt and 1 or 0
+  -- bras (derrière le corps) : à droite, toujours le long du corps
+  c:ellipse(51, 47, 6, 11, "s"); c:vline(46, 40, 56, "p"); c:disc(52, 58, 4, "s")
+  if pose.attack then
+    -- gifle : bras tendu vers le joueur, main ouverte, traits de vitesse
+    local reach = pose.attack * 3
+    c:line(17, 40, 5 - reach, 33, "s", 6)
+    c:disc(4 - reach, 34, 4, "s"); c:hline(0 - reach, 3 - reach, 31, "s"); c:hline(0 - reach, 3 - reach, 37, "s")
+    c:hline(9 - reach, 15 - reach, 41, "p")
+    if pose.attack == 2 then
+      c:vline(10, 26, 30, "6"); c:vline(13, 24, 29, "6"); c:vline(16, 26, 30, "6")
+    end
+  else
+    c:ellipse(13, 47, 6, 11, "s"); c:vline(18, 40, 56, "p"); c:disc(12, 58, 4, "s")
+  end
+  -- épaules, débardeur et bretelles
+  c:ellipse(32, 41, 19, 7, "s")
+  c:ellipse(32, 46, 16, 4, "B"); c:rect(16, 46, 33, 18, "B"); c:rect(43, 46, 6, 18, "b")
+  c:ellipse(32, 42, 7, 4, "s")
+  c:rect(19, 35, 4, 11, "B"); c:rect(42, 35, 4, 11, "B"); c:vline(45, 35, 45, "b")
+  c:arc(32, 58, 12, 4, 200, 340, "b")
+  local h = c:shift(0, bob)
+  -- cheveux (derrière le visage), jusqu'aux épaules
+  h:ellipse(32, 14, 16, 12, "Y"); h:rect(16, 14, 33, 21, "Y")
+  h:vline(19, 18, 34, "y"); h:vline(22, 24, 34, "y"); h:vline(42, 24, 34, "y"); h:vline(45, 18, 34, "y")
+  -- visage rond et cou
+  h:rect(27, 31, 11, 5, "s")
+  h:ellipse(32, 22, 11, 11, "s"); h:ellipse(32, 28, 12, 6, "s"); h:arc(32, 28, 12, 6, 20, 160, "p")
+  -- frange
+  h:ellipse(32, 11, 12, 5, "Y"); h:rect(20, 11, 25, 4, "Y")
+  h:px(24, 15, "y"); h:px(28, 15, "y"); h:px(33, 15, "y"); h:px(38, 15, "y"); h:px(42, 14, "y")
+  -- yeux et sourcils
+  if pose.hurt then
+    xEye(h, 24, 19, 3, "1"); xEye(h, 36, 19, 3, "1")
+  else
+    h:line(22, 16, 29, 19, "N", 2); h:line(42, 16, 35, 19, "N", 2)
+    h:rect(25, 20, 3, 2, "1"); h:rect(37, 20, 3, 2, "1")
+    h:hline(25, 27, 23, "p"); h:hline(37, 39, 23, "p")
+  end
+  -- nez et bouche
+  h:rect(31, 21, 3, 5, "p"); h:hline(30, 34, 26, "n")
+  if pose.hurt or pose.attack == 2 then
+    h:ellipse(32, 30, 3, 2, "1")
+  else
+    h:arc(32, 32, 5, 2, 200, 340, "N")
+  end
+end
+
 -- ------------------------------------------------------------------ placeholders
 -- Choomah, Clarence et le boss sont dessinés à la main : une silhouette « ? » en attendant, avec le
 -- seul tag idle. Remplacer le dessin dans le .aseprite (le script n'y touchera plus).
@@ -640,7 +693,7 @@ return {
   standard("came", came), standard("paresseux", paresseux), standard("le-peneu", peneu),
   standard("t-rex-defonce", trex), standard("etudiant-post-examen", etudiant), standard("vafi", vafi),
   standard("gourou-du-sat", gourou), standard("ng", ng), standard("hypercube-misogyne", hypercube),
-  gobelinSprite(), standard("engeance-des-cookies", engeance),
+  gobelinSprite(), standard("engeance-des-cookies", engeance), standard("nortin", nortin),
   placeholder("choomah", false), placeholder("clarence", false), placeholder("boss", true),
 }
 
