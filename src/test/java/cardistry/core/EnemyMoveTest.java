@@ -290,6 +290,90 @@ class EnemyMoveTest {
         assertSame(NORMAL, enemy.intent());
     }
 
+    // --- Un dernier p'tit verre (Zo le StreMon) ---
+
+    private static final EnemyMove PTIT_VERRE = EnemyMove.of("ptit-verre", "Un dernier p'tit verre", "P'tit verre",
+            MoveEffect.Hit.of(5), new MoveEffect.Drink(1));
+
+    /** Deux adversaires : le combat contre le premier n'est pas le dernier (Gueule de bois possible). */
+    private void setUpDrinker() {
+        EventBus bus = new EventBus();
+        bus.subscribe(events::add);
+        enemy = Enemy.builder("zo", "Zo", NEUTRAL, EnemyRank.BOSS).hp(100)
+                .behavior(EnemyBehavior.always(PTIT_VERRE)).build();
+        Enemy next = Enemy.builder("suivant", "Suivant", NEUTRAL, EnemyRank.COMMON).hp(100)
+                .behavior(EnemyBehavior.always(NORMAL)).build();
+        state = new GameState(new Player(100), List.of(enemy, next),
+                new TerrainCard("Forêt", NATURE, cardistry.items.Rarity.COMMON), List.of(), new Stats());
+        engine = new CombatEngine(state, new CardPool(List.of(new TerrainCard("Pioche", FIRE, cardistry.items.Rarity.COMMON))),
+                new Rng(seed), bus, new LootTable(List::of));
+    }
+
+    @Test
+    void boissonNEstPasUneAttaqueMaisLeVerreEnEstUne() {
+        assertFalse(new MoveEffect.Drink(1).isAttack());
+        assertTrue(PTIT_VERRE.isAttack()); // à cause du coup de 5
+    }
+
+    @Test
+    void ptitVerreDonneUneIvresse() {
+        setUpDrinker();
+        endTurn();
+        assertEquals(1, state.drunkenness());
+        assertEquals(DrunkTier.TIPSY, state.drunkTier());
+        assertTrue(events.contains(new GameEvent.DrunkennessChanged(1, state.hangoverThreshold())));
+    }
+
+    @Test
+    void ptitVerreFrappeDeCinqPuisFaitBoire() {
+        setUpDrinker();
+        events.clear();
+        endTurn();
+        assertEquals(95, state.player().hp(), DELTA);
+        int hit = indexOf(GameEvent.EnemyAttacked.class);
+        int drink = indexOf(GameEvent.DrunkennessChanged.class);
+        assertTrue(hit >= 0 && drink > hit, "le coup avant l'Ivresse");
+    }
+
+    @Test
+    void ptitVerreDegatsMultipliesParLeNiveau() {
+        setUp(Enemy.builder("zo", "Zo", NEUTRAL, EnemyRank.BOSS).hp(100).scale(1.0, 1.25)
+                .behavior(EnemyBehavior.always(PTIT_VERRE)), List.of());
+        double expected = state.hitDamage(MoveEffect.Hit.of(5)); // 5 × 1,25 (arrondi des PV entiers)
+        assertTrue(expected > 5);
+        endTurn();
+        assertEquals(100 - expected, state.player().hp(), DELTA);
+        assertEquals(1, state.drunkenness());
+    }
+
+    @Test
+    void moscowMuleAnnuleLeCoupPasLIvresse() {
+        setUpDrinker();
+        giveMoscowMule(); // le Moscow Mule est lui-même une boisson : Ivresse 1
+        assertEquals(1, state.drunkenness());
+        endTurn();
+        assertEquals(100, state.player().hp(), DELTA);
+        assertEquals(1, events.stream().filter(e -> e instanceof GameEvent.AttackCancelled).count());
+        assertEquals(2, state.drunkenness());
+    }
+
+    @Test
+    void ptitVerreAuSeuilProgrammeUneGueuleDeBois() {
+        setUpDrinker();
+        state.setDrunkenness(state.hangoverThreshold() - 1);
+        assertEquals(0, state.pendingIntensity(Curse.HANGOVER));
+        endTurn();
+        assertEquals(state.hangoverThreshold(), state.drunkenness());
+        assertEquals(1, state.pendingIntensity(Curse.HANGOVER));
+        assertTrue(events.contains(new GameEvent.CurseGained(Curse.HANGOVER)));
+    }
+
+    @Test
+    void ptitVerreIntent() {
+        setUpDrinker();
+        assertEquals("5, +1 Ivresse pour toi", cardistry.ui.IntentText.effects(state, PTIT_VERRE));
+    }
+
     // --- Vol de trinket (Nortin) ---
 
     @Test

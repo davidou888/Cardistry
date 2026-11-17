@@ -51,6 +51,18 @@ public sealed interface MoveEffect {
         }
     }
 
+    /**
+     * Augmente Ivresse de {@code amount}.
+     * Pas une attaque => pas blocable
+     * */
+    record Drink(int amount) implements MoveEffect {
+
+        @Override
+        public boolean isAttack() {
+            return false;
+        }
+    }
+
      /**
      * Vol de trinket: {@code chance} la proba que le vol fonctionne; Rendu quand l’adversaire est vaincu;
       * si tu n’as aucun trinket, un coup de {@code fallbackDamage}à la place ;

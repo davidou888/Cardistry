@@ -84,7 +84,7 @@ class SpriteTest {
     @Test
     void spritesOriginauxAnimes() {
         for (String id : List.of("caddie-enerve", "came", "paresseux", "seau-de-fuite", "vafi", "le-peneu",
-                "t-rex-defonce", "etudiant-post-examen", "nortin")) {
+                "t-rex-defonce", "etudiant-post-examen", "nortin", "zo")) {
             Sprite sprite = Sprites.byId(id).orElseThrow();
             assertTrue(sprite.idle().size() >= 2 && sprite.idle().size() <= 3, id + " : 2-3 frames idle");
             assertFalse(sprite.frames(Sprite.ATTACK).isEmpty(), id + " : attaque");

@@ -89,7 +89,7 @@ public final class EnemyRegistry {
             Map.entry(ETUDIANT, new int[] {1, 3, 0, 0, 0, 2}),
             Map.entry(ENGEANCE, new int[] {2, 3, 2, 1, 3, 2}),
             Map.entry("boss-1", new int[] {3, 1, 1, 2, 3, 1}),
-            Map.entry("boss-2", new int[] {4, 2, 2, 3, 4, 2}),
+            Map.entry("boss-2", new int[] {4, 4, 2, 3, 4, 2}),
             Map.entry("boss-3", new int[] {5, 3, 3, 4, 5, 3}));
 
     /** Stats de base (niveau 1) de l'adversaire {@code id} : FOR, INT, ESP, DEF, RES, CHA. */
@@ -185,7 +185,10 @@ public final class EnemyRegistry {
         .hp(160)
         .sprite("nortin")
                 .behavior(nortin()));
-        boss(all, 2, WATER, 200, 10, 22);
+        all.put(bossId(2), () -> Enemy.builder(bossId(2), "Zo le StreMon", ALGEBRAIC, EnemyRank.BOSS)
+                .hp(250)
+                .sprite("zo")
+                .behavior(zo()));
         boss(all, 3, NATURE, 280, 10, 22);
         return all;
     }
@@ -363,6 +366,29 @@ public final class EnemyRegistry {
             case 1 -> dodge;
             case 2 -> steal;
             default -> kickNuts;
+        };
+    }
+
+
+    private static EnemyBehavior zo() {
+        EnemyMove coupTeub = EnemyMove.of("coup-de-teub", "Coup de teub", "Il va te mettre un gros coup de reins",
+                Hit.of(8));
+        EnemyMove regen = EnemyMove.of("petite-clope", "Ptite clope",
+                "Il se fait une petite clope",
+                new MoveEffect.HealSelf(10));
+        EnemyMove ptitVerre = EnemyMove.of("ptit-verre", "Un dernier p'tit verre", "Il fait monter ton ivresse",
+                Hit.of(5),new MoveEffect.Drink(1));
+        EnemyMove capoeira = EnemyMove.of("capoeira", "move de Capoeira", "Un backflip ou une danse on ne sait pas trop",
+                Hit.of(12));
+
+        return self -> switch (self.actions() % 6) {
+            //case 0 -> coupTeub;
+            //case 1 -> coupTeub;
+            case 2 -> ptitVerre;
+            //case 3 -> ;
+            case 4 -> regen;
+            case 5 -> capoeira;
+            default -> coupTeub;
         };
     }
 

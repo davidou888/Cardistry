@@ -114,6 +114,7 @@ public final class IntentText {
             case MoveEffect.StealTrinket steal -> percent(steal.chance()) + " de te voler un trinket, sans trinket : "
                     + num(state.hitDamage(steal.fallbackDamage()));
             case MoveEffect.Dodge dodge -> "esquive ton prochain sort";
+            case MoveEffect.Drink drink -> "+" + drink.amount() + " Ivresse pour toi";
             case MoveEffect.CurseCard curse -> "une carte devient « " + curse.cardName() + " »";
             case MoveEffect.HealSelf heal -> "se soigne de "
                     + num(state.hasEnemy() ? cardistry.core.CombatFormula.heal(heal.amount() * state.currentEnemy().damageScale(),

@@ -1639,6 +1639,11 @@ public final class CombatEngine {
                             inflict.turns(), StatusExtras.NONE, StatusTarget.ENEMY, true);
                 }
             }
+
+            case MoveEffect.Drink drink -> {
+                addDrunkenness(drink.amount());
+            }
+
         }
     }
 
